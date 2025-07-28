@@ -1,5 +1,3 @@
 # Universe
 
-Portfolio website
-
 Monorepo

@@ -1,4 +1,3 @@
-/* eslint-disable */
 const { fixupPluginRules } = require('@eslint/compat');
 const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
@@ -118,6 +117,13 @@ module.exports = defineConfig([
       '@typescript-eslint/no-var-requires': 'off',
       '@typescript-eslint/no-dynamic-delete': 'off',
       '@typescript-eslint/prefer-for-of': 'off',
+    },
+  },
+  {
+    files: ['*.cjs'],
+    rules: {
+      '@typescript-eslint/no-var-requires': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
 ]);
