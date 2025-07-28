@@ -6,11 +6,11 @@
 			"image": {
 				"origin": {
 					"id": "main",
-					"url": "https://images.unsplash.com/photo-1515378960530-7c0da6231fb1",
+					"url": "http://localhost:3000/slice-simulator/dino-cel.png",
 					"width": 5616,
 					"height": 3744
 				},
-				"url": "https://images.unsplash.com/photo-1515378960530-7c0da6231fb1",
+				"url": "http://localhost:3000/slice-simulator/dino-cel.png",
 				"width": 5616,
 				"height": 3744,
 				"edit": {
@@ -32,8 +32,18 @@
 					{
 						"type": "paragraph",
 						"content": {
-							"text": "Excepteur labore ex est culpa nulla deserunt aliquip duis. Voluptate laborum ex deserunt ullamco veniam irure aliquip fugiat occaecat elit laboris. Aliquip fugiat culpa minim minim irure exercitation labore sunt ipsum fugiat veniam sint fugiat elit ipsum."
-						}
+							"text": "Lastly, this engine has the ability to define custom shaders for any use cases. For example, pictured on the left is a dino using a cel shader.",
+							"spans": []
+						},
+						"direction": "ltr"
+					},
+					{
+						"type": "paragraph",
+						"content": {
+							"text": "You can see the latest iteration of this project in my GitHub repository below.",
+							"spans": []
+						},
+						"direction": "ltr"
 					}
 				]
 			},
@@ -42,9 +52,17 @@
 				"key": "18539cc5-044c-4f24-8360-b6f67ea7dcdf",
 				"value": {
 					"__TYPE__": "ExternalLink",
-					"url": "http://twitter.com",
-					"text": "travel"
+					"url": "https://github.com/wuguishifu/Engine3D",
+					"text": "View on GitHub"
 				}
+			},
+			"background": {
+				"__TYPE__": "BooleanContent",
+				"value": true
+			},
+			"swapped": {
+				"__TYPE__": "BooleanContent",
+				"value": false
 			}
 		},
 		"items": []

@@ -6,11 +6,11 @@
 			"image": {
 				"origin": {
 					"id": "main",
-					"url": "https://images.unsplash.com/photo-1571126770897-2d612d1f7b89",
+					"url": "http://localhost:3000/slice-simulator/periodic-table.png",
 					"width": 3456,
 					"height": 3456
 				},
-				"url": "https://images.unsplash.com/photo-1571126770897-2d612d1f7b89",
+				"url": "http://localhost:3000/slice-simulator/periodic-table.png",
 				"width": 3456,
 				"height": 3456,
 				"edit": {
@@ -28,8 +28,8 @@
 			},
 			"title": {
 				"__TYPE__": "FieldContent",
-				"value": "class",
-				"type": "Text"
+				"type": "Text",
+				"value": "Interactive Periodic Table"
 			},
 			"description": {
 				"__TYPE__": "StructuredTextContent",
@@ -37,15 +37,16 @@
 					{
 						"type": "paragraph",
 						"content": {
-							"text": "Ea enim et excepteur velit cupidatat ad ad proident."
-						}
+							"text": "I built this interactive periodic table for my 501(c)(3) chemistry education nonprofit, ChemTalk. Very few good periodic tables exist online, and every one of them has downsides. The ones that look nicer often have poor interactivity, but ones with clean and intuitive interactions have outdated designs.",
+							"spans": []
+						},
+						"direction": "ltr"
 					}
 				]
 			},
-			"alt_text": {
-				"__TYPE__": "FieldContent",
-				"value": "grew",
-				"type": "Text"
+			"background": {
+				"__TYPE__": "BooleanContent",
+				"value": false
 			}
 		},
 		"items": []

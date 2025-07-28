@@ -9,10 +9,24 @@
 					{
 						"type": "paragraph",
 						"content": {
-							"text": "Dolore irure officia sunt commodo id dolore nostrud sunt dolor. Ea Lorem voluptate id enim qui amet ullamco occaecat laboris aliqua officia tempor."
-						}
+							"text": "For each cube, the algorithm determines the value of the surface at each of the 8 vertices. The value of the surface is determined by the scalar field. If the value of the surface is greater than a certain threshold, then the vertex is considered to be inside the surface. If the value of the surface is less than the threshold, then the vertex is considered to be outside the surface. The threshold is usually set to 0, so that the surface is defined as the set of points where the scalar field is equal to 0.",
+							"spans": []
+						},
+						"direction": "ltr"
+					},
+					{
+						"type": "paragraph",
+						"content": {
+							"text": "In this image, I have colored the vertices that are inside the surface blue, and I've drawn a red outline of where the surface intersects with the cube.",
+							"spans": []
+						},
+						"direction": "ltr"
 					}
 				]
+			},
+			"background": {
+				"__TYPE__": "BooleanContent",
+				"value": true
 			}
 		},
 		"items": []

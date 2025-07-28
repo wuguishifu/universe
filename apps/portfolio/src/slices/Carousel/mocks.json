@@ -12,40 +12,101 @@
 							[
 								"image",
 								{
+									"provider": "imgix",
+									"url": "http://localhost:3000/slice-simulator/benz-default.png",
+									"alt": "Benzene rendered normally",
 									"origin": {
-										"id": "main",
-										"url": "https://images.unsplash.com/photo-1589321599763-d66926c29613",
-										"width": 3168,
-										"height": 4752
+										"id": "3t8rQ3LD2JI",
+										"url": "http://localhost:3000/slice-simulator/benz-default.png",
+										"width": 3024,
+										"height": 3024
 									},
-									"url": "https://images.unsplash.com/photo-1589321599763-d66926c29613",
-									"width": 3168,
-									"height": 4752,
+									"width": 3024,
+									"height": 3024,
 									"edit": {
+										"background": "transparent",
 										"zoom": 1,
 										"crop": {
 											"x": 0,
 											"y": 0
-										},
-										"background": "transparent"
+										}
 									},
-									"alt": "plain",
 									"credits": null,
 									"__TYPE__": "ImageContent",
 									"thumbnails": {}
 								}
-							],
+							]
+						]
+					},
+					{
+						"__TYPE__": "GroupItemContent",
+						"value": [
 							[
-								"alt_text",
+								"image",
 								{
-									"__TYPE__": "FieldContent",
-									"value": "negative",
-									"type": "Text"
+									"provider": "imgix",
+									"url": "http://localhost:3000/slice-simulator/benz-color-buffer.png",
+									"alt": "Benzene color buffer",
+									"origin": {
+										"id": "Jr7t5QviCDM",
+										"url": "http://localhost:3000/slice-simulator/benz-color-buffer.png",
+										"width": 3024,
+										"height": 4032
+									},
+									"width": 3024,
+									"height": 4032,
+									"edit": {
+										"background": "transparent",
+										"zoom": 1,
+										"crop": {
+											"x": 0,
+											"y": 0
+										}
+									},
+									"credits": null,
+									"__TYPE__": "ImageContent",
+									"thumbnails": {}
+								}
+							]
+						]
+					},
+					{
+						"__TYPE__": "GroupItemContent",
+						"value": [
+							[
+								"image",
+								{
+									"provider": "imgix",
+									"url": "http://localhost:3000/slice-simulator/benz-selection.png",
+									"alt": "Benzene atom selection",
+									"origin": {
+										"id": "agP9RgnWZAY",
+										"url": "http://localhost:3000/slice-simulator/benz-selection.png",
+										"width": 5143,
+										"height": 4114
+									},
+									"width": 5143,
+									"height": 4114,
+									"edit": {
+										"background": "transparent",
+										"zoom": 1,
+										"crop": {
+											"x": 0,
+											"y": 0
+										}
+									},
+									"credits": null,
+									"__TYPE__": "ImageContent",
+									"thumbnails": {}
 								}
 							]
 						]
 					}
 				]
+			},
+			"background": {
+				"__TYPE__": "BooleanContent",
+				"value": true
 			}
 		},
 		"items": []

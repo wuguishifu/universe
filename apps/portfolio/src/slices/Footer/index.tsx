@@ -1,47 +1,51 @@
+import { Content, isFilled } from '@prismicio/client';
+import Image from 'next/image';
 import { FC } from 'react';
-import { Content } from '@prismicio/client';
-import { SliceComponentProps } from '@prismicio/react';
 
-/**
- * Props for `Footer`.
- */
-export type FooterProps = SliceComponentProps<Content.FooterSlice>;
+import { RichText } from '../../components/text/text';
+import { buttonVariants } from '../../components/ui/button';
+import { cn } from '../../lib/utils';
+import { backgroundClass } from '../background';
+import { SliceComponentPropsWithContext } from '../context';
 
-/**
- * Component for "Footer" Slices.
- */
-const Footer: FC<FooterProps> = ({ slice }) => {
+export type FooterProps = SliceComponentPropsWithContext<Content.FooterSlice>;
+
+const Footer: FC<FooterProps> = ({ slice, context }) => {
+  const colorScheme = context.colorScheme;
+  const showBackground = slice.primary.background;
+  const image = isFilled.image(slice.primary.image) ? slice.primary.image : null;
+  const buttonLink = isFilled.link(slice.primary.button_link) ? slice.primary.button_link : null;
+
   return (
-    <section data-slice-type={slice.slice_type} data-slice-variation={slice.variation}>
-      Placeholder component for footer (variation: {slice.variation}) slices.
-      <br />
-      <strong>You can edit this slice directly in your code editor.</strong>
-      {/**
-       * 💡 Use Prismic MCP with your code editor
-       *
-       * Get AI-powered help to build your slice components — based on your actual model.
-       *
-       * ▶️ Setup:
-       * 1. Add a new MCP Server in your code editor:
-       *
-       * {
-       *   "mcpServers": {
-       *     "Prismic MCP": {
-       *       "command": "npx",
-       *       "args": ["-y", "@prismicio/mcp-server@latest"]
-       *     }
-       *   }
-       * }
-       *
-       * 2. Select a model optimized for coding (e.g. Claude 3.7 Sonnet or similar)
-       *
-       * ✅ Then open your slice file and ask your code editor:
-       *    "Code this slice"
-       *
-       * Your code editor reads your slice model and helps you code faster ⚡
-       * 🎙️ Give your feedback: https://community.prismic.io/t/help-us-shape-the-future-of-slice-creation/19505
-       * 📚 Documentation: https://prismic.io/docs/ai#code-with-prismics-mcp-server
-       */}
+    <section
+      data-slice-type={slice.slice_type}
+      data-slice-variation={slice.variation}
+      className={cn(
+        'flex flex-col items-center w-full px-8 md:flex-row md:gap-16 max-w-screen-xl',
+        slice.primary.swapped ? 'flex-col-reverse md:flex-row-reverse' : 'flex-col md:flex-row',
+        { [backgroundClass(colorScheme)]: showBackground },
+      )}
+    >
+      <div className="flex-1 flex flex-col items-center justify-center">
+        {image && (
+          <Image
+            src={image.url}
+            alt={image.alt ?? ''}
+            width={image.dimensions.width}
+            height={image.dimensions.height}
+          />
+        )}
+      </div>
+      <div className="flex-1 flex flex-col justify-center">
+        <RichText content={slice.primary.content} />
+        <div>
+          {buttonLink && (
+            <a href={buttonLink.url} target="_blank" className={buttonVariants({ variant: 'secondary' })}>
+              {buttonLink.text}
+            </a>
+          )}
+        </div>
+      </div>
     </section>
   );
 };

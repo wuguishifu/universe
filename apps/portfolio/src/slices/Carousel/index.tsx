@@ -1,47 +1,54 @@
+import { Content, isFilled } from '@prismicio/client';
+import Image from 'next/image';
 import { FC } from 'react';
-import { Content } from '@prismicio/client';
-import { SliceComponentProps } from '@prismicio/react';
 
-/**
- * Props for `Carousel`.
- */
-export type CarouselProps = SliceComponentProps<Content.CarouselSlice>;
+import {
+  CarouselContainer,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '../../components/ui/carousel';
+import { cn } from '../../lib/utils';
+import { backgroundClass } from '../background';
+import { SliceComponentPropsWithContext } from '../context';
 
-/**
- * Component for "Carousel" Slices.
- */
-const Carousel: FC<CarouselProps> = ({ slice }) => {
+export type CarouselProps = SliceComponentPropsWithContext<Content.CarouselSlice>;
+
+const Carousel: FC<CarouselProps> = ({ slice, context }) => {
+  const colorScheme = context.colorScheme;
+  const showBackground = slice.primary.background;
+
   return (
-    <section data-slice-type={slice.slice_type} data-slice-variation={slice.variation}>
-      Placeholder component for carousel (variation: {slice.variation}) slices.
-      <br />
-      <strong>You can edit this slice directly in your code editor.</strong>
-      {/**
-       * 💡 Use Prismic MCP with your code editor
-       *
-       * Get AI-powered help to build your slice components — based on your actual model.
-       *
-       * ▶️ Setup:
-       * 1. Add a new MCP Server in your code editor:
-       *
-       * {
-       *   "mcpServers": {
-       *     "Prismic MCP": {
-       *       "command": "npx",
-       *       "args": ["-y", "@prismicio/mcp-server@latest"]
-       *     }
-       *   }
-       * }
-       *
-       * 2. Select a model optimized for coding (e.g. Claude 3.7 Sonnet or similar)
-       *
-       * ✅ Then open your slice file and ask your code editor:
-       *    "Code this slice"
-       *
-       * Your code editor reads your slice model and helps you code faster ⚡
-       * 🎙️ Give your feedback: https://community.prismic.io/t/help-us-shape-the-future-of-slice-creation/19505
-       * 📚 Documentation: https://prismic.io/docs/ai#code-with-prismics-mcp-server
-       */}
+    <section
+      data-slice-type={slice.slice_type}
+      data-slice-variation={slice.variation}
+      className={cn('w-full flex justify-center', {
+        [backgroundClass(colorScheme)]: showBackground,
+      })}
+    >
+      <div className="flex flex-col items-center w-full max-w-screen-lg">
+        <CarouselContainer className="w-[95%] md:w-[75%]" opts={{ loop: true }}>
+          <CarouselContent className="rounded-lg">
+            {slice.primary.contents.map((item, index) => (
+              <CarouselItem key={index}>
+                <div className="aspect-video relative w-full">
+                  {isFilled.image(item.image) ? (
+                    <Image
+                      src={item.image.url}
+                      alt={item.image.alt ?? ''}
+                      fill={true}
+                      className="object-contain rounded-lg"
+                    />
+                  ) : null}
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselNext />
+          <CarouselPrevious />
+        </CarouselContainer>
+      </div>
     </section>
   );
 };

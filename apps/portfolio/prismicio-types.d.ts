@@ -167,16 +167,6 @@ export interface CarouselSliceDefaultPrimaryContentsItem {
    * - **Documentation**: https://prismic.io/docs/fields/image
    */
   image: prismic.ImageField<never>;
-
-  /**
-   * Alt Text field in *Carousel → Default → Primary → Contents*
-   *
-   * - **Field Type**: Text
-   * - **Placeholder**: *None*
-   * - **API ID Path**: carousel.default.primary.contents[].alt_text
-   * - **Documentation**: https://prismic.io/docs/fields/text
-   */
-  alt_text: prismic.KeyTextField;
 }
 
 /**
@@ -192,6 +182,17 @@ export interface CarouselSliceDefaultPrimary {
    * - **Documentation**: https://prismic.io/docs/fields/repeatable-group
    */
   contents: prismic.GroupField<Simplify<CarouselSliceDefaultPrimaryContentsItem>>;
+
+  /**
+   * Background field in *Carousel → Default → Primary*
+   *
+   * - **Field Type**: Boolean
+   * - **Placeholder**: *None*
+   * - **Default Value**: false
+   * - **API ID Path**: carousel.default.primary.background
+   * - **Documentation**: https://prismic.io/docs/fields/boolean
+   */
+  background: prismic.BooleanField;
 }
 
 /**
@@ -254,6 +255,28 @@ export interface FooterSliceDefaultPrimary {
    * - **Documentation**: https://prismic.io/docs/fields/link
    */
   button_link: prismic.LinkField<string, string, unknown, prismic.FieldState, never>;
+
+  /**
+   * Background field in *Footer → Default → Primary*
+   *
+   * - **Field Type**: Boolean
+   * - **Placeholder**: *None*
+   * - **Default Value**: false
+   * - **API ID Path**: footer.default.primary.background
+   * - **Documentation**: https://prismic.io/docs/fields/boolean
+   */
+  background: prismic.BooleanField;
+
+  /**
+   * Swapped field in *Footer → Default → Primary*
+   *
+   * - **Field Type**: Boolean
+   * - **Placeholder**: *None*
+   * - **Default Value**: false
+   * - **API ID Path**: footer.default.primary.swapped
+   * - **Documentation**: https://prismic.io/docs/fields/boolean
+   */
+  swapped: prismic.BooleanField;
 }
 
 /**
@@ -294,16 +317,6 @@ export interface SplitSliceDefaultPrimarySectionsItem {
   image: prismic.ImageField<never>;
 
   /**
-   * Alt Text field in *Split → Default → Primary → Sections*
-   *
-   * - **Field Type**: Text
-   * - **Placeholder**: *None*
-   * - **API ID Path**: split.default.primary.sections[].alt_text
-   * - **Documentation**: https://prismic.io/docs/fields/text
-   */
-  alt_text: prismic.KeyTextField;
-
-  /**
    * Content field in *Split → Default → Primary → Sections*
    *
    * - **Field Type**: Rich Text
@@ -327,6 +340,17 @@ export interface SplitSliceDefaultPrimary {
    * - **Documentation**: https://prismic.io/docs/fields/repeatable-group
    */
   sections: prismic.GroupField<Simplify<SplitSliceDefaultPrimarySectionsItem>>;
+
+  /**
+   * Background field in *Split → Default → Primary*
+   *
+   * - **Field Type**: Boolean
+   * - **Placeholder**: *None*
+   * - **Default Value**: false
+   * - **API ID Path**: split.default.primary.background
+   * - **Documentation**: https://prismic.io/docs/fields/boolean
+   */
+  background: prismic.BooleanField;
 }
 
 /**
@@ -365,6 +389,17 @@ export interface TextSliceDefaultPrimary {
    * - **Documentation**: https://prismic.io/docs/fields/rich-text
    */
   content: prismic.RichTextField;
+
+  /**
+   * Background field in *Text → Default → Primary*
+   *
+   * - **Field Type**: Boolean
+   * - **Placeholder**: *None*
+   * - **Default Value**: false
+   * - **API ID Path**: text.default.primary.background
+   * - **Documentation**: https://prismic.io/docs/fields/boolean
+   */
+  background: prismic.BooleanField;
 }
 
 /**
@@ -405,16 +440,6 @@ export interface TitleSliceDefaultPrimary {
   image: prismic.ImageField<never>;
 
   /**
-   * Alt Text field in *Title → Default → Primary*
-   *
-   * - **Field Type**: Text
-   * - **Placeholder**: *None*
-   * - **API ID Path**: title.default.primary.alt_text
-   * - **Documentation**: https://prismic.io/docs/fields/text
-   */
-  alt_text: prismic.KeyTextField;
-
-  /**
    * Title field in *Title → Default → Primary*
    *
    * - **Field Type**: Text
@@ -433,6 +458,17 @@ export interface TitleSliceDefaultPrimary {
    * - **Documentation**: https://prismic.io/docs/fields/rich-text
    */
   description: prismic.RichTextField;
+
+  /**
+   * Background field in *Title → Default → Primary*
+   *
+   * - **Field Type**: Boolean
+   * - **Placeholder**: *None*
+   * - **Default Value**: false
+   * - **API ID Path**: title.default.primary.background
+   * - **Documentation**: https://prismic.io/docs/fields/boolean
+   */
+  background: prismic.BooleanField;
 }
 
 /**

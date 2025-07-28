@@ -1,7 +1,7 @@
-import { SliceZone } from '@prismicio/react';
 import { getSlices, SliceSimulator, SliceSimulatorParams } from '@slicemachine/adapter-next/simulator';
 
 import { components } from '../../slices';
+import { SliceZoneWithContext } from '../../slices/context';
 
 export default async function SliceSimulatorPage({ searchParams }: SliceSimulatorParams) {
   const { state } = await searchParams;
@@ -9,7 +9,7 @@ export default async function SliceSimulatorPage({ searchParams }: SliceSimulato
 
   return (
     <SliceSimulator>
-      <SliceZone slices={slices} components={components} />
+      <SliceZoneWithContext slices={slices} components={components} context={{ colorScheme: 'Blue' }} />
     </SliceSimulator>
   );
 }

@@ -10,15 +10,37 @@
 						"__TYPE__": "GroupItemContent",
 						"value": [
 							[
+								"content",
+								{
+									"__TYPE__": "StructuredTextContent",
+									"value": [
+										{
+											"type": "paragraph",
+											"content": {
+												"text": "The first step of the algorithm is to define a 3d grid of cubes. Here I have defined a grid of cubes. The number of cubes in the grid is determined by the resolution of the grid, which is the number of cubes along each axis. The resolution of the grid is determined by the number of vertices along each axis of the scalar field. For example, if the scalar field has a resolution of 10x10x10, then the marching cubes grid will have a resolution of 9x9x9, and will contain 8x8x8 cubes.",
+												"spans": []
+											},
+											"direction": "ltr"
+										}
+									]
+								}
+							]
+						],
+						"key": "8106e163-51c9-4d08-9938-645a28d0c58c"
+					},
+					{
+						"__TYPE__": "GroupItemContent",
+						"value": [
+							[
 								"image",
 								{
 									"origin": {
 										"id": "main",
-										"url": "https://images.unsplash.com/photo-1600804931749-2da4ce26c869",
+										"url": "http://localhost:3000/slice-simulator/grid.png",
 										"width": 3199,
 										"height": 3199
 									},
-									"url": "https://images.unsplash.com/photo-1600804931749-2da4ce26c869",
+									"url": "http://localhost:3000/slice-simulator/grid.png",
 									"width": 3199,
 									"height": 3199,
 									"edit": {
@@ -34,32 +56,16 @@
 									"__TYPE__": "ImageContent",
 									"thumbnails": {}
 								}
-							],
-							[
-								"alt_text",
-								{
-									"__TYPE__": "FieldContent",
-									"value": "compass",
-									"type": "Text"
-								}
-							],
-							[
-								"content",
-								{
-									"__TYPE__": "StructuredTextContent",
-									"value": [
-										{
-											"type": "paragraph",
-											"content": {
-												"text": "Enim pariatur officia nulla elit. Incididunt proident id culpa est eiusmod duis dolor veniam eiusmod eu ea nisi qui magna."
-											}
-										}
-									]
-								}
 							]
-						]
+						],
+						"key": "538dd5f1-6e8b-4f76-8fd6-9a943ae03724"
 					}
-				]
+				],
+				"key": "e22c9235-92ea-4ed0-87fd-8acd278ea951"
+			},
+			"background": {
+				"__TYPE__": "BooleanContent",
+				"value": true
 			}
 		},
 		"items": []

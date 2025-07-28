@@ -1,4 +1,5 @@
-import { JSXMapSerializer } from '@prismicio/react';
+import { RichTextField } from '@prismicio/client';
+import { JSXMapSerializer, PrismicRichText } from '@prismicio/react';
 
 import { Anchor } from './anchor';
 
@@ -50,3 +51,7 @@ export const richTextComponentMap: JSXMapSerializer = {
   strong: Strong,
   hyperlink: Anchor,
 };
+
+export function RichText({ content }: { content: RichTextField }) {
+  return <PrismicRichText field={content} components={richTextComponentMap} />;
+}

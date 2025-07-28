@@ -26,13 +26,6 @@
                   "thumbnails": []
                 }
               },
-              "alt_text": {
-                "type": "Text",
-                "config": {
-                  "label": "Alt Text",
-                  "placeholder": ""
-                }
-              },
               "content": {
                 "type": "StructuredText",
                 "config": {
@@ -43,6 +36,15 @@
                 }
               }
             }
+          }
+        },
+        "background": {
+          "type": "Boolean",
+          "config": {
+            "label": "Background",
+            "placeholder_false": "false",
+            "placeholder_true": "true",
+            "default_value": false
           }
         }
       },

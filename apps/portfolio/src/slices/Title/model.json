@@ -20,13 +20,6 @@
             "thumbnails": []
           }
         },
-        "alt_text": {
-          "type": "Text",
-          "config": {
-            "label": "Alt Text",
-            "placeholder": ""
-          }
-        },
         "title": {
           "type": "Text",
           "config": {
@@ -41,6 +34,15 @@
             "placeholder": "",
             "allowTargetBlank": true,
             "multi": "paragraph,preformatted,heading1,heading2,heading3,heading4,heading5,heading6,strong,hyperlink"
+          }
+        },
+        "background": {
+          "type": "Boolean",
+          "config": {
+            "label": "Background",
+            "placeholder_false": "false",
+            "placeholder_true": "true",
+            "default_value": false
           }
         }
       },

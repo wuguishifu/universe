@@ -39,6 +39,24 @@
             "allowText": true,
             "repeat": false
           }
+        },
+        "background": {
+          "type": "Boolean",
+          "config": {
+            "label": "Background",
+            "placeholder_false": "false",
+            "placeholder_true": "true",
+            "default_value": false
+          }
+        },
+        "swapped": {
+          "type": "Boolean",
+          "config": {
+            "label": "Swapped",
+            "placeholder_false": "false",
+            "placeholder_true": "true",
+            "default_value": false
+          }
         }
       },
       "items": {}
