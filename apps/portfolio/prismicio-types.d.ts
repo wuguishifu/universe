@@ -222,13 +222,121 @@ type CarouselSliceVariation = CarouselSliceDefault;
 export type CarouselSlice = prismic.SharedSlice<'carousel', CarouselSliceVariation>;
 
 /**
+ * Primary content in *Footer → Default → Primary*
+ */
+export interface FooterSliceDefaultPrimary {
+  /**
+   * Image field in *Footer → Default → Primary*
+   *
+   * - **Field Type**: Image
+   * - **Placeholder**: *None*
+   * - **API ID Path**: footer.default.primary.image
+   * - **Documentation**: https://prismic.io/docs/fields/image
+   */
+  image: prismic.ImageField<never>;
+
+  /**
+   * Content field in *Footer → Default → Primary*
+   *
+   * - **Field Type**: Rich Text
+   * - **Placeholder**: *None*
+   * - **API ID Path**: footer.default.primary.content
+   * - **Documentation**: https://prismic.io/docs/fields/rich-text
+   */
+  content: prismic.RichTextField;
+
+  /**
+   * Button Link field in *Footer → Default → Primary*
+   *
+   * - **Field Type**: Link
+   * - **Placeholder**: *None*
+   * - **API ID Path**: footer.default.primary.button_link
+   * - **Documentation**: https://prismic.io/docs/fields/link
+   */
+  button_link: prismic.LinkField<string, string, unknown, prismic.FieldState, never>;
+}
+
+/**
+ * Default variation for Footer Slice
+ *
+ * - **API ID**: `default`
+ * - **Description**: Default
+ * - **Documentation**: https://prismic.io/docs/slices
+ */
+export type FooterSliceDefault = prismic.SharedSliceVariation<'default', Simplify<FooterSliceDefaultPrimary>, never>;
+
+/**
+ * Slice variation for *Footer*
+ */
+type FooterSliceVariation = FooterSliceDefault;
+
+/**
+ * Footer Shared Slice
+ *
+ * - **API ID**: `footer`
+ * - **Description**: Footer
+ * - **Documentation**: https://prismic.io/docs/slices
+ */
+export type FooterSlice = prismic.SharedSlice<'footer', FooterSliceVariation>;
+
+/**
+ * Item in *Split → Default → Primary → Sections*
+ */
+export interface SplitSliceDefaultPrimarySectionsItem {
+  /**
+   * Image field in *Split → Default → Primary → Sections*
+   *
+   * - **Field Type**: Image
+   * - **Placeholder**: *None*
+   * - **API ID Path**: split.default.primary.sections[].image
+   * - **Documentation**: https://prismic.io/docs/fields/image
+   */
+  image: prismic.ImageField<never>;
+
+  /**
+   * Alt Text field in *Split → Default → Primary → Sections*
+   *
+   * - **Field Type**: Text
+   * - **Placeholder**: *None*
+   * - **API ID Path**: split.default.primary.sections[].alt_text
+   * - **Documentation**: https://prismic.io/docs/fields/text
+   */
+  alt_text: prismic.KeyTextField;
+
+  /**
+   * Content field in *Split → Default → Primary → Sections*
+   *
+   * - **Field Type**: Rich Text
+   * - **Placeholder**: *None*
+   * - **API ID Path**: split.default.primary.sections[].content
+   * - **Documentation**: https://prismic.io/docs/fields/rich-text
+   */
+  content: prismic.RichTextField;
+}
+
+/**
+ * Primary content in *Split → Default → Primary*
+ */
+export interface SplitSliceDefaultPrimary {
+  /**
+   * Sections field in *Split → Default → Primary*
+   *
+   * - **Field Type**: Group
+   * - **Placeholder**: *None*
+   * - **API ID Path**: split.default.primary.sections[]
+   * - **Documentation**: https://prismic.io/docs/fields/repeatable-group
+   */
+  sections: prismic.GroupField<Simplify<SplitSliceDefaultPrimarySectionsItem>>;
+}
+
+/**
  * Default variation for Split Slice
  *
  * - **API ID**: `default`
  * - **Description**: Default
  * - **Documentation**: https://prismic.io/docs/slices
  */
-export type SplitSliceDefault = prismic.SharedSliceVariation<'default', Record<string, never>, never>;
+export type SplitSliceDefault = prismic.SharedSliceVariation<'default', Simplify<SplitSliceDefaultPrimary>, never>;
 
 /**
  * Slice variation for *Split*
@@ -374,7 +482,13 @@ declare module '@prismicio/client' {
       CarouselSliceDefaultPrimary,
       CarouselSliceVariation,
       CarouselSliceDefault,
+      FooterSlice,
+      FooterSliceDefaultPrimary,
+      FooterSliceVariation,
+      FooterSliceDefault,
       SplitSlice,
+      SplitSliceDefaultPrimarySectionsItem,
+      SplitSliceDefaultPrimary,
       SplitSliceVariation,
       SplitSliceDefault,
       TextSlice,

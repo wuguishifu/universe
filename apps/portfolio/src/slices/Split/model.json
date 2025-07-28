@@ -10,7 +10,43 @@
       "docURL": "...",
       "version": "initial",
       "description": "Default",
-      "imageUrl": ""
+      "imageUrl": "",
+      "primary": {
+        "sections": {
+          "type": "Group",
+          "config": {
+            "label": "Sections",
+            "repeat": true,
+            "fields": {
+              "image": {
+                "type": "Image",
+                "config": {
+                  "label": "Image",
+                  "constraint": {},
+                  "thumbnails": []
+                }
+              },
+              "alt_text": {
+                "type": "Text",
+                "config": {
+                  "label": "Alt Text",
+                  "placeholder": ""
+                }
+              },
+              "content": {
+                "type": "StructuredText",
+                "config": {
+                  "label": "Content",
+                  "placeholder": "",
+                  "allowTargetBlank": true,
+                  "multi": "paragraph,preformatted,heading1,heading2,heading3,heading4,heading5,heading6,strong,em,hyperlink,image,embed,list-item,o-list-item"
+                }
+              }
+            }
+          }
+        }
+      },
+      "items": {}
     }
   ]
 }
