@@ -1,0 +1,8 @@
+package-change:
+  - package.json
+
+komi:
+  - apps/komi/**
+
+library-change:
+  - libs/**

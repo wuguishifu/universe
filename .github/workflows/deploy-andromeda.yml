@@ -1,0 +1,60 @@
+name: Deploy Andromeda Production
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [develop]
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    env:
+      BASE: ${{ github.event.before || 'origin/develop' }}
+      HEAD: ${{ github.sha }}
+      TOKEN: ${{ secrets.PERSONAL_REPO_TOKEN }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_KEY }}
+      ENVIRONMENT: 'production'
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      
+      - name: Install dependencies
+        run: pnpm i
+      
+      - name: Setup Andromeda
+        run: pnpm nx setup andromeda --output-style=stream
+
+      - name: Check if Andromeda is affected
+        id: check_affected
+        run: |
+          affected=$(npx nx show projects --affected --base="$BASE" --head="$HEAD")
+          echo "affected projects: $affected"
+          if [[ "$affected" == *andromeda* ]]; then
+            echo "affected=yes" >> $GITHUB_OUTPUT
+          else
+            echo "affected=no" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Skip deploy if Andromeda is not affected
+        if: steps.check_affected.outputs.affected == 'no'
+        run: echo "Andromeda unchanged - skipping mirror & deploy." && echo 0
+      
+      - name: Prepare clean repo
+        if: steps.check_affected.outputs.affected == 'yes'
+        run: |
+          rm -rf .git
+          rm -rf .github
+          git init -b main
+          git config user.name "admin"
+          git config user.email "admin@panyon.co"
+          git add .
+          git commit -m 'Deploy "$HEAD"'
+
+      - name: Mirror to personal repo
+        if: steps.check_affected.outputs.affected == 'yes'
+        run: |
+          git remote add origin https://x-access-token:${TOKEN}@github.com/panyonco/andromeda.git
+          git push --force origin main

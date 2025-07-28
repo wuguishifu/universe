@@ -1,0 +1,71 @@
+{
+  "name": "environment",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/environment/src",
+  "projectType": "library",
+  "tags": [
+    "scope:server"
+  ],
+  "// targets": "to see all targets run: nx show project environment --web",
+  "targets": {
+    "setup": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/environment",
+        "parallel": false,
+        "commands": [
+          "ts-node ./src/lib/utils/decrypt.ts",
+          "pnpm nx setup:post environment"
+        ]
+      }
+    },
+    "update": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/environment",
+        "parallel": false,
+        "commands": [
+          "ts-node ./src/lib/utils/encrypt.ts",
+          "pnpm nx setup:post environment"
+        ]
+      }
+    },
+    "fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/environment",
+        "parallel": false,
+        "commands": [
+          "ts-node ./src/lib/utils/fix.ts",
+          "pnpm nx setup:post environment"
+        ]
+      }
+    },
+    "setup:post": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/environment",
+        "command": "ts-node -r tsconfig-paths/register ./src/lib/utils/postSetup.ts"
+      }
+    },
+    "verify": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/environment",
+        "parallel": false,
+        "commands": [
+          "ts-node ./src/lib/environment.ts"
+        ]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "maxWarnings": 0
+      }
+    }
+  }
+}
