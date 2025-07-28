@@ -39,7 +39,23 @@
         "type": "Slices",
         "fieldset": "Slice Zone",
         "config": {
-          "choices": {}
+          "choices": {
+            "carousel": {
+              "type": "SharedSlice"
+            },
+            "text": {
+              "type": "SharedSlice"
+            },
+            "footer": {
+              "type": "SharedSlice"
+            },
+            "title": {
+              "type": "SharedSlice"
+            },
+            "split": {
+              "type": "SharedSlice"
+            }
+          }
         }
       }
     },

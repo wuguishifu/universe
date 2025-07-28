@@ -54,7 +54,7 @@ type ContentRelationshipFieldWithData<
   >;
 }[Exclude<TCustomType[number], string>['id']];
 
-type ProjectDocumentDataSlicesSlice = never;
+type ProjectDocumentDataSlicesSlice = CarouselSlice | TextSlice | FooterSlice | TitleSlice | SplitSlice;
 
 /**
  * Content for Project documents
