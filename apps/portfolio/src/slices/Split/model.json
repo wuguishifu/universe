@@ -1,0 +1,16 @@
+{
+  "id": "split",
+  "type": "SharedSlice",
+  "name": "Split",
+  "description": "Split",
+  "variations": [
+    {
+      "id": "default",
+      "name": "Default",
+      "docURL": "...",
+      "version": "initial",
+      "description": "Default",
+      "imageUrl": ""
+    }
+  ]
+}
