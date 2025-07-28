@@ -1,30 +1,24 @@
-'use client';
+import Link from 'next/link';
 
-import { useRouter } from 'next/navigation';
-import { useCallback } from 'react';
+import { cn } from '../lib/utils';
+import { createClient } from '../prismicio';
+import { buttonVariants } from './ui/button';
 
-import { Button } from './ui/button';
+export async function ShowMeButton() {
+  const client = createClient();
 
-const redirectionUrls = [
-  '/projects/molecular',
-  '/projects/ptable',
-  '/projects/mujank',
-  '/projects/engine3d',
-  '/projects/marching-cubes',
-  '/projects/planets',
-  '/projects/cloudsafe',
-];
-
-export default function ShowMeButton() {
-  const router = useRouter();
-
-  const handleClick = useCallback(() => {
-    router.push(redirectionUrls[Math.floor(Math.random() * redirectionUrls.length)]);
-  }, [router]);
+  const allProjects = await client.getAllByType('project');
+  const randomProject = allProjects[Math.floor(Math.random() * allProjects.length)];
 
   return (
-    <Button className="animate-fade-in animation-delay-600 text-xl fill-mode-both" size="lg" onClick={handleClick}>
+    <Link
+      href={`/projects/${randomProject.uid}`}
+      className={cn(
+        buttonVariants({ variant: 'default', size: 'lg' }),
+        'animate-fade-in animation-delay-600 text-xl fill-mode-both',
+      )}
+    >
       Show me something cool!
-    </Button>
+    </Link>
   );
 }

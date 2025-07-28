@@ -1,6 +1,6 @@
 import Image from 'next/image';
 
-import ShowMeButton from '../components/show-me-button';
+import { ShowMeButton } from '../components/show-me-button';
 
 export default function Home() {
   return (
@@ -20,7 +20,7 @@ export default function Home() {
       </div>
       <div className="flex-1 place-content-center hidden md:block">
         <div className="fixed left-[55%] h-4/5 bottom-0 animate-[fade-in_1.5s] fill-mode-both animation-delay-200">
-          <Image src="/chibi/chibi-reflected.png" alt="chibi bo" width={780} height={1032} className="h-full w-auto" />
+          <Image src="/chibi-reflected.png" alt="chibi bo" width={780} height={1032} className="h-full w-auto" />
         </div>
       </div>
     </div>
