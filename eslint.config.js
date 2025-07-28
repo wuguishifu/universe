@@ -119,11 +119,4 @@ module.exports = defineConfig([
       '@typescript-eslint/prefer-for-of': 'off',
     },
   },
-  {
-    files: ['*.cjs'],
-    rules: {
-      '@typescript-eslint/no-var-requires': 'off',
-      '@typescript-eslint/no-require-imports': 'off',
-    },
-  },
 ]);
