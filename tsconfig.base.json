@@ -18,7 +18,9 @@
     "strict": true,
     "noUnusedLocals": true,
     "typeRoots": ["./types", "./node_modules/@types"],
-    "paths": {}
+    "paths": {
+      "@wuguishifu/utils-web": ["libs/utils-web/src/index.ts"]
+    }
   },
   "exclude": ["node_modules"]
 }

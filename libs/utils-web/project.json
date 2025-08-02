@@ -1,0 +1,19 @@
+{
+  "name": "utils-web",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/utils-web/src",
+  "projectType": "library",
+  "tags": ["scope:client"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/utils-web",
+        "main": "libs/utils-web/src/index.ts",
+        "tsConfig": "libs/utils-web/tsconfig.lib.json",
+        "assets": ["libs/utils-web/*.md"]
+      }
+    }
+  }
+}
