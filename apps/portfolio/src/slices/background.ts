@@ -8,7 +8,7 @@ export function backgroundClass(
     case 'Blue':
       return `gradient-blue py-2 ${useDarkClass ? 'dark' : ''}`;
     case 'Green':
-      return 'gradient-green py-2';
+      return `gradient-green py-2 ${useDarkClass ? 'dark' : ''}`;
     case 'Red':
       return `gradient-red py-2 ${useDarkClass ? 'dark' : ''}`;
     case 'Blurple':

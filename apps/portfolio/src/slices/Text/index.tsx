@@ -22,7 +22,9 @@ const Text: FC<TextProps> = ({ slice, context }) => {
         [animation(sliceIndex)]: slice.primary.animate,
       })}
     >
-      <div className="max-w-screen-lg text-foreground text-lg py-2">{content && <RichText content={content} />}</div>
+      <div className="max-w-screen-lg text-foreground text-lg py-2 text-left">
+        {content && <RichText content={content} />}
+      </div>
     </section>
   );
 };

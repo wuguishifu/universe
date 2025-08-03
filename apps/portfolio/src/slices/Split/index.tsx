@@ -48,7 +48,7 @@ function Section({ section }: { section: Simplify<SplitSliceDefaultPrimarySectio
 
   if (content) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-lg text-foreground">
+      <div className="flex-1 flex flex-col items-start justify-center text-lg text-foreground">
         <RichText content={content} />
       </div>
     );
