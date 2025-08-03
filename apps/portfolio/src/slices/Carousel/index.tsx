@@ -5,6 +5,7 @@ import { FC } from 'react';
 import {
   CarouselContainer,
   CarouselContent,
+  CarouselIndicator,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
@@ -47,6 +48,7 @@ const Carousel: FC<CarouselProps> = ({ slice, context }) => {
           </CarouselContent>
           <CarouselNext />
           <CarouselPrevious />
+          <CarouselIndicator />
         </CarouselContainer>
       </div>
     </section>

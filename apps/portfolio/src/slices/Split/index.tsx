@@ -19,13 +19,13 @@ const Split: FC<SplitProps> = ({ slice, context }) => {
     <section
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
-      className={cn('flex flex-col items-center w-full px-8 md:flex-row md:gap-16 max-w-screen-xl', {
-        [backgroundClass(colorScheme)]: showBackground,
-      })}
+      className={cn('w-full', { [backgroundClass(colorScheme)]: showBackground })}
     >
-      {slice.primary.sections.map((section, index) => (
-        <Section key={index} section={section} />
-      ))}
+      <div className="flex flex-col items-center w-full px-8 md:flex-row md:gap-16 max-w-screen-xl mx-auto">
+        {slice.primary.sections.map((section, index) => (
+          <Section key={index} section={section} />
+        ))}
+      </div>
     </section>
   );
 };
@@ -45,7 +45,7 @@ function Section({ section }: { section: Simplify<SplitSliceDefaultPrimarySectio
 
   if (content) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center">
+      <div className="flex-1 flex flex-col items-center justify-center text-lg text-foreground">
         <RichText content={content} />
       </div>
     );

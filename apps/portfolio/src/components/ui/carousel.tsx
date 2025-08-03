@@ -26,6 +26,9 @@ type CarouselContextProps = {
   scrollNext: () => void;
   canScrollPrev: boolean;
   canScrollNext: boolean;
+  selectedIndex: number;
+  scrollSnaps: number[];
+  scrollTo: (index: number) => void;
 } & CarouselProps;
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null);
@@ -51,6 +54,8 @@ const CarouselContainer = React.forwardRef<HTMLDivElement, React.HTMLAttributes<
     );
     const [canScrollPrev, setCanScrollPrev] = React.useState(false);
     const [canScrollNext, setCanScrollNext] = React.useState(false);
+    const [selectedIndex, setSelectedIndex] = React.useState(0);
+    const [scrollSnaps, setScrollSnaps] = React.useState<number[]>([]);
 
     const onSelect = React.useCallback((_api: CarouselApi) => {
       if (!_api) {
@@ -59,6 +64,7 @@ const CarouselContainer = React.forwardRef<HTMLDivElement, React.HTMLAttributes<
 
       setCanScrollPrev(_api.canScrollPrev());
       setCanScrollNext(_api.canScrollNext());
+      setSelectedIndex(_api.selectedScrollSnap());
     }, []);
 
     const scrollPrev = React.useCallback(() => {
@@ -68,6 +74,13 @@ const CarouselContainer = React.forwardRef<HTMLDivElement, React.HTMLAttributes<
     const scrollNext = React.useCallback(() => {
       api?.scrollNext();
     }, [api]);
+
+    const scrollTo = React.useCallback(
+      (index: number) => {
+        api?.scrollTo(index);
+      },
+      [api],
+    );
 
     const handleKeyDown = React.useCallback(
       (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -95,6 +108,8 @@ const CarouselContainer = React.forwardRef<HTMLDivElement, React.HTMLAttributes<
         return;
       }
 
+      // Initialize scroll snaps and current selection
+      setScrollSnaps(api.scrollSnapList());
       onSelect(api);
       api.on('reInit', onSelect);
       api.on('select', onSelect);
@@ -115,6 +130,9 @@ const CarouselContainer = React.forwardRef<HTMLDivElement, React.HTMLAttributes<
           scrollNext,
           canScrollPrev,
           canScrollNext,
+          selectedIndex,
+          scrollSnaps,
+          scrollTo,
         }}
       >
         <div
@@ -187,7 +205,7 @@ const CarouselPrevious = React.forwardRef<HTMLButtonElement, React.ComponentProp
         onClick={scrollPrev}
         {...props}
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="h-4 w-4 text-foreground" />
         <span className="sr-only">Previous slide</span>
       </Button>
     );
@@ -215,7 +233,7 @@ const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
         onClick={scrollNext}
         {...props}
       >
-        <ArrowRight className="h-4 w-4" />
+        <ArrowRight className="h-4 w-4 text-foreground" />
         <span className="sr-only">Next slide</span>
       </Button>
     );
@@ -223,4 +241,53 @@ const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
 );
 CarouselNext.displayName = 'CarouselNext';
 
-export { CarouselContainer, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi };
+const CarouselIndicator = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => {
+    const { scrollSnaps, selectedIndex, scrollTo } = useCarousel();
+
+    return (
+      <div className={cn('flex justify-center mt-4 gap-2', className)} ref={ref} {...props}>
+        {scrollSnaps.map((_, index) => (
+          <CarouselDot key={index} index={index} isActive={index === selectedIndex} onClick={() => scrollTo(index)} />
+        ))}
+      </div>
+    );
+  },
+);
+CarouselIndicator.displayName = 'CarouselIndicator';
+
+const CarouselDot = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    index: number;
+    isActive: boolean;
+  }
+>(({ className, index, isActive, ...props }, ref) => {
+  return (
+    <button
+      ref={ref}
+      type="button"
+      className={cn(
+        'h-2 w-2 rounded-full transition-all duration-200 ease-in-out',
+        isActive
+          ? 'bg-neutral-900 dark:bg-neutral-100'
+          : 'bg-neutral-300 dark:bg-neutral-900 hover:bg-neutral-400 dark:hover:bg-neutral-800',
+        className,
+      )}
+      aria-label={`Go to slide ${index + 1}`}
+      {...props}
+    />
+  );
+});
+CarouselDot.displayName = 'CarouselDot';
+
+export {
+  CarouselContainer,
+  CarouselContent,
+  CarouselDot,
+  CarouselIndicator,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+};

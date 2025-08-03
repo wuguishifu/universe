@@ -22,7 +22,7 @@ const Text: FC<TextProps> = ({ slice, context }) => {
         [backgroundClass(colorScheme)]: showBackground,
       })}
     >
-      <div className="max-w-screen-lg">{content && <RichText content={content} />}</div>
+      <div className="max-w-screen-lg py-8 text-foreground text-lg">{content && <RichText content={content} />}</div>
     </section>
   );
 };

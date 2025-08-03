@@ -20,30 +20,33 @@ const Footer: FC<FooterProps> = ({ slice, context }) => {
     <section
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
-      className={cn(
-        'flex flex-col items-center w-full px-8 md:flex-row md:gap-16 max-w-screen-xl',
-        slice.primary.swapped ? 'flex-col-reverse md:flex-row-reverse' : 'flex-col md:flex-row',
-        { [backgroundClass(colorScheme)]: showBackground },
-      )}
+      className={cn('w-full', { [backgroundClass(colorScheme)]: showBackground })}
     >
-      <div className="flex-1 flex flex-col items-center justify-center">
-        {image && (
-          <Image
-            src={image.url}
-            alt={image.alt ?? ''}
-            width={image.dimensions.width}
-            height={image.dimensions.height}
-          />
+      <div
+        className={cn(
+          'flex w-full max-w-screen-xl mx-auto items-center px-8 md:gap-16',
+          slice.primary.swapped ? 'flex-col-reverse md:flex-row-reverse' : 'flex-col md:flex-row',
         )}
-      </div>
-      <div className="flex-1 flex flex-col justify-center">
-        <RichText content={slice.primary.content} />
-        <div>
-          {buttonLink && (
-            <a href={buttonLink.url} target="_blank" className={buttonVariants({ variant: 'secondary' })}>
-              {buttonLink.text}
-            </a>
+      >
+        <div className="flex-1 flex flex-col items-center justify-center">
+          {image && (
+            <Image
+              src={image.url}
+              alt={image.alt ?? ''}
+              width={image.dimensions.width}
+              height={image.dimensions.height}
+            />
           )}
+        </div>
+        <div className="flex-1 flex flex-col justify-center text-lg text-secondary-foreground">
+          <RichText content={slice.primary.content} />
+          <div>
+            {buttonLink && (
+              <a href={buttonLink.url} target="_blank" className={buttonVariants({ variant: 'secondary' })}>
+                {buttonLink.text}
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </section>

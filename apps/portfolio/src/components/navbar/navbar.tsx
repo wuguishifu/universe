@@ -32,7 +32,7 @@ export default function Navbar() {
           <NavigationMenuItem>
             <NavigationMenuLink
               className={cn(
-                'text-sm px-4 py-2 hover:underline underline-offset-4 opacity-80 font-medium',
+                'text-md px-4 py-2 hover:underline underline-offset-4 opacity-80 font-medium',
                 pathname === '/' ? 'underline' : '',
               )}
               href="/"
@@ -43,7 +43,7 @@ export default function Navbar() {
           <NavigationMenuItem>
             <NavigationMenuLink
               className={cn(
-                'text-sm px-4 py-2 hover:underline underline-offset-4 opacity-80 font-medium',
+                'text-md px-4 py-2 hover:underline underline-offset-4 opacity-80 font-medium',
                 pathname.startsWith('/about') ? 'underline' : '',
               )}
               href="/about"
@@ -54,7 +54,7 @@ export default function Navbar() {
           <NavigationMenuItem>
             <NavigationMenuLink
               className={cn(
-                'text-sm px-4 py-2 hover:underline underline-offset-4 opacity-80 font-medium',
+                'text-md px-4 py-2 hover:underline underline-offset-4 opacity-80 font-medium',
                 pathname.startsWith('/projects') ? 'underline' : '',
               )}
               href="/projects"
@@ -64,7 +64,7 @@ export default function Navbar() {
           </NavigationMenuItem>
           <NavigationMenuItem>
             <NavigationMenuLink
-              className="text-sm px-4 py-2 hover:underline underline-offset-4 opacity-80 font-medium"
+              className="text-md px-4 py-2 hover:underline underline-offset-4 opacity-80 font-medium"
               href="/resume"
             >
               Resume

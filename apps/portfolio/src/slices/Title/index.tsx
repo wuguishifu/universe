@@ -21,23 +21,23 @@ const Title: FC<TitleProps> = ({ slice, context }) => {
     <section
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
-      className={cn('flex flex-col items-center w-full px-8 md:flex-row md:gap-16 max-w-screen-xl', {
-        [backgroundClass(colorScheme)]: showBackground,
-      })}
+      className={cn('w-full', { [backgroundClass(colorScheme)]: showBackground })}
     >
-      <div className="flex-1 flex-col items-center justify-center flex">
-        {image && (
-          <Image
-            src={image.url}
-            width={image.dimensions.width}
-            height={image.dimensions.height}
-            alt={image.alt ?? ''}
-          />
-        )}
-      </div>
-      <div className="flex-1 flex flex-col justify-center">
-        {title && <h2 className="text-3xl font-bold">{title}</h2>}
-        {description && <RichText content={description} />}
+      <div className="flex flex-col items-center w-full px-8 md:flex-row md:gap-16 max-w-screen-xl mx-auto">
+        <div className="flex-1 flex-col items-center justify-center flex">
+          {image && (
+            <Image
+              src={image.url}
+              width={image.dimensions.width}
+              height={image.dimensions.height}
+              alt={image.alt ?? ''}
+            />
+          )}
+        </div>
+        <div className="flex-1 flex flex-col justify-center text-foreground">
+          {title && <h2 className="text-3xl font-bold">{title}</h2>}
+          <div className="text-lg">{description && <RichText content={description} />}</div>
+        </div>
       </div>
     </section>
   );
