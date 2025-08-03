@@ -129,7 +129,8 @@ export function NavbarMobile() {
               >
                 <Moon className="opacity-80 block dark:hidden" size={20} />
                 <Sun className="opacity-80 hidden dark:block" size={20} />
-                <span>Toggle Theme</span>
+                <span className="block dark:hidden">Dark Mode</span>
+                <span className="hidden dark:block">Light Mode</span>
               </button>
             </div>
           </div>
