@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Nunito } from 'next/font/google';
+import Script from 'next/script';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 
@@ -20,6 +21,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   // https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <Script async defer src="https://static.cdn.prismic.io/prismic.js?new=true&repo=wuguishifu-portfolio" />
+      </head>
       <body
         className={cn(nunito.className, 'min-h-screen bg-background antialiased w-full relative flex flex-col')}
         id="portal"
