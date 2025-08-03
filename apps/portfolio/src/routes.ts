@@ -3,10 +3,9 @@ import { BuildQueryURLArgs } from '@prismicio/client';
 export const routes: NonNullable<BuildQueryURLArgs['routes']> = [
   {
     type: 'project',
-    path: '/projects/:projectId',
+    path: '/projects/:uid',
+    resolvers: {
+      projectId: 'uid',
+    },
   },
 ];
-
-export type Params = {
-  projectId: string;
-};
