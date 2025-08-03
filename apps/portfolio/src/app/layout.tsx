@@ -3,7 +3,7 @@ import { Nunito } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 
-import Navbar from '../components/navbar/navbar';
+import { Navbar } from '../components/navbar/navbar';
 import { cn } from '../lib/utils';
 
 import './globals.css';

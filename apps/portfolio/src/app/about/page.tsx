@@ -8,17 +8,24 @@ import {
   SiSwift,
   SiTypescript,
 } from '@icons-pack/react-simple-icons';
+import { Metadata } from 'next';
 import Link from 'next/link';
 
 import 'remixicon/fonts/remixicon.css';
 import { buttonVariants } from '../../components/ui/button';
 import { cn } from '../../lib/utils';
 
+export const metadata: Metadata = {
+  title: 'Bo | About',
+};
+
 export default function About() {
   return (
-    <div className="min-h-full w-full h-full">
-      <div className="flex flex-col z-10 justify-center h-full lg:-mt-8">
-        <h1 className="text-[4em] font-bold pb-2 animate-fade-in fill-mode-both m-0">What&apos;s Poppin!</h1>
+    <div className="w-full flex-1">
+      <div className="flex flex-col z-10 justify-center h-full max-w-screen-lg mx-auto px-8 xl:px-0">
+        <h1 className="text-[4em] font-bold pb-2 animate-fade-in fill-mode-both m-0 text-center md:text-left">
+          What&apos;s Poppin!
+        </h1>
         <p className="text-[1.2em] text-grey animate-fade-in fill-mode-both animation-delay-200">
           Hi! My name is <span className="text-blue">Bo Bramer</span>, and I&apos;m a full-stack engineer with a degree
           in chemical engineering from the University of California, Irvine. Currently, I&apos;m a software engineer for{' '}

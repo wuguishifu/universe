@@ -35,6 +35,14 @@
           "placeholder": ""
         }
       },
+      "display_image": {
+        "type": "Image",
+        "config": {
+          "label": "Display Image",
+          "constraint": {},
+          "thumbnails": []
+        }
+      },
       "slices": {
         "type": "Slices",
         "fieldset": "Slice Zone",

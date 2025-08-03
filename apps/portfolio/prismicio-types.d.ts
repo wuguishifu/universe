@@ -95,6 +95,17 @@ interface ProjectDocumentData {
   description: prismic.KeyTextField;
 
   /**
+   * Display Image field in *Project*
+   *
+   * - **Field Type**: Image
+   * - **Placeholder**: *None*
+   * - **API ID Path**: project.display_image
+   * - **Tab**: Main
+   * - **Documentation**: https://prismic.io/docs/fields/image
+   */
+  display_image: prismic.ImageField<never>;
+
+  /**
    * Slice Zone field in *Project*
    *
    * - **Field Type**: Slice Zone
