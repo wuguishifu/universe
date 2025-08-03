@@ -21,7 +21,7 @@ const Footer: FC<FooterProps> = ({ slice, context }) => {
     <section
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
-      className={cn('w-full', { [backgroundClass(colorScheme)]: showBackground })}
+      className={cn('w-full', { [backgroundClass(colorScheme, { useDarkClass: true })]: showBackground })}
     >
       <div
         className={cn(

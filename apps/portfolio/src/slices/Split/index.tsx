@@ -19,9 +19,9 @@ const Split: FC<SplitProps> = ({ slice, context }) => {
     <section
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
-      className={cn('w-full', { [backgroundClass(colorScheme)]: showBackground })}
+      className={cn('w-full', { [backgroundClass(colorScheme, { useDarkClass: true })]: showBackground })}
     >
-      <div className="flex flex-col items-center w-full px-8 md:flex-row md:gap-16 max-w-screen-xl mx-auto">
+      <div className="flex flex-col items-center w-full px-8 md:flex-row md:gap-16 max-w-screen-xl mx-auto py-2">
         {slice.primary.sections.map((section, index) => (
           <Section key={index} section={section} />
         ))}

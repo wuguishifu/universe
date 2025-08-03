@@ -28,7 +28,7 @@ const Carousel: FC<CarouselProps> = ({ slice, context }) => {
         [backgroundClass(colorScheme)]: showBackground,
       })}
     >
-      <div className="flex flex-col items-center w-full max-w-screen-lg">
+      <div className="flex flex-col items-center w-full max-w-screen-xl py-2">
         <CarouselContainer className="w-[95%] md:w-[75%]" opts={{ loop: true }}>
           <CarouselContent className="rounded-lg">
             {slice.primary.contents.map((item, index) => (
