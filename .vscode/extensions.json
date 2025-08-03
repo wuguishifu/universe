@@ -4,7 +4,6 @@
     "eamodio.gitlens",
     "dbaeumer.vscode-eslint",
     "msjsdiag.vscode-react-native",
-    "firsttris.vscode-jest-runner",
-    "ms-playwright.playwright"
+    "firsttris.vscode-jest-runner"
   ]
 }
