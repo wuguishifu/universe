@@ -1,4 +1,5 @@
 import { Content, isFilled } from '@prismicio/client';
+import { ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 import { FC } from 'react';
 
@@ -42,8 +43,9 @@ const Footer: FC<FooterProps> = ({ slice, context }) => {
           <RichText content={slice.primary.content} />
           <div>
             {buttonLink && (
-              <a href={buttonLink.url} target="_blank" className={buttonVariants({ variant: 'secondary' })}>
-                {buttonLink.text}
+              <a href={buttonLink.url} target="_blank" className={cn(buttonVariants({ variant: 'default' }))}>
+                <span className="text-lg">{buttonLink.text}</span>
+                <ExternalLink className="ml-2 size-4" />
               </a>
             )}
           </div>
