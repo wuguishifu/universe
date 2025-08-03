@@ -1,4 +1,3 @@
-/* eslint-disable */
 const { fixupConfigRules } = require('@eslint/compat');
 const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
@@ -12,11 +11,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  { ignores: ['**/.next/**', '**/prismicio-types.d.ts'] },
   ...fixupConfigRules(compat.extends('next')),
   ...fixupConfigRules(compat.extends('next/core-web-vitals')),
-  ...baseConfig,
   ...nx.configs['flat/react-typescript'],
-  {
-    ignores: ['.next/**/*', 'prismicio-types.d.ts'],
-  },
+  ...baseConfig,
 ];

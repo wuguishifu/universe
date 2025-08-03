@@ -16,6 +16,7 @@ const compat = new FlatCompat({
 });
 
 module.exports = defineConfig([
+  globalIgnores(['types/*', 'dist/*', 'src-tauri/*']),
   {
     extends: compat.extends(
       'plugin:@typescript-eslint/strict',
@@ -100,7 +101,6 @@ module.exports = defineConfig([
       ],
     },
   },
-  globalIgnores(['types/*', 'dist/*', 'src-tauri/*']),
   {
     files: ['**/*.ts', '**/*.tsx'],
 
@@ -117,6 +117,12 @@ module.exports = defineConfig([
       '@typescript-eslint/no-var-requires': 'off',
       '@typescript-eslint/no-dynamic-delete': 'off',
       '@typescript-eslint/prefer-for-of': 'off',
+    },
+  },
+  {
+    files: ['**/eslint.config.cjs'],
+    rules: {
+      '@typescript-eslint/no-var-requires': 'off',
     },
   },
 ]);
