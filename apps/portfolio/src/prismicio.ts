@@ -6,6 +6,8 @@ import { routes } from './routes';
 
 export const repositoryName = sm.repositoryName;
 
+export const PRISMIC_SECRET_HEADER = 'x-prismic-secret';
+
 /**
  * Creates a Prismic client for the project's repository. The client is used to
  * query content from the Prismic API.
