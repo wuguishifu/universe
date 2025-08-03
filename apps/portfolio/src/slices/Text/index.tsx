@@ -18,11 +18,11 @@ const Text: FC<TextProps> = ({ slice, context }) => {
     <section
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
-      className={cn('flex flex-col items-center w-full px-8 py-2', {
+      className={cn('flex flex-col items-center w-full px-8', {
         [backgroundClass(colorScheme, { useDarkClass: true })]: showBackground,
       })}
     >
-      <div className="max-w-screen-lg py-8 text-foreground text-lg">{content && <RichText content={content} />}</div>
+      <div className="max-w-screen-lg text-foreground text-lg py-2">{content && <RichText content={content} />}</div>
     </section>
   );
 };

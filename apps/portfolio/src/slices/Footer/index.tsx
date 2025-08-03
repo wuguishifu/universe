@@ -25,7 +25,7 @@ const Footer: FC<FooterProps> = ({ slice, context }) => {
     >
       <div
         className={cn(
-          'flex w-full max-w-screen-xl mx-auto items-center px-8 md:gap-16',
+          'flex w-full max-w-screen-xl mx-auto items-center px-8 md:gap-16 py-2',
           slice.primary.swapped ? 'flex-col-reverse md:flex-row-reverse' : 'flex-col md:flex-row',
         )}
       >
@@ -36,12 +36,13 @@ const Footer: FC<FooterProps> = ({ slice, context }) => {
               alt={image.alt ?? ''}
               width={image.dimensions.width}
               height={image.dimensions.height}
+              className="py-2"
             />
           )}
         </div>
         <div className="flex-1 flex flex-col justify-center text-lg text-secondary-foreground">
           <RichText content={slice.primary.content} />
-          <div>
+          <div className="flex justify-center md:justify-start mt-8 md:mt-4">
             {buttonLink && (
               <a href={buttonLink.url} target="_blank" className={cn(buttonVariants({ variant: 'default' }))}>
                 <span className="text-lg">{buttonLink.text}</span>

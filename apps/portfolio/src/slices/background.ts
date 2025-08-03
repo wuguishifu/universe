@@ -6,14 +6,14 @@ export function backgroundClass(
 ): string {
   switch (colorScheme) {
     case 'Blue':
-      return `gradient-blue py-8 ${useDarkClass ? 'dark' : ''}`;
+      return `gradient-blue py-2 ${useDarkClass ? 'dark' : ''}`;
     case 'Green':
-      return 'gradient-green py-8';
+      return 'gradient-green py-2';
     case 'Red':
-      return `gradient-red dark py-8 ${useDarkClass ? 'dark' : ''}`;
+      return `gradient-red py-2 ${useDarkClass ? 'dark' : ''}`;
     case 'Blurple':
-      return `gradient-blurple dark py-8 ${useDarkClass ? 'dark' : ''}`;
+      return `gradient-blurple py-2 ${useDarkClass ? 'dark' : ''}`;
     case 'Peach':
-      return `gradient-peach dark py-8 ${useDarkClass ? 'dark' : ''}`;
+      return `gradient-peach py-2 ${useDarkClass ? 'dark' : ''}`;
   }
 }

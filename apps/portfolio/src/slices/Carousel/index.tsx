@@ -39,15 +39,15 @@ const Carousel: FC<CarouselProps> = ({ slice, context }) => {
                       src={item.image.url}
                       alt={item.image.alt ?? ''}
                       fill={true}
-                      className="object-contain rounded-lg"
+                      className="object-contain rounded-lg select-none"
                     />
                   ) : null}
                 </div>
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselNext />
-          <CarouselPrevious />
+          <CarouselNext className="hidden md:flex" />
+          <CarouselPrevious className="hidden md:flex" />
           <CarouselIndicator />
         </CarouselContainer>
       </div>
