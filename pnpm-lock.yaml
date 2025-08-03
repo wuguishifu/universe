@@ -211,6 +211,75 @@ importers:
         specifier: ^8.38.0
         version: 8.38.0(eslint@9.32.0(jiti@1.21.7))(typescript@5.7.3)
 
+  apps/portfolio:
+    dependencies:
+      '@icons-pack/react-simple-icons':
+        specifier: 13.7.0
+        version: 13.7.0(react@19.0.0)
+      '@radix-ui/react-dropdown-menu':
+        specifier: 2.1.15
+        version: 2.1.15(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@radix-ui/react-hover-card':
+        specifier: 1.1.14
+        version: 1.1.14(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@radix-ui/react-label':
+        specifier: 2.1.7
+        version: 2.1.7(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@radix-ui/react-navigation-menu':
+        specifier: 1.2.13
+        version: 1.2.13(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@radix-ui/react-slot':
+        specifier: 1.2.3
+        version: 1.2.3(@types/react@19.0.0)(react@19.0.0)
+      '@radix-ui/react-tooltip':
+        specifier: 1.2.7
+        version: 1.2.7(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      class-variance-authority:
+        specifier: 0.7.1
+        version: 0.7.1
+      clsx:
+        specifier: 2.1.1
+        version: 2.1.1
+      embla-carousel-react:
+        specifier: 8.6.0
+        version: 8.6.0(react@19.0.0)
+      lucide-react:
+        specifier: 0.526.0
+        version: 0.526.0(react@19.0.0)
+      next:
+        specifier: 15.2.5
+        version: 15.2.5(@babel/core@7.28.0)(@playwright/test@1.54.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(sass@1.89.2)
+      next-themes:
+        specifier: 0.4.6
+        version: 0.4.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      react:
+        specifier: 19.0.0
+        version: 19.0.0
+      react-dom:
+        specifier: 19.0.0
+        version: 19.0.0(react@19.0.0)
+      react-hook-form:
+        specifier: 7.61.1
+        version: 7.61.1(react@19.0.0)
+      react-plock:
+        specifier: 3.5.1
+        version: 3.5.1(react@19.0.0)
+      remixicon:
+        specifier: 4.6.0
+        version: 4.6.0
+      sharp:
+        specifier: 0.33.5
+        version: 0.33.5
+      sonner:
+        specifier: 2.0.6
+        version: 2.0.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      typescript:
+        specifier: 5.7.3
+        version: 5.7.3
+      vaul:
+        specifier: 1.1.2
+        version: 1.1.2(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+
   libs/environment: {}
 
   libs/utils-web:
@@ -11616,13 +11685,11 @@ snapshots:
     dependencies:
       color-name: 1.1.4
       simple-swizzle: 0.2.2
-    optional: true
 
   color@4.2.3:
     dependencies:
       color-convert: 2.0.1
       color-string: 1.9.1
-    optional: true
 
   colord@2.9.3: {}
 
@@ -11963,8 +12030,7 @@ snapshots:
   detect-libc@1.0.3:
     optional: true
 
-  detect-libc@2.0.4:
-    optional: true
+  detect-libc@2.0.4: {}
 
   detect-node-es@1.1.0: {}
 
@@ -13164,8 +13230,7 @@ snapshots:
 
   is-arrayish@0.2.1: {}
 
-  is-arrayish@0.3.2:
-    optional: true
+  is-arrayish@0.3.2: {}
 
   is-async-function@2.1.1:
     dependencies:
@@ -15045,7 +15110,6 @@ snapshots:
       '@img/sharp-wasm32': 0.33.5
       '@img/sharp-win32-ia32': 0.33.5
       '@img/sharp-win32-x64': 0.33.5
-    optional: true
 
   shebang-command@2.0.0:
     dependencies:
@@ -15090,7 +15154,6 @@ snapshots:
   simple-swizzle@0.2.2:
     dependencies:
       is-arrayish: 0.3.2
-    optional: true
 
   slash@3.0.0: {}
 
