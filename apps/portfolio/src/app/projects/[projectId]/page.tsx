@@ -1,6 +1,5 @@
-import { notFound } from 'next/navigation';
-
 import { PageProps } from '@wuguishifu/utils-web';
+import { notFound } from 'next/navigation';
 
 import { AllDocumentTypes, ProjectDocument } from '../../../../prismicio-types';
 import { createClient } from '../../../prismicio';
@@ -12,7 +11,7 @@ function verifyParams(page: AllDocumentTypes): page is ProjectDocument {
 }
 
 export default async function ProjectPage({ params }: PageProps<never, { projectId: string }>) {
-  const { projectId } = params;
+  const { projectId } = await params;
   const client = createClient();
   const page = await client.getByUID('project', projectId).catch(() => notFound());
 
