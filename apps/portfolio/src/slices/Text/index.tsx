@@ -3,15 +3,14 @@ import { FC } from 'react';
 
 import { RichText } from '../../components/text/text';
 import { cn } from '../../lib/utils';
+import { animation } from '../animation';
 import { backgroundClass } from '../background';
 import { SliceComponentPropsWithContext } from '../context';
 
 export type TextProps = SliceComponentPropsWithContext<Content.TextSlice>;
 
 const Text: FC<TextProps> = ({ slice, context }) => {
-  const colorScheme = context.colorScheme;
-  const showBackground = slice.primary.background;
-
+  const sliceIndex = context.sliceIds.indexOf(slice.id);
   const content = isFilled.richText(slice.primary.content) ? slice.primary.content : null;
 
   return (
@@ -19,7 +18,8 @@ const Text: FC<TextProps> = ({ slice, context }) => {
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
       className={cn('flex flex-col items-center w-full px-8', {
-        [backgroundClass(colorScheme, { useDarkClass: true })]: showBackground,
+        [backgroundClass(context.colorScheme, { useDarkClass: true })]: slice.primary.background,
+        [animation(sliceIndex)]: slice.primary.animate,
       })}
     >
       <div className="max-w-screen-lg text-foreground text-lg py-2">{content && <RichText content={content} />}</div>

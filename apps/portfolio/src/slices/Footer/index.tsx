@@ -6,14 +6,14 @@ import { FC } from 'react';
 import { RichText } from '../../components/text/text';
 import { buttonVariants } from '../../components/ui/button';
 import { cn } from '../../lib/utils';
+import { animation } from '../animation';
 import { backgroundClass } from '../background';
 import { SliceComponentPropsWithContext } from '../context';
 
 export type FooterProps = SliceComponentPropsWithContext<Content.FooterSlice>;
 
 const Footer: FC<FooterProps> = ({ slice, context }) => {
-  const colorScheme = context.colorScheme;
-  const showBackground = slice.primary.background;
+  const sliceIndex = context.sliceIds.indexOf(slice.id);
   const image = isFilled.image(slice.primary.image) ? slice.primary.image : null;
   const buttonLink = isFilled.link(slice.primary.button_link) ? slice.primary.button_link : null;
 
@@ -21,7 +21,10 @@ const Footer: FC<FooterProps> = ({ slice, context }) => {
     <section
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
-      className={cn('w-full', { [backgroundClass(colorScheme, { useDarkClass: true })]: showBackground })}
+      className={cn('w-full', {
+        [backgroundClass(context.colorScheme, { useDarkClass: true })]: slice.primary.background,
+        [animation(sliceIndex)]: slice.primary.animate,
+      })}
     >
       <div
         className={cn(

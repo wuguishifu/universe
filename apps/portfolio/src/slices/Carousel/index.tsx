@@ -11,21 +11,22 @@ import {
   CarouselPrevious,
 } from '../../components/ui/carousel';
 import { cn } from '../../lib/utils';
+import { animation } from '../animation';
 import { backgroundClass } from '../background';
 import { SliceComponentPropsWithContext } from '../context';
 
 export type CarouselProps = SliceComponentPropsWithContext<Content.CarouselSlice>;
 
 const Carousel: FC<CarouselProps> = ({ slice, context }) => {
-  const colorScheme = context.colorScheme;
-  const showBackground = slice.primary.background;
+  const sliceIndex = context.sliceIds.indexOf(slice.id);
 
   return (
     <section
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
       className={cn('w-full flex justify-center', {
-        [backgroundClass(colorScheme)]: showBackground,
+        [backgroundClass(context.colorScheme)]: slice.primary.background,
+        [animation(sliceIndex)]: slice.primary.animate,
       })}
     >
       <div className="flex flex-col items-center w-full max-w-screen-xl py-2">

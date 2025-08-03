@@ -47,6 +47,10 @@
 			"background": {
 				"__TYPE__": "BooleanContent",
 				"value": false
+			},
+			"animate": {
+				"__TYPE__": "BooleanContent",
+				"value": true
 			}
 		},
 		"items": []

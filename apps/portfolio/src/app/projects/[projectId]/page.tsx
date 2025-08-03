@@ -21,6 +21,7 @@ export default async function ProjectPage({ params }: PageProps<never, { project
 
   const context: PageContext = {
     colorScheme: page.data.color_scheme,
+    sliceIds: page.data.slices.map((slice) => slice.id),
   };
 
   return (

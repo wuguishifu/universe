@@ -48,8 +48,8 @@
 				]
 			},
 			"button_link": {
-				"__TYPE__": "LinkContent",
 				"key": "18539cc5-044c-4f24-8360-b6f67ea7dcdf",
+				"__TYPE__": "LinkContent",
 				"value": {
 					"__TYPE__": "ExternalLink",
 					"url": "https://github.com/wuguishifu/Engine3D",
@@ -61,6 +61,10 @@
 				"value": true
 			},
 			"swapped": {
+				"__TYPE__": "BooleanContent",
+				"value": false
+			},
+			"animate": {
 				"__TYPE__": "BooleanContent",
 				"value": false
 			}

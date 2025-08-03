@@ -4,6 +4,7 @@ import { ProjectDocumentData } from '../../prismicio-types';
 
 export type PageContext = {
   colorScheme: ProjectDocumentData['color_scheme'];
+  sliceIds: string[];
 };
 
 export type SliceComponentPropsWithContext<T extends SliceLike> = SliceComponentProps<T, PageContext>;

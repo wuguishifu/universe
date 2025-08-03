@@ -6,20 +6,23 @@ import { FC } from 'react';
 import { SplitSliceDefaultPrimarySectionsItem } from '../../../prismicio-types';
 import { RichText } from '../../components/text/text';
 import { cn } from '../../lib/utils';
+import { animation } from '../animation';
 import { backgroundClass } from '../background';
 import { SliceComponentPropsWithContext } from '../context';
 
 export type SplitProps = SliceComponentPropsWithContext<Content.SplitSlice>;
 
 const Split: FC<SplitProps> = ({ slice, context }) => {
-  const colorScheme = context.colorScheme;
-  const showBackground = slice.primary.background;
+  const sliceIndex = context.sliceIds.indexOf(slice.id);
 
   return (
     <section
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
-      className={cn('w-full', { [backgroundClass(colorScheme, { useDarkClass: true })]: showBackground })}
+      className={cn('w-full', {
+        [backgroundClass(context.colorScheme, { useDarkClass: true })]: slice.primary.background,
+        [animation(sliceIndex)]: slice.primary.animate,
+      })}
     >
       <div className="flex flex-col items-center w-full px-8 md:flex-row md:gap-16 max-w-screen-xl mx-auto py-2">
         {slice.primary.sections.map((section, index) => (

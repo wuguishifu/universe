@@ -204,6 +204,17 @@ export interface CarouselSliceDefaultPrimary {
    * - **Documentation**: https://prismic.io/docs/fields/boolean
    */
   background: prismic.BooleanField;
+
+  /**
+   * Animate field in *Carousel → Default → Primary*
+   *
+   * - **Field Type**: Boolean
+   * - **Placeholder**: *None*
+   * - **Default Value**: true
+   * - **API ID Path**: carousel.default.primary.animate
+   * - **Documentation**: https://prismic.io/docs/fields/boolean
+   */
+  animate: prismic.BooleanField;
 }
 
 /**
@@ -288,6 +299,17 @@ export interface FooterSliceDefaultPrimary {
    * - **Documentation**: https://prismic.io/docs/fields/boolean
    */
   swapped: prismic.BooleanField;
+
+  /**
+   * Animate field in *Footer → Default → Primary*
+   *
+   * - **Field Type**: Boolean
+   * - **Placeholder**: *None*
+   * - **Default Value**: true
+   * - **API ID Path**: footer.default.primary.animate
+   * - **Documentation**: https://prismic.io/docs/fields/boolean
+   */
+  animate: prismic.BooleanField;
 }
 
 /**
@@ -362,6 +384,17 @@ export interface SplitSliceDefaultPrimary {
    * - **Documentation**: https://prismic.io/docs/fields/boolean
    */
   background: prismic.BooleanField;
+
+  /**
+   * Animate field in *Split → Default → Primary*
+   *
+   * - **Field Type**: Boolean
+   * - **Placeholder**: *None*
+   * - **Default Value**: true
+   * - **API ID Path**: split.default.primary.animate
+   * - **Documentation**: https://prismic.io/docs/fields/boolean
+   */
+  animate: prismic.BooleanField;
 }
 
 /**
@@ -411,6 +444,17 @@ export interface TextSliceDefaultPrimary {
    * - **Documentation**: https://prismic.io/docs/fields/boolean
    */
   background: prismic.BooleanField;
+
+  /**
+   * Animate field in *Text → Default → Primary*
+   *
+   * - **Field Type**: Boolean
+   * - **Placeholder**: *None*
+   * - **Default Value**: true
+   * - **API ID Path**: text.default.primary.animate
+   * - **Documentation**: https://prismic.io/docs/fields/boolean
+   */
+  animate: prismic.BooleanField;
 }
 
 /**
@@ -480,6 +524,17 @@ export interface TitleSliceDefaultPrimary {
    * - **Documentation**: https://prismic.io/docs/fields/boolean
    */
   background: prismic.BooleanField;
+
+  /**
+   * Animate field in *Title → Default → Primary*
+   *
+   * - **Field Type**: Boolean
+   * - **Placeholder**: *None*
+   * - **Default Value**: true
+   * - **API ID Path**: title.default.primary.animate
+   * - **Documentation**: https://prismic.io/docs/fields/boolean
+   */
+  animate: prismic.BooleanField;
 }
 
 /**

@@ -4,14 +4,14 @@ import { FC } from 'react';
 
 import { RichText } from '../../components/text/text';
 import { cn } from '../../lib/utils';
+import { animation } from '../animation';
 import { backgroundClass } from '../background';
 import { SliceComponentPropsWithContext } from '../context';
 
 export type TitleProps = SliceComponentPropsWithContext<Content.TitleSlice>;
 
 const Title: FC<TitleProps> = ({ slice, context }) => {
-  const colorScheme = context.colorScheme;
-  const showBackground = slice.primary.background;
+  const sliceIndex = context.sliceIds.indexOf(slice.id);
 
   const title = isFilled.keyText(slice.primary.title) ? slice.primary.title : null;
   const description = isFilled.richText(slice.primary.description) ? slice.primary.description : null;
@@ -21,7 +21,10 @@ const Title: FC<TitleProps> = ({ slice, context }) => {
     <section
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
-      className={cn('w-full', { [backgroundClass(colorScheme, { useDarkClass: true })]: showBackground })}
+      className={cn('w-full', {
+        [backgroundClass(context.colorScheme, { useDarkClass: true })]: slice.primary.background,
+        [animation(sliceIndex)]: slice.primary.animate,
+      })}
     >
       <div className="flex flex-col items-center w-full px-8 md:flex-row md:gap-16 max-w-screen-xl mx-auto pb-2">
         <div className="flex-1 flex-col items-center justify-center flex">

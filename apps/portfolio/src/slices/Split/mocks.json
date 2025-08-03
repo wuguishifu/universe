@@ -25,8 +25,7 @@
 									]
 								}
 							]
-						],
-						"key": "8106e163-51c9-4d08-9938-645a28d0c58c"
+						]
 					},
 					{
 						"__TYPE__": "GroupItemContent",
@@ -57,15 +56,17 @@
 									"thumbnails": {}
 								}
 							]
-						],
-						"key": "538dd5f1-6e8b-4f76-8fd6-9a943ae03724"
+						]
 					}
-				],
-				"key": "e22c9235-92ea-4ed0-87fd-8acd278ea951"
+				]
 			},
 			"background": {
 				"__TYPE__": "BooleanContent",
 				"value": true
+			},
+			"animate": {
+				"__TYPE__": "BooleanContent",
+				"value": false
 			}
 		},
 		"items": []

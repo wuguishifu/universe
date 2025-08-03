@@ -9,9 +9,10 @@ export function ProjectItem({ project }: { project: ProjectDocument }) {
   return (
     <Link href={`/projects/${project.uid}`}>
       <div
-        className={cn('w-full px-6 py-8 rounded-xl transition-all duration-300 cursor-pointer hover:scale-[102%]', [
+        className={cn('w-full px-6 py-8 rounded-xl cursor-pointer hover:scale-[102%] animate-[fade-in_1s]', [
           backgroundClass(project.data.color_scheme, { useDarkClass: true }),
         ])}
+        style={{ transitionProperty: 'all', transitionDuration: '300ms' }}
       >
         <div className="w-full aspect-video relative select-none pointer-events-none">
           <Image
