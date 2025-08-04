@@ -1,6 +1,6 @@
 import { cn } from '@wuguishifu/ui-web';
 
-export default function Spinner({ className }: { className?: string }) {
+export function Spinner({ className }: { className?: string }) {
   return (
     <svg
       className={cn(className, 'spinner')}

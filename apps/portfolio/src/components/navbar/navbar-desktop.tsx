@@ -5,6 +5,7 @@ import {
   Button,
   buttonVariants,
   cn,
+  LinkedIn,
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuLink,
@@ -14,8 +15,6 @@ import { Moon, Sun } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-
-import { LinkedIn } from '../icons/linkedin';
 
 export function NavbarDesktop() {
   const pathname = usePathname();
