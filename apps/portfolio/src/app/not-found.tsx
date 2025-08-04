@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export default function NotFound() {
   return (
-    <main className="w-full h-full flex items-center justify-center">
+    <div className="w-full h-full flex items-center justify-center">
       <div className="h-screen w-screen absolute top-0 left-0 -z-50 gradient" />
       <div className="flex flex-col gap-6 max-w-[20.375rem] md:max-w-[35.25rem] items-center">
         <div className="w-full text-center flex flex-col gap-2">
@@ -14,6 +14,6 @@ export default function NotFound() {
           <span className="button-span">Back Home</span>
         </Link>
       </div>
-    </main>
+    </div>
   );
 }

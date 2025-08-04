@@ -14,8 +14,8 @@ export default async function Projects() {
   const projects = allDocuments.filter((doc): doc is ProjectDocument => doc.type === 'project');
 
   return (
-    <main className="px-16 w-full flex-1 mt-8 max-w-screen-xl">
+    <div className="px-16 w-full flex-1 mt-8 max-w-screen-xl">
       <ProjectsContainer projects={projects} />
-    </main>
+    </div>
   );
 }

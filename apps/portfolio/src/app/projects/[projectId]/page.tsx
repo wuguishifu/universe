@@ -26,9 +26,9 @@ export default async function ProjectPage({ params }: PageProps<never, { project
   };
 
   return (
-    <main className="w-full flex-1">
+    <div className="w-full flex-1">
       <SliceZoneWithContext slices={page.data.slices} components={components} context={context} />
-    </main>
+    </div>
   );
 }
 
