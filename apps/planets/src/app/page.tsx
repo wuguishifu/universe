@@ -1,5 +1,6 @@
 'use client';
 
+import { OrbitControls } from '@react-three/drei';
 import { Canvas, ThreeElements, useFrame } from '@react-three/fiber';
 import { Suspense, useRef, useState } from 'react';
 import { Mesh } from 'three';
@@ -36,6 +37,7 @@ export default function Index() {
     <div className="w-full h-screen">
       <Suspense fallback={null}>
         <Canvas className="w-full h-full" camera={{ position: [0, 0, 15] }}>
+          <OrbitControls enableDamping dampingFactor={0.05} />
           <ambientLight intensity={Math.PI / 2} />
           <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} decay={0} intensity={Math.PI} />
           <pointLight position={[-10, -10, -10]} decay={0} intensity={Math.PI} />
