@@ -8,12 +8,11 @@ import {
   SiSwift,
   SiTypescript,
 } from '@icons-pack/react-simple-icons';
+import { buttonVariants, cn } from '@wuguishifu/ui-web';
 import { Metadata } from 'next';
 import Link from 'next/link';
 
 import 'remixicon/fonts/remixicon.css';
-import { buttonVariants } from '../../components/ui/button';
-import { cn } from '../../lib/utils';
 
 export const metadata: Metadata = {
   title: 'Bo | About',
@@ -108,10 +107,10 @@ export default function About() {
           You can learn more about me below!
         </p>
         <div className="pt-2 w-full flex flex-row items-center gap-4 animate-fade-in animation-delay-1000 fill-mode-both">
-          <SocialMediaButton href="https://www.linkedin.com/in/bo-bramer/" icon="ri-linkedin-fill" />
-          <SocialMediaButton href="https://github.com/wuguishifu" icon="ri-github-fill" />
-          <SocialMediaButton href="https://instagram.com/theonetheycallbo" icon="ri-instagram-line" />
           <SocialMediaButton href="mailto:bramer.bo@gmail.com" icon="ri-at-line" />
+          <SocialMediaButton href="https://github.com/wuguishifu" icon="ri-github-fill" />
+          <SocialMediaButton href="https://www.linkedin.com/in/bo-bramer/" icon="ri-linkedin-fill" />
+          <SocialMediaButton href="https://instagram.com/theonetheycallbo" icon="ri-instagram-line" />
         </div>
       </div>
     </div>

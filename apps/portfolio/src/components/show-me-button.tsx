@@ -1,8 +1,7 @@
+import { buttonVariants, cn } from '@wuguishifu/ui-web';
 import Link from 'next/link';
 
-import { cn } from '../lib/utils';
 import { createClient } from '../prismicio';
-import { buttonVariants } from './ui/button';
 
 export async function ShowMeButton() {
   const client = createClient();

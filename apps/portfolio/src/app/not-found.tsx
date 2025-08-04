@@ -1,6 +1,5 @@
+import { buttonVariants } from '@wuguishifu/ui-web';
 import Link from 'next/link';
-
-import { buttonVariants } from '../components/ui/button';
 
 export default function NotFound() {
   return (

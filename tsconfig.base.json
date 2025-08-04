@@ -19,6 +19,7 @@
     "noUnusedLocals": true,
     "typeRoots": ["./types", "./node_modules/@types"],
     "paths": {
+      "@wuguishifu/ui-web": ["libs/ui-web/src/index.ts"],
       "@wuguishifu/utils-web": ["libs/utils-web/src/index.ts"]
     }
   },

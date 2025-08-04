@@ -1,11 +1,11 @@
 import { Content, isFilled } from '@prismicio/client';
+import { cn } from '@wuguishifu/ui-web';
 import Image from 'next/image';
 import { Simplify } from 'node_modules/@prismicio/client/dist/types/value/types';
 import { FC } from 'react';
 
 import { SplitSliceDefaultPrimarySectionsItem } from '../../../prismicio-types';
 import { RichText } from '../../components/text/text';
-import { cn } from '../../lib/utils';
 import { animation } from '../animation';
 import { backgroundClass } from '../background';
 import { SliceComponentPropsWithContext } from '../context';

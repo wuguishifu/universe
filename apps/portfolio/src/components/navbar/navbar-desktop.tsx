@@ -1,19 +1,20 @@
 'use client';
 
 import { SiGithub, SiMaildotru } from '@icons-pack/react-simple-icons';
+import {
+  Button,
+  buttonVariants,
+  cn,
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+} from '@wuguishifu/ui-web';
 import { Moon, Sun } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 
-import { Button, buttonVariants } from '../../components/ui/button';
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-} from '../../components/ui/navigation-menu';
-import { cn } from '../../lib/utils';
 import { LinkedIn } from '../icons/linkedin';
 
 export function NavbarDesktop() {

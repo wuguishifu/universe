@@ -1,4 +1,4 @@
-import { cn } from '../../lib/utils';
+import { cn } from '@wuguishifu/ui-web';
 
 export default function Spinner({ className }: { className?: string }) {
   return (

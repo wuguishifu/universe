@@ -1,8 +1,8 @@
+import { cn } from '@wuguishifu/ui-web';
 import Image from 'next/image';
 import Link from 'next/link';
 
 import { ProjectDocument } from '../../../prismicio-types';
-import { cn } from '../../lib/utils';
 import { backgroundClass } from '../../slices/background';
 
 export function ProjectItem({ project, rowIndex }: { project: ProjectDocument; rowIndex: number }) {

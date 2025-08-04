@@ -1,7 +1,4 @@
 import { Content, isFilled } from '@prismicio/client';
-import Image from 'next/image';
-import { FC } from 'react';
-
 import {
   CarouselContainer,
   CarouselContent,
@@ -9,8 +6,11 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from '../../components/ui/carousel';
-import { cn } from '../../lib/utils';
+  cn,
+} from '@wuguishifu/ui-web';
+import Image from 'next/image';
+import { FC } from 'react';
+
 import { animation } from '../animation';
 import { backgroundClass } from '../background';
 import { SliceComponentPropsWithContext } from '../context';

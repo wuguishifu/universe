@@ -1,7 +1,6 @@
+import { cn } from '@wuguishifu/ui-web';
 import Image from 'next/image';
 import Link from 'next/link';
-
-import { cn } from '../lib/utils';
 
 import 'remixicon/fonts/remixicon.css';
 
