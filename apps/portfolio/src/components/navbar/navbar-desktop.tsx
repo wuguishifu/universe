@@ -62,14 +62,14 @@ export function NavbarDesktop() {
               Projects
             </NavigationMenuLink>
           </NavigationMenuItem>
-          <NavigationMenuItem>
+          {/* <NavigationMenuItem>
             <NavigationMenuLink
               className="text-md px-4 py-2 hover:underline underline-offset-4 opacity-80 font-medium"
               href="/resume"
             >
               Resume
             </NavigationMenuLink>
-          </NavigationMenuItem>
+          </NavigationMenuItem> */}
           <NavigationMenuItem>
             <Link href="mailto:bramer.bo@gmail.com" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               <SiMaildotru className="opacity-80" title="" size={20} />

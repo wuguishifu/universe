@@ -84,13 +84,13 @@ export function NavbarMobile() {
               Projects
             </Link>
 
-            <Link
+            {/* <Link
               href="/resume"
               onClick={closeDrawer}
               className="text-lg px-4 py-3 rounded-md hover:bg-accent transition-colors font-medium"
             >
               Resume
-            </Link>
+            </Link> */}
 
             {/* Divider */}
             <div className="border-t border-border my-4" />
