@@ -41,7 +41,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run-many --targets=slicemachine,serve --projects=portfolio"
+        "command": "nx run-many --targets=slicemachine,serve --project=portfolio"
       }
     },
     "slicemachine": {
