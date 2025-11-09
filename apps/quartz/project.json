@@ -1,15 +1,15 @@
 {
-  "name": "portfolio",
+  "name": "quartz",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/portfolio",
+  "sourceRoot": "apps/quartz",
   "projectType": "application",
   "tags": ["scope:client"],
-  "// targets": "to see all targets run: nx show project portfolio --web",
+  "// targets": "to see all targets run: nx show project quartz --web",
   "targets": {
     "clean": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "rm -rf apps/portfolio/.next"
+        "command": "rm -rf apps/quartz/.next"
       }
     },
     "build": {
@@ -18,7 +18,7 @@
       "defaultConfiguration": "production",
       "dependsOn": ["clean"],
       "options": {
-        "outputPath": "apps/portfolio"
+        "outputPath": "apps/quartz"
       },
       "configurations": {
         "development": {},
@@ -41,31 +41,31 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run-many --targets=slicemachine,serve --projects=portfolio"
+        "command": "nx run-many --targets=slicemachine,serve --projects=quartz"
       }
     },
     "slicemachine": {
       "executor": "nx:run-commands",
       "options": {
         "command": "start-slicemachine",
-        "cwd": "apps/portfolio"
+        "cwd": "apps/quartz"
       }
     },
     "serve": {
       "executor": "@nx/next:server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "portfolio:build",
+        "buildTarget": "quartz:build",
         "dev": true,
         "port": 3000
       },
       "configurations": {
         "development": {
-          "buildTarget": "portfolio:build:development",
+          "buildTarget": "quartz:build:development",
           "dev": true
         },
         "production": {
-          "buildTarget": "portfolio:build:production",
+          "buildTarget": "quartz:build:production",
           "dev": false
         }
       }
@@ -74,7 +74,7 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "tsc -p tsconfig.json",
-        "cwd": "apps/portfolio"
+        "cwd": "apps/quartz"
       }
     },
     "lint": {

@@ -20,9 +20,9 @@ type AppConfig = {
 };
 
 const appRootMap: Partial<Record<keyof EnvironmentConfig, AppConfig>> = {
-  portfolio: {
+  quartz: {
     appType: 'next',
-    dir: path.join(rootDir, 'apps', 'portfolio'),
+    dir: path.join(rootDir, 'apps', 'quartz'),
   },
 };
 

@@ -3,3 +3,6 @@ package-change:
 
 library-change:
   - libs/**
+
+quartz:
+  - apps/quartz/**

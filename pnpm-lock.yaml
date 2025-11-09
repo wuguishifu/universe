@@ -232,7 +232,7 @@ importers:
         specifier: ^8.38.0
         version: 8.38.0(eslint@9.32.0(jiti@1.21.7))(typescript@5.7.3)
 
-  apps/portfolio:
+  apps/quartz:
     dependencies:
       '@icons-pack/react-simple-icons':
         specifier: 13.7.0
