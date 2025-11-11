@@ -1,0 +1,15 @@
+{
+  "name": "sapphire",
+  "version": "0.0.1",
+  "packageManager": "pnpm@10.2.0",
+  "scripts": {
+    "start": "next start"
+  },
+  "dependencies": {
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "next": "15.2.5",
+    "typescript": "5.7.3",
+    "sharp": "0.33.5"
+  }
+}
