@@ -1,0 +1,13 @@
+
+{
+  "apps": {
+    "sapphire": {
+      "staging": {
+        "registryPath": "wuguishifu/sapphire"
+      },
+      "production": {
+        "registryPath": "wuguishifu/sapphire"
+      }
+    }
+  }
+}
