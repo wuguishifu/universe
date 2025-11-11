@@ -1,0 +1,9 @@
+{
+  "name": "sapphire",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/sapphire",
+  "projectType": "application",
+  "tags": ["scope:hybrid"],
+  "// targets": "to see all targets run: nx show project sapphire --web",
+  "targets": {}
+}
