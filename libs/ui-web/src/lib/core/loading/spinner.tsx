@@ -1,4 +1,4 @@
-import { cn } from '@wuguishifu/ui-web';
+import { cn } from '../../cn';
 
 export function Spinner({ className }: { className?: string }) {
   return (

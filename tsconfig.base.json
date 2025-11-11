@@ -23,7 +23,9 @@
       "@wuguishifu/engine": ["libs/engine/src/index.ts"],
       "@wuguishifu/ui-web": ["libs/ui-web/src/index.ts"],
       "@wuguishifu/utils-web": ["libs/utils-web/src/index.ts"],
-    }
+    },
+    // this is required while https://github.com/nrwl/nx/issues/32398 is not resolved
+    "types": ["node"],
   },
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
 }
