@@ -8,6 +8,7 @@ const _import = require('eslint-plugin-import');
 const react = require('eslint-plugin-react');
 const reactHooks = require('eslint-plugin-react-hooks');
 const strictNullChecks = require('eslint-plugin-strict-null-checks');
+const nx = require('@nx/eslint-plugin');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -23,19 +24,17 @@ module.exports = defineConfig([
       'plugin:@typescript-eslint/stylistic',
       'plugin:prettier/recommended',
     ),
-
     languageOptions: {
       parser: tsParser,
     },
-
     plugins: {
       '@typescript-eslint': typescriptEslint,
       import: fixupPluginRules(_import),
       'strict-null-checks': strictNullChecks,
       'react-hooks': fixupPluginRules(reactHooks),
       react: fixupPluginRules(react),
+      '@nx': nx,
     },
-
     rules: {
       curly: 'error',
       '@typescript-eslint/no-extraneous-class': 'off',
@@ -65,19 +64,16 @@ module.exports = defineConfig([
       '@typescript-eslint/no-var-requires': 'warn',
       indent: 'off',
       'no-useless-escape': 'warn',
-
       'no-empty-function': [
         'warn',
         {
           allow: ['constructors'],
         },
       ],
-
       'no-useless-catch': 'warn',
       'no-async-promise-executor': 'warn',
       'react-hooks/exhaustive-deps': 'warn',
       'react-native/no-inline-styles': 'off',
-
       'sort-imports': [
         'warn',
         {
@@ -85,7 +81,6 @@ module.exports = defineConfig([
           ignoreDeclarationSort: true,
         },
       ],
-
       'import/order': [
         'warn',
         {
@@ -99,11 +94,38 @@ module.exports = defineConfig([
           },
         },
       ],
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: 'scope:shared',
+              onlyDependOnLibsWithTags: ['scope:shared'],
+            },
+            {
+              sourceTag: 'scope:server',
+              onlyDependOnLibsWithTags: ['scope:server', 'scope:shared'],
+            },
+            {
+              sourceTag: 'scope:client',
+              onlyDependOnLibsWithTags: ['scope:client', 'scope:shared'],
+            },
+            {
+              sourceTag: 'scope:hybrid',
+              onlyDependOnLibsWithTags: ['scope:hybrid', 'scope:shared', 'scope:client', 'scope:server'],
+            },
+            {
+              sourceTag: 'scope:hybrid',
+              notDependOnLibsWithTags: ['environment']
+            }
+          ],
+        },
+      ],
     },
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
-
     rules: {
       '@typescript-eslint/no-shadow': ['warn'],
       'no-shadow': 'off',
@@ -112,7 +134,6 @@ module.exports = defineConfig([
   },
   {
     files: ['**/*.js', '**/*.spec.ts'],
-
     rules: {
       '@typescript-eslint/no-var-requires': 'off',
       '@typescript-eslint/no-dynamic-delete': 'off',
