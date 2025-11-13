@@ -7,9 +7,7 @@ const { composePlugins, withNx } = require('@nx/next');
  **/
 const nextConfig = {
   output: 'standalone',
-  nx: {
-    svgr: false,
-  },
+  nx: {},
 };
 
 const plugins = [withNx];
