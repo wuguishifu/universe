@@ -1,4 +1,5 @@
-import './global.css';
+import './globals.css';
+
 import { ParallaxBackground } from '../components/parallax-background';
 
 export const metadata = {
