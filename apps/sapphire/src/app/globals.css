@@ -1,6 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@source "../../../../libs/ui-web/";
+@custom-variant dark (&:where(.dark, .dark *));
 
 img, html { 
   image-rendering: optimizeSpeed;
