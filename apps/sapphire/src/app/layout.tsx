@@ -1,6 +1,6 @@
 import './globals.css';
 
-import { ParallaxBackground } from '../components/parallax-background';
+import { ParallaxBackground } from './components/ParallaxBackground';
 
 export const metadata = {
   title: 'son of bo',
