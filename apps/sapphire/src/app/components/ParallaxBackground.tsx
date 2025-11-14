@@ -3,7 +3,7 @@ import { ParallaxDriver } from './ParallaxDriver';
 export function ParallaxBackground() {
   return (
     <>
-      <div className="fixed inset-0 bg-[#0b121bd0] z-[-1000] pointer-events-none" />
+      <div className="fixed inset-0 bg-[#090d12]/90 z-[-1000] pointer-events-none" />
       <div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat z-[-1004] pointer-events-none"
         style={{

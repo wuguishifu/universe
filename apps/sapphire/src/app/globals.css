@@ -2,6 +2,64 @@
 @source "../../../../libs/ui-web/";
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --font-jersey: var(--font-jersey);
+  --color-highlight: #5df3b2;
+}
+
+.crt-container {
+  position: fixed;
+  inset: 0;
+  padding: 20px;
+}
+
+.crt-container::before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(18, 16, 16, 0) 10%,
+    rgba(0, 0, 0, 0.25) 10%
+  );
+  background-size: 100% 4px;
+  animation: crt-scan 1s linear infinite;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+@keyframes crt-scan {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 4px;
+  }
+}
+
+.pulse {
+  animation: pulse-glow 2s infinite alternate ease-in-out; 
+}
+
+@keyframes pulse-glow {
+  from {
+    text-shadow: 
+      0 0 2px #4fa78140,
+      0 0 4px #4fa78140,
+      0 0 6px #4fa78140;
+  }
+  to {
+    text-shadow: 
+      0 0 8px #4fa78140, 
+      0 0 10px #4fa78140, 
+      0 0 16px #4fa78140;
+  }
+}
+
 img, html { 
   image-rendering: optimizeSpeed;
   image-rendering: -moz-crisp-edges;
