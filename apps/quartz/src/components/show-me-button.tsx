@@ -14,7 +14,7 @@ export async function ShowMeButton() {
       href={`/projects/${randomProject.uid}`}
       className={cn(
         buttonVariants({ variant: 'default', size: 'lg' }),
-        'animate-fade-in animation-delay-600 text-xl fill-mode-both',
+        'animate-fade-in delay-600 text-xl fill-mode-both',
       )}
     >
       Show me something cool!
