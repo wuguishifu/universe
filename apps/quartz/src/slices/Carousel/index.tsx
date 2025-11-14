@@ -29,7 +29,7 @@ const Carousel: FC<CarouselProps> = ({ slice, context }) => {
         [animation(sliceIndex)]: slice.primary.animate,
       })}
     >
-      <div className="flex flex-col items-center w-full max-w-screen-xl py-2">
+      <div className="flex flex-col items-center w-full max-w-7xl py-2">
         <CarouselContainer className="w-[95%] md:w-[75%]" opts={{ loop: true }}>
           <CarouselContent className="rounded-lg">
             {slice.primary.contents.map((item, index) => (

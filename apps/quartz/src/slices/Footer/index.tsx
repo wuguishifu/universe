@@ -27,7 +27,7 @@ const Footer: FC<FooterProps> = ({ slice, context }) => {
     >
       <div
         className={cn(
-          'flex w-full max-w-screen-xl mx-auto items-center px-8 md:gap-16 py-2',
+          'flex w-full max-w-7xl mx-auto items-center px-8 md:gap-16 py-2',
           slice.primary.swapped ? 'flex-col-reverse md:flex-row-reverse' : 'flex-col md:flex-row',
         )}
       >

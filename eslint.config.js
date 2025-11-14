@@ -1,6 +1,7 @@
 const { fixupPluginRules } = require('@eslint/compat');
 const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
+const nx = require('@nx/eslint-plugin');
 const typescriptEslint = require('@typescript-eslint/eslint-plugin');
 const tsParser = require('@typescript-eslint/parser');
 const { defineConfig, globalIgnores } = require('eslint/config');
@@ -8,7 +9,6 @@ const _import = require('eslint-plugin-import');
 const react = require('eslint-plugin-react');
 const reactHooks = require('eslint-plugin-react-hooks');
 const strictNullChecks = require('eslint-plugin-strict-null-checks');
-const nx = require('@nx/eslint-plugin');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -117,8 +117,8 @@ module.exports = defineConfig([
             },
             {
               sourceTag: 'scope:hybrid',
-              notDependOnLibsWithTags: ['environment']
-            }
+              notDependOnLibsWithTags: ['environment'],
+            },
           ],
         },
       ],

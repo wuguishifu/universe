@@ -26,7 +26,7 @@ const Title: FC<TitleProps> = ({ slice, context }) => {
         [animation(sliceIndex)]: slice.primary.animate,
       })}
     >
-      <div className="flex flex-col items-center w-full px-8 md:flex-row md:gap-16 max-w-screen-xl mx-auto pb-2">
+      <div className="flex flex-col items-center w-full px-8 md:flex-row md:gap-16 max-w-7xl mx-auto pb-2">
         <div className="flex-1 flex-col items-center justify-center flex">
           {image && (
             <Image
