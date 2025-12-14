@@ -31,7 +31,8 @@ export default function About() {
           <Link href="https://inkitt.com" className="underline underline-offset-4 text-blue" target="_blank">
             Inkitt
           </Link>{' '}
-          where I mainly work with React Native and TypeScript. Here&apos;s the full tech stack I&apos;m using at work:
+          where I work on mobile apps using React Native with Typescript, Kotlin, and Swift. Here&apos;s the full tech
+          stack I&apos;m using at work:
         </p>
         <div className="animate-fade-in fill-mode-both delay-400 flex flex-row items-center flex-wrap max-w-screen-sm w-full mx-auto gap-x-16 gap-y-4 mt-4 justify-between">
           <a className="cursor-pointer" href="https://reactnative.dev/" target="_blank" tabIndex={-1}>
@@ -84,20 +85,16 @@ export default function About() {
           </a>
           <div className="w-20 h-0" />
         </div>
-        <p className="text-[1.2em] text-grey animate-fade-in fill-mode-both delay-400">
+        {/* <p className="text-[1.2em] text-grey animate-fade-in fill-mode-both delay-400">
           You can learn more about what I do at work{' '}
           <Link href="/resume" className="underline underline-offset-4 text-blue">
             here
           </Link>
           !
-        </p>
+        </p> */}
         <p className="text-[1.2em] text-grey animate-fade-in fill-mode-both delay-600">
           The most recent side project I&apos;ve been working on is{' '}
-          <Link
-            href="https://github.com/wuguishifu/tungsten"
-            className="underline underline-offset-4 text-blue"
-            target="_blank"
-          >
+          <Link href="/projects/tungsten" className="underline underline-offset-4 text-blue" target="_blank">
             Tungsten
           </Link>
           , a self-hostable note-taking app that supports markdown formatting, LaTeX, and vim input. It saves files to
