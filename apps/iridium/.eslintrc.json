@@ -1,0 +1,39 @@
+{
+  "extends": ["../../.eslintrc.js"],
+  "ignorePatterns": ["!**/*", "jest.config.ts"],
+  "rules": {
+    "no-empty-function": "off",
+    "@typescript-eslint/no-extraneous-class": "off",
+    "import/order": [
+      "error",
+      {
+        "newlines-between": "always",
+        "groups": [["external", "builtin"], ["internal"], ["parent", "sibling", "index"]],
+        "pathGroups": [
+          { "pattern": "@/**", "group": "internal" },
+          { "pattern": "@wuguishifu/**", "group": "external" },
+          { "pattern": "@wuguishifu/**", "group": "external" }
+        ],
+        "pathGroupsExcludedImportTypes": ["react", "internal"],
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        }
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
+    }
+  ]
+}

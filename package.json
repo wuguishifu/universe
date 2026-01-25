@@ -21,6 +21,7 @@
     "@nx/nest": "22.0.3",
     "@nx/next": "22.0.3",
     "@nx/react": "22.0.3",
+    "@nx/webpack": "22.0.3",
     "@nx/workspace": "22.0.3",
     "@prismicio/client": "^7.19.0",
     "@prismicio/next": "^2.0.1",
@@ -66,6 +67,7 @@
     "includedScripts": []
   },
   "dependencies": {
+    "@fastify/multipart": "^9.4.0",
     "@icons-pack/react-simple-icons": "^13.7.0",
     "@nestjs/common": "^11.1.12",
     "@nestjs/core": "^11.1.12",

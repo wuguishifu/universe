@@ -1,0 +1,10 @@
+services:
+  iridium:
+    image: ghcr.io/wuguishifu/universe/iridium:latest
+    container_name: iridium
+    restart: unless-stopped
+    # if you want to be able to access the scan API
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
