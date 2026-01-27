@@ -1,6 +1,5 @@
 import { BestBidAskMessage } from './bestBidAskMessage';
 import { BookMessage } from './bookMessage';
-import { EventMessage } from './eventMessage';
 import { LastTradePriceMessage } from './lastTradePriceMessage';
 import { MarketResolvedMessage } from './marketResolvedMessage';
 import { NewMarketMessage } from './newMarketMessage';

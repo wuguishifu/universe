@@ -18,7 +18,6 @@ export class PriceService {
   private reconnectionTimer: NodeJS.Timeout | null = null;
 
   private queuedMessages: string[] = [];
-  private lastMessageTimestamp = 0;
 
   constructor(private readonly cacheService: CacheService) {
     this.socket = new WebSocket(CLOB_WS_URL);
@@ -61,7 +60,6 @@ export class PriceService {
     try {
       const parsed = JSON.parse(data.toString());
       const messages: Message[] = Array.isArray(parsed) ? parsed : [parsed];
-      const updatedTokenIds = new Set<string>();
 
       messages.forEach((message) => {
         if (message.event_type !== 'book') {
@@ -77,7 +75,6 @@ export class PriceService {
   }
 
   private updateBook(message: BookMessage) {
-    this.lastMessageTimestamp = Date.now();
     const bids = message.bids.map(parseOrderSummary).sort((a, b) => b[0] - a[0]);
     const asks = message.asks.map(parseOrderSummary).sort((a, b) => a[0] - b[0]);
     this.cacheService.orderBook.set(message.asset_id, { bids, asks });
