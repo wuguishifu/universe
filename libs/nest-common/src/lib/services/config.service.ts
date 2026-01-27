@@ -1,5 +1,5 @@
-import { environmentConfig } from '@alphacore/environment';
 import { Injectable } from '@nestjs/common';
+import { environmentConfig } from '@wuguishifu/environment';
 
 @Injectable()
 export class ConfigService {

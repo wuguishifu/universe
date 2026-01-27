@@ -16,7 +16,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "strict": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "typeRoots": ["./types", "./node_modules/@types"],
     "paths": {
       "@wuguishifu/environment": ["libs/environment/src/index.ts"],

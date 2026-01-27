@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+
 import { ConfigService } from '@wuguishifu/nest-common';
 
 @Controller()

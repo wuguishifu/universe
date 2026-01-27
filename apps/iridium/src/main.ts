@@ -2,7 +2,8 @@ import multipart from '@fastify/multipart';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
-import { appDevLogger } from '@universe/nest-common';
+
+import { appDevLogger } from '@wuguishifu/nest-common';
 
 import { AppModule } from './app.module';
 
@@ -27,7 +28,7 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
 
   const url = await app.getUrl();
-  Logger.log(`🚀 Reflux is running on: ${url}`);
+  Logger.log(`🚀 Iridium is running on: ${url}`);
 }
 
 bootstrap();

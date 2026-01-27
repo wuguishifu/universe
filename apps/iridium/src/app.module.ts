@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
+
 import { AllExceptionsFilter, CommonModule, HealthController } from '@wuguishifu/nest-common';
 
 import { AppController } from './app.controller';
+import { DiscoveryModule } from './modules/discovery/discovery.module';
 
 @Module({
-  imports: [CommonModule],
+  imports: [CommonModule, DiscoveryModule],
   controllers: [AppController, HealthController],
   providers: [
     {
