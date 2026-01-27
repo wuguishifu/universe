@@ -2,8 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import WebSocket from 'ws';
 
 import { CLOB_WS_URL } from '../../constants/constants';
+import { BookMessage } from '../../types/clob/bookMessage';
 import { Message } from '../../types/clob/message';
 import { Market } from '../../types/market';
+import { parseOrderSummary } from '../../utils/discovery.utils';
 import { CacheService } from '../cache/cache.service';
 
 const reconnectionDelays = [1000, 2000, 5000, 10000];
@@ -16,6 +18,7 @@ export class PriceService {
   private reconnectionTimer: NodeJS.Timeout | null = null;
 
   private queuedMessages: string[] = [];
+  private lastMessageTimestamp = 0;
 
   constructor(private readonly cacheService: CacheService) {
     this.socket = new WebSocket(CLOB_WS_URL);
@@ -61,25 +64,23 @@ export class PriceService {
       const updatedTokenIds = new Set<string>();
 
       messages.forEach((message) => {
-        if (message.event_type !== 'price_change') {
+        if (message.event_type !== 'book') {
           // faster than filtering first and then forEaching
           return;
         }
 
-        for (const change of message.price_changes) {
-        }
+        this.updateBook(message);
       });
-
-      for (const message of messages) {
-        if (message.event_type !== 'price_change') {
-          continue;
-        }
-      }
-
-      console.log(JSON.stringify(messages, null, 2));
     } catch (error) {
       this.logger.error(`Failed to parse WebSocket message: ${error}`);
     }
+  }
+
+  private updateBook(message: BookMessage) {
+    this.lastMessageTimestamp = Date.now();
+    const bids = message.bids.map(parseOrderSummary).sort((a, b) => b[0] - a[0]);
+    const asks = message.asks.map(parseOrderSummary).sort((a, b) => a[0] - b[0]);
+    this.cacheService.orderBook.set(message.asset_id, { bids, asks });
   }
 
   private scheduleReconnect() {
@@ -129,5 +130,11 @@ export class PriceService {
       this.logger.warn('WebSocket not ready, unsubscription will be queued');
       this.queuedMessages.push(JSON.stringify(message));
     }
+
+    // clear now-stale asset ids from the order book cache
+    markets.forEach((market) => {
+      this.cacheService.orderBook.delete(market.downToken);
+      this.cacheService.orderBook.delete(market.upToken);
+    });
   }
 }

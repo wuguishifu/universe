@@ -10,6 +10,6 @@ export type BookMessage = {
   /** unix timestamp in ms */
   timestamp: string;
   hash: string;
-  buys: OrderSummary[];
-  sells: OrderSummary[];
+  bids: OrderSummary[];
+  asks: OrderSummary[];
 };
