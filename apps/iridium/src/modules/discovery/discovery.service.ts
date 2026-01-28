@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+import { MarketAdapter } from './market-adapters/adapter';
+import { CryptoAdapter } from './market-adapters/crypto.adapter';
 import { Market } from '../../types/market';
 import { getTimeRemaining } from '../../utils/discovery.utils';
 import { CacheService } from '../cache/cache.service';
 import { PriceService } from '../price/price.service';
-import { CryptoAdapter } from './adapters/crypto.adapter';
-import { MarketAdapter } from './adapters/marketAdapter';
 
 @Injectable()
 export class DiscoveryService {

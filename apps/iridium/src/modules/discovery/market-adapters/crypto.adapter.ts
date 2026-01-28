@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 
-import { MarketAdapter } from './marketAdapter';
+import { MarketAdapter } from './adapter';
 import { Event, eventSchema } from '../../../types/event';
 
 type Period = 'am' | 'pm';
