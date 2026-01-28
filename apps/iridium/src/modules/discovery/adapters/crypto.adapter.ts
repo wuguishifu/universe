@@ -1,3 +1,5 @@
+import { Logger } from '@nestjs/common';
+
 import { MarketAdapter } from './marketAdapter';
 import { Event, eventSchema } from '../../../types/event';
 
@@ -51,6 +53,8 @@ function makeHourWindow(startTimeUtc: Date): HourWindow {
 const assets = ['bitcoin', 'ethereum', 'solana', 'xrp'] as const;
 
 export class CryptoAdapter extends MarketAdapter {
+  protected readonly logger = new Logger(CryptoAdapter.name);
+
   async fetchMarkets() {
     const { current, next } = getCurrentHourWindows();
 

@@ -1,27 +1,22 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { HttpService } from '@wuguishifu/nest-common';
-
-import { CryptoAdapter } from './adapters/crypto.adapter';
-import { MarketAdapter } from './adapters/marketAdapter';
-import { GAMMA_API_BASE } from '../../constants/constants';
 import { Market } from '../../types/market';
 import { getTimeRemaining } from '../../utils/discovery.utils';
 import { CacheService } from '../cache/cache.service';
 import { PriceService } from '../price/price.service';
+import { CryptoAdapter } from './adapters/crypto.adapter';
+import { MarketAdapter } from './adapters/marketAdapter';
 
 @Injectable()
 export class DiscoveryService {
   private readonly logger = new Logger(DiscoveryService.name);
-  private readonly httpService = new HttpService({ baseURL: GAMMA_API_BASE });
   private readonly marketAdapter: MarketAdapter;
 
   constructor(
     private readonly priceService: PriceService,
     private readonly cacheService: CacheService,
   ) {
-    this.marketAdapter = new CryptoAdapter(this.httpService, this.logger);
-
+    this.marketAdapter = new CryptoAdapter();
     this.refreshMarkets();
 
     setInterval(
@@ -38,7 +33,6 @@ export class DiscoveryService {
     markets.forEach((market) => this.cacheService.markets.set(market.cacheKey, market));
 
     this.priceService.subscribeToMarkets(markets);
-
     this.logger.debug(`Refreshed ${markets.length} markets in discovery cache`);
   }
 
@@ -54,7 +48,6 @@ export class DiscoveryService {
     }
 
     this.priceService.unsubscribeFromMarkets(unsubscribed);
-
     this.logger.debug(`Cleaned up ${unsubscribed.length} stale markets from discovery cache`);
   }
 }
