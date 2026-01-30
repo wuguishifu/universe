@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { MarketAdapter } from './market-adapters/adapter';
 import { CryptoAdapter } from './market-adapters/crypto.adapter';
 import { Market } from '../../types/market';
-import { getTimeRemaining } from '../../utils/discovery.utils';
+import { getTimeRemainingMs } from '../../utils/market.utils';
 import { CacheService } from '../cache/cache.service';
 import { PriceService } from '../price/price.service';
 
@@ -37,17 +37,20 @@ export class DiscoveryService {
   }
 
   private cleanStaleMarkets() {
-    const now = new Date();
-    const unsubscribed: Market[] = [];
+    const now = Date.now();
+    const cleared: Market[] = [];
     for (const [key, market] of this.cacheService.markets.entries()) {
-      const timeRemaining = getTimeRemaining(market, now);
+      const timeRemaining = getTimeRemainingMs(market, now);
       if (timeRemaining <= 0) {
         this.cacheService.markets.delete(key);
-        unsubscribed.push(market);
+        cleared.push(market);
       }
     }
 
-    this.priceService.unsubscribeFromMarkets(unsubscribed);
-    this.logger.debug(`Cleaned up ${unsubscribed.length} stale markets from discovery cache`);
+    this.priceService.unsubscribeFromMarkets(cleared);
+    cleared.forEach((market) => {
+      this.cacheService.straddles.delete(market.cacheKey);
+    });
+    this.logger.debug(`Cleaned up ${cleared.length} stale markets from discovery cache`);
   }
 }

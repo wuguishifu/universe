@@ -16,8 +16,8 @@ export const marketSchema = z
 
     return {
       ...data,
-      upToken: data.clobTokenIds[0],
-      downToken: data.clobTokenIds[1],
+      yesToken: data.clobTokenIds[0],
+      noToken: data.clobTokenIds[1],
       asset,
       timeframe: '1h',
       cacheKey: `${asset}-${data.endDate.toISOString()}`,

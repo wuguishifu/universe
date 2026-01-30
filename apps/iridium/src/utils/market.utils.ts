@@ -1,8 +1,12 @@
 import { OrderSummary } from '../types/clob/bookMessage';
 import { Market } from '../types/market';
 
-export function getTimeRemaining(market: Market, now: Date = new Date()) {
-  return market.endDate.getTime() - now.getTime();
+export function getTimeRemainingMs(market: Market, now: number = Date.now()) {
+  return market.endDate.getTime() - now;
+}
+
+export function isExpired(market: Market, now: number = Date.now()) {
+  return getTimeRemainingMs(market, now) <= 0;
 }
 
 /** @returns [price, size] */

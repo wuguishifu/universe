@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 import multipart from '@fastify/multipart';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';

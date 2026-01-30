@@ -5,7 +5,7 @@ import { CLOB_WS_URL } from '../../constants/constants';
 import { BookMessage } from '../../types/clob/bookMessage';
 import { Message } from '../../types/clob/message';
 import { Market } from '../../types/market';
-import { parseOrderSummary } from '../../utils/discovery.utils';
+import { parseOrderSummary } from '../../utils/market.utils';
 import { CacheService } from '../cache/cache.service';
 
 const reconnectionDelays = [1000, 2000, 5000, 10000];
@@ -77,7 +77,7 @@ export class PriceService {
   private updateBook(message: BookMessage) {
     const bids = message.bids.map(parseOrderSummary).sort((a, b) => b[0] - a[0]);
     const asks = message.asks.map(parseOrderSummary).sort((a, b) => a[0] - b[0]);
-    this.cacheService.orderBook.set(message.asset_id, { bids, asks });
+    this.cacheService.orderBooks.set(message.asset_id, { bids, asks });
   }
 
   private scheduleReconnect() {
@@ -98,7 +98,7 @@ export class PriceService {
 
   public subscribeToMarkets(markets: Market[]) {
     this.logger.debug(`Scheduling subscription for ${markets.length} markets`);
-    const tokenIds = markets.flatMap((market) => [market.downToken, market.upToken]);
+    const tokenIds = markets.flatMap((market) => [market.noToken, market.yesToken]);
     const message = {
       type: 'subscribe',
       channel: 'market',
@@ -114,7 +114,7 @@ export class PriceService {
   }
 
   public unsubscribeFromMarkets(markets: Market[]) {
-    const tokenIds = markets.flatMap((market) => [market.downToken, market.upToken]);
+    const tokenIds = markets.flatMap((market) => [market.noToken, market.yesToken]);
     const message = {
       type: 'unsubscribe',
       channel: 'market',
@@ -130,8 +130,8 @@ export class PriceService {
 
     // clear now-stale asset ids from the order book cache
     markets.forEach((market) => {
-      this.cacheService.orderBook.delete(market.downToken);
-      this.cacheService.orderBook.delete(market.upToken);
+      this.cacheService.orderBooks.delete(market.noToken);
+      this.cacheService.orderBooks.delete(market.yesToken);
     });
   }
 }
