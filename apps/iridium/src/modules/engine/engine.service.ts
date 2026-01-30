@@ -1,6 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
-import { STRADDLE_GATE } from '../../constants/constants';
 import { Market } from '../../types/market';
 import { Straddle } from '../../types/straddle';
 import { getTimeRemainingMs, isExpired } from '../../utils/market.utils';
@@ -14,7 +13,7 @@ export class EngineService {
   private readonly logger = new Logger(EngineService.name);
 
   constructor(
-    @Inject(STRADDLE_GATE) private readonly gateService: GateService,
+    private readonly gateService: GateService,
     private readonly cacheService: CacheService,
     private readonly executionService: ExecutionService,
   ) {}
