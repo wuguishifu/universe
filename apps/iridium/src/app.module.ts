@@ -1,29 +1,21 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 
-import { AllExceptionsFilter, CommonModule, HealthController, LocalEnvironmentModule } from '@wuguishifu/nest-common';
+import { AllExceptionsFilter, CommonModule, HealthController } from '@wuguishifu/nest-common';
 
 import { AppController } from './app.controller';
-import { environmentSchema } from './environment/environment-schema';
-import { EnvironmentService } from './environment/environment-service';
+import { EnvironmentModule } from './environment/environment-module';
 import { DiscoveryModule } from './modules/discovery/discovery.module';
 import { StrategyModule } from './modules/strategy/strategy.module';
 
 @Module({
-  imports: [
-    CommonModule,
-    DiscoveryModule,
-    LocalEnvironmentModule.forRoot({ schema: environmentSchema }),
-    StrategyModule,
-  ],
+  imports: [CommonModule, DiscoveryModule, StrategyModule, EnvironmentModule],
   controllers: [AppController, HealthController],
   providers: [
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
     },
-    EnvironmentService,
   ],
-  exports: [EnvironmentService],
 })
 export class AppModule {}

@@ -28,7 +28,7 @@ export class LocalEnvironmentService<T extends z.ZodType = z.ZodType> {
   }
 
   private get rawEnvObject(): Record<string, unknown> {
-    const prefix = this.options.prefix;
+    const prefix = this.options?.prefix;
     const env = process.env;
 
     if (!prefix) {

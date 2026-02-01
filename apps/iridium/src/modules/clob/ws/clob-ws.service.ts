@@ -6,6 +6,7 @@ import { CLOB_WS_URL } from '../../../constants/constants';
 import { BookMessage } from '../../../types/clob/bookMessage';
 import { Message } from '../../../types/clob/message';
 import { Market } from '../../../types/market';
+import { parseOrderSummary } from '../../../utils/market.utils';
 import { CacheService } from '../../cache/cache.service';
 
 export type MarketTick = {
@@ -60,8 +61,7 @@ export class ClobWsService {
       return;
     }
 
-    const bestBidStr = message.bids.length > 0 ? message.bids[0].price : '0';
-    const bestBid = parseFloat(bestBidStr);
+    const bestBid = message.bids.length > 0 ? message.bids.map(parseOrderSummary).sort((a, b) => b[0] - a[0])[0][0] : 0;
 
     const state = this.getMarketState(message.market);
     state[message.asset_id] = bestBid;
@@ -126,12 +126,14 @@ export class ClobWsService {
     this.logger.debug(`Scheduling subscription for ${markets.length} markets`);
     const tokenIds = markets.flatMap((market) => [market.noToken, market.yesToken]);
     this.send({ type: 'subscribe', channel: 'market', assets_ids: tokenIds });
+    markets.forEach((market) => this.getMarketState(market.conditionId));
   }
 
   public unsubscribe(markets: Market[]) {
     this.logger.debug(`Scheduling unsubscription for ${markets.length} markets`);
     const tokenIds = markets.flatMap((market) => [market.noToken, market.yesToken]);
     this.send({ type: 'unsubscribe', channel: 'market', assets_ids: tokenIds });
+    markets.forEach((market) => this.marketState.delete(market.conditionId));
   }
 
   private send(message: unknown) {
