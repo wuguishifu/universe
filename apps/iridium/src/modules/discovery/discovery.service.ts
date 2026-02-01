@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { MarketAdapter } from './market-adapters/adapter';
-import { CryptoAdapter } from './market-adapters/crypto.adapter';
 import { Market } from '../../types/market';
 import { getTimeRemainingMs } from '../../utils/market.utils';
 import { CacheService } from '../cache/cache.service';
 import { PriceService } from '../price/price.service';
+import { MarketAdapter } from './market-adapters/adapter';
+import { CryptoAdapter } from './market-adapters/crypto.adapter';
 
 @Injectable()
 export class DiscoveryService {
@@ -30,7 +30,7 @@ export class DiscoveryService {
 
   public async refreshMarkets() {
     const markets = await this.marketAdapter.fetchMarkets();
-    markets.forEach((market) => this.cacheService.markets.set(market.cacheKey, market));
+    markets.forEach((market) => this.cacheService.markets.set(market.id, market));
 
     this.priceService.subscribeToMarkets(markets);
     this.logger.debug(`Refreshed ${markets.length} markets in discovery cache`);
@@ -48,9 +48,6 @@ export class DiscoveryService {
     }
 
     this.priceService.unsubscribeFromMarkets(cleared);
-    cleared.forEach((market) => {
-      this.cacheService.straddles.delete(market.cacheKey);
-    });
     this.logger.debug(`Cleaned up ${cleared.length} stale markets from discovery cache`);
   }
 }
