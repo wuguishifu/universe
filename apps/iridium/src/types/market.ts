@@ -5,7 +5,6 @@ import { preprocessDate, preprocessJsonArray } from '../utils/preprocessors';
 export type Market = z.infer<typeof marketSchema>;
 export const marketSchema = z
   .object({
-    id: z.string(),
     conditionId: z.string(),
     clobTokenIds: z.preprocess(preprocessJsonArray, z.tuple([z.string(), z.string()])),
     slug: z.string(),

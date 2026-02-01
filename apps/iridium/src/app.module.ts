@@ -7,9 +7,15 @@ import { AppController } from './app.controller';
 import { environmentSchema } from './environment/environment-schema';
 import { EnvironmentService } from './environment/environment-service';
 import { DiscoveryModule } from './modules/discovery/discovery.module';
+import { StrategyModule } from './modules/strategy/strategy.module';
 
 @Module({
-  imports: [CommonModule, DiscoveryModule, LocalEnvironmentModule.forRoot({ schema: environmentSchema })],
+  imports: [
+    CommonModule,
+    DiscoveryModule,
+    LocalEnvironmentModule.forRoot({ schema: environmentSchema }),
+    StrategyModule,
+  ],
   controllers: [AppController, HealthController],
   providers: [
     {

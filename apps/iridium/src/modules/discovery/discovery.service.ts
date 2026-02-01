@@ -30,7 +30,7 @@ export class DiscoveryService {
 
   public async refreshMarkets() {
     const markets = await this.marketAdapter.fetchMarkets();
-    markets.forEach((market) => this.cacheService.markets.set(market.id, market));
+    markets.forEach((market) => this.cacheService.markets.set(market.conditionId, market));
 
     this.clobWsService.subscribe(markets);
     this.logger.debug(`Refreshed ${markets.length} markets in discovery cache`);

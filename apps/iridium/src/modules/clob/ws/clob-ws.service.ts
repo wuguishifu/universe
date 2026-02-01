@@ -3,11 +3,23 @@ import { share, Subject } from 'rxjs';
 import WebSocket from 'ws';
 
 import { CLOB_WS_URL } from '../../../constants/constants';
+import { BookMessage } from '../../../types/clob/bookMessage';
 import { Message } from '../../../types/clob/message';
-import { PriceChangeMessage } from '../../../types/clob/priceChangeMessage';
 import { Market } from '../../../types/market';
+import { CacheService } from '../../cache/cache.service';
+
+export type MarketTick = {
+  marketId: string;
+  yesAssetId: string;
+  noAssetId: string;
+  bestBidYes: number;
+  bestBidNo: number;
+  timestamp: number;
+};
 
 const reconnectionDelays = [1000, 2000, 5000, 10000];
+
+type MarketState = { [assetId: string]: number };
 
 @Injectable()
 export class ClobWsService {
@@ -18,10 +30,11 @@ export class ClobWsService {
   private reconnectionTimer: NodeJS.Timeout | null = null;
   private reconnectionAttempts = 0;
 
-  private readonly priceSubject = new Subject<PriceChangeMessage>();
-  public readonly priceUpdates$ = this.priceSubject.asObservable().pipe(share());
+  private marketState = new Map<string, MarketState>();
+  private readonly marketTickSubject = new Subject<MarketTick>();
+  public readonly marketTicks$ = this.marketTickSubject.asObservable().pipe(share());
 
-  constructor() {
+  constructor(private readonly cacheService: CacheService) {
     this.ws = new WebSocket(CLOB_WS_URL);
     this.setupEventListeners();
   }
@@ -31,12 +44,38 @@ export class ClobWsService {
       const parsed = JSON.parse(data.toString());
       const messages: Message[] = Array.isArray(parsed) ? parsed : [parsed];
       messages.forEach((message) => {
-        if (message.event_type === 'price_change') {
-          this.priceSubject.next(message);
+        if (message.event_type === 'book') {
+          this.processBookUpdate(message);
         }
       });
     } catch (error) {
       this.logger.error(`Failed to parse CLOB WS message: ${error}`);
+    }
+  }
+
+  private processBookUpdate(message: BookMessage) {
+    const market = this.cacheService.markets.get(message.market);
+    if (!market) {
+      this.logger.warn(`Received book update for unknown market: ${message.market}`);
+      return;
+    }
+
+    const bestBidStr = message.bids.length > 0 ? message.bids[0].price : '0';
+    const bestBid = parseFloat(bestBidStr);
+
+    const state = this.getMarketState(message.market);
+    state[message.asset_id] = bestBid;
+    const assetIds = Object.keys(state);
+
+    if (assetIds.length === 2) {
+      this.marketTickSubject.next({
+        marketId: message.market,
+        yesAssetId: market.yesToken,
+        noAssetId: market.noToken,
+        bestBidYes: state[market.yesToken],
+        bestBidNo: state[market.noToken],
+        timestamp: parseInt(message.timestamp),
+      });
     }
   }
 
@@ -103,5 +142,16 @@ export class ClobWsService {
       this.logger.debug('Buffering message (WS not ready)');
       this.queuedMessages.push(payload);
     }
+  }
+
+  private getMarketState(marketId: string): MarketState {
+    return (
+      this.marketState.get(marketId) ??
+      (() => {
+        const state = {};
+        this.marketState.set(marketId, state);
+        return state;
+      })()
+    );
   }
 }
