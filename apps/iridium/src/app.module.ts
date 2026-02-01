@@ -6,18 +6,10 @@ import { AllExceptionsFilter, CommonModule, HealthController, LocalEnvironmentMo
 import { AppController } from './app.controller';
 import { environmentSchema } from './environment/environment-schema';
 import { EnvironmentService } from './environment/environment-service';
-import { CacheModule } from './modules/cache/cache.module';
 import { DiscoveryModule } from './modules/discovery/discovery.module';
-import { PriceModule } from './modules/price/price.module';
 
 @Module({
-  imports: [
-    CommonModule,
-    DiscoveryModule,
-    CacheModule,
-    PriceModule,
-    LocalEnvironmentModule.forRoot({ schema: environmentSchema }),
-  ],
+  imports: [CommonModule, DiscoveryModule, LocalEnvironmentModule.forRoot({ schema: environmentSchema })],
   controllers: [AppController, HealthController],
   providers: [
     {

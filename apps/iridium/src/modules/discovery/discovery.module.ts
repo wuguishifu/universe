@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 
 import { DiscoveryService } from './discovery.service';
 import { CacheModule } from '../cache/cache.module';
-import { PriceModule } from '../price/price.module';
+import { ClobWsModule } from '../clob/ws/clob-ws.module';
 
 @Module({
-  imports: [CacheModule, PriceModule],
+  imports: [CacheModule, ClobWsModule],
   providers: [DiscoveryService],
 })
 export class DiscoveryModule {}

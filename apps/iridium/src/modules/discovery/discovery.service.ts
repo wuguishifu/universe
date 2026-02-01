@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+import { MarketAdapter } from './market-adapters/adapter';
+import { CryptoAdapter } from './market-adapters/crypto.adapter';
 import { Market } from '../../types/market';
 import { getTimeRemainingMs } from '../../utils/market.utils';
 import { CacheService } from '../cache/cache.service';
-import { PriceService } from '../price/price.service';
-import { MarketAdapter } from './market-adapters/adapter';
-import { CryptoAdapter } from './market-adapters/crypto.adapter';
+import { ClobWsService } from '../clob/ws/clob-ws.service';
 
 @Injectable()
 export class DiscoveryService {
@@ -13,7 +13,7 @@ export class DiscoveryService {
   private readonly marketAdapter: MarketAdapter;
 
   constructor(
-    private readonly priceService: PriceService,
+    private readonly clobWsService: ClobWsService,
     private readonly cacheService: CacheService,
   ) {
     this.marketAdapter = new CryptoAdapter();
@@ -32,7 +32,7 @@ export class DiscoveryService {
     const markets = await this.marketAdapter.fetchMarkets();
     markets.forEach((market) => this.cacheService.markets.set(market.id, market));
 
-    this.priceService.subscribeToMarkets(markets);
+    this.clobWsService.subscribe(markets);
     this.logger.debug(`Refreshed ${markets.length} markets in discovery cache`);
   }
 
@@ -47,7 +47,7 @@ export class DiscoveryService {
       }
     }
 
-    this.priceService.unsubscribeFromMarkets(cleared);
+    this.clobWsService.unsubscribe(cleared);
     this.logger.debug(`Cleaned up ${cleared.length} stale markets from discovery cache`);
   }
 }
