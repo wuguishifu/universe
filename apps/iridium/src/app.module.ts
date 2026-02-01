@@ -8,7 +8,6 @@ import { environmentSchema } from './environment/environment-schema';
 import { EnvironmentService } from './environment/environment-service';
 import { CacheModule } from './modules/cache/cache.module';
 import { DiscoveryModule } from './modules/discovery/discovery.module';
-import { GateModule } from './modules/gate/gate.module';
 import { PriceModule } from './modules/price/price.module';
 
 @Module({
@@ -17,7 +16,6 @@ import { PriceModule } from './modules/price/price.module';
     DiscoveryModule,
     CacheModule,
     PriceModule,
-    GateModule,
     LocalEnvironmentModule.forRoot({ schema: environmentSchema }),
   ],
   controllers: [AppController, HealthController],
@@ -28,6 +26,6 @@ import { PriceModule } from './modules/price/price.module';
     },
     EnvironmentService,
   ],
-  exports: [EnvironmentService, GateModule],
+  exports: [EnvironmentService],
 })
 export class AppModule {}
