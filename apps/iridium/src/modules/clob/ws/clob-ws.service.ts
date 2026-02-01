@@ -5,6 +5,7 @@ import WebSocket from 'ws';
 import { CLOB_WS_URL } from '../../../constants/constants';
 import { BookMessage } from '../../../types/clob/bookMessage';
 import { Message } from '../../../types/clob/message';
+import { OrderMessage } from '../../../types/clob/orderMessage';
 import { Market } from '../../../types/market';
 import { parseOrderSummary } from '../../../utils/market.utils';
 import { CacheService } from '../../cache/cache.service';
@@ -36,6 +37,9 @@ export class ClobWsService {
   private readonly marketTickSubject = new Subject<MarketTick>();
   public readonly marketTicks$ = this.marketTickSubject.asObservable().pipe(share());
 
+  private readonly orderUpdateSubject = new Subject<OrderMessage>();
+  public readonly orderUpdates$ = this.orderUpdateSubject.asObservable();
+
   constructor(private readonly cacheService: CacheService) {
     this.ws = new WebSocket(CLOB_WS_URL);
     this.setupEventListeners();
@@ -48,6 +52,8 @@ export class ClobWsService {
       messages.forEach((message) => {
         if (message.event_type === 'book') {
           this.processBookUpdate(message);
+        } else if (message.event_type === 'order') {
+          this.orderUpdateSubject.next(message);
         }
       });
     } catch (error) {
