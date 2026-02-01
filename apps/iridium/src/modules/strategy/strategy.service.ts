@@ -24,6 +24,11 @@ export class StrategyService implements OnModuleInit {
           const totalCost = tick.bestBidYes + tick.bestBidNo;
           return totalCost > 0.9 && totalCost < 1.01;
         }),
+        filter(
+          (tick) =>
+            tick.timeRemaining >= this.environmentService.environment.minTimeRemainingMs &&
+            tick.timeRemaining <= this.environmentService.environment.minTimeElapsedMs,
+        ),
         throttleTime(100),
       )
       .subscribe((tick) => {

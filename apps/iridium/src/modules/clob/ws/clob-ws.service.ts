@@ -16,6 +16,7 @@ export type MarketTick = {
   bestBidYes: number;
   bestBidNo: number;
   timestamp: number;
+  timeRemaining: number;
 };
 
 const reconnectionDelays = [1000, 2000, 5000, 10000];
@@ -75,6 +76,7 @@ export class ClobWsService {
         bestBidYes: state[market.yesToken],
         bestBidNo: state[market.noToken],
         timestamp: parseInt(message.timestamp),
+        timeRemaining: market.endDate.getTime() - Date.now(),
       });
     }
   }
