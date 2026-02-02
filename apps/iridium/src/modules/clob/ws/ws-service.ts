@@ -20,6 +20,7 @@ export abstract class WebSocketService {
 
   private setupLifecycleEventListeners() {
     this.ws.on('open', () => {
+      this.onOpen();
       this.logger.debug('WebSocket connection opened');
       this.reconnectionAttempts = 0;
       this.flushQueuedMessages();
@@ -30,14 +31,28 @@ export abstract class WebSocketService {
     });
 
     this.ws.on('error', (error) => {
+      this.onError(error);
       this.logger.error(`WebSocket error: ${error.message}`);
       this.ws.close();
     });
 
     this.ws.on('close', (code, reason) => {
-      this.logger.warn(`WebSocket closed: ${code} - ${reason}`);
+      this.onClose(code, reason.toString());
+      this.logger.warn(`WebSocket closed: ${code} - ${reason.toString()}`);
       this.scheduleReconnect();
     });
+  }
+
+  protected onOpen() {
+    // empty
+  }
+
+  protected onError(_error: Error) {
+    // empty
+  }
+
+  protected onClose(_code: number, _reason: string) {
+    // empty
   }
 
   private flushQueuedMessages() {

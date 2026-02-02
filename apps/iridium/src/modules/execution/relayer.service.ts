@@ -1,10 +1,17 @@
+import { JsonRpcProvider } from '@ethersproject/providers';
 import { Wallet } from '@ethersproject/wallet';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { RelayClient } from '@polymarket/builder-relayer-client';
 import { BuilderConfig } from '@polymarket/builder-signing-sdk';
 import { encodeFunctionData, parseUnits } from 'viem';
 
-import { CTF_EXCHANGE_ADDRESS, POLYGON_CHAIN_ID, RELAYER_API_BASE, USDC_ADDRESS } from '../../constants/constants';
+import {
+  CTF_EXCHANGE_ADDRESS,
+  POLYGON_CHAIN_ID,
+  POLYGON_RPC_URL,
+  RELAYER_API_BASE,
+  USDC_ADDRESS,
+} from '../../constants/constants';
 import { EnvironmentService } from '../../environment/environment-service';
 
 @Injectable()
@@ -21,7 +28,10 @@ export class RelayerService implements OnModuleInit {
 
     const { privateKey, polyApiKey, polyApiSecret, polyApiPassphrase } = this.environmentService.environment;
     const formattedKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
-    this.signer = new Wallet(formattedKey);
+
+    // The RelayClient requires a signer with a provider attached
+    const provider = new JsonRpcProvider(POLYGON_RPC_URL);
+    this.signer = new Wallet(formattedKey, provider);
 
     const builderConfig = new BuilderConfig({
       localBuilderCreds: {
