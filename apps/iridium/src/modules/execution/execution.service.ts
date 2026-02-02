@@ -62,7 +62,7 @@ export class ExecutionService implements OnModuleInit {
     );
 
     if (this.environmentService.environment.dryRun) {
-      this.logger.log('Dry run mode enabled - skipping order placement');
+      this.logger.debug('Dry run mode enabled - skipping order placement');
       await new Promise((resolve) => setTimeout(resolve, 1000));
       return { noOrderId: 'dry-run-no-order-id', yesOrderId: 'dry-run-yes-order-id' };
     }
@@ -108,7 +108,7 @@ export class ExecutionService implements OnModuleInit {
     }
 
     if (this.environmentService.environment.dryRun) {
-      this.logger.log(`Dry run mode enabled - skipping cancellation of order ${orderId}`);
+      this.logger.debug(`Dry run mode enabled - skipping cancellation of order ${orderId}`);
       await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
@@ -132,7 +132,7 @@ export class ExecutionService implements OnModuleInit {
     }
 
     if (this.environmentService.environment.dryRun) {
-      this.logger.log('Dry run mode enabled - skipping panic sell');
+      this.logger.debug('Dry run mode enabled - skipping panic sell');
       await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }

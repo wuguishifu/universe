@@ -54,15 +54,40 @@ export class StrategyService implements OnModuleInit {
     // entry pipe
     this.marketWsService.marketTicks$
       .pipe(
+        // MARK: filter for valid straddle opportunities
         filter((tick) => {
           const totalCost = tick.bestBidYes + tick.bestBidNo;
-          return totalCost > 0.9 && totalCost < 1.01;
+          if (totalCost <= 0.9) {
+            this.logger.debug(`Skipping market ${tick.conditionId} with total cost ${totalCost.toFixed(4)} (too low)`);
+            return false;
+          }
+
+          if (totalCost >= 1.01) {
+            this.logger.debug(`Skipping market ${tick.conditionId} with total cost ${totalCost.toFixed(4)} (too high)`);
+            return false;
+          }
+
+          return true;
         }),
-        filter(
-          (tick) =>
-            tick.timeRemaining >= this.environmentService.environment.minTimeRemainingMs &&
-            tick.timeRemaining <= this.environmentService.environment.minTimeElapsedMs,
-        ),
+        // MARK: filter for time remaining
+        filter((tick) => {
+          if (tick.timeRemaining <= this.environmentService.environment.minTimeRemainingMs) {
+            this.logger.debug(
+              `Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too little)`,
+            );
+            return false;
+          }
+
+          if (tick.timeElapsed <= this.environmentService.environment.minTimeElapsedMs) {
+            this.logger.debug(
+              `Skipping market ${tick.conditionId} with time elapsed ${tick.timeElapsed}ms (too little)`,
+            );
+            return false;
+          }
+
+          return true;
+        }),
+        // MARK: throttle to avoid rapid re-evaluation
         throttleTime(100),
       )
       .subscribe((tick) => {
