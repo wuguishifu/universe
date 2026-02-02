@@ -7,6 +7,7 @@ import { CLOB_WS_URL } from '../../../constants/constants';
 import { BookMessage } from '../../../types/clob/bookMessage';
 import { Message } from '../../../types/clob/message';
 import { OrderMessage } from '../../../types/clob/orderMessage';
+import { TickSizeChangeMessage } from '../../../types/clob/tickSizeChangeMessage';
 import { Market } from '../../../types/market';
 import { parseOrderSummary } from '../../../utils/market.utils';
 import { CacheService } from '../../cache/cache.service';
@@ -52,10 +53,16 @@ export class ClobWsService {
       const parsed = JSON.parse(data.toString());
       const messages: Message[] = Array.isArray(parsed) ? parsed : [parsed];
       messages.forEach((message) => {
-        if (message.event_type === 'book') {
-          this.processBookUpdate(message);
-        } else if (message.event_type === 'order') {
-          this.orderUpdateSubject.next(message);
+        switch (message.event_type) {
+          case 'book':
+            this.processBookUpdate(message);
+            break;
+          case 'order':
+            this.orderUpdateSubject.next(message);
+            break;
+          case 'tick_size_change':
+            this.processTickSizeChange(message);
+            break;
         }
       });
     } catch (error) {
@@ -88,6 +95,16 @@ export class ClobWsService {
         minTickSize: market.orderPriceMinTickSize,
       });
     }
+  }
+
+  private processTickSizeChange(message: TickSizeChangeMessage) {
+    const market = this.cacheService.markets.get(message.market);
+    if (!market) {
+      this.logger.warn(`Received tick size change for unknown market: ${message.market}`);
+      return;
+    }
+
+    market.orderPriceMinTickSize = message.new_tick_size;
   }
 
   private setupEventListeners() {
