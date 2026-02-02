@@ -239,6 +239,8 @@ importers:
 
   libs/environment: {}
 
+  libs/ui-web: {}
+
   libs/utils-web: {}
 
 packages:

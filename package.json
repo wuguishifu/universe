@@ -4,7 +4,8 @@
   "license": "MIT",
   "scripts": {
     "prepush": "nx affected -t prepush --base=develop --head=HEAD --output-style=stream --nxBail=true",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "nx run-many --target=build --projects=tag:build-on-install"
   },
   "private": true,
   "devDependencies": {
