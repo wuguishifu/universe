@@ -245,42 +245,76 @@ export class StrategyService implements OnModuleInit {
   private async cleanupStraddle(straddle: ActiveStraddle) {
     this.logger.debug(`Cleaning up straddle for condition ${straddle.conditionId}`);
 
-    this.activeStraddles.delete(straddle.conditionId);
-    this.orderMap.delete(straddle.yesOrderId);
-    this.orderMap.delete(straddle.noOrderId);
+    // Clear timer first to prevent concurrent panic exit
     if (straddle.timer) {
       clearTimeout(straddle.timer);
+      straddle.timer = undefined;
     }
 
+    // Handle any remaining imbalanced holdings BEFORE deleting state
     if (Math.abs(straddle.yesHoldings - straddle.noHoldings) > 0.001) {
       this.logger.warn(
         `Significant holdings remain for condition ${straddle.conditionId} during cleanup: Yes=${straddle.yesHoldings}, No=${straddle.noHoldings}`,
       );
-      await this.panicExit(straddle);
+      await this.panicExit(straddle, false); // Don't cleanup again from panicExit
     }
+
+    // Now safe to delete state
+    this.activeStraddles.delete(straddle.conditionId);
+    this.orderMap.delete(straddle.yesOrderId);
+    this.orderMap.delete(straddle.noOrderId);
 
     this.logger.debug(`Straddle for condition ${straddle.conditionId} has been cleaned up.`);
   }
 
-  private async panicExit(straddle: ActiveStraddle) {
-    this.logger.error(`Legging risk timer expired for ${straddle.conditionId}. Initiating panic exit.`);
-    await Promise.all([
-      this.executionService.cancelOrder(straddle.yesOrderId),
-      this.executionService.cancelOrder(straddle.noOrderId),
-    ]);
+  private async panicExit(straddle: ActiveStraddle, shouldCleanup = true) {
+    this.logger.error(`Initiating panic exit for ${straddle.conditionId}.`);
 
-    if (straddle.yesHoldings || straddle.noHoldings) {
-      this.executionService
-        .sellMarketPosition({
+    // Cancel any remaining open orders
+    const cancelPromises: Promise<void>[] = [];
+    if (straddle.yesStatus === 'OPEN') {
+      cancelPromises.push(
+        this.executionService.cancelOrder(straddle.yesOrderId).catch((err) => {
+          this.logger.error(`Failed to cancel YES order ${straddle.yesOrderId}: ${(err as Error).message}`);
+        }),
+      );
+    }
+    if (straddle.noStatus === 'OPEN') {
+      cancelPromises.push(
+        this.executionService.cancelOrder(straddle.noOrderId).catch((err) => {
+          this.logger.error(`Failed to cancel NO order ${straddle.noOrderId}: ${(err as Error).message}`);
+        }),
+      );
+    }
+    await Promise.all(cancelPromises);
+
+    // Sell any remaining holdings
+    if (straddle.yesHoldings > 0 || straddle.noHoldings > 0) {
+      try {
+        await this.executionService.sellMarketPosition({
           conditionId: straddle.conditionId,
           yesAmount: straddle.yesHoldings,
           noAmount: straddle.noHoldings,
-        })
-        .catch((error) => {
-          this.logger.error(
-            `Failed to execute panic sell on condition ${straddle.conditionId}: ${(error as Error).message}`,
-          );
         });
+        // Zero out holdings after successful sell
+        straddle.yesHoldings = 0;
+        straddle.noHoldings = 0;
+      } catch (error) {
+        this.logger.error(
+          `Failed to execute panic sell on condition ${straddle.conditionId}: ${(error as Error).message}`,
+        );
+      }
+    }
+
+    // Clean up state if called from timer (not from cleanupStraddle)
+    if (shouldCleanup) {
+      this.activeStraddles.delete(straddle.conditionId);
+      this.orderMap.delete(straddle.yesOrderId);
+      this.orderMap.delete(straddle.noOrderId);
+      if (straddle.timer) {
+        clearTimeout(straddle.timer);
+        straddle.timer = undefined;
+      }
     }
   }
 
