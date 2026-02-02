@@ -12,8 +12,8 @@ export const environmentSchema = z
 
     // clob config
     privateKey: z.string().min(1, { error: 'private key required' }),
-    funderAddress: z.string().optional(),
     signatureType: z.coerce.number().min(0).max(2).default(1),
+    funderAddress: z.string().optional(),
 
     // relayer config
     polyApiKey: z.string(),

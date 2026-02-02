@@ -7,4 +7,18 @@ services:
     ports:
       - "3000:3000"
     environment:
-      NODE_ENV: production
+      # strategy config (optional)
+      DRY_RUN: "false"
+      TARGET_ENTRY: 0.97 # enter when summed legs price is at 97% of theoretical price
+      MIN_TIME_REMAINING_MS: 300000 # don't trade if less than 5 minutes to expiry
+      MIN_TIME_ELAPSED_MS: 0 # don't trade if less than 0 minutes since listing
+      TARGET_POSITION_SIZE: 10 # 10 shares of each leg
+      PANIC_EXIT_DELAY_MS: 120000 # wait 2 minutes before exiting all positions in panic mode
+      # clob config (required)
+      PRIVATE_KEY: ${PRIVATE_KEY}
+      SIGNATURE_TYPE: 1
+      FUNDER_ADDRESS: ${FUNDER_ADDRESS} # optional unless signature type is 1
+      # relayer config (required)
+      POLY_API_KEY: ${POLY_API_KEY}
+      POLY_API_SECRET: ${POLY_API_SECRET}
+      POLY_API_PASSPHRASE: ${POLY_API_PASSPHRASE}
