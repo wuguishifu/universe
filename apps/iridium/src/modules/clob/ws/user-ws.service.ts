@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { Subject } from 'rxjs';
+import { Subject, take } from 'rxjs';
 import { Data } from 'ws';
 
 import { WebSocketService } from './ws-service';
@@ -33,7 +33,7 @@ export class UserWsService extends WebSocketService implements OnModuleInit, OnM
   }
 
   public onModuleInit() {
-    this.authService.authBundle$.subscribe(({ credentials }) => {
+    this.authService.authBundle$.pipe(take(1)).subscribe(({ credentials }) => {
       this.authenticate({
         apiKey: credentials.key,
         secret: credentials.secret,

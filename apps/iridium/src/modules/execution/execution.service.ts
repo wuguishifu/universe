@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ClobClient, OrderType, Side, TickSize } from '@polymarket/clob-client';
+import { take } from 'rxjs';
 
 import { RelayerService } from './relayer.service';
 import { CLOB_API_BASE, POLYGON_CHAIN_ID } from '../../constants/constants';
@@ -24,7 +25,7 @@ export class ExecutionService implements OnModuleInit {
   // MARK: module/client init
   public onModuleInit() {
     this.logger.log('Initializing Polymarket CLOB client...');
-    this.authService.authBundle$.subscribe(({ wallet, credentials }) => {
+    this.authService.authBundle$.pipe(take(1)).subscribe(({ wallet, credentials }) => {
       this.clobClient = new ClobClient(
         CLOB_API_BASE,
         POLYGON_CHAIN_ID,
