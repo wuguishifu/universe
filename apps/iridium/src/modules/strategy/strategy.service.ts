@@ -243,11 +243,15 @@ export class StrategyService implements OnModuleInit {
     ]);
 
     if (straddle.yesHoldings || straddle.noHoldings) {
-      this.executionService.sellMarketPosition({
-        marketId: straddle.marketId,
-        yesAmount: straddle.yesHoldings,
-        noAmount: straddle.noHoldings,
-      });
+      this.executionService
+        .sellMarketPosition({
+          marketId: straddle.marketId,
+          yesAmount: straddle.yesHoldings,
+          noAmount: straddle.noHoldings,
+        })
+        .catch((error) => {
+          this.logger.error(`Failed to execute panic sell on market ${straddle.marketId}: ${(error as Error).message}`);
+        });
     }
   }
 

@@ -1,3 +1,5 @@
+import { TickSize } from '@polymarket/clob-client';
+
 export const preprocessJsonArray = (value: unknown) => {
   if (!value || typeof value !== 'string') {
     return [];
@@ -21,4 +23,12 @@ export const preprocessDate = (value: unknown) => {
     }
   }
   return null;
+};
+
+const validTickSizes = [0.1, 0.01, 0.001, 0.0001];
+export const preprocessTickSize = (value: unknown) => {
+  if (typeof value === 'number' && validTickSizes.includes(value)) {
+    const tickSizeString = value.toString();
+    return tickSizeString as TickSize;
+  }
 };

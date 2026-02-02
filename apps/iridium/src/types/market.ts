@@ -1,6 +1,7 @@
+import { TickSize } from '@polymarket/clob-client';
 import z from 'zod';
 
-import { preprocessDate, preprocessJsonArray } from '../utils/preprocessors';
+import { preprocessDate, preprocessJsonArray, preprocessTickSize } from '../utils/preprocessors';
 
 export type Market = z.infer<typeof marketSchema>;
 export const marketSchema = z
@@ -10,6 +11,7 @@ export const marketSchema = z
     slug: z.string(),
     question: z.string(),
     endDate: z.preprocess(preprocessDate, z.date()),
+    orderPriceMinTickSize: z.preprocess(preprocessTickSize, z.custom<TickSize>()),
   })
   .transform((data) => {
     const asset = data.slug.split('-')[0];

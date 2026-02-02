@@ -1,6 +1,6 @@
 import { Wallet } from '@ethersproject/wallet';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ClobClient, OrderType, Side } from '@polymarket/clob-client';
+import { ClobClient, OrderType, Side, TickSize } from '@polymarket/clob-client';
 
 import { CLOB_API_BASE } from '../../constants/constants';
 import { EnvironmentService } from '../../environment/environment-service';
@@ -12,8 +12,6 @@ const SIGNATURE_TYPE_TO_MODE_DEBUG: Record<number, string> = {
   1: 'Mode: Polymarket Magic Link proxy wallet',
   2: 'Mode: Polymarket browser wallet (Gnosis Safe proxy)',
 };
-
-const TICK_SIZE = '0.01';
 
 @Injectable()
 export class ExecutionService implements OnModuleInit {
@@ -27,6 +25,7 @@ export class ExecutionService implements OnModuleInit {
     private readonly environmentService: EnvironmentService,
   ) {}
 
+  // MARK: module/client init
   async onModuleInit() {
     this.logger.log('Initializing Polymarket CLOB client...');
     const { privateKey, funderAddress, signatureType } = this.environmentService.environment;
@@ -71,6 +70,7 @@ export class ExecutionService implements OnModuleInit {
     }
   }
 
+  // MARK: place limit order
   public async placeLimitOrder({
     marketId,
     targetYes,
@@ -89,7 +89,7 @@ export class ExecutionService implements OnModuleInit {
       throw new Error('CLOB client is not configured');
     }
 
-    const { yesTokenId, noTokenId } = this.getTokenIds(marketId);
+    const { yesTokenId, noTokenId, minimumTickSize } = this.getMarketMetadata(marketId);
     this.logger.log(
       `Placing limit orders on market ${marketId}: Yes Token @ ${targetYes}, No Token @ ${targetNo} for quantity ${quantity}`,
     );
@@ -97,12 +97,12 @@ export class ExecutionService implements OnModuleInit {
     const [yesOrderResponse, noOrderResponse] = await Promise.all([
       this.clobClient.createAndPostOrder(
         { tokenID: yesTokenId, price: targetYes, side: Side.BUY, size: quantity },
-        { tickSize: TICK_SIZE },
+        { tickSize: minimumTickSize },
         OrderType.GTC,
       ),
       this.clobClient.createAndPostOrder(
         { tokenID: noTokenId, price: targetNo, side: Side.BUY, size: quantity },
-        { tickSize: TICK_SIZE },
+        { tickSize: minimumTickSize },
         OrderType.GTC,
       ),
     ]);
@@ -128,6 +128,7 @@ export class ExecutionService implements OnModuleInit {
     };
   }
 
+  // MARK: cancel order
   public async cancelOrder(orderId: string) {
     if (!this.clobClient || !this.isConfigured) {
       throw new Error('CLOB client is not configured');
@@ -136,6 +137,7 @@ export class ExecutionService implements OnModuleInit {
     this.logger.log(`Cancelled order ${orderId}`);
   }
 
+  // MARK: sell market position
   public async sellMarketPosition({
     marketId,
     yesAmount,
@@ -145,22 +147,73 @@ export class ExecutionService implements OnModuleInit {
     yesAmount: number;
     noAmount: number;
   }) {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    // const { yesTokenId, noTokenId } = this.getTokenIds(marketId);
-    this.getTokenIds(marketId);
+    if (!this.isConfigured || !this.clobClient) {
+      throw new Error('CLOB client is not configured');
+    }
 
-    this.logger.log(`Selling market positions on market ${marketId}: Yes Amount: ${yesAmount}, No Amount: ${noAmount}`);
+    if (yesAmount === 0 && noAmount === 0) {
+      return;
+    }
+
+    const { yesTokenId, noTokenId, minimumTickSize } = this.getMarketMetadata(marketId);
+
+    this.logger.warn(`PANIC SELL on ${marketId}: Yes=${yesAmount}, No=${noAmount}`);
+
+    // PRICE STRATEGY:
+    // We sell at 0.01. The engine matches us with the highest bidder.
+    // If BestBid is 0.50, we get 0.50.
+    const panicPrice = 0.01;
+    const promises = [];
+
+    // It's okay to use GTC here because any amount of selling is better than losing the entire position.
+    const type = OrderType.GTC;
+
+    if (yesAmount > 0) {
+      promises.push(
+        this.clobClient
+          .createAndPostOrder(
+            { tokenID: yesTokenId, price: panicPrice, side: Side.SELL, size: yesAmount },
+            { tickSize: minimumTickSize },
+            type,
+          )
+          .then((res) => this.logSellResult(res, 'YES')),
+      );
+    }
+
+    if (noAmount > 0) {
+      promises.push(
+        this.clobClient
+          .createAndPostOrder(
+            { tokenID: noTokenId, price: panicPrice, side: Side.SELL, size: noAmount },
+            { tickSize: minimumTickSize },
+            type,
+          )
+          .then((res) => this.logSellResult(res, 'NO')),
+      );
+    }
+
+    await Promise.all(promises);
   }
 
+  // MARK: merge positions
   public async mergePositions({ marketId, amount }: { marketId: string; amount: number }) {
     await new Promise((resolve) => setTimeout(resolve, 100));
     // const { yesTokenId, noTokenId } = this.getTokenIds(marketId);
-    this.getTokenIds(marketId);
+    this.getMarketMetadata(marketId);
 
     this.logger.log(`Merging ${amount} positions on market ${marketId}`);
   }
 
-  private getTokenIds(marketId: string): { yesTokenId: string; noTokenId: string } {
+  // #region helper methods
+  private logSellResult(response: Awaited<ReturnType<typeof ClobClient.prototype.createAndPostOrder>>, side: string) {
+    if (response.success) {
+      this.logger.log(`Panic Sell ${side} Success: Order ${response.orderID}`);
+    } else {
+      this.logger.error(`Panic Sell ${side} Failed: ${response.errorMsg}`);
+    }
+  }
+
+  private getMarketMetadata(marketId: string): { yesTokenId: string; noTokenId: string; minimumTickSize: TickSize } {
     const market = this.cacheService.markets.get(marketId);
     if (!market) {
       throw new Error(`Market ${marketId} not found in cache`);
@@ -171,6 +224,7 @@ export class ExecutionService implements OnModuleInit {
       throw new Error(`Tokens for market ${marketId} are not available`);
     }
 
-    return { yesTokenId: yesToken, noTokenId: noToken };
+    return { yesTokenId: yesToken, noTokenId: noToken, minimumTickSize: market.orderPriceMinTickSize };
   }
+  // #endregion
 }
