@@ -51,11 +51,15 @@ export class UserWsService extends WebSocketService implements OnModuleInit {
   }
 
   protected onOpen(): void {
-    this.logger.log('User WebSocket authenticated');
+    if (this.userCredentials) {
+      this.logger.log('User WebSocket reconnected, re-authenticating...');
+      this.send({ type: 'user', auth: this.userCredentials });
+    }
   }
 
   public authenticate(userCredentials: UserCredentials) {
     this.userCredentials = userCredentials;
     this.send({ type: 'user', auth: this.userCredentials });
+    this.logger.log('User WebSocket authenticated');
   }
 }

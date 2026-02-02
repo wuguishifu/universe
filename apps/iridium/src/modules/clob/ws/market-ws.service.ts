@@ -31,11 +31,19 @@ export class MarketWsService extends WebSocketService {
   protected readonly logger = new Logger(MarketWsService.name);
 
   private marketState = new Map<string, MarketState>();
+  private subscribedTokenIds = new Set<string>();
   private readonly marketTickSubject = new Subject<MarketTick>();
   public readonly marketTicks$ = this.marketTickSubject.asObservable().pipe(share());
 
   constructor(private readonly cacheService: CacheService) {
     super(CLOB_MARKET_WS_URL);
+  }
+
+  protected onOpen(): void {
+    if (this.subscribedTokenIds.size > 0) {
+      this.logger.log(`Market WebSocket reconnected, re-subscribing to ${this.subscribedTokenIds.size} tokens...`);
+      this.send({ type: 'subscribe', channel: 'market', assets_ids: Array.from(this.subscribedTokenIds) });
+    }
   }
 
   protected handleMessage(data: WebSocket.Data) {
@@ -98,6 +106,7 @@ export class MarketWsService extends WebSocketService {
   public subscribe(markets: Market[]) {
     this.logger.debug(`Scheduling subscription for ${markets.length} markets`);
     const tokenIds = markets.flatMap((market) => [market.noToken, market.yesToken]);
+    tokenIds.forEach((id) => this.subscribedTokenIds.add(id));
     this.send({ type: 'subscribe', channel: 'market', assets_ids: tokenIds });
     markets.forEach((market) => this.getMarketState(market.conditionId));
   }
@@ -105,6 +114,7 @@ export class MarketWsService extends WebSocketService {
   public unsubscribe(markets: Market[]) {
     this.logger.debug(`Scheduling unsubscription for ${markets.length} markets`);
     const tokenIds = markets.flatMap((market) => [market.noToken, market.yesToken]);
+    tokenIds.forEach((id) => this.subscribedTokenIds.delete(id));
     this.send({ type: 'unsubscribe', channel: 'market', assets_ids: tokenIds });
     markets.forEach((market) => this.marketState.delete(market.conditionId));
   }
