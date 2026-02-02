@@ -110,10 +110,18 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
   }
 
   public subscribe(markets: Market[]) {
-    this.logger.debug(`Scheduling subscription for ${markets.length} markets`);
-    const tokenIds = markets.flatMap((market) => [market.noToken, market.yesToken]);
-    tokenIds.forEach((id) => this.subscribedTokenIds.add(id));
-    this.send({ type: 'subscribe', channel: 'market', assets_ids: tokenIds });
+    // Filter to only new tokens that aren't already subscribed
+    const allTokenIds = markets.flatMap((market) => [market.noToken, market.yesToken]);
+    const newTokenIds = allTokenIds.filter((id) => !this.subscribedTokenIds.has(id));
+
+    if (newTokenIds.length === 0) {
+      this.logger.debug(`All ${markets.length} markets already subscribed, skipping`);
+      return;
+    }
+
+    this.logger.debug(`Subscribing to ${newTokenIds.length} new tokens (${markets.length} markets requested)`);
+    newTokenIds.forEach((id) => this.subscribedTokenIds.add(id));
+    this.send({ type: 'subscribe', channel: 'market', assets_ids: newTokenIds });
     markets.forEach((market) => this.getMarketState(market.conditionId));
   }
 
