@@ -3,7 +3,7 @@ import { TickSize } from '@polymarket/clob-client';
 import { share, Subject } from 'rxjs';
 import WebSocket from 'ws';
 
-import { CLOB_WS_URL } from '../../../constants/constants';
+import { CLOB_MARKET_WS_URL } from '../../../constants/constants';
 import { BookMessage } from '../../../types/clob/bookMessage';
 import { Message } from '../../../types/clob/message';
 import { OrderMessage } from '../../../types/clob/orderMessage';
@@ -44,7 +44,7 @@ export class ClobWsService {
   public readonly orderUpdates$ = this.orderUpdateSubject.asObservable();
 
   constructor(private readonly cacheService: CacheService) {
-    this.ws = new WebSocket(CLOB_WS_URL);
+    this.ws = new WebSocket(CLOB_MARKET_WS_URL);
     this.setupEventListeners();
   }
 
@@ -145,7 +145,7 @@ export class ClobWsService {
     this.reconnectionTimer = setTimeout(() => {
       this.reconnectionAttempts++;
       this.reconnectionTimer = null;
-      this.ws = new WebSocket(CLOB_WS_URL);
+      this.ws = new WebSocket(CLOB_MARKET_WS_URL);
       this.setupEventListeners();
     }, delay);
   }

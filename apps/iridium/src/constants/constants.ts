@@ -1,4 +1,5 @@
-export const CLOB_WS_URL = 'wss://ws-subscriptions-clob.polymarket.com/ws/market';
+export const CLOB_MARKET_WS_URL = 'wss://ws-subscriptions-clob.polymarket.com/ws/market';
+export const CLOB_USER_WS_URL = 'wss://ws-subscriptions-clob.polymarket.com/ws/user';
 export const CLOB_API_BASE = 'https://clob.polymarket.com';
 export const GAMMA_API_BASE = 'https://gamma-api.polymarket.com';
 export const RELAYER_API_BASE = 'https://relayer-v2.polymarket.com';
