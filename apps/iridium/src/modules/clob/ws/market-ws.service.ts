@@ -7,7 +7,6 @@ import { WebSocketService } from './ws-service';
 import { CLOB_MARKET_WS_URL } from '../../../constants/constants';
 import { BookMessage } from '../../../types/clob/bookMessage';
 import { Message } from '../../../types/clob/message';
-import { OrderMessage } from '../../../types/clob/orderMessage';
 import { TickSizeChangeMessage } from '../../../types/clob/tickSizeChangeMessage';
 import { Market } from '../../../types/market';
 import { parseOrderSummary } from '../../../utils/market.utils';
@@ -34,9 +33,6 @@ export class MarketWsService extends WebSocketService {
   private readonly marketTickSubject = new Subject<MarketTick>();
   public readonly marketTicks$ = this.marketTickSubject.asObservable().pipe(share());
 
-  private readonly orderUpdateSubject = new Subject<OrderMessage>();
-  public readonly orderUpdates$ = this.orderUpdateSubject.asObservable();
-
   constructor(private readonly cacheService: CacheService) {
     super(CLOB_MARKET_WS_URL);
   }
@@ -49,9 +45,6 @@ export class MarketWsService extends WebSocketService {
         switch (message.event_type) {
           case 'book':
             this.processBookUpdate(message);
-            break;
-          case 'order':
-            this.orderUpdateSubject.next(message);
             break;
           case 'tick_size_change':
             this.processTickSizeChange(message);

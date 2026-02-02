@@ -5,6 +5,7 @@ import { filter, throttleTime } from 'rxjs';
 import { EnvironmentService } from '../../environment/environment-service';
 import { OrderMessage } from '../../types/clob/orderMessage';
 import { MarketTick, MarketWsService } from '../clob/ws/market-ws.service';
+import { UserWsService } from '../clob/ws/user-ws.service';
 import { ExecutionService } from '../execution/execution.service';
 
 interface ActiveStraddle {
@@ -43,6 +44,7 @@ export class StrategyService implements OnModuleInit {
   private readonly orderMap = new Map<string, string>();
 
   constructor(
+    private readonly userWsService: UserWsService,
     private readonly marketWsService: MarketWsService,
     private readonly executionService: ExecutionService,
     private readonly environmentService: EnvironmentService,
@@ -68,7 +70,7 @@ export class StrategyService implements OnModuleInit {
       });
 
     // lifecycle pipe
-    this.marketWsService.orderUpdates$.subscribe((update) => this.handleOrderUpdate(update));
+    this.userWsService.orderUpdates$.subscribe((update) => this.handleOrderUpdate(update));
   }
 
   private async evaluateStraddle(tick: MarketTick) {

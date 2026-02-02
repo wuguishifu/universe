@@ -1,17 +1,11 @@
-import { Wallet } from '@ethersproject/wallet';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ClobClient, OrderType, Side, TickSize } from '@polymarket/clob-client';
 
 import { RelayerService } from './relayer.service';
 import { CLOB_API_BASE, POLYGON_CHAIN_ID } from '../../constants/constants';
 import { EnvironmentService } from '../../environment/environment-service';
+import { AuthService } from '../auth/auth.service';
 import { CacheService } from '../cache/cache.service';
-
-const SIGNATURE_TYPE_TO_MODE_DEBUG: Record<number, string> = {
-  0: 'Mode: direct EOA wallet',
-  1: 'Mode: Polymarket Magic Link proxy wallet',
-  2: 'Mode: Polymarket browser wallet (Gnosis Safe proxy)',
-};
 
 @Injectable()
 export class ExecutionService implements OnModuleInit {
@@ -21,54 +15,26 @@ export class ExecutionService implements OnModuleInit {
   private clobClient: ClobClient | null = null;
 
   constructor(
+    private readonly authService: AuthService,
     private readonly cacheService: CacheService,
     private readonly relayerService: RelayerService,
     private readonly environmentService: EnvironmentService,
   ) {}
 
   // MARK: module/client init
-  async onModuleInit() {
+  onModuleInit() {
     this.logger.log('Initializing Polymarket CLOB client...');
-    const { privateKey, funderAddress, signatureType } = this.environmentService.environment;
-
-    const formattedKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
-    const wallet = new Wallet(formattedKey);
-
-    this.logger.debug(`    Wallet address: ${wallet.address}`);
-    this.logger.debug(`    Signature type: ${signatureType}`);
-    this.logger.debug(`    Funder address: ${funderAddress || 'N/A (using wallet address)'}`);
-    this.logger.debug(`    CLOB API: ${CLOB_API_BASE}`);
-    this.logger.debug(`    ${SIGNATURE_TYPE_TO_MODE_DEBUG[signatureType]}`);
-
-    try {
-      // initialize client without credentials first
-      const tempClient = new ClobClient(
-        CLOB_API_BASE,
-        POLYGON_CHAIN_ID,
-        wallet,
-        undefined,
-        signatureType,
-        funderAddress,
-      );
-
-      // derive API credentials
-      this.logger.debug('Deriving API credentials...');
-      const credentials = await tempClient.createOrDeriveApiKey();
-      this.logger.log('API credentials created.');
-
-      // create final client with credentials
+    this.authService.authBundle$.subscribe(({ wallet, credentials }) => {
       this.clobClient = new ClobClient(
         CLOB_API_BASE,
         POLYGON_CHAIN_ID,
         wallet,
         credentials,
-        signatureType,
-        funderAddress,
+        this.environmentService.environment.signatureType,
+        this.environmentService.environment.funderAddress,
       );
       this.isConfigured = true;
-    } catch (error) {
-      this.logger.error('Error initializing CLOB client:', error);
-    }
+    });
   }
 
   // MARK: place limit order
