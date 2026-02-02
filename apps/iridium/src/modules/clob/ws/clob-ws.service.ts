@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { TickSize } from '@polymarket/clob-client';
 import { share, Subject } from 'rxjs';
 import WebSocket from 'ws';
 
@@ -18,6 +19,7 @@ export type MarketTick = {
   bestBidNo: number;
   timestamp: number;
   timeRemaining: number;
+  minTickSize: TickSize;
 };
 
 const reconnectionDelays = [1000, 2000, 5000, 10000];
@@ -83,6 +85,7 @@ export class ClobWsService {
         bestBidNo: state[market.noToken],
         timestamp: parseInt(message.timestamp),
         timeRemaining: market.endDate.getTime() - Date.now(),
+        minTickSize: market.orderPriceMinTickSize,
       });
     }
   }

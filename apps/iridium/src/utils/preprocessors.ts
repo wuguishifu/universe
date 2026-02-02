@@ -31,4 +31,5 @@ export const preprocessTickSize = (value: unknown) => {
     const tickSizeString = value.toString();
     return tickSizeString as TickSize;
   }
+  return null;
 };

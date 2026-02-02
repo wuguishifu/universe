@@ -1,4 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { TickSize } from '@polymarket/clob-client';
 import { filter, throttleTime } from 'rxjs';
 
 import { EnvironmentService } from '../../environment/environment-service';
@@ -81,8 +82,8 @@ export class StrategyService implements OnModuleInit {
     const currentSpread = tick.bestBidYes + tick.bestBidNo;
     const targetDiscount = Math.max((currentSpread - targetEntry) / 2, 0);
 
-    const targetYes = this.roundDown(tick.bestBidYes - targetDiscount);
-    const targetNo = this.roundDown(tick.bestBidNo - targetDiscount);
+    const targetYes = this.roundDown(tick.bestBidYes - targetDiscount, tick.minTickSize);
+    const targetNo = this.roundDown(tick.bestBidNo - targetDiscount, tick.minTickSize);
     if (targetYes <= 0 || targetNo <= 0) {
       return;
     }
@@ -256,7 +257,8 @@ export class StrategyService implements OnModuleInit {
   }
 
   /** Rounds down to 2 decimal places (requirement by PolyMarket) */
-  private roundDown(value: number): number {
-    return Math.floor(value * 100) / 100;
+  private roundDown(value: number, tickSize: TickSize): number {
+    const factor = 1 / parseFloat(tickSize);
+    return Math.floor(value * factor) / factor;
   }
 }
