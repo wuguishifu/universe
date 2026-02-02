@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Subject } from 'rxjs';
 import { Data } from 'ws';
 
@@ -15,7 +15,7 @@ type UserCredentials = {
 };
 
 @Injectable()
-export class UserWsService extends WebSocketService implements OnModuleInit {
+export class UserWsService extends WebSocketService implements OnModuleInit, OnModuleDestroy {
   protected readonly logger = new Logger(UserWsService.name);
   private userCredentials: UserCredentials | null = null;
 
@@ -24,6 +24,12 @@ export class UserWsService extends WebSocketService implements OnModuleInit {
 
   constructor(private readonly authService: AuthService) {
     super(CLOB_USER_WS_URL);
+  }
+
+  onModuleDestroy() {
+    this.logger.log('Shutting down User WebSocket...');
+    this.orderUpdateSubject.complete();
+    this.close();
   }
 
   onModuleInit() {

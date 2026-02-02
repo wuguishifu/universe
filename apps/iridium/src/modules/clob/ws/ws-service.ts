@@ -10,6 +10,7 @@ export abstract class WebSocketService {
   private readonly queuedMessages: string[] = [];
   private reconnectionTimer: NodeJS.Timeout | null = null;
   private reconnectionAttempts = 0;
+  private isShuttingDown = false;
 
   constructor(private readonly websocketUrl: string) {
     this.ws = new WebSocket(this.websocketUrl);
@@ -65,7 +66,7 @@ export abstract class WebSocketService {
   }
 
   private scheduleReconnect() {
-    if (this.reconnectionTimer) {
+    if (this.reconnectionTimer || this.isShuttingDown) {
       return;
     }
 
@@ -77,6 +78,22 @@ export abstract class WebSocketService {
       this.ws = new WebSocket(this.websocketUrl);
       this.setupLifecycleEventListeners();
     }, delay);
+  }
+
+  /** Gracefully close the WebSocket connection */
+  public close() {
+    this.isShuttingDown = true;
+
+    if (this.reconnectionTimer) {
+      clearTimeout(this.reconnectionTimer);
+      this.reconnectionTimer = null;
+    }
+
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.close(1000, 'Graceful shutdown');
+    }
+
+    this.logger.log('WebSocket connection closed gracefully');
   }
 
   protected send(message: unknown) {

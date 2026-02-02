@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { TickSize } from '@polymarket/clob-client';
 import { share, Subject } from 'rxjs';
 import WebSocket from 'ws';
@@ -27,7 +27,7 @@ export type MarketTick = {
 type MarketState = { [assetId: string]: number };
 
 @Injectable()
-export class MarketWsService extends WebSocketService {
+export class MarketWsService extends WebSocketService implements OnModuleDestroy {
   protected readonly logger = new Logger(MarketWsService.name);
 
   private marketState = new Map<string, MarketState>();
@@ -37,6 +37,12 @@ export class MarketWsService extends WebSocketService {
 
   constructor(private readonly cacheService: CacheService) {
     super(CLOB_MARKET_WS_URL);
+  }
+
+  onModuleDestroy() {
+    this.logger.log('Shutting down Market WebSocket...');
+    this.marketTickSubject.complete();
+    this.close();
   }
 
   protected onOpen(): void {

@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { TickSize } from '@polymarket/clob-client';
 import { filter, groupBy, map, mergeAll, throttleTime } from 'rxjs';
 
@@ -31,7 +31,7 @@ interface ActiveStraddle {
 }
 
 @Injectable()
-export class StrategyService implements OnModuleInit {
+export class StrategyService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(StrategyService.name);
 
   /** conditionId -> StraddleState */
@@ -50,6 +50,77 @@ export class StrategyService implements OnModuleInit {
     private readonly environmentService: EnvironmentService,
   ) {}
 
+  // MARK: deinit
+  async onModuleDestroy() {
+    this.logger.log('Shutting down strategy service...');
+
+    if (this.activeStraddles.size === 0) {
+      this.logger.log('No active straddles to clean up');
+      return;
+    }
+
+    this.logger.log(`Cleaning up ${this.activeStraddles.size} active straddles...`);
+
+    // MARK: cancel open orders
+    const cancelPromises: Promise<void>[] = [];
+    for (const straddle of this.activeStraddles.values()) {
+      if (straddle.timer) {
+        clearTimeout(straddle.timer);
+        straddle.timer = undefined;
+      }
+
+      if (straddle.yesStatus === 'OPEN') {
+        cancelPromises.push(
+          this.executionService.cancelOrder(straddle.yesOrderId).catch((err) => {
+            this.logger.error(`Failed to cancel YES order ${straddle.yesOrderId}: ${(err as Error).message}`);
+          }),
+        );
+      }
+      if (straddle.noStatus === 'OPEN') {
+        cancelPromises.push(
+          this.executionService.cancelOrder(straddle.noOrderId).catch((err) => {
+            this.logger.error(`Failed to cancel NO order ${straddle.noOrderId}: ${(err as Error).message}`);
+          }),
+        );
+      }
+    }
+
+    await Promise.all(cancelPromises);
+    this.logger.log('All open orders cancelled.');
+
+    // MARK: sell excess holdings
+    const sellPromises: Promise<void>[] = [];
+    for (const straddle of this.activeStraddles.values()) {
+      const excessYes = Math.max(0, straddle.yesHoldings - straddle.noHoldings);
+      const excessNo = Math.max(0, straddle.noHoldings - straddle.yesHoldings);
+
+      if (excessYes > 0 || excessNo > 0) {
+        this.logger.log(
+          `Selling excess on ${straddle.conditionId}: YES=${excessYes.toFixed(2)}, NO=${excessNo.toFixed(2)}`,
+        );
+        sellPromises.push(
+          this.executionService
+            .sellMarketPosition({
+              conditionId: straddle.conditionId,
+              yesAmount: excessYes,
+              noAmount: excessNo,
+            })
+            .catch((err) => {
+              this.logger.error(`Failed to sell excess on ${straddle.conditionId}: ${(err as Error).message}`);
+            }),
+        );
+      }
+    }
+
+    if (sellPromises.length > 0) {
+      await Promise.all(sellPromises);
+      this.logger.log('Excess holdings sold.');
+    }
+
+    this.logger.log('Shutdown complete.');
+  }
+
+  // MARK: init
   onModuleInit() {
     // entry pipe
     this.marketWsService.marketTicks$
