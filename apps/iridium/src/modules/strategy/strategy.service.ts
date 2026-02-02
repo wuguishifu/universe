@@ -251,7 +251,7 @@ export class StrategyService implements OnModuleInit {
     }
   }
 
-  /** Rounds down to 3 decimal places (requirement by PolyMarket) */
+  /** Rounds down to 2 decimal places (requirement by PolyMarket) */
   private roundDown(value: number): number {
     return Math.floor(value * 100) / 100;
   }

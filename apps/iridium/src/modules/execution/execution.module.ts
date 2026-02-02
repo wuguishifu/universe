@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 
 import { ExecutionService } from './execution.service';
+import { RelayerService } from './relayer.service';
 import { CacheModule } from '../cache/cache.module';
-import { RelayerModule } from '../relayer/relayer.module';
 
 @Module({
-  imports: [CacheModule, RelayerModule],
-  providers: [ExecutionService],
+  imports: [CacheModule],
+  providers: [ExecutionService, RelayerService],
   exports: [ExecutionService],
 })
 export class ExecutionModule {}

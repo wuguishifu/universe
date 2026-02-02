@@ -7,7 +7,8 @@
   "micropico.syncFolder": "proto/pico-prototype",
   "editor.formatOnSave": false,
   "cSpell.words": [
-    "Clob"
+    "Clob",
+    "Polymarket"
   ],
   "javascript.preferences.importModuleSpecifier": "project-relative",
   "typescript.preferences.importModuleSpecifier": "project-relative",
