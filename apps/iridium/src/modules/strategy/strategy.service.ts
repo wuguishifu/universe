@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { TickSize } from '@polymarket/clob-client';
-import { filter, throttleTime } from 'rxjs';
+import { filter, groupBy, map, mergeAll, throttleTime } from 'rxjs';
 
 import { EnvironmentService } from '../../environment/environment-service';
 import { OrderMessage } from '../../types/clob/orderMessage';
@@ -87,8 +87,10 @@ export class StrategyService implements OnModuleInit {
 
           return true;
         }),
-        // MARK: throttle to avoid rapid re-evaluation
-        throttleTime(100),
+        // MARK: throttle per-market to avoid rapid re-evaluation while allowing different markets through
+        groupBy((tick) => tick.conditionId),
+        map((marketGroup$) => marketGroup$.pipe(throttleTime(100))),
+        mergeAll(),
       )
       .subscribe((tick) => {
         this.evaluateStraddle(tick);
