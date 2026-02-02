@@ -5,7 +5,7 @@ import { CryptoAdapter } from './market-adapters/crypto.adapter';
 import { Market } from '../../types/market';
 import { getTimeRemainingMs } from '../../utils/market.utils';
 import { CacheService } from '../cache/cache.service';
-import { ClobWsService } from '../clob/ws/clob-ws.service';
+import { MarketWsService } from '../clob/ws/market-ws.service';
 
 @Injectable()
 export class DiscoveryService {
@@ -13,7 +13,7 @@ export class DiscoveryService {
   private readonly marketAdapter: MarketAdapter;
 
   constructor(
-    private readonly clobWsService: ClobWsService,
+    private readonly marketWsService: MarketWsService,
     private readonly cacheService: CacheService,
   ) {
     this.marketAdapter = new CryptoAdapter();
@@ -32,7 +32,7 @@ export class DiscoveryService {
     const markets = await this.marketAdapter.fetchMarkets();
     markets.forEach((market) => this.cacheService.markets.set(market.conditionId, market));
 
-    this.clobWsService.subscribe(markets);
+    this.marketWsService.subscribe(markets);
     this.logger.debug(`Refreshed ${markets.length} markets in discovery cache`);
   }
 
@@ -47,7 +47,7 @@ export class DiscoveryService {
       }
     }
 
-    this.clobWsService.unsubscribe(cleared);
+    this.marketWsService.unsubscribe(cleared);
     this.logger.debug(`Cleaned up ${cleared.length} stale markets from discovery cache`);
   }
 }

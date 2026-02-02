@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 
-import { ClobWsService } from './clob-ws.service';
+import { MarketWsService } from './market-ws.service';
+import { UserWsService } from './user-ws.service';
 import { CacheModule } from '../../cache/cache.module';
 
 @Module({
   imports: [CacheModule],
-  providers: [ClobWsService],
-  exports: [ClobWsService],
+  providers: [MarketWsService, UserWsService],
+  exports: [MarketWsService, UserWsService],
 })
 export class ClobWsModule {}
