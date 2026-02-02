@@ -22,7 +22,7 @@ export class ExecutionService implements OnModuleInit {
   ) {}
 
   // MARK: module/client init
-  onModuleInit() {
+  public onModuleInit() {
     this.logger.log('Initializing Polymarket CLOB client...');
     this.authService.authBundle$.subscribe(({ wallet, credentials }) => {
       this.clobClient = new ClobClient(

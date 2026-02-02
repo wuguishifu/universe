@@ -23,7 +23,7 @@ export class RelayerService implements OnModuleInit {
 
   constructor(private readonly environmentService: EnvironmentService) {}
 
-  onModuleInit() {
+  public onModuleInit() {
     this.logger.log('Initializing Relayer Client');
 
     const { privateKey, polyApiKey, polyApiSecret, polyApiPassphrase } = this.environmentService.environment;

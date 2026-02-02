@@ -121,7 +121,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   }
 
   // MARK: init
-  onModuleInit() {
+  public onModuleInit() {
     // entry pipe
     this.marketWsService.marketTicks$
       .pipe(

@@ -26,13 +26,13 @@ export class UserWsService extends WebSocketService implements OnModuleInit, OnM
     super(CLOB_USER_WS_URL);
   }
 
-  onModuleDestroy() {
+  public onModuleDestroy() {
     this.logger.log('Shutting down User WebSocket...');
     this.orderUpdateSubject.complete();
     this.close();
   }
 
-  onModuleInit() {
+  public onModuleInit() {
     this.authService.authBundle$.subscribe(({ credentials }) => {
       this.authenticate({
         apiKey: credentials.key,

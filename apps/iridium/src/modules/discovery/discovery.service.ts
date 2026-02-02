@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 
 import { MarketAdapter } from './market-adapters/adapter';
 import { CryptoAdapter } from './market-adapters/crypto.adapter';
@@ -8,24 +8,35 @@ import { CacheService } from '../cache/cache.service';
 import { MarketWsService } from '../clob/ws/market-ws.service';
 
 @Injectable()
-export class DiscoveryService {
+export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DiscoveryService.name);
   private readonly marketAdapter: MarketAdapter;
+
+  private refreshInterval: NodeJS.Timeout | null = null;
 
   constructor(
     private readonly marketWsService: MarketWsService,
     private readonly cacheService: CacheService,
   ) {
     this.marketAdapter = new CryptoAdapter();
-    this.refreshMarkets();
+  }
 
-    setInterval(
+  public async onModuleInit() {
+    await this.refreshMarkets();
+    this.refreshInterval = setInterval(
       () => {
         this.refreshMarkets();
         this.cleanStaleMarkets();
       },
       5 * 60 * 1000,
     );
+  }
+
+  public onModuleDestroy() {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
+    }
   }
 
   public async refreshMarkets() {
