@@ -6,6 +6,7 @@ export type OrderSummary = {
 export type BookMessage = {
   event_type: 'book';
   asset_id: string;
+  /** condition ID */
   market: string;
   /** unix timestamp in ms */
   timestamp: string;

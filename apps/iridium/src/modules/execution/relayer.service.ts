@@ -70,8 +70,8 @@ export class RelayerService implements OnModuleInit {
     return response.transactionID;
   }
 
-  private validateConditionId(marketId: string): marketId is `0x${string}` {
-    return marketId.startsWith('0x');
+  private validateConditionId(conditionId: string): conditionId is `0x${string}` {
+    return conditionId.startsWith('0x');
   }
 }
 

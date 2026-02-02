@@ -73,12 +73,12 @@ export class ExecutionService implements OnModuleInit {
 
   // MARK: place limit order
   public async placeLimitOrder({
-    marketId,
+    conditionId,
     targetYes,
     targetNo,
     quantity,
   }: {
-    marketId: string;
+    conditionId: string;
     targetYes: number;
     targetNo: number;
     quantity: number;
@@ -90,9 +90,9 @@ export class ExecutionService implements OnModuleInit {
       throw new Error('CLOB client is not configured');
     }
 
-    const { yesTokenId, noTokenId, minimumTickSize } = this.getMarketMetadata(marketId);
+    const { yesTokenId, noTokenId, minimumTickSize } = this.getMarketMetadata(conditionId);
     this.logger.log(
-      `Placing limit orders on market ${marketId}: Yes Token @ ${targetYes}, No Token @ ${targetNo} for quantity ${quantity}`,
+      `Placing limit orders on condition ${conditionId}: Yes Token @ ${targetYes}, No Token @ ${targetNo} for quantity ${quantity}`,
     );
 
     const [yesOrderResponse, noOrderResponse] = await Promise.all([
@@ -140,11 +140,11 @@ export class ExecutionService implements OnModuleInit {
 
   // MARK: sell market position
   public async sellMarketPosition({
-    marketId,
+    conditionId,
     yesAmount,
     noAmount,
   }: {
-    marketId: string;
+    conditionId: string;
     yesAmount: number;
     noAmount: number;
   }) {
@@ -156,9 +156,9 @@ export class ExecutionService implements OnModuleInit {
       return;
     }
 
-    const { yesTokenId, noTokenId, minimumTickSize } = this.getMarketMetadata(marketId);
+    const { yesTokenId, noTokenId, minimumTickSize } = this.getMarketMetadata(conditionId);
 
-    this.logger.warn(`PANIC SELL on ${marketId}: Yes=${yesAmount}, No=${noAmount}`);
+    this.logger.warn(`PANIC SELL on ${conditionId}: Yes=${yesAmount}, No=${noAmount}`);
 
     // PRICE STRATEGY:
     // We sell at 0.01. The engine matches us with the highest bidder.
@@ -210,15 +210,15 @@ export class ExecutionService implements OnModuleInit {
     }
   }
 
-  private getMarketMetadata(marketId: string): { yesTokenId: string; noTokenId: string; minimumTickSize: TickSize } {
-    const market = this.cacheService.markets.get(marketId);
+  private getMarketMetadata(conditionId: string): { yesTokenId: string; noTokenId: string; minimumTickSize: TickSize } {
+    const market = this.cacheService.markets.get(conditionId);
     if (!market) {
-      throw new Error(`Market ${marketId} not found in cache`);
+      throw new Error(`Market ${conditionId} not found in cache`);
     }
 
     const { yesToken, noToken } = market;
     if (!yesToken || !noToken) {
-      throw new Error(`Tokens for market ${marketId} are not available`);
+      throw new Error(`Tokens for market ${conditionId} are not available`);
     }
 
     return { yesTokenId: yesToken, noTokenId: noToken, minimumTickSize: market.orderPriceMinTickSize };

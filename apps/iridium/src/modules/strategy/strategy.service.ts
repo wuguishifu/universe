@@ -8,7 +8,7 @@ import { ClobWsService, MarketTick } from '../clob/ws/clob-ws.service';
 import { ExecutionService } from '../execution/execution.service';
 
 interface ActiveStraddle {
-  marketId: string;
+  conditionId: string;
 
   // Order IDs
   yesOrderId: string;
@@ -73,7 +73,7 @@ export class StrategyService implements OnModuleInit {
 
   private async evaluateStraddle(tick: MarketTick) {
     // MARK: skip if already active or in progress
-    if (this.activeStraddles.has(tick.marketId) || this.marketsInProgress.has(tick.marketId)) {
+    if (this.activeStraddles.has(tick.conditionId) || this.marketsInProgress.has(tick.conditionId)) {
       return;
     }
 
@@ -89,7 +89,7 @@ export class StrategyService implements OnModuleInit {
     }
 
     if (targetYes > tick.bestBidYes || targetNo > tick.bestBidNo) {
-      this.logger.warn(`Calculated target bids are worse than current bids for market ${tick.marketId}. Skipping.`);
+      this.logger.warn(`Calculated target bids are worse than current bids for market ${tick.conditionId}. Skipping.`);
       return;
     }
 
@@ -97,22 +97,22 @@ export class StrategyService implements OnModuleInit {
       return;
     }
 
-    this.marketsInProgress.add(tick.marketId);
+    this.marketsInProgress.add(tick.conditionId);
     this.logger.log(
-      `Opportunity on ${tick.marketId} (Skew: ${tick.bestBidYes}/${tick.bestBidNo}). Placing Skewed Limits: Yes@${targetYes} | No@${targetNo}`,
+      `Opportunity on ${tick.conditionId} (Skew: ${tick.bestBidYes}/${tick.bestBidNo}). Placing Skewed Limits: Yes@${targetYes} | No@${targetNo}`,
     );
 
     try {
       // MARK: place limit orders
       const { yesOrderId, noOrderId } = await this.executionService.placeLimitOrder({
-        marketId: tick.marketId,
+        conditionId: tick.conditionId,
         targetYes,
         targetNo,
         quantity: this.environmentService.environment.targetPositionSize,
       });
 
-      this.activeStraddles.set(tick.marketId, {
-        marketId: tick.marketId,
+      this.activeStraddles.set(tick.conditionId, {
+        conditionId: tick.conditionId,
         yesOrderId,
         noOrderId,
         yesHoldings: 0,
@@ -122,26 +122,26 @@ export class StrategyService implements OnModuleInit {
         yesStatus: 'OPEN',
         noStatus: 'OPEN',
       });
-      this.orderMap.set(yesOrderId, tick.marketId);
-      this.orderMap.set(noOrderId, tick.marketId);
-      this.marketsInProgress.delete(tick.marketId);
+      this.orderMap.set(yesOrderId, tick.conditionId);
+      this.orderMap.set(noOrderId, tick.conditionId);
+      this.marketsInProgress.delete(tick.conditionId);
     } catch (error) {
-      this.logger.error(`Failed to place limit order on ${tick.marketId}: ${(error as Error).message}`);
-      this.marketsInProgress.delete(tick.marketId);
+      this.logger.error(`Failed to place limit order on ${tick.conditionId}: ${(error as Error).message}`);
+      this.marketsInProgress.delete(tick.conditionId);
     }
   }
 
   private handleOrderUpdate(update: OrderMessage) {
     // MARK: find context
-    const marketId = this.orderMap.get(update.id);
-    if (!marketId) {
+    const conditionId = this.orderMap.get(update.id);
+    if (!conditionId) {
       this.logger.warn(`Received order update for unknown orderId: ${update.id}`);
       return;
     }
 
-    const straddle = this.activeStraddles.get(marketId);
+    const straddle = this.activeStraddles.get(conditionId);
     if (!straddle) {
-      this.logger.warn(`No active straddle found for marketId: ${marketId}`);
+      this.logger.warn(`No active straddle found for conditionId: ${conditionId}`);
       return;
     }
 
@@ -187,8 +187,8 @@ export class StrategyService implements OnModuleInit {
       straddle.yesHoldings -= match;
       straddle.noHoldings -= match;
 
-      this.logger.log(`Merging ${match} positions on market ${marketId}`);
-      this.executionService.mergePositions({ conditionId: marketId, amount: match });
+      this.logger.log(`Merging ${match} positions on condition ${conditionId}`);
+      this.executionService.mergePositions({ conditionId, amount: match });
     }
 
     // MARK: check for complete exit
@@ -197,7 +197,7 @@ export class StrategyService implements OnModuleInit {
     if (isYesDone && isNoDone) {
       // ensure we don't delete while pending a merge
       if (straddle.yesHoldings < 0.001 && straddle.noHoldings < 0.001) {
-        this.logger.log(`Straddle on market ${marketId} is complete. Cleaning up state.`);
+        this.logger.log(`Straddle on condition ${conditionId} is complete. Cleaning up state.`);
         this.cleanupStraddle(straddle);
         return;
       }
@@ -206,19 +206,19 @@ export class StrategyService implements OnModuleInit {
     // MARK: risk timer
     const imbalance = Math.abs(straddle.yesHoldings - straddle.noHoldings);
     if (imbalance > 0 && !straddle.timer) {
-      this.logger.warn(`Starting legging risk timer for ${marketId}`);
+      this.logger.warn(`Starting legging risk timer for ${conditionId}`);
       straddle.timer = setTimeout(() => this.panicExit(straddle), this.environmentService.environment.panicExitDelayMs);
     } else if (imbalance === 0 && straddle.timer) {
-      this.logger.debug(`Clearing legging risk timer for ${marketId}`);
+      this.logger.debug(`Clearing legging risk timer for ${conditionId}`);
       clearTimeout(straddle.timer);
       straddle.timer = undefined;
     }
   }
 
   private async cleanupStraddle(straddle: ActiveStraddle) {
-    this.logger.debug(`Cleaning up straddle for market ${straddle.marketId}`);
+    this.logger.debug(`Cleaning up straddle for condition ${straddle.conditionId}`);
 
-    this.activeStraddles.delete(straddle.marketId);
+    this.activeStraddles.delete(straddle.conditionId);
     this.orderMap.delete(straddle.yesOrderId);
     this.orderMap.delete(straddle.noOrderId);
     if (straddle.timer) {
@@ -227,17 +227,16 @@ export class StrategyService implements OnModuleInit {
 
     if (Math.abs(straddle.yesHoldings - straddle.noHoldings) > 0.001) {
       this.logger.warn(
-        `Significant holdings remain for market ${straddle.marketId} during cleanup: Yes=${straddle.yesHoldings}, No=${straddle.noHoldings}`,
+        `Significant holdings remain for condition ${straddle.conditionId} during cleanup: Yes=${straddle.yesHoldings}, No=${straddle.noHoldings}`,
       );
       await this.panicExit(straddle);
     }
 
-    this.logger.debug(`Straddle for market ${straddle.marketId} has been cleaned up.`);
+    this.logger.debug(`Straddle for condition ${straddle.conditionId} has been cleaned up.`);
   }
 
   private async panicExit(straddle: ActiveStraddle) {
-    this.logger.error(`Legging risk timer expired for ${straddle.marketId}. Initiating panic exit.`);
-
+    this.logger.error(`Legging risk timer expired for ${straddle.conditionId}. Initiating panic exit.`);
     await Promise.all([
       this.executionService.cancelOrder(straddle.yesOrderId),
       this.executionService.cancelOrder(straddle.noOrderId),
@@ -246,12 +245,14 @@ export class StrategyService implements OnModuleInit {
     if (straddle.yesHoldings || straddle.noHoldings) {
       this.executionService
         .sellMarketPosition({
-          marketId: straddle.marketId,
+          conditionId: straddle.conditionId,
           yesAmount: straddle.yesHoldings,
           noAmount: straddle.noHoldings,
         })
         .catch((error) => {
-          this.logger.error(`Failed to execute panic sell on market ${straddle.marketId}: ${(error as Error).message}`);
+          this.logger.error(
+            `Failed to execute panic sell on condition ${straddle.conditionId}: ${(error as Error).message}`,
+          );
         });
     }
   }

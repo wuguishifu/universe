@@ -13,7 +13,7 @@ import { parseOrderSummary } from '../../../utils/market.utils';
 import { CacheService } from '../../cache/cache.service';
 
 export type MarketTick = {
-  marketId: string;
+  conditionId: string;
   yesAssetId: string;
   noAssetId: string;
   bestBidYes: number;
@@ -85,7 +85,7 @@ export class ClobWsService {
 
     if (assetIds.length === 2) {
       this.marketTickSubject.next({
-        marketId: message.market,
+        conditionId: message.market,
         yesAssetId: market.yesToken,
         noAssetId: market.noToken,
         bestBidYes: state[market.yesToken],
@@ -174,12 +174,12 @@ export class ClobWsService {
     }
   }
 
-  private getMarketState(marketId: string): MarketState {
+  private getMarketState(conditionId: string): MarketState {
     return (
-      this.marketState.get(marketId) ??
+      this.marketState.get(conditionId) ??
       (() => {
         const state = {};
-        this.marketState.set(marketId, state);
+        this.marketState.set(conditionId, state);
         return state;
       })()
     );
