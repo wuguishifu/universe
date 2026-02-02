@@ -61,6 +61,12 @@ export class ExecutionService implements OnModuleInit {
       `Placing limit orders on condition ${conditionId}: Yes Token @ ${targetYes}, No Token @ ${targetNo} for quantity ${quantity}`,
     );
 
+    if (this.environmentService.environment.dryRun) {
+      this.logger.log('Dry run mode enabled - skipping order placement');
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return { noOrderId: 'dry-run-no-order-id', yesOrderId: 'dry-run-yes-order-id' };
+    }
+
     const [yesOrderResponse, noOrderResponse] = await Promise.all([
       this.clobClient.createAndPostOrder(
         { tokenID: yesTokenId, price: targetYes, side: Side.BUY, size: quantity },
@@ -100,6 +106,13 @@ export class ExecutionService implements OnModuleInit {
     if (!this.clobClient || !this.isConfigured) {
       throw new Error('CLOB client is not configured');
     }
+
+    if (this.environmentService.environment.dryRun) {
+      this.logger.log(`Dry run mode enabled - skipping cancellation of order ${orderId}`);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return;
+    }
+
     await this.clobClient.cancelOrder({ orderID: orderId });
     this.logger.log(`Cancelled order ${orderId}`);
   }
@@ -116,6 +129,12 @@ export class ExecutionService implements OnModuleInit {
   }) {
     if (!this.isConfigured || !this.clobClient) {
       throw new Error('CLOB client is not configured');
+    }
+
+    if (this.environmentService.environment.dryRun) {
+      this.logger.log('Dry run mode enabled - skipping panic sell');
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return;
     }
 
     if (yesAmount === 0 && noAmount === 0) {

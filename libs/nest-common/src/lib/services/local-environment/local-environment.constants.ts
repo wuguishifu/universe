@@ -8,5 +8,9 @@ export type EnvironmentOptions =
        * If set, the service reads process.env.API_FOO into schema key "FOO".
        */
       prefix?: string;
+      /**
+       * If true, converts SNAKE_CASE keys to camelCase before parsing.
+       */
+      camelize?: boolean;
     }
   | undefined;

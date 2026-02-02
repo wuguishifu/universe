@@ -46,6 +46,12 @@ export class RelayerService implements OnModuleInit {
 
     this.logger.log(`Merging positions for condition ${conditionId} with amount ${amount}`);
 
+    if (this.environmentService.environment.dryRun) {
+      this.logger.log('Dry run mode enabled - skipping merge positions');
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return 'dry-run-merge-positions-tx-id';
+    }
+
     // encode transaction data
     const rawAmount = parseUnits(amount.toFixed(6), 6);
     const data = encodeFunctionData({

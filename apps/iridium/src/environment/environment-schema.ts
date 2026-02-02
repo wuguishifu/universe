@@ -2,6 +2,8 @@ import z from 'zod';
 
 export const environmentSchema = z
   .object({
+    dryRun: z.coerce.boolean().default(true),
+
     targetEntry: z.coerce.number().min(0).max(1).default(0.97),
     minTimeRemainingMs: z.coerce.number().min(0).default(300_000),
     minTimeElapsedMs: z.coerce.number().min(0).default(0),
@@ -10,7 +12,7 @@ export const environmentSchema = z
 
     // clob config
     privateKey: z.string().min(1, { error: 'private key required' }),
-    funderAddress: z.string().min(1),
+    funderAddress: z.string().optional(),
     signatureType: z.coerce.number().min(0).max(2).default(1),
 
     // relayer config

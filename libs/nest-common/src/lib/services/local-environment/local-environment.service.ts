@@ -28,8 +28,8 @@ export class LocalEnvironmentService<T extends z.ZodType = z.ZodType> {
   }
 
   private get rawEnvObject(): Record<string, unknown> {
-    const prefix = this.options?.prefix;
-    const env = process.env;
+    const { prefix, camelize } = this.options ?? {};
+    const env = camelize ? this.camelize(process.env) : process.env;
 
     if (!prefix) {
       return env as unknown as Record<string, unknown>;
@@ -42,5 +42,20 @@ export class LocalEnvironmentService<T extends z.ZodType = z.ZodType> {
       }
     }
     return out;
+  }
+
+  private camelize(env: Record<string, string | undefined>): Record<string, string> {
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(env)) {
+      if (v === undefined) {
+        continue;
+      }
+      out[this.snakeToCamel(k)] = v;
+    }
+    return out;
+  }
+
+  private snakeToCamel(s: string): string {
+    return s.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
   }
 }

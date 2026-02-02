@@ -7,7 +7,14 @@ import { EnvironmentService } from './environment-service';
 
 @Global()
 @Module({
-  imports: [LocalEnvironmentModule.forRoot({ schema: environmentSchema })],
+  imports: [
+    LocalEnvironmentModule.forRoot({
+      schema: environmentSchema,
+      options: {
+        camelize: true,
+      },
+    }),
+  ],
   providers: [EnvironmentService],
   exports: [EnvironmentService],
 })
