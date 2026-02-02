@@ -67,30 +67,33 @@ export class ExecutionService implements OnModuleInit {
       return { noOrderId: 'dry-run-no-order-id', yesOrderId: 'dry-run-yes-order-id' };
     }
 
-    const [yesOrderResponse, noOrderResponse] = await Promise.all([
-      this.clobClient.createAndPostOrder(
-        { tokenID: yesTokenId, price: targetYes, side: Side.BUY, size: quantity },
-        { tickSize: minimumTickSize },
-        OrderType.GTC,
-      ),
-      this.clobClient.createAndPostOrder(
-        { tokenID: noTokenId, price: targetNo, side: Side.BUY, size: quantity },
-        { tickSize: minimumTickSize },
-        OrderType.GTC,
-      ),
-    ]);
+    // MARK: place orders sequentially
+    // 1. Place YES order first
+    const yesOrderResponse = await this.clobClient.createAndPostOrder(
+      { tokenID: yesTokenId, price: targetYes, side: Side.BUY, size: quantity },
+      { tickSize: minimumTickSize },
+      OrderType.GTC,
+    );
 
-    // polymarket docs are inconsistent with orderID vs orderId
     const yesOrderId = yesOrderResponse.orderID || yesOrderResponse.orderId;
-    const noOrderId = noOrderResponse.orderID || noOrderResponse.orderId;
-
     if (!yesOrderResponse.success || !yesOrderId) {
       throw new Error(`Failed to place YES order: ${yesOrderResponse.errorMsg ?? 'Unknown error'}`);
     }
 
+    // 2. Place NO order only after YES succeeds
+    const noOrderResponse = await this.clobClient.createAndPostOrder(
+      { tokenID: noTokenId, price: targetNo, side: Side.BUY, size: quantity },
+      { tickSize: minimumTickSize },
+      OrderType.GTC,
+    );
+
+    const noOrderId = noOrderResponse.orderID || noOrderResponse.orderId;
     if (!noOrderResponse.success || !noOrderId) {
-      // Cancel the YES order if the NO order fails
-      await this.clobClient.cancelOrder({ orderID: yesOrderId });
+      // Cancel YES order - any fills that occurred will be tracked via WebSocket updates
+      this.logger.warn(`NO order failed, cancelling YES order ${yesOrderId}`);
+      await this.clobClient.cancelOrder({ orderID: yesOrderId }).catch((err) => {
+        this.logger.error(`Failed to cancel YES order ${yesOrderId} during rollback: ${err.message}`);
+      });
       throw new Error(`Failed to place NO order: ${noOrderResponse.errorMsg ?? 'Unknown error'}`);
     }
 
