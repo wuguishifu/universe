@@ -1,6 +1,6 @@
 import { Wallet } from '@ethersproject/wallet';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ClobClient } from '@polymarket/clob-client';
+import { ClobClient, OrderType, Side } from '@polymarket/clob-client';
 
 import { CLOB_API_BASE } from '../../constants/constants';
 import { EnvironmentService } from '../../environment/environment-service';
@@ -12,6 +12,8 @@ const SIGNATURE_TYPE_TO_MODE_DEBUG: Record<number, string> = {
   1: 'Mode: Polymarket Magic Link proxy wallet',
   2: 'Mode: Polymarket browser wallet (Gnosis Safe proxy)',
 };
+
+const TICK_SIZE = '0.01';
 
 @Injectable()
 export class ExecutionService implements OnModuleInit {
@@ -83,17 +85,55 @@ export class ExecutionService implements OnModuleInit {
     yesOrderId: string;
     noOrderId: string;
   }> {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const { yesTokenId, noTokenId } = this.getTokenIds(marketId);
+    if (!this.isConfigured || !this.clobClient) {
+      throw new Error('CLOB client is not configured');
+    }
 
+    const { yesTokenId, noTokenId } = this.getTokenIds(marketId);
     this.logger.log(
       `Placing limit orders on market ${marketId}: Yes Token @ ${targetYes}, No Token @ ${targetNo} for quantity ${quantity}`,
     );
 
+    const [yesOrderResponse, noOrderResponse] = await Promise.all([
+      this.clobClient.createAndPostOrder(
+        { tokenID: yesTokenId, price: targetYes, side: Side.BUY, size: quantity },
+        { tickSize: TICK_SIZE },
+        OrderType.GTC,
+      ),
+      this.clobClient.createAndPostOrder(
+        { tokenID: noTokenId, price: targetNo, side: Side.BUY, size: quantity },
+        { tickSize: TICK_SIZE },
+        OrderType.GTC,
+      ),
+    ]);
+
+    // polymarket docs are inconsistent with orderID vs orderId
+    const yesOrderId = yesOrderResponse.orderID || yesOrderResponse.orderId;
+    const noOrderId = noOrderResponse.orderID || noOrderResponse.orderId;
+
+    if (!yesOrderResponse.success || !yesOrderId) {
+      throw new Error(`Failed to place YES order: ${yesOrderResponse.errorMsg ?? 'Unknown error'}`);
+    }
+
+    if (!noOrderResponse.success || !noOrderId) {
+      // Cancel the YES order if the NO order fails
+      await this.clobClient.cancelOrder({ orderID: yesOrderId });
+      throw new Error(`Failed to place NO order: ${noOrderResponse.errorMsg ?? 'Unknown error'}`);
+    }
+
+    this.logger.log(`Successfully placed orders: YES=${yesOrderId}, NO=${noOrderId}`);
     return {
-      yesOrderId: `order-${yesTokenId}-${Date.now()}`,
-      noOrderId: `order-${noTokenId}-${Date.now()}`,
+      yesOrderId,
+      noOrderId,
     };
+  }
+
+  public async cancelOrder(orderId: string) {
+    if (!this.clobClient || !this.isConfigured) {
+      throw new Error('CLOB client is not configured');
+    }
+    await this.clobClient.cancelOrder({ orderID: orderId });
+    this.logger.log(`Cancelled order ${orderId}`);
   }
 
   public async sellMarketPosition({
@@ -118,11 +158,6 @@ export class ExecutionService implements OnModuleInit {
     this.getTokenIds(marketId);
 
     this.logger.log(`Merging ${amount} positions on market ${marketId}`);
-  }
-
-  public async cancelOrder(orderId: string) {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    this.logger.log(`Cancelling order ${orderId}`);
   }
 
   private getTokenIds(marketId: string): { yesTokenId: string; noTokenId: string } {
