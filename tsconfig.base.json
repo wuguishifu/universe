@@ -21,6 +21,7 @@
     "paths": {
       "@wuguishifu/environment": ["libs/environment/src/index.ts"],
       "@wuguishifu/engine": ["libs/engine/src/index.ts"],
+      "@wuguishifu/nest-common": ["libs/nest-common/src/index.ts"],
       "@wuguishifu/ui-web": ["libs/ui-web/src/index.ts"],
       "@wuguishifu/utils-web": ["libs/utils-web/src/index.ts"],
     },

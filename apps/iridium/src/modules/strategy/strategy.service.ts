@@ -1,0 +1,419 @@
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { TickSize } from '@polymarket/clob-client';
+import { filter, Subscription } from 'rxjs';
+
+import { EnvironmentService } from '../../environment/environment-service';
+import { OrderMessage } from '../../types/clob/orderMessage';
+import { MarketTick, MarketWsService } from '../clob/ws/market-ws.service';
+import { UserWsService } from '../clob/ws/user-ws.service';
+import { ExecutionService } from '../execution/execution.service';
+
+interface ActiveStraddle {
+  conditionId: string;
+
+  // Order IDs
+  yesOrderId: string;
+  noOrderId: string;
+
+  // "Bag" - The shares we currently hold (Available to Merge)
+  yesHoldings: number;
+  noHoldings: number;
+
+  // API State - Used to calculate Deltas & Status
+  yesCumulativeFilled: number; // The 'size_matched' from last message
+  noCumulativeFilled: number; // The 'size_matched' from last message
+
+  yesStatus: 'OPEN' | 'FILLED' | 'CANCELED';
+  noStatus: 'OPEN' | 'FILLED' | 'CANCELED';
+
+  // Legging risk timer
+  timer?: NodeJS.Timeout;
+}
+
+@Injectable()
+export class StrategyService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(StrategyService.name);
+
+  /** conditionId -> StraddleState */
+  private readonly activeStraddles = new Map<string, ActiveStraddle>();
+
+  /** conditionId being processed */
+  private readonly marketsInProgress = new Set<string>();
+
+  /** orderId -> conditionId */
+  private readonly orderMap = new Map<string, string>();
+
+  /** RxJS subscriptions to clean up on destroy */
+  private readonly subscriptions: Subscription[] = [];
+
+  /** Per-market throttle tracking (conditionId -> last evaluation timestamp) */
+  private readonly lastEvalTime = new Map<string, number>();
+
+  constructor(
+    private readonly userWsService: UserWsService,
+    private readonly marketWsService: MarketWsService,
+    private readonly executionService: ExecutionService,
+    private readonly environmentService: EnvironmentService,
+  ) {}
+
+  // MARK: deinit
+  async onModuleDestroy() {
+    this.logger.log('Shutting down strategy service...');
+
+    // Unsubscribe from all RxJS subscriptions
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+    this.subscriptions.length = 0;
+    this.lastEvalTime.clear();
+
+    if (this.activeStraddles.size === 0) {
+      this.logger.log('No active straddles to clean up');
+      return;
+    }
+
+    this.logger.log(`Cleaning up ${this.activeStraddles.size} active straddles...`);
+
+    // MARK: cancel open orders
+    const cancelPromises: Promise<void>[] = [];
+    for (const straddle of this.activeStraddles.values()) {
+      if (straddle.timer) {
+        clearTimeout(straddle.timer);
+        straddle.timer = undefined;
+      }
+
+      if (straddle.yesStatus === 'OPEN') {
+        cancelPromises.push(
+          this.executionService.cancelOrder(straddle.yesOrderId).catch((err) => {
+            this.logger.error(`Failed to cancel YES order ${straddle.yesOrderId}: ${(err as Error).message}`);
+          }),
+        );
+      }
+      if (straddle.noStatus === 'OPEN') {
+        cancelPromises.push(
+          this.executionService.cancelOrder(straddle.noOrderId).catch((err) => {
+            this.logger.error(`Failed to cancel NO order ${straddle.noOrderId}: ${(err as Error).message}`);
+          }),
+        );
+      }
+    }
+
+    await Promise.all(cancelPromises);
+    this.logger.log('All open orders cancelled.');
+
+    // MARK: sell excess holdings
+    const sellPromises: Promise<void>[] = [];
+    for (const straddle of this.activeStraddles.values()) {
+      const excessYes = Math.max(0, straddle.yesHoldings - straddle.noHoldings);
+      const excessNo = Math.max(0, straddle.noHoldings - straddle.yesHoldings);
+
+      if (excessYes > 0 || excessNo > 0) {
+        this.logger.log(
+          `Selling excess on ${straddle.conditionId}: YES=${excessYes.toFixed(2)}, NO=${excessNo.toFixed(2)}`,
+        );
+        sellPromises.push(
+          this.executionService
+            .sellMarketPosition({
+              conditionId: straddle.conditionId,
+              yesAmount: excessYes,
+              noAmount: excessNo,
+            })
+            .catch((err) => {
+              this.logger.error(`Failed to sell excess on ${straddle.conditionId}: ${(err as Error).message}`);
+            }),
+        );
+      }
+    }
+
+    if (sellPromises.length > 0) {
+      await Promise.all(sellPromises);
+      this.logger.log('Excess holdings sold.');
+    }
+
+    this.logger.log('Shutdown complete.');
+  }
+
+  // MARK: init
+  public onModuleInit() {
+    // entry pipe
+    const marketTickSub = this.marketWsService.marketTicks$
+      .pipe(
+        // MARK: filter for valid straddle opportunities
+        filter((tick) => {
+          const totalCost = tick.bestBidYes + tick.bestBidNo;
+          if (totalCost <= 0.9) {
+            this.logger.debug(`Skipping market ${tick.conditionId} with total cost ${totalCost.toFixed(4)} (too low)`);
+            return false;
+          }
+
+          if (totalCost >= 1.01) {
+            this.logger.debug(`Skipping market ${tick.conditionId} with total cost ${totalCost.toFixed(4)} (too high)`);
+            return false;
+          }
+
+          return true;
+        }),
+        // MARK: filter for time remaining
+        filter((tick) => {
+          if (tick.timeRemaining <= this.environmentService.environment.minTimeRemainingMs) {
+            this.logger.debug(
+              `Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too little)`,
+            );
+            return false;
+          }
+
+          if (tick.timeElapsed <= this.environmentService.environment.minTimeElapsedMs) {
+            this.logger.debug(
+              `Skipping market ${tick.conditionId} with time elapsed ${tick.timeElapsed}ms (too little)`,
+            );
+            return false;
+          }
+
+          return true;
+        }),
+        // MARK: throttle per-market to avoid rapid re-evaluation
+        filter((tick) => {
+          const now = Date.now();
+          const lastTime = this.lastEvalTime.get(tick.conditionId) ?? 0;
+          if (now - lastTime < 100) {
+            return false;
+          }
+          this.lastEvalTime.set(tick.conditionId, now);
+          return true;
+        }),
+      )
+      .subscribe((tick) => {
+        this.evaluateStraddle(tick);
+      });
+    this.subscriptions.push(marketTickSub);
+
+    // lifecycle pipe
+    const orderUpdateSub = this.userWsService.orderUpdates$.subscribe((update) => this.handleOrderUpdate(update));
+    this.subscriptions.push(orderUpdateSub);
+  }
+
+  private async evaluateStraddle(tick: MarketTick) {
+    // MARK: skip if already active or in progress
+    if (this.activeStraddles.has(tick.conditionId) || this.marketsInProgress.has(tick.conditionId)) {
+      return;
+    }
+
+    // MARK: calculate target bids
+    const targetEntry = this.environmentService.environment.targetEntry;
+    const currentSpread = tick.bestBidYes + tick.bestBidNo;
+    const targetDiscount = Math.max((currentSpread - targetEntry) / 2, 0);
+
+    const targetYes = this.roundDown(tick.bestBidYes - targetDiscount, tick.minTickSize);
+    const targetNo = this.roundDown(tick.bestBidNo - targetDiscount, tick.minTickSize);
+    if (targetYes <= 0 || targetNo <= 0) {
+      return;
+    }
+
+    if (targetYes > tick.bestBidYes || targetNo > tick.bestBidNo) {
+      this.logger.warn(`Calculated target bids are worse than current bids for market ${tick.conditionId}. Skipping.`);
+      return;
+    }
+
+    if (targetYes + targetNo > 1.0) {
+      return;
+    }
+
+    this.marketsInProgress.add(tick.conditionId);
+    this.logger.log(
+      `Opportunity on ${tick.conditionId} (Skew: ${tick.bestBidYes}/${tick.bestBidNo}). Placing Skewed Limits: Yes@${targetYes} | No@${targetNo}`,
+    );
+
+    try {
+      // MARK: place limit orders
+      const { yesOrderId, noOrderId } = await this.executionService.placeLimitOrder({
+        conditionId: tick.conditionId,
+        targetYes,
+        targetNo,
+        quantity: this.environmentService.environment.targetPositionSize,
+      });
+
+      this.activeStraddles.set(tick.conditionId, {
+        conditionId: tick.conditionId,
+        yesOrderId,
+        noOrderId,
+        yesHoldings: 0,
+        noHoldings: 0,
+        yesCumulativeFilled: 0,
+        noCumulativeFilled: 0,
+        yesStatus: 'OPEN',
+        noStatus: 'OPEN',
+      });
+      this.orderMap.set(yesOrderId, tick.conditionId);
+      this.orderMap.set(noOrderId, tick.conditionId);
+      this.marketsInProgress.delete(tick.conditionId);
+    } catch (error) {
+      this.logger.error(`Failed to place limit order on ${tick.conditionId}: ${(error as Error).message}`);
+      this.marketsInProgress.delete(tick.conditionId);
+    }
+  }
+
+  private handleOrderUpdate(update: OrderMessage) {
+    // MARK: find context
+    const conditionId = this.orderMap.get(update.id);
+    if (!conditionId) {
+      this.logger.warn(`Received order update for unknown orderId: ${update.id}`);
+      return;
+    }
+
+    const straddle = this.activeStraddles.get(conditionId);
+    if (!straddle) {
+      this.logger.warn(`No active straddle found for conditionId: ${conditionId}`);
+      return;
+    }
+
+    // MARK: update state
+    let delta = 0;
+    const newMatchedSize = parseFloat(update.size_matched);
+    const originalSize = parseFloat(update.original_size);
+
+    // MARK: update state
+    if (update.id === straddle.yesOrderId) {
+      delta = newMatchedSize - straddle.yesCumulativeFilled;
+      straddle.yesCumulativeFilled = newMatchedSize;
+      if (delta > 0) {
+        straddle.yesHoldings += delta;
+      }
+
+      if (update.type === 'CANCELLATION') {
+        straddle.yesStatus = 'CANCELED';
+      } else if (newMatchedSize >= originalSize) {
+        straddle.yesStatus = 'FILLED';
+      } else {
+        straddle.yesStatus = 'OPEN';
+      }
+    } else if (update.id === straddle.noOrderId) {
+      delta = newMatchedSize - straddle.noCumulativeFilled;
+      straddle.noCumulativeFilled = newMatchedSize;
+      if (delta > 0) {
+        straddle.noHoldings += delta;
+      }
+
+      if (update.type === 'CANCELLATION') {
+        straddle.noStatus = 'CANCELED';
+      } else if (newMatchedSize >= originalSize) {
+        straddle.noStatus = 'FILLED';
+      } else {
+        straddle.noStatus = 'OPEN';
+      }
+    }
+
+    // MARK: check for merge
+    const match = Math.min(straddle.yesHoldings, straddle.noHoldings);
+    if (match > 0) {
+      straddle.yesHoldings -= match;
+      straddle.noHoldings -= match;
+
+      this.logger.log(`Merging ${match} positions on condition ${conditionId}`);
+      this.executionService.mergePositions({ conditionId, amount: match });
+    }
+
+    // MARK: check for complete exit
+    const isYesDone = straddle.yesStatus === 'FILLED' || straddle.yesStatus === 'CANCELED';
+    const isNoDone = straddle.noStatus === 'FILLED' || straddle.noStatus === 'CANCELED';
+    if (isYesDone && isNoDone) {
+      // ensure we don't delete while pending a merge
+      if (straddle.yesHoldings < 0.001 && straddle.noHoldings < 0.001) {
+        this.logger.log(`Straddle on condition ${conditionId} is complete. Cleaning up state.`);
+        this.cleanupStraddle(straddle);
+        return;
+      }
+    }
+
+    // MARK: risk timer
+    const imbalance = Math.abs(straddle.yesHoldings - straddle.noHoldings);
+    if (imbalance > 0 && !straddle.timer) {
+      this.logger.warn(`Starting legging risk timer for ${conditionId}`);
+      straddle.timer = setTimeout(() => this.panicExit(straddle), this.environmentService.environment.panicExitDelayMs);
+    } else if (imbalance === 0 && straddle.timer) {
+      this.logger.debug(`Clearing legging risk timer for ${conditionId}`);
+      clearTimeout(straddle.timer);
+      straddle.timer = undefined;
+    }
+  }
+
+  private async cleanupStraddle(straddle: ActiveStraddle) {
+    this.logger.debug(`Cleaning up straddle for condition ${straddle.conditionId}`);
+
+    // Clear timer first to prevent concurrent panic exit
+    if (straddle.timer) {
+      clearTimeout(straddle.timer);
+      straddle.timer = undefined;
+    }
+
+    // Handle any remaining imbalanced holdings BEFORE deleting state
+    if (Math.abs(straddle.yesHoldings - straddle.noHoldings) > 0.001) {
+      this.logger.warn(
+        `Significant holdings remain for condition ${straddle.conditionId} during cleanup: Yes=${straddle.yesHoldings}, No=${straddle.noHoldings}`,
+      );
+      await this.panicExit(straddle, false); // Don't cleanup again from panicExit
+    }
+
+    // Now safe to delete state
+    this.activeStraddles.delete(straddle.conditionId);
+    this.orderMap.delete(straddle.yesOrderId);
+    this.orderMap.delete(straddle.noOrderId);
+    this.lastEvalTime.delete(straddle.conditionId);
+
+    this.logger.debug(`Straddle for condition ${straddle.conditionId} has been cleaned up.`);
+  }
+
+  private async panicExit(straddle: ActiveStraddle, shouldCleanup = true) {
+    this.logger.error(`Initiating panic exit for ${straddle.conditionId}.`);
+
+    // Cancel any remaining open orders
+    const cancelPromises: Promise<void>[] = [];
+    if (straddle.yesStatus === 'OPEN') {
+      cancelPromises.push(
+        this.executionService.cancelOrder(straddle.yesOrderId).catch((err) => {
+          this.logger.error(`Failed to cancel YES order ${straddle.yesOrderId}: ${(err as Error).message}`);
+        }),
+      );
+    }
+    if (straddle.noStatus === 'OPEN') {
+      cancelPromises.push(
+        this.executionService.cancelOrder(straddle.noOrderId).catch((err) => {
+          this.logger.error(`Failed to cancel NO order ${straddle.noOrderId}: ${(err as Error).message}`);
+        }),
+      );
+    }
+    await Promise.all(cancelPromises);
+
+    // Sell any remaining holdings
+    if (straddle.yesHoldings > 0 || straddle.noHoldings > 0) {
+      try {
+        await this.executionService.sellMarketPosition({
+          conditionId: straddle.conditionId,
+          yesAmount: straddle.yesHoldings,
+          noAmount: straddle.noHoldings,
+        });
+        // Zero out holdings after successful sell
+        straddle.yesHoldings = 0;
+        straddle.noHoldings = 0;
+      } catch (error) {
+        this.logger.error(
+          `Failed to execute panic sell on condition ${straddle.conditionId}: ${(error as Error).message}`,
+        );
+      }
+    }
+
+    // Clean up state if called from timer (not from cleanupStraddle)
+    if (shouldCleanup) {
+      this.activeStraddles.delete(straddle.conditionId);
+      this.orderMap.delete(straddle.yesOrderId);
+      this.orderMap.delete(straddle.noOrderId);
+      if (straddle.timer) {
+        clearTimeout(straddle.timer);
+        straddle.timer = undefined;
+      }
+    }
+  }
+
+  /** Rounds down to 2 decimal places (requirement by PolyMarket) */
+  private roundDown(value: number, tickSize: TickSize): number {
+    const factor = 1 / parseFloat(tickSize);
+    return Math.floor(value * factor) / factor;
+  }
+}
