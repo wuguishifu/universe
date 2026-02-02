@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { TickSize } from '@polymarket/clob-client';
-import { filter, groupBy, map, mergeAll, throttleTime } from 'rxjs';
+import { filter, Subscription } from 'rxjs';
 
 import { EnvironmentService } from '../../environment/environment-service';
 import { OrderMessage } from '../../types/clob/orderMessage';
@@ -43,6 +43,12 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   /** orderId -> conditionId */
   private readonly orderMap = new Map<string, string>();
 
+  /** RxJS subscriptions to clean up on destroy */
+  private readonly subscriptions: Subscription[] = [];
+
+  /** Per-market throttle tracking (conditionId -> last evaluation timestamp) */
+  private readonly lastEvalTime = new Map<string, number>();
+
   constructor(
     private readonly userWsService: UserWsService,
     private readonly marketWsService: MarketWsService,
@@ -53,6 +59,11 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   // MARK: deinit
   async onModuleDestroy() {
     this.logger.log('Shutting down strategy service...');
+
+    // Unsubscribe from all RxJS subscriptions
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+    this.subscriptions.length = 0;
+    this.lastEvalTime.clear();
 
     if (this.activeStraddles.size === 0) {
       this.logger.log('No active straddles to clean up');
@@ -123,7 +134,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   // MARK: init
   public onModuleInit() {
     // entry pipe
-    this.marketWsService.marketTicks$
+    const marketTickSub = this.marketWsService.marketTicks$
       .pipe(
         // MARK: filter for valid straddle opportunities
         filter((tick) => {
@@ -158,17 +169,25 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
 
           return true;
         }),
-        // MARK: throttle per-market to avoid rapid re-evaluation while allowing different markets through
-        groupBy((tick) => tick.conditionId),
-        map((marketGroup$) => marketGroup$.pipe(throttleTime(100))),
-        mergeAll(),
+        // MARK: throttle per-market to avoid rapid re-evaluation
+        filter((tick) => {
+          const now = Date.now();
+          const lastTime = this.lastEvalTime.get(tick.conditionId) ?? 0;
+          if (now - lastTime < 100) {
+            return false;
+          }
+          this.lastEvalTime.set(tick.conditionId, now);
+          return true;
+        }),
       )
       .subscribe((tick) => {
         this.evaluateStraddle(tick);
       });
+    this.subscriptions.push(marketTickSub);
 
     // lifecycle pipe
-    this.userWsService.orderUpdates$.subscribe((update) => this.handleOrderUpdate(update));
+    const orderUpdateSub = this.userWsService.orderUpdates$.subscribe((update) => this.handleOrderUpdate(update));
+    this.subscriptions.push(orderUpdateSub);
   }
 
   private async evaluateStraddle(tick: MarketTick) {
@@ -336,6 +355,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     this.activeStraddles.delete(straddle.conditionId);
     this.orderMap.delete(straddle.yesOrderId);
     this.orderMap.delete(straddle.noOrderId);
+    this.lastEvalTime.delete(straddle.conditionId);
 
     this.logger.debug(`Straddle for condition ${straddle.conditionId} has been cleaned up.`);
   }
