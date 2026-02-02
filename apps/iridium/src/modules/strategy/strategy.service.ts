@@ -33,13 +33,13 @@ interface ActiveStraddle {
 export class StrategyService implements OnModuleInit {
   private readonly logger = new Logger(StrategyService.name);
 
-  /** marketId -> StraddleState */
+  /** conditionId -> StraddleState */
   private readonly activeStraddles = new Map<string, ActiveStraddle>();
 
-  /** marketIds being processed */
+  /** conditionId being processed */
   private readonly marketsInProgress = new Set<string>();
 
-  /** orderId -> marketId */
+  /** orderId -> conditionId */
   private readonly orderMap = new Map<string, string>();
 
   constructor(
@@ -188,7 +188,7 @@ export class StrategyService implements OnModuleInit {
       straddle.noHoldings -= match;
 
       this.logger.log(`Merging ${match} positions on market ${marketId}`);
-      this.executionService.mergePositions({ marketId, amount: match });
+      this.executionService.mergePositions({ conditionId: marketId, amount: match });
     }
 
     // MARK: check for complete exit

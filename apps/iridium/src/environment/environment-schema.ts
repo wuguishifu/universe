@@ -8,9 +8,15 @@ export const environmentSchema = z
     targetPositionSize: z.coerce.number().min(0).default(50),
     panicExitDelayMs: z.coerce.number().min(0).default(120_000),
 
+    // clob config
     privateKey: z.string().min(1, { error: 'private key required' }),
     funderAddress: z.string().min(1),
     signatureType: z.coerce.number().min(0).max(2).default(1),
+
+    // relayer config
+    polyApiKey: z.string(),
+    polyApiSecret: z.string(),
+    polyApiPassphrase: z.string(),
   })
   .refine((data) => data.signatureType !== 1 || !!data.funderAddress, {
     message: 'funderAddress is required when signatureType is 1',

@@ -2,11 +2,11 @@ import { Wallet } from '@ethersproject/wallet';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ClobClient, OrderType, Side, TickSize } from '@polymarket/clob-client';
 
-import { CLOB_API_BASE } from '../../constants/constants';
+import { RelayerService } from './relayer.service';
+import { CLOB_API_BASE, POLYGON_CHAIN_ID } from '../../constants/constants';
 import { EnvironmentService } from '../../environment/environment-service';
 import { CacheService } from '../cache/cache.service';
 
-const POLYGON_CHAIN_ID = 137;
 const SIGNATURE_TYPE_TO_MODE_DEBUG: Record<number, string> = {
   0: 'Mode: direct EOA wallet',
   1: 'Mode: Polymarket Magic Link proxy wallet',
@@ -22,6 +22,7 @@ export class ExecutionService implements OnModuleInit {
 
   constructor(
     private readonly cacheService: CacheService,
+    private readonly relayerService: RelayerService,
     private readonly environmentService: EnvironmentService,
   ) {}
 
@@ -196,12 +197,8 @@ export class ExecutionService implements OnModuleInit {
   }
 
   // MARK: merge positions
-  public async mergePositions({ marketId, amount }: { marketId: string; amount: number }) {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    // const { yesTokenId, noTokenId } = this.getTokenIds(marketId);
-    this.getMarketMetadata(marketId);
-
-    this.logger.log(`Merging ${amount} positions on market ${marketId}`);
+  public mergePositions({ conditionId, amount }: { conditionId: string; amount: number }) {
+    return this.relayerService.mergePositions({ conditionId, amount });
   }
 
   // #region helper methods
