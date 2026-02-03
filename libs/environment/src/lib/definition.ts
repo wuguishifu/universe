@@ -9,5 +9,12 @@ export const config = z
     osmium: z.object({
       apiAccessKey: z.string(),
     }),
+    hydrogen: z.object({
+      host: z.string(),
+      port: z.number(),
+      user: z.string(),
+      password: z.string(),
+      database: z.string(),
+    }),
   })
   .strict();

@@ -20,6 +20,7 @@
     "typeRoots": ["./types", "./node_modules/@types"],
     "paths": {
       "@wuguishifu/contracts-osmium": ["libs/contracts-osmium/src/index.ts"],
+      "@wuguishifu/db-hydrogen": ["libs/db-hydrogen/src/index.ts"],
       "@wuguishifu/environment": ["libs/environment/src/index.ts"],
       "@wuguishifu/engine": ["libs/engine/src/index.ts"],
       "@wuguishifu/nest-common": ["libs/nest-common/src/index.ts"],
