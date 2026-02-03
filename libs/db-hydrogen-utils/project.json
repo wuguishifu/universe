@@ -12,6 +12,44 @@
         "cwd": "libs/db-hydrogen-utils"
       }
     },
+    "migrate:generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/db-hydrogen-utils",
+        "command": "drizzle-kit generate:pg --schema=../db-hydrogen/src/db/schemas/* --out=./src/lib/migrations"
+      }
+    },
+    "migrate:run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/db-hydrogen-utils",
+        "command": "ts-node -r tsconfig-paths/register ./src/lib/migrate.ts"
+      }
+    },
+    "create:db": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/db-hydrogen-utils",
+        "command": "ts-node -r tsconfig-paths/register ./src/lib/db/setup.ts"
+      }
+    },
+    "init:db": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/db-hydrogen-utils",
+        "commands": [
+          "pnpm nx create:db db-hydrogen-utils",
+          "pnpm nx migrate:run db-hydrogen-utils"
+        ]
+      }
+    },
+    "studio": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/db-hydrogen-utils",
+        "command": "pnpm dlx drizzle-kit studio"
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": [
