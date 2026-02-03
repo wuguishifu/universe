@@ -12,13 +12,15 @@ export class TrackingService {
 
   public async trackEvent(event: TrackingEvent) {
     this.logger.debug(`Tracking event received: ${event.name}`);
-    const cleanedEvent = { ...event, createdAt: new Date(event.createdAt) };
-    await this.hydrogen.insert(osmiumSchema.events).values([cleanedEvent]);
+    await this.hydrogen.insert(osmiumSchema.events).values([this.prepareEvent(event)]);
   }
 
   public async trackEventBatch(events: TrackingEvent[]) {
     this.logger.debug(`Tracking batch of ${events.length} events`);
-    const cleanedEvents = events.map((event) => ({ ...event, createdAt: new Date(event.createdAt) }));
-    await this.hydrogen.insert(osmiumSchema.events).values(cleanedEvents);
+    await this.hydrogen.insert(osmiumSchema.events).values(events.map(this.prepareEvent));
   }
+
+  private prepareEvent = (event: TrackingEvent): typeof osmiumSchema.events.$inferInsert => {
+    return { metadata: {}, ...event, createdAt: new Date(event.createdAt) };
+  };
 }
