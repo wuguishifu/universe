@@ -49,7 +49,7 @@ jobs:
         id: config
         run: |
           CONFIG=$(cat .github/config/server-app-config.json)
-          CONFIG_PATH=".apps.\"${{ inputs.app }}\".\"${{ inputs.environment }}\""
+          CONFIG_PATH=".apps.\"${{ inputs.app }}\""
           REGISTRY_PATH=$(echo "$CONFIG" | jq -r "$CONFIG_PATH.registryPath")
           if [ "$REGISTRY_PATH" == "null" ]; then
             echo "Error: Invalid configuration for app '${{ inputs.app }}' in environment '${{ inputs.environment }}'."
