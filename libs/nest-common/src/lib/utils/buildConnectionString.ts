@@ -1,4 +1,4 @@
-type DBConfig = {
+export type DbConfig = {
   user?: string;
   password?: string;
   host?: string;
@@ -9,7 +9,7 @@ type DBConfig = {
   };
 };
 
-export const buildConnectionString = (dbConfig: DBConfig, options?: { excludeDb: boolean }) =>
+export const buildConnectionString = (dbConfig: DbConfig, options?: { excludeDb: boolean }) =>
   `postgres://${dbConfig.user}:${dbConfig.password}@${dbConfig.host}:${dbConfig.port}${
     options?.excludeDb ? '' : `/${dbConfig.database}`
   }`;

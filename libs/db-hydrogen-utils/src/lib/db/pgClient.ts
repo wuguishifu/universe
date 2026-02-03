@@ -1,8 +1,7 @@
 import { environmentConfig } from '@wuguishifu/environment';
+import { buildConnectionString } from '@wuguishifu/nest-common';
 import { drizzle as jsDrizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-
-import { buildConnectionString } from '../build-connection-string';
 
 const connectionString =
   process.env['HYDROGEN_DB_URL'] || buildConnectionString(environmentConfig.hydrogen, { excludeDb: true });

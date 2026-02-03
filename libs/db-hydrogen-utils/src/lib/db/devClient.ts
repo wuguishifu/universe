@@ -1,12 +1,11 @@
 import { environmentConfig } from '@wuguishifu/environment';
+import { buildConnectionString } from '@wuguishifu/nest-common';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { drizzle as jsDrizzle } from 'drizzle-orm/postgres-js';
 import { migrate as jsMigrate } from 'drizzle-orm/postgres-js/migrator';
 import { Pool, PoolConfig } from 'pg';
 import postgres from 'postgres';
-
-import { buildConnectionString } from '../build-connection-string';
 
 const connectionString = process.env['HYDROGEN_DB_URL'] || buildConnectionString(environmentConfig.hydrogen);
 

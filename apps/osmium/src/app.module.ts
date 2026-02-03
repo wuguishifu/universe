@@ -5,10 +5,11 @@ import { AllExceptionsFilter, CommonModule, HealthController } from '@wuguishifu
 
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
+import { GlobalModule } from './modules/global.module';
 import { TrackingModule } from './modules/tracking/tracking.module';
 
 @Module({
-  imports: [CommonModule, AuthModule, TrackingModule],
+  imports: [AuthModule, CommonModule, GlobalModule, TrackingModule],
   controllers: [AppController, HealthController],
   providers: [
     {
