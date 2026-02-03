@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { osmiumSchema } from '@wuguishifu/db-hydrogen';
 
 import { TrackingEvent } from '@wuguishifu/contracts-osmium';
+import { osmiumSchema } from '@wuguishifu/db-hydrogen';
 import { HYDROGEN_DB, HydrogenDb } from '@wuguishifu/nest-common';
 
 @Injectable()
