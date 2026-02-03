@@ -11,7 +11,7 @@ export const environmentSchema = z
     panicExitDelayMs: z.coerce.number().min(0).default(120_000),
 
     // clob config
-    privateKey: z.string().min(1, { error: 'private key required' }),
+    privateKey: z.string().min(1, { message: 'private key required' }),
     signatureType: z.coerce.number().min(0).max(2).default(1),
     funderAddress: z.string().optional(),
 
