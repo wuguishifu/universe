@@ -4,10 +4,11 @@ import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter, CommonModule, HealthController } from '@wuguishifu/nest-common';
 
 import { AppController } from './app.controller';
+import { AuthModule } from './auth/auth.module';
 import { TrackingModule } from './modules/tracking/tracking.module';
 
 @Module({
-  imports: [CommonModule, TrackingModule],
+  imports: [CommonModule, AuthModule, TrackingModule],
   controllers: [AppController, HealthController],
   providers: [
     {
