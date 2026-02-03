@@ -16,7 +16,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "libs/db-hydrogen-utils",
-        "command": "drizzle-kit generate:pg --schema=../db-hydrogen/src/db/schemas/* --out=./src/lib/migrations"
+        "command": "drizzle-kit generate --config=./drizzle.config.ts"
       }
     },
     "migrate:run": {
@@ -47,7 +47,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "libs/db-hydrogen-utils",
-        "command": "pnpm dlx drizzle-kit studio"
+        "command": "drizzle-kit studio --config=./src/drizzle.config.ts"
       }
     },
     "docker": {

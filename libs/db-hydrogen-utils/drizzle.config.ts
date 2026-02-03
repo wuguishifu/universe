@@ -2,8 +2,8 @@ import { environmentConfig } from '@wuguishifu/environment';
 import type { Config } from 'drizzle-kit';
 
 export default {
-  schema: '../../db-hydrogen/src/db/schemas/*',
-  out: './lib/migrations',
+  schema: '../db-hydrogen/src/db/schemas/*',
+  out: './src/lib/migrations',
   dialect: 'postgresql',
   dbCredentials: {
     host: environmentConfig.hydrogen.host,
