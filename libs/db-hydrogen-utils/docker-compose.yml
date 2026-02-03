@@ -1,0 +1,10 @@
+---
+services:
+  postgres:
+    image: postgres
+    container_name: hydrogen-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "${COMPOSE_HYDROGEN_UTILS_POSTGRES_PORT:-5432}:5432"

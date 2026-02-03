@@ -18,6 +18,7 @@
     "strict": true,
     "noUnusedLocals": true,
     "typeRoots": ["./types", "./node_modules/@types"],
+    "noPropertyAccessFromIndexSignature": false,
     "paths": {
       "@wuguishifu/contracts-osmium": ["libs/contracts-osmium/src/index.ts"],
       "@wuguishifu/db-hydrogen": ["libs/db-hydrogen/src/index.ts"],

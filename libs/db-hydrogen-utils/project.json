@@ -50,6 +50,19 @@
         "command": "pnpm dlx drizzle-kit studio"
       }
     },
+    "docker": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/db-hydrogen-utils",
+        "parallel": false,
+        "commands": [
+          "docker stop db-hydrogen-utils || true",
+          "docker compose up --detach",
+          "pnpm nx init:db db-hydrogen-utils",
+          "docker ps"
+        ]
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": [
