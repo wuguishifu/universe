@@ -6,5 +6,8 @@ export const config = z
     quartz: z.object({
       PRISMIC_REVALIDATE_SECRET: z.string(),
     }),
+    osmium: z.object({
+      apiAccessKey: z.string(),
+    }),
   })
   .strict();

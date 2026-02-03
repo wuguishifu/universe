@@ -37,10 +37,10 @@ importers:
         version: 11.1.12(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)
       '@polymarket/builder-relayer-client':
         specifier: ^0.0.8
-        version: 0.0.8(zod@4.0.10)
+        version: 0.0.8(zod@3.21.4)
       '@polymarket/clob-client':
         specifier: ^5.2.1
-        version: 5.2.1(typescript@5.9.3)(zod@4.0.10)
+        version: 5.2.1(typescript@5.9.3)(zod@3.21.4)
       '@radix-ui/react-dropdown-menu':
         specifier: ^2.1.15
         version: 2.1.15(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -70,10 +70,10 @@ importers:
         version: 4.1.17
       '@ts-rest/core':
         specifier: ^3.52.1
-        version: 3.52.1(@types/node@24.1.0)(zod@4.0.10)
+        version: 3.52.1(@types/node@24.1.0)(zod@3.21.4)
       '@ts-rest/nest':
         specifier: ^3.52.1
-        version: 3.52.1(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(@ts-rest/core@3.52.1(@types/node@24.1.0)(zod@4.0.10))(rxjs@7.8.2)(zod@4.0.10)
+        version: 3.52.1(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(@ts-rest/core@3.52.1(@types/node@24.1.0)(zod@3.21.4))(rxjs@7.8.2)(zod@3.21.4)
       axios-retry:
         specifier: ^4.5.0
         version: 4.5.0(axios@1.13.2)
@@ -92,6 +92,12 @@ importers:
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      passport:
+        specifier: ^0.7.0
+        version: 0.7.0
+      passport-headerapikey:
+        specifier: ^1.2.2
+        version: 1.2.2
       react:
         specifier: 19.0.0
         version: 19.0.0
@@ -124,13 +130,13 @@ importers:
         version: 1.1.2(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       viem:
         specifier: ^2.45.1
-        version: 2.45.1(typescript@5.9.3)(zod@4.0.10)
+        version: 2.45.1(typescript@5.9.3)(zod@3.21.4)
       ws:
         specifier: ^8.19.0
         version: 8.19.0
       zod:
-        specifier: ^4.0.10
-        version: 4.0.10
+        specifier: ^3.21.4
+        version: 3.21.4
     devDependencies:
       '@babel/core':
         specifier: ^7.14.5
@@ -7631,6 +7637,9 @@ packages:
   pascal-case@3.1.2:
     resolution: {integrity: sha512-uWlGT3YSnK9x3BQJaOdcZwrnV6hPpd8jFH1/ucpiLRPh/2zCVJKS19E4GvYHvaCcACn3foXZ0cLB9Wrx1KGe5g==}
 
+  passport-headerapikey@1.2.2:
+    resolution: {integrity: sha512-4BvVJRrWsNJPrd3UoZfcnnl4zvUWYKEtfYkoDsaOKBsrWHYmzTApCjs7qUbncOLexE9ul0IRiYBFfBG0y9IVQA==}
+
   passport-strategy@1.0.0:
     resolution: {integrity: sha512-CB97UUvDKJde2V0KDWWB3lyf6PC3FaZP7YxZ2G8OAtn9p4HI9j9JLP9qjOGZFvyl8uwNT8qM+hGnz/n16NI7oA==}
     engines: {node: '>= 0.4.0'}
@@ -9946,8 +9955,8 @@ packages:
     resolution: {integrity: sha512-AyeEbWOu/TAXdxlV9wmGcR0+yh2j3vYPGOECcIj2S7MkrLyC7ne+oye2BKTItt0ii2PHk4cDy+95+LshzbXnGg==}
     engines: {node: '>=12.20'}
 
-  zod@4.0.10:
-    resolution: {integrity: sha512-3vB+UU3/VmLL2lvwcY/4RV2i9z/YU0DTV/tDuYjrwmx5WeJ7hwy+rGEEx8glHp6Yxw7ibRbKSaIFBgReRPe5KA==}
+  zod@3.21.4:
+    resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
 
   zustand@4.5.7:
     resolution: {integrity: sha512-CHOUy7mu3lbD6o6LJLfllpjkzhHXSBlX8B9+qPddUsIfeF5S/UZ5q0kmCsnRqT1UHFQZchNFDDzMbQsuesHWlw==}
@@ -12761,27 +12770,27 @@ snapshots:
       playwright: 1.54.1
     optional: true
 
-  '@polymarket/builder-abstract-signer@0.0.1(zod@4.0.10)':
+  '@polymarket/builder-abstract-signer@0.0.1(zod@3.21.4)':
     dependencies:
       ethers: 5.8.0
       ts-node: 9.1.1(typescript@5.9.3)
       typescript: 5.9.3
-      viem: 2.45.1(typescript@5.9.3)(zod@4.0.10)
+      viem: 2.45.1(typescript@5.9.3)(zod@3.21.4)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
       - zod
 
-  '@polymarket/builder-relayer-client@0.0.8(zod@4.0.10)':
+  '@polymarket/builder-relayer-client@0.0.8(zod@3.21.4)':
     dependencies:
-      '@polymarket/builder-abstract-signer': 0.0.1(zod@4.0.10)
+      '@polymarket/builder-abstract-signer': 0.0.1(zod@3.21.4)
       '@polymarket/builder-signing-sdk': 0.0.8
       axios: 0.27.2
       browser-or-node: 3.0.0
       ethers: 5.8.0
       tsx: 4.21.0
       typescript: 5.9.3
-      viem: 2.45.1(typescript@5.9.3)(zod@4.0.10)
+      viem: 2.45.1(typescript@5.9.3)(zod@3.21.4)
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -12796,13 +12805,13 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@polymarket/clob-client@5.2.1(typescript@5.9.3)(zod@4.0.10)':
+  '@polymarket/clob-client@5.2.1(typescript@5.9.3)(zod@3.21.4)':
     dependencies:
       '@ethersproject/providers': 5.8.0
       '@ethersproject/units': 5.8.0
       '@ethersproject/wallet': 5.8.0
       '@polymarket/builder-signing-sdk': 0.0.8
-      '@polymarket/order-utils': 3.0.1(typescript@5.9.3)(zod@4.0.10)
+      '@polymarket/order-utils': 3.0.1(typescript@5.9.3)(zod@3.21.4)
       axios: 1.13.2
       browser-or-node: 2.1.1
       ethers: 5.8.0
@@ -12814,13 +12823,13 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@polymarket/order-utils@3.0.1(typescript@5.9.3)(zod@4.0.10)':
+  '@polymarket/order-utils@3.0.1(typescript@5.9.3)(zod@3.21.4)':
     dependencies:
       '@ethersproject/providers': 5.8.0
       '@ethersproject/wallet': 5.8.0
       ethers: 5.8.0
       tslib: 2.8.1
-      viem: 2.45.1(typescript@5.9.3)(zod@4.0.10)
+      viem: 2.45.1(typescript@5.9.3)(zod@3.21.4)
     transitivePeerDependencies:
       - bufferutil
       - typescript
@@ -13911,19 +13920,19 @@ snapshots:
 
   '@trysound/sax@0.2.0': {}
 
-  '@ts-rest/core@3.52.1(@types/node@24.1.0)(zod@4.0.10)':
+  '@ts-rest/core@3.52.1(@types/node@24.1.0)(zod@3.21.4)':
     optionalDependencies:
       '@types/node': 24.1.0
-      zod: 4.0.10
+      zod: 3.21.4
 
-  '@ts-rest/nest@3.52.1(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(@ts-rest/core@3.52.1(@types/node@24.1.0)(zod@4.0.10))(rxjs@7.8.2)(zod@4.0.10)':
+  '@ts-rest/nest@3.52.1(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(@ts-rest/core@3.52.1(@types/node@24.1.0)(zod@3.21.4))(rxjs@7.8.2)(zod@3.21.4)':
     dependencies:
       '@nestjs/common': 11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/core': 11.1.12(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.12)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@ts-rest/core': 3.52.1(@types/node@24.1.0)(zod@4.0.10)
+      '@ts-rest/core': 3.52.1(@types/node@24.1.0)(zod@3.21.4)
       rxjs: 7.8.2
     optionalDependencies:
-      zod: 4.0.10
+      zod: 3.21.4
 
   '@tsconfig/node10@1.0.11': {}
 
@@ -14693,10 +14702,10 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
-  abitype@1.2.3(typescript@5.9.3)(zod@4.0.10):
+  abitype@1.2.3(typescript@5.9.3)(zod@3.21.4):
     optionalDependencies:
       typescript: 5.9.3
-      zod: 4.0.10
+      zod: 3.21.4
 
   abort-controller@3.0.0:
     dependencies:
@@ -18696,7 +18705,7 @@ snapshots:
       object-keys: 1.1.1
       safe-push-apply: 1.0.0
 
-  ox@0.11.3(typescript@5.9.3)(zod@4.0.10):
+  ox@0.11.3(typescript@5.9.3)(zod@3.21.4):
     dependencies:
       '@adraffy/ens-normalize': 1.11.1
       '@noble/ciphers': 1.3.0
@@ -18704,7 +18713,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.2.3(typescript@5.9.3)(zod@4.0.10)
+      abitype: 1.2.3(typescript@5.9.3)(zod@3.21.4)
       eventemitter3: 5.0.1
     optionalDependencies:
       typescript: 5.9.3
@@ -18781,6 +18790,11 @@ snapshots:
     dependencies:
       no-case: 3.0.4
       tslib: 2.8.1
+
+  passport-headerapikey@1.2.2:
+    dependencies:
+      lodash: 4.17.21
+      passport-strategy: 1.0.0
 
   passport-strategy@1.0.0: {}
 
@@ -20909,15 +20923,15 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  viem@2.45.1(typescript@5.9.3)(zod@4.0.10):
+  viem@2.45.1(typescript@5.9.3)(zod@3.21.4):
     dependencies:
       '@noble/curves': 1.9.1
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.2.3(typescript@5.9.3)(zod@4.0.10)
+      abitype: 1.2.3(typescript@5.9.3)(zod@3.21.4)
       isows: 1.0.7(ws@8.18.3)
-      ox: 0.11.3(typescript@5.9.3)(zod@4.0.10)
+      ox: 0.11.3(typescript@5.9.3)(zod@3.21.4)
       ws: 8.18.3
     optionalDependencies:
       typescript: 5.9.3
@@ -21248,7 +21262,7 @@ snapshots:
 
   yocto-queue@1.2.1: {}
 
-  zod@4.0.10: {}
+  zod@3.21.4: {}
 
   zustand@4.5.7(@types/react@19.0.0)(react@19.0.0):
     dependencies:

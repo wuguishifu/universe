@@ -1,0 +1,7 @@
+services:
+  osmium:
+    image: ghcr.io/wuguishifu/universe/osmium:latest
+    container_name: osmium
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
