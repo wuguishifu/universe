@@ -7,6 +7,7 @@ import { OrderMessage } from '../../types/clob/orderMessage';
 import { MarketTick, MarketWsService } from '../clob/ws/market-ws.service';
 import { UserWsService } from '../clob/ws/user-ws.service';
 import { ExecutionService } from '../execution/execution.service';
+import { LedgerService } from '../ledger/ledger.service';
 
 interface ActiveStraddle {
   conditionId: string;
@@ -14,6 +15,11 @@ interface ActiveStraddle {
   // Order IDs
   yesOrderId: string;
   noOrderId: string;
+
+  // Order parameters (needed for refund calculations)
+  yesPrice: number;
+  noPrice: number;
+  quantity: number;
 
   // "Bag" - The shares we currently hold (Available to Merge)
   yesHoldings: number;
@@ -54,6 +60,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     private readonly marketWsService: MarketWsService,
     private readonly executionService: ExecutionService,
     private readonly environmentService: EnvironmentService,
+    private readonly ledgerService: LedgerService,
   ) {}
 
   // MARK: deinit
@@ -228,24 +235,40 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
+    // MARK: check available capital
+    const quantity = this.environmentService.environment.targetPositionSize;
+    const requiredCapital = (targetYes + targetNo) * quantity;
+    if (!this.ledgerService.hasAvailableCapital(requiredCapital)) {
+      this.logger.debug(
+        `Insufficient capital for ${tick.conditionId}. Required: ${requiredCapital.toFixed(4)}, Available: ${this.ledgerService.getAvailableBalance().toFixed(4)}`,
+      );
+      return;
+    }
+
     this.marketsInProgress.add(tick.conditionId);
     this.logger.log(
       `Opportunity on ${tick.conditionId} (Skew: ${tick.bestBidYes}/${tick.bestBidNo}). Placing Skewed Limits: Yes@${targetYes} | No@${targetNo}`,
     );
 
     try {
+      // MARK: debit capital from ghost ledger
+      this.ledgerService.debit(requiredCapital);
+
       // MARK: place limit orders
       const { yesOrderId, noOrderId } = await this.executionService.placeLimitOrder({
         conditionId: tick.conditionId,
         targetYes,
         targetNo,
-        quantity: this.environmentService.environment.targetPositionSize,
+        quantity,
       });
 
       this.activeStraddles.set(tick.conditionId, {
         conditionId: tick.conditionId,
         yesOrderId,
         noOrderId,
+        yesPrice: targetYes,
+        noPrice: targetNo,
+        quantity,
         yesHoldings: 0,
         noHoldings: 0,
         yesCumulativeFilled: 0,
@@ -259,10 +282,12 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       this.logger.error(`Failed to place limit order on ${tick.conditionId}: ${(error as Error).message}`);
       this.marketsInProgress.delete(tick.conditionId);
+
+      this.ledgerService.credit(requiredCapital); // refund capital on failure
     }
   }
 
-  private handleOrderUpdate(update: OrderMessage) {
+  private async handleOrderUpdate(update: OrderMessage) {
     // MARK: find context
     const conditionId = this.orderMap.get(update.id);
     if (!conditionId) {
@@ -291,6 +316,10 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
 
       if (update.type === 'CANCELLATION') {
         straddle.yesStatus = 'CANCELED';
+        const unfilledQty = straddle.quantity - straddle.yesCumulativeFilled;
+        if (unfilledQty > 0) {
+          this.ledgerService.credit(straddle.yesPrice * unfilledQty);
+        }
       } else if (newMatchedSize >= originalSize) {
         straddle.yesStatus = 'FILLED';
       } else {
@@ -305,6 +334,10 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
 
       if (update.type === 'CANCELLATION') {
         straddle.noStatus = 'CANCELED';
+        const unfilledQty = straddle.quantity - straddle.noCumulativeFilled;
+        if (unfilledQty > 0) {
+          this.ledgerService.credit(straddle.noPrice * unfilledQty);
+        }
       } else if (newMatchedSize >= originalSize) {
         straddle.noStatus = 'FILLED';
       } else {
@@ -319,7 +352,14 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       straddle.noHoldings -= match;
 
       this.logger.log(`Merging ${match} positions on condition ${conditionId}`);
-      this.executionService.mergePositions({ conditionId, amount: match });
+      try {
+        await this.executionService.mergePositions({ conditionId, amount: match });
+        this.ledgerService.credit(match * 1.0);
+      } catch (error) {
+        this.logger.error(`Failed to merge positions on ${conditionId}: ${(error as Error).message}`);
+        straddle.yesHoldings += match;
+        straddle.noHoldings += match;
+      }
     }
 
     // MARK: check for complete exit
@@ -421,6 +461,33 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
         straddle.timer = undefined;
       }
     }
+
+    // Re-sync ghost balance from API after panic exit
+    const lockedCapital = this.calculateLockedCapital(straddle.conditionId);
+    await this.ledgerService.sync(lockedCapital);
+  }
+
+  /** Calculates total capital locked by active straddles (unfilled orders + unmerged shares). */
+  private calculateLockedCapital(excludeConditionId?: string): number {
+    let locked = 0;
+    for (const [conditionId, s] of this.activeStraddles) {
+      if (conditionId === excludeConditionId) {
+        continue;
+      }
+
+      // Unfilled portions of OPEN orders (locked by the exchange)
+      if (s.yesStatus === 'OPEN') {
+        locked += s.yesPrice * (s.quantity - s.yesCumulativeFilled);
+      }
+      if (s.noStatus === 'OPEN') {
+        locked += s.noPrice * (s.quantity - s.noCumulativeFilled);
+      }
+
+      // Unmerged shares (capital that left the wallet as fills)
+      locked += s.yesPrice * s.yesHoldings;
+      locked += s.noPrice * s.noHoldings;
+    }
+    return locked;
   }
 
   /** Rounds down to 2 decimal places (requirement by PolyMarket) */
