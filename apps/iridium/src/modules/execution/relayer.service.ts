@@ -126,9 +126,14 @@ export class RelayerService implements OnModuleInit {
 
     // send to relayer
     const response = await this.client.execute([tx]);
+    const result = await response.wait();
 
-    this.logger.log(`Merge positions transaction submitted: ${response.transactionHash}`);
-    return response.transactionID;
+    if (result) {
+      this.logger.log(`Merge positions transaction submitted: ${result.transactionHash}`);
+      return result.transactionID;
+    }
+
+    throw new Error(`Failed to submit merge positions transaction (txId: ${response.transactionID})`);
   }
 
   private validateConditionId(conditionId: string): conditionId is `0x${string}` {

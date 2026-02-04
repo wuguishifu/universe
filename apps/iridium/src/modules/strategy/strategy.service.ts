@@ -153,7 +153,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
           }
 
           const totalCost = tick.bestBidYes + tick.bestBidNo;
-          if (totalCost <= 0.9) {
+          if (totalCost <= 0.8) {
             this.logger.debug(`Skipping market ${tick.conditionId} with total cost ${totalCost.toFixed(4)} (too low)`);
             return false;
           }
