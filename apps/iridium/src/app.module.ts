@@ -6,11 +6,10 @@ import { AllExceptionsFilter, CommonModule, HealthController } from '@wuguishifu
 import { AppController } from './app.controller';
 import { EnvironmentModule } from './environment/environment-module';
 import { DiscoveryModule } from './modules/discovery/discovery.module';
-import { LedgerModule } from './modules/ledger/ledger.module';
 import { StrategyModule } from './modules/strategy/strategy.module';
 
 @Module({
-  imports: [CommonModule, DiscoveryModule, StrategyModule, EnvironmentModule, LedgerModule],
+  imports: [CommonModule, DiscoveryModule, StrategyModule, EnvironmentModule],
   controllers: [AppController, HealthController],
   providers: [
     {
