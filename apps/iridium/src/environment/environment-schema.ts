@@ -13,7 +13,6 @@ export const environmentSchema = z
     minTimeElapsedMs: z.coerce.number().min(0).default(0),
     targetPositionSize: z.coerce.number().min(0).default(50),
     panicExitDelayMs: z.coerce.number().min(0).default(120_000),
-    maxConcurrentStraddles: z.coerce.number().min(1).default(5),
 
     // clob config
     privateKey: z.string().min(1, { error: 'private key required' }),

@@ -210,13 +210,6 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async evaluateStraddle(tick: MarketTick) {
-    if (this.activeStraddles.size >= this.environmentService.environment.maxConcurrentStraddles) {
-      this.logger.debug(
-        `Max concurrent straddles reached (${this.activeStraddles.size}). Skipping evaluation for ${tick.conditionId}.`,
-      );
-      return;
-    }
-
     // MARK: skip if already active or in progress
     if (this.activeStraddles.has(tick.conditionId) || this.marketsInProgress.has(tick.conditionId)) {
       return;
