@@ -138,6 +138,13 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       .pipe(
         // MARK: filter for valid straddle opportunities
         filter((tick) => {
+          if (tick.bestBidNo <= 0.25 || tick.bestBidYes <= 0.25) {
+            this.logger.debug(
+              `Skipping market ${tick.conditionId} with bids Yes:${tick.bestBidYes.toFixed(4)} No:${tick.bestBidNo.toFixed(4)} (too skewed)`,
+            );
+            return false;
+          }
+
           const totalCost = tick.bestBidYes + tick.bestBidNo;
           if (totalCost <= 0.9) {
             this.logger.debug(`Skipping market ${tick.conditionId} with total cost ${totalCost.toFixed(4)} (too low)`);
