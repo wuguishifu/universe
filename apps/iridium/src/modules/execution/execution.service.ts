@@ -24,6 +24,7 @@ export class ExecutionService implements OnModuleInit {
 
   // MARK: module/client init
   public onModuleInit() {
+    this.logger.log(`Starting in ${this.environmentService.environment.dryRun ? 'DRY RUN' : 'LIVE'} mode`);
     this.logger.log('Initializing Polymarket CLOB client...');
     this.authService.authBundle$.pipe(take(1)).subscribe(({ wallet, credentials }) => {
       this.clobClient = new ClobClient(

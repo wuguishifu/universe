@@ -2,7 +2,10 @@ import z from 'zod';
 
 export const environmentSchema = z
   .object({
-    dryRun: z.coerce.boolean().default(true),
+    dryRun: z
+      .string()
+      .transform((val) => val === 'true')
+      .default(true),
 
     targetEntry: z.coerce.number().min(0).max(1).default(0.97),
     minTimeRemainingMs: z.coerce.number().min(0).default(300_000),
