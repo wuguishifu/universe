@@ -68,6 +68,7 @@
     "includedScripts": []
   },
   "dependencies": {
+    "@ethersproject/contracts": "^5.8.0",
     "@ethersproject/providers": "^5.8.0",
     "@ethersproject/wallet": "^5.8.0",
     "@fastify/multipart": "^9.4.0",
