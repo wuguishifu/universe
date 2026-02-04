@@ -11,7 +11,7 @@ export const environmentSchema = z
     targetEntry: z.coerce.number().min(0).max(1).default(0.97),
     minTimeRemainingMs: z.coerce.number().min(0).default(300_000),
     minTimeElapsedMs: z.coerce.number().min(0).default(0),
-    targetPositionSize: z.coerce.number().min(0).default(50),
+    targetPositionSize: z.coerce.number().min(0).default(10),
     panicExitDelayMs: z.coerce.number().min(0).default(120_000),
 
     // clob config

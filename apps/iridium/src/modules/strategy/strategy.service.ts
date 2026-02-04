@@ -251,6 +251,9 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     );
 
     try {
+      // MARK: debit capital from ghost ledger
+      this.ledgerService.debit(requiredCapital);
+
       // MARK: place limit orders
       const { yesOrderId, noOrderId } = await this.executionService.placeLimitOrder({
         conditionId: tick.conditionId,
@@ -258,9 +261,6 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
         targetNo,
         quantity,
       });
-
-      // MARK: debit capital from ghost ledger
-      this.ledgerService.debit(requiredCapital);
 
       this.activeStraddles.set(tick.conditionId, {
         conditionId: tick.conditionId,
@@ -282,6 +282,8 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       this.logger.error(`Failed to place limit order on ${tick.conditionId}: ${(error as Error).message}`);
       this.marketsInProgress.delete(tick.conditionId);
+
+      this.ledgerService.credit(requiredCapital); // refund capital on failure
     }
   }
 
