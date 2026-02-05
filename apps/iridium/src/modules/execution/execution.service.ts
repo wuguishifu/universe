@@ -2,6 +2,8 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ClobClient, OrderType, Side, TickSize } from '@polymarket/clob-client';
 import { take } from 'rxjs';
 
+import { OsmiumService } from '@wuguishifu/nest-common';
+
 import { RelayerService } from './relayer.service';
 import { EnvironmentService } from '../../environment/environment-service';
 import { CacheService } from '../cache/cache.service';
@@ -19,6 +21,7 @@ export class ExecutionService implements OnModuleInit {
     private readonly cacheService: CacheService,
     private readonly relayerService: RelayerService,
     private readonly environmentService: EnvironmentService,
+    private readonly osmiumService: OsmiumService,
   ) {}
 
   // MARK: module/client init
@@ -32,12 +35,7 @@ export class ExecutionService implements OnModuleInit {
   }
 
   // MARK: place limit order
-  public async placeLimitOrder({
-    conditionId,
-    targetYes,
-    targetNo,
-    quantity,
-  }: {
+  public async placeLimitOrder(props: {
     conditionId: string;
     targetYes: number;
     targetNo: number;
@@ -46,11 +44,22 @@ export class ExecutionService implements OnModuleInit {
     yesOrderId: string;
     noOrderId: string;
   }> {
+    const { conditionId, targetYes, targetNo, quantity } = props;
+
     if (!this.isConfigured || !this.clobClient) {
       throw new Error('CLOB client is not configured');
     }
 
     const { yesTokenId, noTokenId, minimumTickSize } = this.getMarketMetadata(conditionId);
+    const commonTrackingProps = {
+      ...props,
+      dryRun: this.environmentService.environment.dryRun,
+      yesTokenId,
+      noTokenId,
+      minimumTickSize,
+    };
+
+    this.osmiumService.trackEvent({ name: 'limit_order-place-start', metadata: commonTrackingProps });
     this.logger.log(
       `Placing limit orders on condition ${conditionId}: Yes Token @ ${targetYes}, No Token @ ${targetNo} for quantity ${quantity}`,
     );
@@ -58,6 +67,7 @@ export class ExecutionService implements OnModuleInit {
     if (this.environmentService.environment.dryRun) {
       this.logger.debug('Dry run mode enabled - skipping order placement');
       await new Promise((resolve) => setTimeout(resolve, 1000));
+      this.osmiumService.trackEvent({ name: 'limit_order-place-finish', metadata: commonTrackingProps });
       return { noOrderId: 'dry-run-no-order-id', yesOrderId: 'dry-run-yes-order-id' };
     }
 
@@ -71,6 +81,14 @@ export class ExecutionService implements OnModuleInit {
 
     const yesOrderId = yesOrderResponse.orderID || yesOrderResponse.orderId;
     if (!yesOrderResponse.success || !yesOrderId) {
+      this.osmiumService.trackEvent({
+        name: 'limit_order-place-failed',
+        metadata: {
+          ...commonTrackingProps,
+          failedSide: 'YES',
+          reason: yesOrderResponse.errorMsg,
+        },
+      });
       throw new Error(`Failed to place YES order: ${yesOrderResponse.errorMsg ?? 'Unknown error'}`);
     }
 
@@ -83,6 +101,14 @@ export class ExecutionService implements OnModuleInit {
 
     const noOrderId = noOrderResponse.orderID || noOrderResponse.orderId;
     if (!noOrderResponse.success || !noOrderId) {
+      this.osmiumService.trackEvent({
+        name: 'limit_order-place-failed',
+        metadata: {
+          ...commonTrackingProps,
+          failedSide: 'NO',
+          reason: noOrderResponse.errorMsg,
+        },
+      });
       // Cancel YES order - any fills that occurred will be tracked via WebSocket updates
       this.logger.warn(`NO order failed, cancelling YES order ${yesOrderId}`);
       await this.clobClient.cancelOrder({ orderID: yesOrderId }).catch((err) => {
@@ -92,6 +118,7 @@ export class ExecutionService implements OnModuleInit {
     }
 
     this.logger.log(`Successfully placed orders: YES=${yesOrderId}, NO=${noOrderId}`);
+    this.osmiumService.trackEvent({ name: 'limit_order-place-finish', metadata: commonTrackingProps });
     return {
       yesOrderId,
       noOrderId,
@@ -104,13 +131,18 @@ export class ExecutionService implements OnModuleInit {
       throw new Error('CLOB client is not configured');
     }
 
+    const trackingProps = { orderId, dryRun: this.environmentService.environment.dryRun };
+
+    this.osmiumService.trackEvent({ name: 'order-cancel-start', metadata: trackingProps });
     if (this.environmentService.environment.dryRun) {
       this.logger.debug(`Dry run mode enabled - skipping cancellation of order ${orderId}`);
       await new Promise((resolve) => setTimeout(resolve, 500));
+      this.osmiumService.trackEvent({ name: 'order-cancel-finish', metadata: trackingProps });
       return;
     }
 
     await this.clobClient.cancelOrder({ orderID: orderId });
+    this.osmiumService.trackEvent({ name: 'order-cancel-finish', metadata: trackingProps });
     this.logger.log(`Cancelled order ${orderId}`);
   }
 
@@ -128,17 +160,32 @@ export class ExecutionService implements OnModuleInit {
       throw new Error('CLOB client is not configured');
     }
 
+    const trackingProps: Record<string, unknown> = {
+      conditionId,
+      yesAmount,
+      noAmount,
+      dryRun: this.environmentService.environment.dryRun,
+    };
+    this.osmiumService.trackEvent({ name: 'panic_sell-start', metadata: trackingProps });
+
     if (this.environmentService.environment.dryRun) {
       this.logger.debug('Dry run mode enabled - skipping panic sell');
       await new Promise((resolve) => setTimeout(resolve, 500));
+      this.osmiumService.trackEvent({ name: 'panic_sell-finish', metadata: trackingProps });
       return;
     }
 
     if (yesAmount === 0 && noAmount === 0) {
+      this.osmiumService.trackEvent({ name: 'panic_sell-skip', metadata: trackingProps });
       return;
     }
 
     const { yesTokenId, noTokenId, minimumTickSize } = this.getMarketMetadata(conditionId);
+
+    trackingProps['yesTokenId'] = yesTokenId;
+    trackingProps['noTokenId'] = noTokenId;
+    trackingProps['minimumTickSize'] = minimumTickSize;
+    this.osmiumService.trackEvent({ name: 'panic_sell-execute', metadata: trackingProps });
 
     this.logger.warn(`PANIC SELL on ${conditionId}: Yes=${yesAmount}, No=${noAmount}`);
 
@@ -176,6 +223,7 @@ export class ExecutionService implements OnModuleInit {
     }
 
     await Promise.all(promises);
+    this.osmiumService.trackEvent({ name: 'panic_sell-finish', metadata: trackingProps });
   }
 
   // MARK: merge positions
@@ -187,8 +235,16 @@ export class ExecutionService implements OnModuleInit {
   private logSellResult(response: Awaited<ReturnType<typeof ClobClient.prototype.createAndPostOrder>>, side: string) {
     if (response.success) {
       this.logger.log(`Panic Sell ${side} Success: Order ${response.orderID}`);
+      this.osmiumService.trackEvent({
+        name: 'panic_sell-success',
+        metadata: { side, orderId: response.orderID || response.orderId },
+      });
     } else {
       this.logger.error(`Panic Sell ${side} Failed: ${response.errorMsg}`);
+      this.osmiumService.trackEvent({
+        name: 'panic_sell-failed',
+        metadata: { side, reason: response.errorMsg },
+      });
     }
   }
 

@@ -20,7 +20,7 @@ export class OsmiumModule {
           useExisting: OsmiumService,
         },
       ],
-      exports: [key],
+      exports: [OsmiumService, key],
     };
   }
 }

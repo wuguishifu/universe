@@ -20,7 +20,7 @@ export class OsmiumService {
     private readonly configService: ConfigService,
   ) {
     this.http = new HttpService({
-      baseURL: 'https://localhost:3001/api/v1/tracking',
+      baseURL: 'http://localhost:3001/api/v1/tracking',
       headers: {
         Authorization: `Bearer ${this.configService.config.osmium.apiAccessKey}`,
       },
