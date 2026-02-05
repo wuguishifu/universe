@@ -37,7 +37,7 @@ const handleMigrations = async () => {
     const rl = createInterface({ input: stdin, output: stdout });
     const answer = await rl.question(
       chalk.red(
-        `You are running migrations on ${ENV} hydrogen database. Are you sure you know want you are doing and want to continue? (y/n)`,
+        `You are running migrations on ${ENV} hydrogen database. Are you sure you know what you are doing and want to continue? (y/N):`,
       ),
     );
     rl.close();
