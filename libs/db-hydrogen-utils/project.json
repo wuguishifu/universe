@@ -44,6 +44,13 @@
         ]
       }
     },
+    "init:redash": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/db-hydrogen-utils",
+        "command": "./scripts/init-redash.sh"
+      }
+    },
     "studio": {
       "executor": "nx:run-commands",
       "options": {
@@ -58,7 +65,7 @@
         "parallel": false,
         "commands": [
           "docker stop db-hydrogen-utils || true",
-          "docker compose up --detach",
+          "docker compose -f docker-compose.dev.yml up --detach",
           "pnpm nx init:db db-hydrogen-utils",
           "docker ps"
         ]
