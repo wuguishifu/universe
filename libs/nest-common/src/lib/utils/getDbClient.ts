@@ -6,9 +6,24 @@ import { buildConnectionString, DbConfig } from './buildConnectionString';
 
 export type DbClient = PostgresJsDatabase;
 
-export const getDbClient = ({ dbConfig, environment }: { dbConfig: DbConfig; environment: string }): DbClient => {
-  const connectionString = buildConnectionString(dbConfig);
+export type GetDbClientOptions =
+  | { connectionString: string; environment: string }
+  | { dbConfig: DbConfig; environment: string };
+
+export const getDbClient = (options: GetDbClientOptions): DbClient => {
+  const connectionString =
+    'connectionString' in options ? options.connectionString : buildConnectionString(options.dbConfig);
+  const databaseName =
+    'connectionString' in options
+      ? (() => {
+          try {
+            return new URL(connectionString).pathname.slice(1) || 'hydrogen';
+          } catch {
+            return 'hydrogen';
+          }
+        })()
+      : options.dbConfig.database;
   const queryClient = postgres(connectionString, { connect_timeout: 30, idle_timeout: 300 });
-  new Logger(dbConfig.database).debug(`Creating DB Client: '${dbConfig.database}' DB in ${environment} environment`);
+  new Logger(databaseName).debug(`Creating DB Client: '${databaseName}' DB in ${options.environment} environment`);
   return drizzle(queryClient);
 };

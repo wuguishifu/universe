@@ -9,8 +9,15 @@ export type HydrogenDb = PostgresJsDatabase;
 
 export const HydrogenDbProvider: Provider = {
   provide: HYDROGEN_DB,
-  useFactory: () =>
-    getDbClient({
+  useFactory: () => {
+    const connectionString = process.env['HYDROGEN_DB_URL'];
+    if (connectionString) {
+      return getDbClient({
+        connectionString,
+        environment: environmentConfig.environmentKey,
+      });
+    }
+    return getDbClient({
       dbConfig: {
         database: environmentConfig.hydrogen.database,
         host: environmentConfig.hydrogen.host,
@@ -19,5 +26,6 @@ export const HydrogenDbProvider: Provider = {
         user: environmentConfig.hydrogen.user,
       },
       environment: environmentConfig.environmentKey,
-    }),
+    });
+  },
 };

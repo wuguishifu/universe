@@ -2,6 +2,11 @@ services:
   osmium:
     image: ghcr.io/wuguishifu/universe/osmium:latest
     container_name: osmium
+    depends_on:
+      - postgres
     restart: unless-stopped
     ports:
       - "3001:3001"
+    environment:
+      # Required when postgres runs in another container - use service name as host
+      HYDROGEN_DB_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/hydrogen"
