@@ -33,3 +33,10 @@ export const preprocessTickSize = (value: unknown) => {
   }
   return null;
 };
+
+export const preprocessBoolean = (value: unknown) => {
+  if (typeof value === 'string') {
+    return value.toLowerCase() === 'true';
+  }
+  return Boolean(value);
+};

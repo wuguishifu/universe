@@ -2,6 +2,9 @@
   "apps": {
     "iridium": {
       "registryPath": "wuguishifu/universe/iridium"
+    },
+    "osmium": {
+      "registryPath": "wuguishifu/universe/osmium"
     }
   }
 }

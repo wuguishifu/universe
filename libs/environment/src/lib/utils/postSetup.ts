@@ -43,6 +43,10 @@ const appRootMap: Record<string, AppConfig> = {
       POLY_API_PASSPHRASE: rootEnv.parsed?.POLY_API_PASSPHRASE,
     }),
   },
+  osmium: {
+    appType: 'other',
+    dir: appPath('osmium'),
+  },
 };
 
 console.log('Updating .env files...');

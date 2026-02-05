@@ -33,6 +33,7 @@
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
     "@types/node": "^24.1.0",
+    "@types/pg": "^8.16.0",
     "@types/react": "19.0.0",
     "@types/react-dom": "19.0.0",
     "@types/three": "^0.178.1",
@@ -96,11 +97,18 @@
     "axios": "^1.13.4",
     "axios-retry": "^4.5.0",
     "class-variance-authority": "^0.7.1",
+    "drizzle-kit": "^0.31.8",
+    "drizzle-orm": "^0.45.1",
+    "drizzle-zod": "^0.8.3",
     "dotenv": "^17.2.3",
     "embla-carousel-react": "^8.6.0",
     "lucide-react": "^0.526.0",
     "next": "~15.2.8",
     "next-themes": "^0.4.6",
+    "passport": "^0.7.0",
+    "passport-headerapikey": "^1.2.2",
+    "pg": "^8.18.0",
+    "postgres": "^3.4.8",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-hook-form": "^7.61.1",
@@ -114,6 +122,6 @@
     "vaul": "^1.1.2",
     "viem": "^2.45.1",
     "ws": "^8.19.0",
-    "zod": "^4.0.10"
+    "zod": "^3.21.4"
   }
 }

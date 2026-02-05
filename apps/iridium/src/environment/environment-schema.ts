@@ -1,11 +1,10 @@
 import z from 'zod';
 
+import { preprocessBoolean } from '../utils/preprocessors';
+
 export const environmentSchema = z
   .object({
-    dryRun: z
-      .string()
-      .transform((val) => val === 'true')
-      .default(true),
+    dryRun: z.preprocess(preprocessBoolean, z.boolean()).default(true),
 
     // strategy config
     targetEntry: z.coerce.number().min(0).max(1).default(0.97),
@@ -19,7 +18,7 @@ export const environmentSchema = z
     panicAbsoluteTimeoutMs: z.coerce.number().min(0).default(300_000),
 
     // clob config
-    privateKey: z.string().min(1, { error: 'private key required' }),
+    privateKey: z.string().min(1, { message: 'private key required' }),
     signatureType: z.coerce.number().min(0).max(2).default(1),
     funderAddress: z.string().optional(),
 

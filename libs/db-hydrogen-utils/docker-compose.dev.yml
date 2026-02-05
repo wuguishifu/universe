@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres
+    container_name: hydrogen-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "${HYDROGEN_DB_PORT:-5432}:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: hydrogen-pgadmin
+    depends_on:
+      - postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_SERVER_JSON_FILE: /var/lib/pgadmin/servers.json
+      PGPASS_FILE: /var/lib/pgadmin/pgpass
+    ports:
+      - "${HYDROGEN_PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - ./pgadmin/servers.json:/var/lib/pgadmin/servers.json:ro
+      - ./pgadmin/pgpass:/var/lib/pgadmin/pgpass:ro
+
+  redis:
+    image: redis:7-alpine
+    container_name: hydrogen-redis
+
+  redash-server:
+    image: redash/redash:latest
+    container_name: hydrogen-redash
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      REDASH_DATABASE_URL: "postgresql://postgres:admin@postgres:5432/redash"
+      REDASH_REDIS_URL: "redis://redis:6379/0"
+      REDASH_SECRET_KEY: "${REDASH_SECRET_KEY:-c31a9d6ceca4483883e1e9bdaf1d0e6f}"
+      REDASH_COOKIE_SECRET: "${REDASH_COOKIE_SECRET:-8d37f71105144f64b231825767f33e55}"
+    ports:
+      - "${HYDROGEN_REDASH_PORT:-5051}:5000"
+    command: server
+
+  redash-scheduler:
+    image: redash/redash:latest
+    container_name: hydrogen-redash-scheduler
+    depends_on:
+      - redash-server
+    environment:
+      REDASH_DATABASE_URL: "postgresql://postgres:admin@postgres:5432/redash"
+      REDASH_REDIS_URL: "redis://redis:6379/0"
+      REDASH_SECRET_KEY: "${REDASH_SECRET_KEY:-c31a9d6ceca4483883e1e9bdaf1d0e6f}"
+      REDASH_COOKIE_SECRET: "${REDASH_COOKIE_SECRET:-8d37f71105144f64b231825767f33e55}"
+    command: scheduler
+
+  redash-worker:
+    image: redash/redash:latest
+    container_name: hydrogen-redash-worker
+    depends_on:
+      - redash-server
+    environment:
+      REDASH_DATABASE_URL: "postgresql://postgres:admin@postgres:5432/redash"
+      REDASH_REDIS_URL: "redis://redis:6379/0"
+      REDASH_SECRET_KEY: "${REDASH_SECRET_KEY:-c31a9d6ceca4483883e1e9bdaf1d0e6f}"
+      REDASH_COOKIE_SECRET: "${REDASH_COOKIE_SECRET:-8d37f71105144f64b231825767f33e55}"
+    command: worker
+  
+volumes:
+  pgadmin-data:
