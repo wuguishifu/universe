@@ -27,13 +27,13 @@ export class OsmiumService {
     });
   }
 
-  public async trackEvent(params: TrackEventParams) {
+  /** Fire and forget event tracking */
+  public trackEvent(params: TrackEventParams) {
     const event: TrackingEvent = {
       ...params,
       source: this.config.serviceName,
       createdAt: Date.now(),
     };
-
-    return await this.http.post('/events', event);
+    this.http.post('/events', event);
   }
 }
