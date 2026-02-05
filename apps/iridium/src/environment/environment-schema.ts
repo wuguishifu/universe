@@ -12,7 +12,11 @@ export const environmentSchema = z
     minTimeRemainingMs: z.coerce.number().min(0).default(300_000),
     minTimeElapsedMs: z.coerce.number().min(0).default(0),
     targetPositionSize: z.coerce.number().min(0).default(10),
-    panicExitDelayMs: z.coerce.number().min(0).default(120_000),
+
+    // stop loss config
+    panicPriceDropThreshold: z.coerce.number().min(0).max(1).default(0.1),
+    panicSustainedDropMs: z.coerce.number().min(0).default(30_000),
+    panicAbsoluteTimeoutMs: z.coerce.number().min(0).default(300_000),
 
     // clob config
     privateKey: z.string().min(1, { error: 'private key required' }),
