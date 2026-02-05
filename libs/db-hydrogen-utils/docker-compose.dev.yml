@@ -41,7 +41,7 @@ services:
       REDASH_SECRET_KEY: "${REDASH_SECRET_KEY:-c31a9d6ceca4483883e1e9bdaf1d0e6f}"
       REDASH_COOKIE_SECRET: "${REDASH_COOKIE_SECRET:-8d37f71105144f64b231825767f33e55}"
     ports:
-      - "${HYDROGEN_REDASH_PORT:-8665}:5000"
+      - "${HYDROGEN_REDASH_PORT:-5051}:5000"
     command: server
 
   redash-scheduler:
