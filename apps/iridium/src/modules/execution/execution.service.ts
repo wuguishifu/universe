@@ -3,10 +3,9 @@ import { ClobClient, OrderType, Side, TickSize } from '@polymarket/clob-client';
 import { take } from 'rxjs';
 
 import { RelayerService } from './relayer.service';
-import { CLOB_API_BASE, POLYGON_CHAIN_ID } from '../../constants/constants';
 import { EnvironmentService } from '../../environment/environment-service';
-import { AuthService } from '../auth/auth.service';
 import { CacheService } from '../cache/cache.service';
+import { ClobClientService } from '../clob/client/clob-client.service';
 
 @Injectable()
 export class ExecutionService implements OnModuleInit {
@@ -16,7 +15,7 @@ export class ExecutionService implements OnModuleInit {
   private clobClient: ClobClient | null = null;
 
   constructor(
-    private readonly authService: AuthService,
+    private readonly clobClientService: ClobClientService,
     private readonly cacheService: CacheService,
     private readonly relayerService: RelayerService,
     private readonly environmentService: EnvironmentService,
@@ -24,16 +23,10 @@ export class ExecutionService implements OnModuleInit {
 
   // MARK: module/client init
   public onModuleInit() {
+    this.logger.log(`Starting in ${this.environmentService.environment.dryRun ? 'DRY RUN' : 'LIVE'} mode`);
     this.logger.log('Initializing Polymarket CLOB client...');
-    this.authService.authBundle$.pipe(take(1)).subscribe(({ wallet, credentials }) => {
-      this.clobClient = new ClobClient(
-        CLOB_API_BASE,
-        POLYGON_CHAIN_ID,
-        wallet,
-        credentials,
-        this.environmentService.environment.signatureType,
-        this.environmentService.environment.funderAddress,
-      );
+    this.clobClientService.clobClient$.pipe(take(1)).subscribe((client) => {
+      this.clobClient = client;
       this.isConfigured = true;
     });
   }

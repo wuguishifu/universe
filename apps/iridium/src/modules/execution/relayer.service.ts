@@ -20,10 +20,12 @@ export class RelayerService implements OnModuleInit {
 
   private client: RelayClient | null = null;
   private signer: Wallet | null = null;
+  private safeDeployed = false;
+  private deployPromise: Promise<void> | null = null;
 
   constructor(private readonly environmentService: EnvironmentService) {}
 
-  public onModuleInit() {
+  public async onModuleInit() {
     this.logger.log('Initializing Relayer Client');
 
     const { privateKey, polyApiKey, polyApiSecret, polyApiPassphrase } = this.environmentService.environment;
@@ -43,6 +45,46 @@ export class RelayerService implements OnModuleInit {
 
     this.client = new RelayClient(RELAYER_API_BASE, POLYGON_CHAIN_ID, this.signer, builderConfig);
     this.logger.log(`Relayer initialized for wallet: ${this.signer.address}`);
+
+    // Deploy Safe wallet if not already deployed
+    await this.ensureSafeDeployed();
+  }
+
+  private ensureSafeDeployed(): Promise<void> {
+    if (this.safeDeployed || !this.client) {
+      return Promise.resolve();
+    }
+    return (this.deployPromise ??= this.deploySafe());
+  }
+
+  private async deploySafe(): Promise<void> {
+    if (!this.client) {
+      return;
+    }
+
+    if (this.environmentService.environment.dryRun) {
+      this.logger.log('Dry run mode enabled - skipping Safe deployment check');
+      this.safeDeployed = true;
+      return;
+    }
+
+    try {
+      this.logger.log('Deploying Safe wallet (if not already deployed)...');
+      const response = await this.client.deploy();
+      const result = await response.wait();
+
+      if (result) {
+        this.logger.log(`Safe deployed successfully at address: ${result.proxyAddress}`);
+        this.logger.log(`Deployment transaction hash: ${result.transactionHash}`);
+      }
+
+      this.safeDeployed = true;
+    } catch (error) {
+      // If Safe is already deployed, this may throw or succeed silently
+      // Either way, we mark it as deployed to continue
+      this.logger.warn(`Safe deployment response: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.safeDeployed = true;
+    }
   }
 
   public async mergePositions({ conditionId, amount }: { conditionId: string; amount: number }): Promise<string> {
@@ -53,6 +95,9 @@ export class RelayerService implements OnModuleInit {
     if (!this.validateConditionId(conditionId)) {
       throw new Error('Invalid conditionId format');
     }
+
+    // Ensure Safe is deployed before executing transactions
+    await this.ensureSafeDeployed();
 
     this.logger.log(`Merging positions for condition ${conditionId} with amount ${amount}`);
 
@@ -81,9 +126,14 @@ export class RelayerService implements OnModuleInit {
 
     // send to relayer
     const response = await this.client.execute([tx]);
+    const result = await response.wait();
 
-    this.logger.log(`Merge positions transaction submitted: ${response.transactionHash}`);
-    return response.transactionID;
+    if (result) {
+      this.logger.log(`Merge positions transaction submitted: ${result.transactionHash}`);
+      return result.transactionID;
+    }
+
+    throw new Error(`Failed to submit merge positions transaction (txId: ${response.transactionID})`);
   }
 
   private validateConditionId(conditionId: string): conditionId is `0x${string}` {

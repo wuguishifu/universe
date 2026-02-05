@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { TickSize } from '@polymarket/clob-client';
-import { share, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import WebSocket from 'ws';
 
 import { WebSocketService } from './ws-service';
@@ -33,7 +33,7 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
   private marketState = new Map<string, MarketState>();
   private subscribedTokenIds = new Set<string>();
   private readonly marketTickSubject = new Subject<MarketTick>();
-  public readonly marketTicks$ = this.marketTickSubject.asObservable().pipe(share());
+  public readonly marketTicks$ = this.marketTickSubject.asObservable();
 
   constructor(private readonly cacheService: CacheService) {
     super(CLOB_MARKET_WS_URL);

@@ -2,13 +2,21 @@ import z from 'zod';
 
 export const environmentSchema = z
   .object({
-    dryRun: z.coerce.boolean().default(true),
+    dryRun: z
+      .string()
+      .transform((val) => val === 'true')
+      .default(true),
 
+    // strategy config
     targetEntry: z.coerce.number().min(0).max(1).default(0.97),
     minTimeRemainingMs: z.coerce.number().min(0).default(300_000),
     minTimeElapsedMs: z.coerce.number().min(0).default(0),
-    targetPositionSize: z.coerce.number().min(0).default(50),
-    panicExitDelayMs: z.coerce.number().min(0).default(120_000),
+    targetPositionSize: z.coerce.number().min(0).default(10),
+
+    // stop loss config
+    panicPriceDropThreshold: z.coerce.number().min(0).max(1).default(0.1),
+    panicSustainedDropMs: z.coerce.number().min(0).default(30_000),
+    panicAbsoluteTimeoutMs: z.coerce.number().min(0).default(300_000),
 
     // clob config
     privateKey: z.string().min(1, { message: 'private key required' }),
