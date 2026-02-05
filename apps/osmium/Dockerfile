@@ -33,9 +33,6 @@ RUN npm prune --production --legacy-peer-deps
 
 FROM node:22-slim
 
-RUN apt-get update
-RUN apt-get -y install ffmpeg
-
 ARG VERSION
 ENV VERSION=${VERSION}
 
