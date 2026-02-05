@@ -13,9 +13,12 @@ const isLocalHost = (host?: string) => Boolean(host?.includes('localhost') || ho
 
 const isLocalDb = isLocalHost(connectionString);
 
+// Set HYDROGEN_DB_SSL=false when connecting to servers that don't support SSL (e.g. via Tailscale)
+const useSsl = process.env['HYDROGEN_DB_SSL'] !== 'false' && process.env['HYDROGEN_DB_SSL'] !== '0';
+
 const basePoolConfig: PoolConfig = {
   connectionString: connectionString,
-  ssl: { rejectUnauthorized: false },
+  ...(useSsl ? { ssl: { rejectUnauthorized: false } } : { ssl: false }),
   connectionTimeoutMillis: 30000,
   idleTimeoutMillis: 300000,
 };

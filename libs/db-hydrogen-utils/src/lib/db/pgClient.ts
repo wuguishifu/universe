@@ -10,6 +10,9 @@ const isLocalHost = (host?: string) => Boolean(host?.includes('localhost') || ho
 
 const isLocalDb = isLocalHost(connectionString);
 
+// Set HYDROGEN_DB_SSL=false when connecting to servers that don't support SSL (e.g. via Tailscale)
+const useSsl = process.env['HYDROGEN_DB_SSL'] !== 'false' && process.env['HYDROGEN_DB_SSL'] !== '0';
+
 // Parse the connection string to modify the database name
 const url = new URL(connectionString);
 url.pathname = '/defaultdb';
@@ -21,7 +24,7 @@ export const postgresDb = isLocalDb
   : jsDrizzle(
       postgres(remoteConnectionString, {
         max: 1,
-        ssl: { rejectUnauthorized: false }, // Add SSL configuration for remote connections
+        ...(useSsl ? { ssl: { rejectUnauthorized: false } } : { ssl: false }),
         connection: {
           application_name: 'hydrogen-setup',
         },
