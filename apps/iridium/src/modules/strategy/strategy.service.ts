@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { TickSize } from '@polymarket/clob-client';
-import { filter, Subscription } from 'rxjs';
+import { filter, Subscription, tap } from 'rxjs';
 
 import { EnvironmentService } from '../../environment/environment-service';
 import { OrderMessage } from '../../types/clob/orderMessage';
@@ -32,8 +32,11 @@ interface ActiveStraddle {
   yesStatus: 'OPEN' | 'FILLED' | 'CANCELED';
   noStatus: 'OPEN' | 'FILLED' | 'CANCELED';
 
-  // Legging risk timer
-  timer?: NodeJS.Timeout;
+  // Legging risk timers
+  priceDropTimer?: NodeJS.Timeout;
+  absoluteTimer?: NodeJS.Timeout;
+  priceDropTimerStartedAt?: number;
+  isImbalanced: boolean;
 }
 
 @Injectable()
@@ -82,10 +85,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     // MARK: cancel open orders
     const cancelPromises: Promise<void>[] = [];
     for (const straddle of this.activeStraddles.values()) {
-      if (straddle.timer) {
-        clearTimeout(straddle.timer);
-        straddle.timer = undefined;
-      }
+      this.clearAllRiskTimers(straddle);
 
       if (straddle.yesStatus === 'OPEN') {
         cancelPromises.push(
@@ -192,17 +192,32 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
         filter((tick) => {
           const now = Date.now();
           const lastTime = this.lastEvalTime.get(tick.conditionId) ?? 0;
-          if (now - lastTime < 100) {
-            return false;
-          }
-          this.lastEvalTime.set(tick.conditionId, now);
-          return true;
+          return now - lastTime >= 100;
+        }),
+        tap((tick) => {
+          this.lastEvalTime.set(tick.conditionId, Date.now());
         }),
       )
       .subscribe((tick) => {
         this.evaluateStraddle(tick);
       });
     this.subscriptions.push(marketTickSub);
+
+    // legging risk pipe — monitor price for imbalanced straddles
+    const riskTickSub = this.marketWsService.marketTicks$
+      .pipe(
+        filter((tick) => {
+          const straddle = this.activeStraddles.get(tick.conditionId);
+          return !!straddle?.isImbalanced;
+        }),
+      )
+      .subscribe((tick) => {
+        const straddle = this.activeStraddles.get(tick.conditionId);
+        if (straddle) {
+          this.evaluateLeggingRisk(tick, straddle);
+        }
+      });
+    this.subscriptions.push(riskTickSub);
 
     // lifecycle pipe
     const orderUpdateSub = this.userWsService.orderUpdates$.subscribe((update) => this.handleOrderUpdate(update));
@@ -275,6 +290,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
         noCumulativeFilled: 0,
         yesStatus: 'OPEN',
         noStatus: 'OPEN',
+        isImbalanced: false,
       });
       this.orderMap.set(yesOrderId, tick.conditionId);
       this.orderMap.set(noOrderId, tick.conditionId);
@@ -306,7 +322,6 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     const newMatchedSize = parseFloat(update.size_matched);
     const originalSize = parseFloat(update.original_size);
 
-    // MARK: update state
     if (update.id === straddle.yesOrderId) {
       delta = newMatchedSize - straddle.yesCumulativeFilled;
       straddle.yesCumulativeFilled = newMatchedSize;
@@ -374,26 +389,27 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    // MARK: risk timer
+    // MARK: risk management
     const imbalance = Math.abs(straddle.yesHoldings - straddle.noHoldings);
-    if (imbalance > 0 && !straddle.timer) {
-      this.logger.warn(`Starting legging risk timer for ${conditionId}`);
-      straddle.timer = setTimeout(() => this.panicExit(straddle), this.environmentService.environment.panicExitDelayMs);
-    } else if (imbalance === 0 && straddle.timer) {
-      this.logger.debug(`Clearing legging risk timer for ${conditionId}`);
-      clearTimeout(straddle.timer);
-      straddle.timer = undefined;
+    if (imbalance > 0 && !straddle.isImbalanced) {
+      this.logger.warn(`Imbalance detected for ${conditionId}. Starting absolute safety timer.`);
+      straddle.isImbalanced = true;
+      straddle.absoluteTimer = setTimeout(
+        () => this.panicExit(straddle),
+        this.environmentService.environment.panicAbsoluteTimeoutMs,
+      );
+    } else if (imbalance === 0 && straddle.isImbalanced) {
+      this.logger.debug(`Imbalance resolved for ${conditionId}. Clearing all risk timers.`);
+      straddle.isImbalanced = false;
+      this.clearAllRiskTimers(straddle);
     }
   }
 
   private async cleanupStraddle(straddle: ActiveStraddle) {
     this.logger.debug(`Cleaning up straddle for condition ${straddle.conditionId}`);
 
-    // Clear timer first to prevent concurrent panic exit
-    if (straddle.timer) {
-      clearTimeout(straddle.timer);
-      straddle.timer = undefined;
-    }
+    // Clear timers first to prevent concurrent panic exit
+    this.clearAllRiskTimers(straddle);
 
     // Handle any remaining imbalanced holdings BEFORE deleting state
     if (Math.abs(straddle.yesHoldings - straddle.noHoldings) > 0.001) {
@@ -413,7 +429,14 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async panicExit(straddle: ActiveStraddle, shouldCleanup = true) {
+    // Guard against double-execution (both timers firing)
+    if (shouldCleanup && !this.activeStraddles.has(straddle.conditionId)) {
+      return;
+    }
+
     this.logger.error(`Initiating panic exit for ${straddle.conditionId}.`);
+    straddle.isImbalanced = false;
+    this.clearAllRiskTimers(straddle);
 
     // Cancel any remaining open orders
     const cancelPromises: Promise<void>[] = [];
@@ -456,15 +479,56 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       this.activeStraddles.delete(straddle.conditionId);
       this.orderMap.delete(straddle.yesOrderId);
       this.orderMap.delete(straddle.noOrderId);
-      if (straddle.timer) {
-        clearTimeout(straddle.timer);
-        straddle.timer = undefined;
-      }
     }
 
     // Re-sync ghost balance from API after panic exit
     const lockedCapital = this.calculateLockedCapital(straddle.conditionId);
     await this.ledgerService.sync(lockedCapital);
+  }
+
+  private clearAllRiskTimers(straddle: ActiveStraddle) {
+    if (straddle.priceDropTimer) {
+      clearTimeout(straddle.priceDropTimer);
+      straddle.priceDropTimer = undefined;
+      straddle.priceDropTimerStartedAt = undefined;
+    }
+    if (straddle.absoluteTimer) {
+      clearTimeout(straddle.absoluteTimer);
+      straddle.absoluteTimer = undefined;
+    }
+  }
+
+  private evaluateLeggingRisk(tick: MarketTick, straddle: ActiveStraddle) {
+    // Determine exposed side — whichever we hold more of
+    const yesExposed = straddle.yesHoldings > straddle.noHoldings;
+    const entryPrice = yesExposed ? straddle.yesPrice : straddle.noPrice;
+    const currentBid = yesExposed ? tick.bestBidYes : tick.bestBidNo;
+    const drop = entryPrice - currentBid;
+    const threshold = this.environmentService.environment.panicPriceDropThreshold;
+
+    if (drop >= threshold) {
+      // Price has dropped below threshold — start timer if not running
+      if (!straddle.priceDropTimer) {
+        this.logger.warn(
+          `Price drop detected for ${straddle.conditionId}: ${yesExposed ? 'YES' : 'NO'} bid ${currentBid.toFixed(4)} is ${drop.toFixed(4)} below entry ${entryPrice.toFixed(4)}. Starting sustained drop timer.`,
+        );
+        straddle.priceDropTimerStartedAt = Date.now();
+        straddle.priceDropTimer = setTimeout(
+          () => this.panicExit(straddle),
+          this.environmentService.environment.panicSustainedDropMs,
+        );
+      }
+    } else {
+      // Price has recovered — clear the timer
+      if (straddle.priceDropTimer) {
+        this.logger.debug(
+          `Price recovered for ${straddle.conditionId}: ${yesExposed ? 'YES' : 'NO'} bid ${currentBid.toFixed(4)} is within threshold. Clearing sustained drop timer.`,
+        );
+        clearTimeout(straddle.priceDropTimer);
+        straddle.priceDropTimer = undefined;
+        straddle.priceDropTimerStartedAt = undefined;
+      }
+    }
   }
 
   /** Calculates total capital locked by active straddles (unfilled orders + unmerged shares). */
