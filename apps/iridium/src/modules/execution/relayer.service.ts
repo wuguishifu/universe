@@ -5,6 +5,8 @@ import { RelayClient } from '@polymarket/builder-relayer-client';
 import { BuilderConfig } from '@polymarket/builder-signing-sdk';
 import { encodeFunctionData, parseUnits } from 'viem';
 
+import { OsmiumService } from '@wuguishifu/nest-common';
+
 import {
   CTF_EXCHANGE_ADDRESS,
   POLYGON_CHAIN_ID,
@@ -23,7 +25,10 @@ export class RelayerService implements OnModuleInit {
   private safeDeployed = false;
   private deployPromise: Promise<void> | null = null;
 
-  constructor(private readonly environmentService: EnvironmentService) {}
+  constructor(
+    private readonly environmentService: EnvironmentService,
+    private readonly osmiumService: OsmiumService,
+  ) {}
 
   public async onModuleInit() {
     this.logger.log('Initializing Relayer Client');
@@ -78,11 +83,19 @@ export class RelayerService implements OnModuleInit {
         this.logger.log(`Deployment transaction hash: ${result.transactionHash}`);
       }
 
+      this.osmiumService.trackEvent({
+        name: 'relayer_service-safe_deployed',
+        metadata: { proxyAddress: result?.proxyAddress },
+      });
       this.safeDeployed = true;
     } catch (error) {
       // If Safe is already deployed, this may throw or succeed silently
       // Either way, we mark it as deployed to continue
       this.logger.warn(`Safe deployment response: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.osmiumService.trackEvent({
+        name: 'relayer_service-safe_deployment_failed',
+        metadata: { error: error instanceof Error ? error.message : 'Unknown error' },
+      });
       this.safeDeployed = true;
     }
   }
@@ -100,10 +113,19 @@ export class RelayerService implements OnModuleInit {
     await this.ensureSafeDeployed();
 
     this.logger.log(`Merging positions for condition ${conditionId} with amount ${amount}`);
+    const commonTrackingProperties = { conditionId, amount, dryRun: this.environmentService.environment.dryRun };
+    this.osmiumService.trackEvent({
+      name: 'relayer_service-merge_positions-started',
+      metadata: commonTrackingProperties,
+    });
 
     if (this.environmentService.environment.dryRun) {
       this.logger.log('Dry run mode enabled - skipping merge positions');
       await new Promise((resolve) => setTimeout(resolve, 500));
+      this.osmiumService.trackEvent({
+        name: 'relayer_service-merge_positions-finished',
+        metadata: commonTrackingProperties,
+      });
       return 'dry-run-merge-positions-tx-id';
     }
 
@@ -130,9 +152,20 @@ export class RelayerService implements OnModuleInit {
 
     if (result) {
       this.logger.log(`Merge positions transaction submitted: ${result.transactionHash}`);
+      this.osmiumService.trackEvent({
+        name: 'relayer_service-merge_positions-finished',
+        metadata: {
+          ...commonTrackingProperties,
+          transactionHash: result.transactionHash,
+        },
+      });
       return result.transactionID;
     }
 
+    this.osmiumService.trackEvent({
+      name: 'relayer_service-merge_positions-failed',
+      metadata: commonTrackingProperties,
+    });
     throw new Error(`Failed to submit merge positions transaction (txId: ${response.transactionID})`);
   }
 

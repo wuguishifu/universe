@@ -59,7 +59,10 @@ export class ExecutionService implements OnModuleInit {
       minimumTickSize,
     };
 
-    this.osmiumService.trackEvent({ name: 'limit_order-place-start', metadata: commonTrackingProps });
+    this.osmiumService.trackEvent({
+      name: 'execution_service-limit_order-place-started',
+      metadata: commonTrackingProps,
+    });
     this.logger.log(
       `Placing limit orders on condition ${conditionId}: Yes Token @ ${targetYes}, No Token @ ${targetNo} for quantity ${quantity}`,
     );
@@ -67,7 +70,10 @@ export class ExecutionService implements OnModuleInit {
     if (this.environmentService.environment.dryRun) {
       this.logger.debug('Dry run mode enabled - skipping order placement');
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      this.osmiumService.trackEvent({ name: 'limit_order-place-finish', metadata: commonTrackingProps });
+      this.osmiumService.trackEvent({
+        name: 'execution_service-limit_order-place-finished',
+        metadata: commonTrackingProps,
+      });
       return { noOrderId: 'dry-run-no-order-id', yesOrderId: 'dry-run-yes-order-id' };
     }
 
@@ -82,7 +88,7 @@ export class ExecutionService implements OnModuleInit {
     const yesOrderId = yesOrderResponse.orderID || yesOrderResponse.orderId;
     if (!yesOrderResponse.success || !yesOrderId) {
       this.osmiumService.trackEvent({
-        name: 'limit_order-place-failed',
+        name: 'execution_service-limit_order-place-failed',
         metadata: {
           ...commonTrackingProps,
           failedSide: 'YES',
@@ -102,7 +108,7 @@ export class ExecutionService implements OnModuleInit {
     const noOrderId = noOrderResponse.orderID || noOrderResponse.orderId;
     if (!noOrderResponse.success || !noOrderId) {
       this.osmiumService.trackEvent({
-        name: 'limit_order-place-failed',
+        name: 'execution_service-limit_order-place-failed',
         metadata: {
           ...commonTrackingProps,
           failedSide: 'NO',
@@ -118,7 +124,10 @@ export class ExecutionService implements OnModuleInit {
     }
 
     this.logger.log(`Successfully placed orders: YES=${yesOrderId}, NO=${noOrderId}`);
-    this.osmiumService.trackEvent({ name: 'limit_order-place-finish', metadata: commonTrackingProps });
+    this.osmiumService.trackEvent({
+      name: 'execution_service-limit_order-place-finished',
+      metadata: commonTrackingProps,
+    });
     return {
       yesOrderId,
       noOrderId,
@@ -133,16 +142,16 @@ export class ExecutionService implements OnModuleInit {
 
     const trackingProps = { orderId, dryRun: this.environmentService.environment.dryRun };
 
-    this.osmiumService.trackEvent({ name: 'order-cancel-start', metadata: trackingProps });
+    this.osmiumService.trackEvent({ name: 'execution_service-order-cancel-started', metadata: trackingProps });
     if (this.environmentService.environment.dryRun) {
       this.logger.debug(`Dry run mode enabled - skipping cancellation of order ${orderId}`);
       await new Promise((resolve) => setTimeout(resolve, 500));
-      this.osmiumService.trackEvent({ name: 'order-cancel-finish', metadata: trackingProps });
+      this.osmiumService.trackEvent({ name: 'execution_service-order-cancel-finished', metadata: trackingProps });
       return;
     }
 
     await this.clobClient.cancelOrder({ orderID: orderId });
-    this.osmiumService.trackEvent({ name: 'order-cancel-finish', metadata: trackingProps });
+    this.osmiumService.trackEvent({ name: 'execution_service-order-cancel-finished', metadata: trackingProps });
     this.logger.log(`Cancelled order ${orderId}`);
   }
 
@@ -166,17 +175,17 @@ export class ExecutionService implements OnModuleInit {
       noAmount,
       dryRun: this.environmentService.environment.dryRun,
     };
-    this.osmiumService.trackEvent({ name: 'panic_sell-start', metadata: trackingProps });
+    this.osmiumService.trackEvent({ name: 'execution_service-panic_sell-started', metadata: trackingProps });
 
     if (this.environmentService.environment.dryRun) {
       this.logger.debug('Dry run mode enabled - skipping panic sell');
       await new Promise((resolve) => setTimeout(resolve, 500));
-      this.osmiumService.trackEvent({ name: 'panic_sell-finish', metadata: trackingProps });
+      this.osmiumService.trackEvent({ name: 'execution_service-panic_sell-finished', metadata: trackingProps });
       return;
     }
 
     if (yesAmount === 0 && noAmount === 0) {
-      this.osmiumService.trackEvent({ name: 'panic_sell-skip', metadata: trackingProps });
+      this.osmiumService.trackEvent({ name: 'execution_service-panic_sell-skipped', metadata: trackingProps });
       return;
     }
 
@@ -185,7 +194,7 @@ export class ExecutionService implements OnModuleInit {
     trackingProps['yesTokenId'] = yesTokenId;
     trackingProps['noTokenId'] = noTokenId;
     trackingProps['minimumTickSize'] = minimumTickSize;
-    this.osmiumService.trackEvent({ name: 'panic_sell-execute', metadata: trackingProps });
+    this.osmiumService.trackEvent({ name: 'execution_service-panic_sell-executed', metadata: trackingProps });
 
     this.logger.warn(`PANIC SELL on ${conditionId}: Yes=${yesAmount}, No=${noAmount}`);
 
@@ -223,7 +232,7 @@ export class ExecutionService implements OnModuleInit {
     }
 
     await Promise.all(promises);
-    this.osmiumService.trackEvent({ name: 'panic_sell-finish', metadata: trackingProps });
+    this.osmiumService.trackEvent({ name: 'execution_service-panic_sell-finished', metadata: trackingProps });
   }
 
   // MARK: merge positions
@@ -236,13 +245,13 @@ export class ExecutionService implements OnModuleInit {
     if (response.success) {
       this.logger.log(`Panic Sell ${side} Success: Order ${response.orderID}`);
       this.osmiumService.trackEvent({
-        name: 'panic_sell-success',
+        name: 'execution_service-panic_sell-success',
         metadata: { side, orderId: response.orderID || response.orderId },
       });
     } else {
       this.logger.error(`Panic Sell ${side} Failed: ${response.errorMsg}`);
       this.osmiumService.trackEvent({
-        name: 'panic_sell-failed',
+        name: 'execution_service-panic_sell-failed',
         metadata: { side, reason: response.errorMsg },
       });
     }
