@@ -67,6 +67,7 @@
           "docker stop db-hydrogen-utils || true",
           "docker compose -f docker-compose.dev.yml up --detach",
           "pnpm nx init:db db-hydrogen-utils",
+          "pnpm nx init:redash db-hydrogen-utils",
           "docker ps"
         ]
       }
