@@ -37,6 +37,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "libs/db-hydrogen-utils",
+        "parallel": false,
         "commands": [
           "pnpm nx create:db db-hydrogen-utils",
           "pnpm nx migrate:run db-hydrogen-utils"
