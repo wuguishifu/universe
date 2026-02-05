@@ -11,6 +11,7 @@ on:
         type: choice
         options:
           - iridium
+          - osmium
       environment:
         description: 'Environment'
         required: true
