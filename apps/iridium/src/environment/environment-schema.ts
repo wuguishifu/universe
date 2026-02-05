@@ -1,11 +1,10 @@
 import z from 'zod';
 
+import { preprocessBoolean } from '../utils/preprocessors';
+
 export const environmentSchema = z
   .object({
-    dryRun: z
-      .string()
-      .transform((val) => val === 'true')
-      .default(true),
+    dryRun: z.preprocess(preprocessBoolean, z.boolean()).default(true),
 
     // strategy config
     targetEntry: z.coerce.number().min(0).max(1).default(0.97),
