@@ -34,7 +34,9 @@ RUN npm prune --production --legacy-peer-deps
 FROM node:22-slim
 
 ARG VERSION
+ARG BUILD_ENV
 ENV VERSION=${VERSION}
+ENV ENVIRONMENT=${BUILD_ENV}
 
 COPY --from=build_image /app/dist/apps/iridium ./dist
 COPY --from=build_image /app/node_modules ./node_modules
