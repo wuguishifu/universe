@@ -8,6 +8,7 @@ export const config = z
     }),
     osmium: z.object({
       apiAccessKey: z.string(),
+      baseUrl: z.string(),
     }),
     hydrogen: z.object({
       host: z.string(),
