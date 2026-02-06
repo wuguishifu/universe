@@ -59,6 +59,9 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   /** RxJS subscriptions to clean up on destroy */
   private readonly subscriptions: Subscription[] = [];
 
+  /** Periodic reconciliation timer */
+  private reconcileInterval: NodeJS.Timeout | null = null;
+
   /** Per-market throttle tracking (conditionId -> last evaluation timestamp) */
   private readonly lastEvalTime = new Map<string, number>();
 
@@ -78,6 +81,12 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.subscriptions.length = 0;
     this.lastEvalTime.clear();
+
+    // Clear periodic reconciliation timer
+    if (this.reconcileInterval) {
+      clearInterval(this.reconcileInterval);
+      this.reconcileInterval = null;
+    }
 
     if (this.activeStraddles.size === 0) {
       this.logger.log('No active straddles to clean up');
@@ -229,11 +238,14 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     this.subscriptions.push(orderUpdateSub);
 
     // reconciliation pipe — catch up on fills missed during WebSocket disconnects
-    const reconnectSub = this.userWsService.reconnected$.subscribe(() => this.reconcileAfterReconnect());
+    const reconnectSub = this.userWsService.reconnected$.subscribe(() => this.reconcileStraddles());
     this.subscriptions.push(reconnectSub);
+
+    // periodic reconciliation — catch any drift every 5 minutes
+    this.reconcileInterval = setInterval(() => this.reconcileStraddles(), 5 * 60 * 1000);
   }
 
-  private async reconcileAfterReconnect() {
+  private async reconcileStraddles() {
     if (this.activeStraddles.size === 0) {
       return;
     }
