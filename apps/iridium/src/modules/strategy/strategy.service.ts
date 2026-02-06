@@ -227,6 +227,70 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     // lifecycle pipe
     const orderUpdateSub = this.userWsService.orderUpdates$.subscribe((update) => this.handleOrderUpdate(update));
     this.subscriptions.push(orderUpdateSub);
+
+    // reconciliation pipe — catch up on fills missed during WebSocket disconnects
+    const reconnectSub = this.userWsService.reconnected$.subscribe(() => this.reconcileAfterReconnect());
+    this.subscriptions.push(reconnectSub);
+  }
+
+  private async reconcileAfterReconnect() {
+    if (this.activeStraddles.size === 0) {
+      return;
+    }
+
+    this.logger.log(`WebSocket reconnected — reconciling ${this.activeStraddles.size} active straddle(s)...`);
+
+    for (const straddle of this.activeStraddles.values()) {
+      try {
+        // Fetch current order state from the CLOB API for both legs
+        const [yesOrder, noOrder] = await Promise.all([
+          this.executionService.getOrder(straddle.yesOrderId).catch(() => null),
+          this.executionService.getOrder(straddle.noOrderId).catch(() => null),
+        ]);
+
+        let changed = false;
+
+        if (yesOrder) {
+          const apiMatched = parseFloat(yesOrder.size_matched);
+          const delta = apiMatched - straddle.yesCumulativeFilled;
+          if (delta > 0) {
+            this.logger.log(`Reconcile: YES order on ${straddle.conditionId} — missed ${delta.toFixed(6)} fills`);
+            straddle.yesCumulativeFilled = apiMatched;
+            straddle.yesHoldings += delta;
+            changed = true;
+          }
+          if (yesOrder.status === 'MATCHED') {
+            straddle.yesStatus = 'FILLED';
+          } else if (yesOrder.status === 'CANCELED') {
+            straddle.yesStatus = 'CANCELED';
+          }
+        }
+
+        if (noOrder) {
+          const apiMatched = parseFloat(noOrder.size_matched);
+          const delta = apiMatched - straddle.noCumulativeFilled;
+          if (delta > 0) {
+            this.logger.log(`Reconcile: NO order on ${straddle.conditionId} — missed ${delta.toFixed(6)} fills`);
+            straddle.noCumulativeFilled = apiMatched;
+            straddle.noHoldings += delta;
+            changed = true;
+          }
+          if (noOrder.status === 'MATCHED') {
+            straddle.noStatus = 'FILLED';
+          } else if (noOrder.status === 'CANCELED') {
+            straddle.noStatus = 'CANCELED';
+          }
+        }
+
+        if (changed) {
+          this.scheduleMerge(straddle);
+        }
+      } catch (error) {
+        this.logger.error(`Failed to reconcile straddle ${straddle.conditionId}: ${(error as Error).message}`);
+      }
+    }
+
+    this.logger.log('Reconciliation complete.');
   }
 
   private async evaluateStraddle(tick: MarketTick) {

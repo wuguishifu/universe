@@ -240,6 +240,15 @@ export class ExecutionService implements OnModuleInit {
     return this.relayerService.mergePositions({ conditionId, amount });
   }
 
+  // MARK: get order
+  public getOrder(orderId: string) {
+    if (!this.clobClient || !this.isConfigured) {
+      throw new Error('CLOB client is not configured');
+    }
+
+    return this.clobClient.getOrder(orderId);
+  }
+
   // #region helper methods
   private logSellResult(response: Awaited<ReturnType<typeof ClobClient.prototype.createAndPostOrder>>, side: string) {
     if (response.success) {
