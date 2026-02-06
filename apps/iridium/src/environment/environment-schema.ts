@@ -16,6 +16,10 @@ export const environmentSchema = z
     maxTotalCost: z.coerce.number().min(0).default(1.01),
     mergeDebounceMs: z.coerce.number().min(0).default(5000),
 
+    // price stability config (prevents entering during spikes)
+    priceStabilityRangeCents: z.coerce.number().min(0).default(5), // +/- range in cents
+    priceStabilityDurationMs: z.coerce.number().min(0).default(10_000), // how long price must be stable
+
     // stop loss config
     panicPriceDropThreshold: z.coerce.number().min(0).max(1).default(0.1),
     panicSustainedDropMs: z.coerce.number().min(0).default(30_000),

@@ -65,6 +65,9 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   /** Per-market throttle tracking (conditionId -> last evaluation timestamp) */
   private readonly lastEvalTime = new Map<string, number>();
 
+  /** Price history for stability checking (conditionId -> array of {price, timestamp}) */
+  private readonly priceHistory = new Map<string, Array<{ noPrice: number; timestamp: number }>>();
+
   constructor(
     private readonly userWsService: UserWsService,
     private readonly marketWsService: MarketWsService,
@@ -81,6 +84,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.subscriptions.length = 0;
     this.lastEvalTime.clear();
+    this.priceHistory.clear();
 
     // Clear periodic reconciliation timer
     if (this.reconcileInterval) {
@@ -202,6 +206,8 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
 
           return true;
         }),
+        // MARK: filter for price stability (prevents entering during spikes)
+        filter((tick) => this.updatePriceHistoryAndCheckStability(tick)),
         // MARK: throttle per-market to avoid rapid re-evaluation
         filter((tick) => {
           const now = Date.now();
@@ -557,6 +563,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     this.orderMap.delete(straddle.yesOrderId);
     this.orderMap.delete(straddle.noOrderId);
     this.lastEvalTime.delete(straddle.conditionId);
+    this.priceHistory.delete(straddle.conditionId);
 
     this.logger.debug(`Straddle for condition ${straddle.conditionId} has been cleaned up.`);
   }
@@ -695,5 +702,54 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   private roundDown(value: number, tickSize: TickSize): number {
     const factor = 1 / parseFloat(tickSize);
     return Math.floor(value * factor) / factor;
+  }
+
+  /**
+   * Updates price history for a market and checks if the price has been stable.
+   * Stability means the NO price has stayed within +/- range for the configured duration.
+   * We track NO price since it's typically the side that spikes during volatile events.
+   */
+  private updatePriceHistoryAndCheckStability(tick: MarketTick): boolean {
+    const { priceStabilityRangeCents, priceStabilityDurationMs } = this.environmentService.environment;
+    if (priceStabilityRangeCents === 0 || priceStabilityDurationMs === 0) {
+      return true;
+    }
+
+    const now = tick.timestamp;
+    const cutoffTime = now - priceStabilityDurationMs;
+    const rangeDollars = priceStabilityRangeCents / 100;
+
+    let history = this.priceHistory.get(tick.conditionId);
+    if (!history) {
+      history = [];
+      this.priceHistory.set(tick.conditionId, history);
+    }
+    history.push({ noPrice: tick.bestBidNo, timestamp: now });
+
+    while (history.length > 0 && history[0].timestamp < cutoffTime) {
+      history.shift();
+    }
+
+    if (history.length === 0 || history[0].timestamp > cutoffTime) {
+      this.logger.debug(
+        `Market ${tick.conditionId} needs more price history (have ${history.length} samples, oldest: ${history[0]?.timestamp ?? 'none'}, cutoff: ${cutoffTime})`,
+      );
+      return false;
+    }
+
+    const currentPrice = tick.bestBidNo;
+    const minAllowed = currentPrice - rangeDollars;
+    const maxAllowed = currentPrice + rangeDollars;
+
+    for (const entry of history) {
+      if (entry.noPrice < minAllowed || entry.noPrice > maxAllowed) {
+        this.logger.debug(
+          `Market ${tick.conditionId} price unstable: NO price ${entry.noPrice.toFixed(4)} at ${entry.timestamp} outside range [${minAllowed.toFixed(4)}, ${maxAllowed.toFixed(4)}]`,
+        );
+        return false;
+      }
+    }
+
+    return true;
   }
 }
