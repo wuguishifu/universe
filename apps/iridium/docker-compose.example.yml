@@ -8,7 +8,8 @@ services:
       - "3000:3000"
     environment:
       ENVIRONMENT: development
-      DRY_RUN: false
+      DRY_RUN: true
+      DEBUG_LOGGING: true
       # strategy config
       TARGET_ENTRY: 0.97 # enter when summed legs price is at 97% of theoretical price
       MIN_TIME_REMAINING_MS: 300000 # don't trade if less than 5 minutes to expiry
