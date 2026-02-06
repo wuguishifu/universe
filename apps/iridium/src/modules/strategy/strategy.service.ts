@@ -65,8 +65,8 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   /** Per-market throttle tracking (conditionId -> last evaluation timestamp) */
   private readonly lastEvalTime = new Map<string, number>();
 
-  /** Price history for stability checking (conditionId -> array of {price, timestamp}) */
-  private readonly priceHistory = new Map<string, Array<{ noPrice: number; timestamp: number }>>();
+  /** Price history for stability checking (conditionId -> array of {yesPrice, noPrice, timestamp}) */
+  private readonly priceHistory = new Map<string, Array<{ yesPrice: number; noPrice: number; timestamp: number }>>();
 
   constructor(
     private readonly userWsService: UserWsService,
@@ -76,7 +76,50 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     private readonly ledgerService: LedgerService,
   ) {}
 
-  // MARK: deinit
+  // #region: module lifecycle
+
+  public onModuleInit() {
+    // entry pipe
+    const marketTickSub = this.marketWsService.marketTicks$
+      // MARK: market filtering
+      .pipe(
+        filter((tick) => this.filterForTimeRemaining(tick)),
+        filter((tick) => this.filterForSkew(tick)),
+        filter((tick) => this.filterForStability(tick)),
+        filter((tick) => this.filterForThrottling(tick)),
+        tap((tick) => this.lastEvalTime.set(tick.conditionId, Date.now())),
+      )
+      .subscribe((tick) => this.evaluateStraddle(tick));
+    this.subscriptions.push(marketTickSub);
+
+    // legging risk pipe — monitor price for imbalanced straddles
+    const riskTickSub = this.marketWsService.marketTicks$
+      .pipe(
+        filter((tick) => {
+          const straddle = this.activeStraddles.get(tick.conditionId);
+          return !!straddle?.isImbalanced;
+        }),
+      )
+      .subscribe((tick) => {
+        const straddle = this.activeStraddles.get(tick.conditionId);
+        if (straddle) {
+          this.evaluateLeggingRisk(tick, straddle);
+        }
+      });
+    this.subscriptions.push(riskTickSub);
+
+    // lifecycle pipe
+    const orderUpdateSub = this.userWsService.orderUpdates$.subscribe((update) => this.handleOrderUpdate(update));
+    this.subscriptions.push(orderUpdateSub);
+
+    // reconciliation pipe — catch up on fills missed during WebSocket disconnects
+    const reconnectSub = this.userWsService.reconnected$.subscribe(() => this.reconcileStraddles());
+    this.subscriptions.push(reconnectSub);
+
+    // periodic reconciliation — catch any drift every 5 minutes
+    this.reconcileInterval = setInterval(() => this.reconcileStraddles(), 5 * 60 * 1000);
+  }
+
   async onModuleDestroy() {
     this.logger.debug('Shutting down strategy service...');
 
@@ -155,162 +198,9 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     this.logger.debug('Shutdown complete.');
   }
 
-  // MARK: init
-  public onModuleInit() {
-    // entry pipe
-    const marketTickSub = this.marketWsService.marketTicks$
-      .pipe(
-        // MARK: filter for time remaining
-        filter((tick) => {
-          if (tick.timeRemaining > this.environmentService.environment.maxTimeRemainingMs) {
-            this.logger.debug(
-              `Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too much)`,
-            );
-            return false;
-          }
+  // #endregion
 
-          if (tick.timeRemaining <= this.environmentService.environment.minTimeRemainingMs) {
-            this.logger.debug(
-              `Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too little)`,
-            );
-            return false;
-          }
-
-          return true;
-        }),
-        // MARK: filter for skew and total cost (prevents entering when market is too skewed or illiquid)
-        filter((tick) => {
-          if (!this.environmentService.environment.enableSkewCheck) {
-            return true;
-          }
-
-          const { minSkewPriceCutoff, minTotalCost, maxTotalCost } = this.environmentService.environment;
-          if (tick.bestBidNo <= minSkewPriceCutoff || tick.bestBidYes <= minSkewPriceCutoff) {
-            this.logger.debug(
-              `Skipping market ${tick.conditionId} with bids Yes:${tick.bestBidYes.toFixed(4)} No:${tick.bestBidNo.toFixed(4)} (too skewed)`,
-            );
-            return false;
-          }
-
-          const totalCost = tick.bestBidYes + tick.bestBidNo;
-          if (totalCost <= minTotalCost) {
-            this.logger.debug(`Skipping market ${tick.conditionId} with total cost ${totalCost.toFixed(4)} (too low)`);
-            return false;
-          }
-
-          if (totalCost >= maxTotalCost) {
-            this.logger.debug(`Skipping market ${tick.conditionId} with total cost ${totalCost.toFixed(4)} (too high)`);
-            return false;
-          }
-
-          return true;
-        }),
-        // MARK: filter for price stability (prevents entering during spikes)
-        // TODO: there is a known edge case where a market could be unstable but near a skew boundary which would cause
-        // TODO: ticks to be filtered out earlier and would make this market appear stable.
-        filter((tick) => this.updatePriceHistoryAndCheckStability(tick)),
-        // MARK: throttle per-market to avoid rapid re-evaluation
-        filter((tick) => {
-          const now = Date.now();
-          const lastTime = this.lastEvalTime.get(tick.conditionId) ?? 0;
-          return now - lastTime >= 100;
-        }),
-        tap((tick) => {
-          this.lastEvalTime.set(tick.conditionId, Date.now());
-        }),
-      )
-      .subscribe((tick) => {
-        this.evaluateStraddle(tick);
-      });
-    this.subscriptions.push(marketTickSub);
-
-    // legging risk pipe — monitor price for imbalanced straddles
-    const riskTickSub = this.marketWsService.marketTicks$
-      .pipe(
-        filter((tick) => {
-          const straddle = this.activeStraddles.get(tick.conditionId);
-          return !!straddle?.isImbalanced;
-        }),
-      )
-      .subscribe((tick) => {
-        const straddle = this.activeStraddles.get(tick.conditionId);
-        if (straddle) {
-          this.evaluateLeggingRisk(tick, straddle);
-        }
-      });
-    this.subscriptions.push(riskTickSub);
-
-    // lifecycle pipe
-    const orderUpdateSub = this.userWsService.orderUpdates$.subscribe((update) => this.handleOrderUpdate(update));
-    this.subscriptions.push(orderUpdateSub);
-
-    // reconciliation pipe — catch up on fills missed during WebSocket disconnects
-    const reconnectSub = this.userWsService.reconnected$.subscribe(() => this.reconcileStraddles());
-    this.subscriptions.push(reconnectSub);
-
-    // periodic reconciliation — catch any drift every 5 minutes
-    this.reconcileInterval = setInterval(() => this.reconcileStraddles(), 5 * 60 * 1000);
-  }
-
-  private async reconcileStraddles() {
-    if (this.activeStraddles.size === 0) {
-      return;
-    }
-
-    this.logger.debug(`WebSocket reconnected — reconciling ${this.activeStraddles.size} active straddle(s)...`);
-
-    for (const straddle of this.activeStraddles.values()) {
-      try {
-        // Fetch current order state from the CLOB API for both legs
-        const [yesOrder, noOrder] = await Promise.all([
-          this.executionService.getOrder(straddle.yesOrderId).catch(() => null),
-          this.executionService.getOrder(straddle.noOrderId).catch(() => null),
-        ]);
-
-        let changed = false;
-
-        if (yesOrder) {
-          const apiMatched = parseFloat(yesOrder.size_matched);
-          const delta = apiMatched - straddle.yesCumulativeFilled;
-          if (delta > 0) {
-            this.logger.log(`Reconcile: YES order on ${straddle.conditionId} — missed ${delta.toFixed(6)} fills`);
-            straddle.yesCumulativeFilled = apiMatched;
-            straddle.yesHoldings += delta;
-            changed = true;
-          }
-          if (yesOrder.status === 'MATCHED') {
-            straddle.yesStatus = 'FILLED';
-          } else if (yesOrder.status === 'CANCELED') {
-            straddle.yesStatus = 'CANCELED';
-          }
-        }
-
-        if (noOrder) {
-          const apiMatched = parseFloat(noOrder.size_matched);
-          const delta = apiMatched - straddle.noCumulativeFilled;
-          if (delta > 0) {
-            this.logger.log(`Reconcile: NO order on ${straddle.conditionId} — missed ${delta.toFixed(6)} fills`);
-            straddle.noCumulativeFilled = apiMatched;
-            straddle.noHoldings += delta;
-            changed = true;
-          }
-          if (noOrder.status === 'MATCHED') {
-            straddle.noStatus = 'FILLED';
-          } else if (noOrder.status === 'CANCELED') {
-            straddle.noStatus = 'CANCELED';
-          }
-        }
-
-        if (changed) {
-          this.scheduleMerge(straddle);
-        }
-      } catch (error) {
-        this.logger.error(`Failed to reconcile straddle ${straddle.conditionId}: ${(error as Error).message}`);
-      }
-    }
-
-    this.logger.debug('Reconciliation complete.');
-  }
+  // #region core evaluation logic
 
   private async evaluateStraddle(tick: MarketTick) {
     // MARK: skip if already active or in progress
@@ -464,7 +354,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    // MARK: risk management
+    // MARK: evaluate legging risk (imbalance or price drop)
     const imbalance = Math.abs(straddle.yesHoldings - straddle.noHoldings);
     if (imbalance > 0 && !straddle.isImbalanced) {
       this.logger.warn(`Imbalance detected for ${conditionId}. Starting absolute safety timer.`);
@@ -479,6 +369,10 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       this.clearAllRiskTimers(straddle);
     }
   }
+
+  // #endregion
+
+  // #region merging
 
   /**
    * Debounces merge attempts so rapid fills accumulate before we send a single
@@ -545,6 +439,10 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  // #endregion
+
+  // #region cleanup
+
   private async cleanupStraddle(straddle: ActiveStraddle) {
     this.logger.debug(`Cleaning up straddle for condition ${straddle.conditionId}`);
 
@@ -568,6 +466,70 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
 
     this.logger.debug(`Straddle for condition ${straddle.conditionId} has been cleaned up.`);
   }
+
+  private async reconcileStraddles() {
+    if (this.activeStraddles.size === 0) {
+      return;
+    }
+
+    this.logger.debug(`WebSocket reconnected — reconciling ${this.activeStraddles.size} active straddle(s)...`);
+
+    for (const straddle of this.activeStraddles.values()) {
+      try {
+        // Fetch current order state from the CLOB API for both legs
+        const [yesOrder, noOrder] = await Promise.all([
+          this.executionService.getOrder(straddle.yesOrderId).catch(() => null),
+          this.executionService.getOrder(straddle.noOrderId).catch(() => null),
+        ]);
+
+        let changed = false;
+
+        if (yesOrder) {
+          const apiMatched = parseFloat(yesOrder.size_matched);
+          const delta = apiMatched - straddle.yesCumulativeFilled;
+          if (delta > 0) {
+            this.logger.log(`Reconcile: YES order on ${straddle.conditionId} — missed ${delta.toFixed(6)} fills`);
+            straddle.yesCumulativeFilled = apiMatched;
+            straddle.yesHoldings += delta;
+            changed = true;
+          }
+          if (yesOrder.status === 'MATCHED') {
+            straddle.yesStatus = 'FILLED';
+          } else if (yesOrder.status === 'CANCELED') {
+            straddle.yesStatus = 'CANCELED';
+          }
+        }
+
+        if (noOrder) {
+          const apiMatched = parseFloat(noOrder.size_matched);
+          const delta = apiMatched - straddle.noCumulativeFilled;
+          if (delta > 0) {
+            this.logger.log(`Reconcile: NO order on ${straddle.conditionId} — missed ${delta.toFixed(6)} fills`);
+            straddle.noCumulativeFilled = apiMatched;
+            straddle.noHoldings += delta;
+            changed = true;
+          }
+          if (noOrder.status === 'MATCHED') {
+            straddle.noStatus = 'FILLED';
+          } else if (noOrder.status === 'CANCELED') {
+            straddle.noStatus = 'CANCELED';
+          }
+        }
+
+        if (changed) {
+          this.scheduleMerge(straddle);
+        }
+      } catch (error) {
+        this.logger.error(`Failed to reconcile straddle ${straddle.conditionId}: ${(error as Error).message}`);
+      }
+    }
+
+    this.logger.debug('Reconciliation complete.');
+  }
+
+  // #endregion
+
+  // #region risk management
 
   private async panicExit(straddle: ActiveStraddle, shouldCleanup = true) {
     // Guard against double-execution (both timers firing)
@@ -612,6 +574,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
         this.logger.error(
           `Failed to execute panic sell on condition ${straddle.conditionId}: ${(error as Error).message}`,
         );
+        return;
       }
     }
 
@@ -705,14 +668,22 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     return Math.floor(value * factor) / factor;
   }
 
+  // #endregion
+
+  // #region filtering
+
   /**
-   * Updates price history for a market and checks if the price has been stable.
-   * Stability means the NO price has stayed within +/- range for the configured duration.
-   * We track NO price since it's typically the side that spikes during volatile events.
+   * MARK: filter for price stability (prevents entering during spikes)
+   * TODO: there is a known edge case where a market could be unstable but near a skew boundary which would cause
+   * TODO: ticks to be filtered out earlier and would make this market appear stable.
+   * Updates price history and checks if the market has been stable.
    */
-  private updatePriceHistoryAndCheckStability(tick: MarketTick): boolean {
-    const { priceStabilityRangeCents, priceStabilityDurationMs } = this.environmentService.environment;
-    if (priceStabilityRangeCents === 0 || priceStabilityDurationMs === 0) {
+  private filterForStability(tick: MarketTick): boolean {
+    const { priceStabilityRangeCents, priceStabilityDurationMs, enablePriceStabilityCheck } =
+      this.environmentService.environment;
+
+    // 1. Bypass if disabled
+    if (!priceStabilityRangeCents || !priceStabilityDurationMs || !enablePriceStabilityCheck) {
       return true;
     }
 
@@ -725,27 +696,46 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       history = [];
       this.priceHistory.set(tick.conditionId, history);
     }
-    history.push({ noPrice: tick.bestBidNo, timestamp: now });
 
+    // 2. Add new data point
+    history.push({
+      yesPrice: tick.bestBidYes,
+      noPrice: tick.bestBidNo,
+      timestamp: now,
+    });
+
+    // 3. Prune old history, BUT remember if we had old data
+    // If we shift items out, it means our history DID span the full duration.
+    let hasCoverage = false;
+    if (history.length > 0 && history[0].timestamp < cutoffTime) {
+      hasCoverage = true;
+    }
     while (history.length > 0 && history[0].timestamp < cutoffTime) {
       history.shift();
     }
 
-    if (history.length === 0 || history[0].timestamp > cutoffTime) {
-      this.logger.debug(
-        `Market ${tick.conditionId} needs more price history (have ${history.length} samples, oldest: ${history[0]?.timestamp ?? 'none'}, cutoff: ${cutoffTime})`,
-      );
+    // 4. Sufficiency Check (Fixed for Illiquidity)
+    // We are "sufficient" if we have old data (even if pruned) OR the current buffer covers the span.
+    const bufferCoversSpan = history.length > 0 && history[0].timestamp <= cutoffTime;
+
+    if (!hasCoverage && !bufferCoversSpan) {
+      // Only log debug on the very first few ticks to avoid noise
+      if (history.length < 5) {
+        this.logger.debug(`Building price history for ${tick.conditionId}...`);
+      }
       return false;
     }
 
-    const currentPrice = tick.bestBidNo;
-    const minAllowed = currentPrice - rangeDollars;
-    const maxAllowed = currentPrice + rangeDollars;
-
+    // 5. Stability Check (Relative to CURRENT price)
+    // We check if ANY historical price is outside the [Current - Range, Current + Range]
+    // If historical price is far away, it means the CURRENT price is likely a spike.
     for (const entry of history) {
-      if (entry.noPrice < minAllowed || entry.noPrice > maxAllowed) {
+      const yesDelta = Math.abs(entry.yesPrice - tick.bestBidYes);
+      const noDelta = Math.abs(entry.noPrice - tick.bestBidNo);
+
+      if (yesDelta > rangeDollars || noDelta > rangeDollars) {
         this.logger.debug(
-          `Market ${tick.conditionId} price unstable: NO price ${entry.noPrice.toFixed(4)} at ${entry.timestamp} outside range [${minAllowed.toFixed(4)}, ${maxAllowed.toFixed(4)}]`,
+          `Unstable Market ${tick.conditionId}: Deviation > ${rangeDollars}. YesDelta: ${yesDelta.toFixed(3)}, NoDelta: ${noDelta.toFixed(3)}`,
         );
         return false;
       }
@@ -753,4 +743,55 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
 
     return true;
   }
+
+  private filterForTimeRemaining(tick: MarketTick): boolean {
+    if (tick.timeRemaining > this.environmentService.environment.maxTimeRemainingMs) {
+      this.logger.debug(`Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too much)`);
+      return false;
+    }
+
+    if (tick.timeRemaining <= this.environmentService.environment.minTimeRemainingMs) {
+      this.logger.debug(`Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too little)`);
+      return false;
+    }
+
+    return true;
+  }
+
+  // MARK: filter for skew and total cost (prevents entering when market is too skewed or illiquid)
+  private filterForSkew(tick: MarketTick): boolean {
+    if (!this.environmentService.environment.enableSkewCheck) {
+      return true;
+    }
+
+    const { minSkewPriceCutoff, minTotalCost, maxTotalCost } = this.environmentService.environment;
+    if (tick.bestBidNo <= minSkewPriceCutoff || tick.bestBidYes <= minSkewPriceCutoff) {
+      this.logger.debug(
+        `Skipping market ${tick.conditionId} with bids Yes:${tick.bestBidYes.toFixed(4)} No:${tick.bestBidNo.toFixed(4)} (too skewed)`,
+      );
+      return false;
+    }
+
+    const totalCost = tick.bestBidYes + tick.bestBidNo;
+    if (totalCost <= minTotalCost) {
+      this.logger.debug(`Skipping market ${tick.conditionId} with total cost ${totalCost.toFixed(4)} (too low)`);
+      return false;
+    }
+
+    if (totalCost >= maxTotalCost) {
+      this.logger.debug(`Skipping market ${tick.conditionId} with total cost ${totalCost.toFixed(4)} (too high)`);
+      return false;
+    }
+
+    return true;
+  }
+
+  // MARK: throttle per-market to avoid rapid re-evaluation
+  private filterForThrottling(tick: MarketTick): boolean {
+    const now = Date.now();
+    const lastTime = this.lastEvalTime.get(tick.conditionId) ?? 0;
+    return now - lastTime >= 100;
+  }
+
+  // #endregion
 }

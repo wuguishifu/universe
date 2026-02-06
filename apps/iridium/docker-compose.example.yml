@@ -21,6 +21,7 @@ services:
       MAX_TOTAL_COST: 1.01 # don't trade if total cost is more than 101% of theoretical (complement purchase is auto losing)
       MERGE_DEBOUNCE_MS: 5000 # when we detect a merge opportunity, wait this long for price updates before executing the merge
       # price stability config
+      ENABLE_PRICE_STABILITY_CHECK: true # enable or disable price stability check
       PRICE_STABILITY_RANGE_CENTS: 5
       PRICE_STABILITY_DURATION_MS: 10000
       # stop loss config

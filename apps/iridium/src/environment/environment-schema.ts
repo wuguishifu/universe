@@ -18,6 +18,7 @@ export const environmentSchema = z
     mergeDebounceMs: z.coerce.number().min(0).default(30_000),
 
     // price stability config (prevents entering during spikes)
+    enablePriceStabilityCheck: z.preprocess(preprocessBoolean, z.boolean()).default(true),
     priceStabilityRangeCents: z.coerce.number().min(0).default(0), // +/- range in cents
     priceStabilityDurationMs: z.coerce.number().min(0).default(0), // how long price must be stable
 
