@@ -11,6 +11,9 @@ export const environmentSchema = z
     minTimeRemainingMs: z.coerce.number().min(0).default(300_000),
     minTimeElapsedMs: z.coerce.number().min(0).default(0),
     targetPositionSize: z.coerce.number().min(0).default(10),
+    minSkewPriceCutoff: z.coerce.number().min(0).default(0.25),
+    minTotalCost: z.coerce.number().min(0).default(0.8),
+    maxTotalCost: z.coerce.number().min(0).default(1.01),
 
     // stop loss config
     panicPriceDropThreshold: z.coerce.number().min(0).max(1).default(0.1),
