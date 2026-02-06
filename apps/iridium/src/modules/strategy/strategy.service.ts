@@ -160,7 +160,25 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     // entry pipe
     const marketTickSub = this.marketWsService.marketTicks$
       .pipe(
-        // MARK: filter for valid straddle opportunities
+        // MARK: filter for time remaining
+        filter((tick) => {
+          if (tick.timeRemaining > this.environmentService.environment.maxTimeRemainingMs) {
+            this.logger.debug(
+              `Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too much)`,
+            );
+            return false;
+          }
+
+          if (tick.timeRemaining <= this.environmentService.environment.minTimeRemainingMs) {
+            this.logger.debug(
+              `Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too little)`,
+            );
+            return false;
+          }
+
+          return true;
+        }),
+        // MARK: filter for skew and total cost (prevents entering when market is too skewed or illiquid)
         filter((tick) => {
           if (!this.environmentService.environment.enableSkewCheck) {
             return true;
@@ -182,24 +200,6 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
 
           if (totalCost >= maxTotalCost) {
             this.logger.debug(`Skipping market ${tick.conditionId} with total cost ${totalCost.toFixed(4)} (too high)`);
-            return false;
-          }
-
-          return true;
-        }),
-        // MARK: filter for time remaining
-        filter((tick) => {
-          if (tick.timeRemaining > this.environmentService.environment.maxTimeRemainingMs) {
-            this.logger.debug(
-              `Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too much)`,
-            );
-            return false;
-          }
-
-          if (tick.timeRemaining <= this.environmentService.environment.minTimeRemainingMs) {
-            this.logger.debug(
-              `Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too little)`,
-            );
             return false;
           }
 
