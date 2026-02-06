@@ -24,8 +24,12 @@ export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
   public async onModuleInit() {
     await this.refreshMarkets();
     this.refreshInterval = setInterval(
-      () => {
-        this.refreshMarkets();
+      async () => {
+        try {
+          await this.refreshMarkets();
+        } catch (error) {
+          this.logger.error(`Failed to refresh markets: ${error}`);
+        }
         this.cleanStaleMarkets();
       },
       5 * 60 * 1000,
