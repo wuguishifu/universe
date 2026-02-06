@@ -75,7 +75,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
 
   // MARK: deinit
   async onModuleDestroy() {
-    this.logger.log('Shutting down strategy service...');
+    this.logger.debug('Shutting down strategy service...');
 
     // Unsubscribe from all RxJS subscriptions
     this.subscriptions.forEach((sub) => sub.unsubscribe());
@@ -89,11 +89,11 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (this.activeStraddles.size === 0) {
-      this.logger.log('No active straddles to clean up');
+      this.logger.debug('No active straddles to clean up');
       return;
     }
 
-    this.logger.log(`Cleaning up ${this.activeStraddles.size} active straddles...`);
+    this.logger.debug(`Cleaning up ${this.activeStraddles.size} active straddles...`);
 
     // MARK: cancel open orders
     const cancelPromises: Promise<void>[] = [];
@@ -117,7 +117,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     }
 
     await Promise.all(cancelPromises);
-    this.logger.log('All open orders cancelled.');
+    this.logger.debug('All open orders cancelled.');
 
     // MARK: sell excess holdings
     const sellPromises: Promise<void>[] = [];
@@ -126,7 +126,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       const excessNo = Math.max(0, straddle.noHoldings - straddle.yesHoldings);
 
       if (excessYes > 0 || excessNo > 0) {
-        this.logger.log(
+        this.logger.debug(
           `Selling excess on ${straddle.conditionId}: YES=${excessYes.toFixed(2)}, NO=${excessNo.toFixed(2)}`,
         );
         sellPromises.push(
@@ -145,10 +145,10 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
 
     if (sellPromises.length > 0) {
       await Promise.all(sellPromises);
-      this.logger.log('Excess holdings sold.');
+      this.logger.debug('Excess holdings sold.');
     }
 
-    this.logger.log('Shutdown complete.');
+    this.logger.debug('Shutdown complete.');
   }
 
   // MARK: init
@@ -250,7 +250,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    this.logger.log(`WebSocket reconnected — reconciling ${this.activeStraddles.size} active straddle(s)...`);
+    this.logger.debug(`WebSocket reconnected — reconciling ${this.activeStraddles.size} active straddle(s)...`);
 
     for (const straddle of this.activeStraddles.values()) {
       try {
@@ -302,7 +302,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    this.logger.log('Reconciliation complete.');
+    this.logger.debug('Reconciliation complete.');
   }
 
   private async evaluateStraddle(tick: MarketTick) {
@@ -451,7 +451,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     if (isYesDone && isNoDone) {
       // ensure we don't delete while pending a merge
       if (straddle.yesHoldings < 0.001 && straddle.noHoldings < 0.001) {
-        this.logger.log(`Straddle on condition ${conditionId} is complete. Cleaning up state.`);
+        this.logger.debug(`Straddle on condition ${conditionId} is complete. Cleaning up state.`);
         this.cleanupStraddle(straddle);
         return;
       }
@@ -533,7 +533,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     const isYesDone = straddle.yesStatus === 'FILLED' || straddle.yesStatus === 'CANCELED';
     const isNoDone = straddle.noStatus === 'FILLED' || straddle.noStatus === 'CANCELED';
     if (isYesDone && isNoDone && straddle.yesHoldings < 0.001 && straddle.noHoldings < 0.001) {
-      this.logger.log(`Straddle on condition ${straddle.conditionId} is complete (post-merge). Cleaning up state.`);
+      this.logger.debug(`Straddle on condition ${straddle.conditionId} is complete (post-merge). Cleaning up state.`);
       this.cleanupStraddle(straddle);
     }
   }

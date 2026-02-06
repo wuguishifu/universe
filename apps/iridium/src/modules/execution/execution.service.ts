@@ -27,7 +27,7 @@ export class ExecutionService implements OnModuleInit {
   // MARK: module/client init
   public onModuleInit() {
     this.logger.log(`Starting in ${this.environmentService.environment.dryRun ? 'DRY RUN' : 'LIVE'} mode`);
-    this.logger.log('Initializing Polymarket CLOB client...');
+    this.logger.debug('Initializing Polymarket CLOB client...');
     this.clobClientService.clobClient$.pipe(take(1)).subscribe((client) => {
       this.clobClient = client;
       this.isConfigured = true;

@@ -40,14 +40,14 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
   }
 
   onModuleDestroy() {
-    this.logger.log('Shutting down Market WebSocket...');
+    this.logger.debug('Shutting down Market WebSocket...');
     this.marketTickSubject.complete();
     this.close();
   }
 
   protected onOpen(): void {
     if (this.subscribedTokenIds.size > 0) {
-      this.logger.log(`Market WebSocket reconnected, re-subscribing to ${this.subscribedTokenIds.size} tokens...`);
+      this.logger.debug(`Market WebSocket reconnected, re-subscribing to ${this.subscribedTokenIds.size} tokens...`);
       this.send({ type: 'subscribe', channel: 'market', assets_ids: Array.from(this.subscribedTokenIds) });
     }
   }

@@ -29,7 +29,7 @@ export class RelayerService implements OnModuleInit {
   ) {}
 
   public onModuleInit() {
-    this.logger.log('Initializing Relayer Client');
+    this.logger.debug('Initializing Relayer Client');
 
     const { privateKey, polyApiKey, polyApiSecret, polyApiPassphrase } = this.environmentService.environment;
     const formattedKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
@@ -47,7 +47,7 @@ export class RelayerService implements OnModuleInit {
     });
 
     this.client = new RelayClient(RELAYER_API_BASE, POLYGON_CHAIN_ID, this.signer, builderConfig, RelayerTxType.PROXY);
-    this.logger.log(`Relayer initialized for wallet: ${this.signer.address} (PROXY mode)`);
+    this.logger.debug(`Relayer initialized for wallet: ${this.signer.address} (PROXY mode)`);
   }
 
   public async mergePositions({ conditionId, amount }: { conditionId: string; amount: number }): Promise<string> {
@@ -67,7 +67,7 @@ export class RelayerService implements OnModuleInit {
     });
 
     if (this.environmentService.environment.dryRun) {
-      this.logger.log('Dry run mode enabled - skipping merge positions');
+      this.logger.debug('Dry run mode enabled - skipping merge positions');
       await new Promise((resolve) => setTimeout(resolve, 500));
       this.osmiumService.trackEvent({
         name: 'relayer_service-merge_positions-finished',

@@ -93,7 +93,7 @@ export abstract class WebSocketService {
       this.ws.close(1000, 'Graceful shutdown');
     }
 
-    this.logger.log('WebSocket connection closed gracefully');
+    this.logger.debug('WebSocket connection closed gracefully');
   }
 
   protected send(message: unknown) {

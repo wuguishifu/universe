@@ -19,7 +19,7 @@ export class AuthService implements OnModuleInit {
   constructor(private readonly environmentService: EnvironmentService) {}
 
   public async onModuleInit() {
-    this.logger.log('Initializing api key...');
+    this.logger.debug('Initializing api key...');
     const { privateKey } = this.environmentService.environment;
     const formattedKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
 

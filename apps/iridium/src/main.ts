@@ -12,7 +12,13 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const fastifyAdapter = new FastifyAdapter({ ignoreTrailingSlash: true, trustProxy: true });
 
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule, fastifyAdapter, { rawBody: true });
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, fastifyAdapter, {
+    rawBody: true,
+    logger:
+      process.env.DEBUG_LOGGING === 'true'
+        ? ['verbose', 'debug', 'log', 'warn', 'error', 'fatal']
+        : ['log', 'warn', 'error', 'fatal'],
+  });
 
   app
     .getHttpAdapter()

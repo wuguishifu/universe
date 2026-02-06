@@ -31,7 +31,7 @@ export class UserWsService extends WebSocketService implements OnModuleInit, OnM
   }
 
   public onModuleDestroy() {
-    this.logger.log('Shutting down User WebSocket...');
+    this.logger.debug('Shutting down User WebSocket...');
     this.orderUpdateSubject.complete();
     this.reconnectedSubject.complete();
     this.close();
@@ -63,7 +63,7 @@ export class UserWsService extends WebSocketService implements OnModuleInit, OnM
 
   protected onOpen(): void {
     if (this.userCredentials) {
-      this.logger.log('User WebSocket reconnected, re-authenticating...');
+      this.logger.debug('User WebSocket reconnected, re-authenticating...');
       this.send({ type: 'user', auth: this.userCredentials });
       this.reconnectedSubject.next();
     }
@@ -72,6 +72,6 @@ export class UserWsService extends WebSocketService implements OnModuleInit, OnM
   public authenticate(userCredentials: UserCredentials) {
     this.userCredentials = userCredentials;
     this.send({ type: 'user', auth: this.userCredentials });
-    this.logger.log('User WebSocket authenticated');
+    this.logger.debug('User WebSocket authenticated');
   }
 }

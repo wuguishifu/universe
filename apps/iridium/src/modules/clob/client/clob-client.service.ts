@@ -18,7 +18,7 @@ export class ClobClientService implements OnModuleInit {
 
   public onModuleInit() {
     this.authService.authBundle$.subscribe(({ wallet, credentials }) => {
-      this.logger.log(`Initializing Polymarket CLOB client...`);
+      this.logger.debug(`Initializing Polymarket CLOB client...`);
       this.clobClient$.next(
         new ClobClient(
           CLOB_API_BASE,

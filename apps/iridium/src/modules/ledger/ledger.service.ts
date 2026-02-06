@@ -60,7 +60,7 @@ export class LedgerService implements OnModuleInit {
   public async sync(lockedCapital = 0): Promise<void> {
     const walletBalance = await this.getUserBalance();
     const adjusted = walletBalance - lockedCapital;
-    this.logger.log(
+    this.logger.debug(
       `Syncing ghost balance. Was: ${this.availableBalance.toFixed(4)}, API: ${walletBalance.toFixed(4)}, Locked: ${lockedCapital.toFixed(4)}, Adjusted: ${adjusted.toFixed(4)}`,
     );
     this.availableBalance = adjusted;
