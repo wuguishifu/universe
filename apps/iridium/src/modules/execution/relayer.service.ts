@@ -1,14 +1,14 @@
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { Wallet } from '@ethersproject/wallet';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { RelayClient } from '@polymarket/builder-relayer-client';
+import { RelayClient, RelayerTxType } from '@polymarket/builder-relayer-client';
 import { BuilderConfig } from '@polymarket/builder-signing-sdk';
 import { encodeFunctionData, parseUnits } from 'viem';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
 
 import {
-  CTF_EXCHANGE_ADDRESS,
+  CONDITIONAL_TOKENS_ADDRESS,
   POLYGON_CHAIN_ID,
   POLYGON_RPC_URL,
   RELAYER_API_BASE,
@@ -22,15 +22,13 @@ export class RelayerService implements OnModuleInit {
 
   private client: RelayClient | null = null;
   private signer: Wallet | null = null;
-  private safeDeployed = false;
-  private deployPromise: Promise<void> | null = null;
 
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly osmiumService: OsmiumService,
   ) {}
 
-  public async onModuleInit() {
+  public onModuleInit() {
     this.logger.log('Initializing Relayer Client');
 
     const { privateKey, polyApiKey, polyApiSecret, polyApiPassphrase } = this.environmentService.environment;
@@ -48,56 +46,8 @@ export class RelayerService implements OnModuleInit {
       },
     });
 
-    this.client = new RelayClient(RELAYER_API_BASE, POLYGON_CHAIN_ID, this.signer, builderConfig);
-    this.logger.log(`Relayer initialized for wallet: ${this.signer.address}`);
-
-    // Deploy Safe wallet if not already deployed
-    await this.ensureSafeDeployed();
-  }
-
-  private ensureSafeDeployed(): Promise<void> {
-    if (this.safeDeployed || !this.client) {
-      return Promise.resolve();
-    }
-    return (this.deployPromise ??= this.deploySafe());
-  }
-
-  private async deploySafe(): Promise<void> {
-    if (!this.client) {
-      return;
-    }
-
-    if (this.environmentService.environment.dryRun) {
-      this.logger.log('Dry run mode enabled - skipping Safe deployment check');
-      this.safeDeployed = true;
-      return;
-    }
-
-    try {
-      this.logger.log('Deploying Safe wallet (if not already deployed)...');
-      const response = await this.client.deploy();
-      const result = await response.wait();
-
-      if (result) {
-        this.logger.log(`Safe deployed successfully at address: ${result.proxyAddress}`);
-        this.logger.log(`Deployment transaction hash: ${result.transactionHash}`);
-      }
-
-      this.osmiumService.trackEvent({
-        name: 'relayer_service-safe_deployed',
-        metadata: { proxyAddress: result?.proxyAddress },
-      });
-      this.safeDeployed = true;
-    } catch (error) {
-      // If Safe is already deployed, this may throw or succeed silently
-      // Either way, we mark it as deployed to continue
-      this.logger.warn(`Safe deployment response: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      this.osmiumService.trackEvent({
-        name: 'relayer_service-safe_deployment_failed',
-        metadata: { error: error instanceof Error ? error.message : 'Unknown error' },
-      });
-      this.safeDeployed = true;
-    }
+    this.client = new RelayClient(RELAYER_API_BASE, POLYGON_CHAIN_ID, this.signer, builderConfig, RelayerTxType.PROXY);
+    this.logger.log(`Relayer initialized for wallet: ${this.signer.address} (PROXY mode)`);
   }
 
   public async mergePositions({ conditionId, amount }: { conditionId: string; amount: number }): Promise<string> {
@@ -108,9 +58,6 @@ export class RelayerService implements OnModuleInit {
     if (!this.validateConditionId(conditionId)) {
       throw new Error('Invalid conditionId format');
     }
-
-    // Ensure Safe is deployed before executing transactions
-    await this.ensureSafeDeployed();
 
     this.logger.log(`Merging positions for condition ${conditionId} with amount ${amount}`);
     const commonTrackingProperties = { conditionId, amount, dryRun: this.environmentService.environment.dryRun };
@@ -132,7 +79,7 @@ export class RelayerService implements OnModuleInit {
     // encode transaction data
     const rawAmount = parseUnits(amount.toFixed(6), 6);
     const data = encodeFunctionData({
-      abi: CTF_EXCHANGE_ABI,
+      abi: CONDITIONAL_TOKENS_ABI,
       functionName: 'mergePositions',
       args: [
         USDC_ADDRESS,
@@ -144,29 +91,54 @@ export class RelayerService implements OnModuleInit {
     });
 
     // create transaction object
-    const tx = { to: CTF_EXCHANGE_ADDRESS, data, value: '0' };
+    const tx = { to: CONDITIONAL_TOKENS_ADDRESS, data, value: '0' };
 
-    // send to relayer
-    const response = await this.client.execute([tx]);
-    const result = await response.wait();
+    try {
+      // send to relayer
+      const response = await this.client.execute([tx]);
+      const result = await response.wait();
 
-    if (result) {
-      this.logger.log(`Merge positions transaction submitted: ${result.transactionHash}`);
+      if (result) {
+        this.logger.log(`Merge positions transaction submitted: ${result.transactionHash}`);
+        this.osmiumService.trackEvent({
+          name: 'relayer_service-merge_positions-finished',
+          metadata: {
+            ...commonTrackingProperties,
+            transactionHash: result.transactionHash,
+          },
+        });
+        return result.transactionID;
+      }
+
+      // wait() returns undefined when the tx hits STATE_FAILED or polling times out
+      const txDetails = await response.getTransaction().catch(() => undefined);
+      const failureMetadata = {
+        ...commonTrackingProperties,
+        relayerTxId: response.transactionID,
+        transactionHash: txDetails?.[0]?.transactionHash,
+        state: txDetails?.[0]?.state,
+      };
+      this.logger.error(`Merge positions failed on-chain: ${JSON.stringify(failureMetadata)}`);
       this.osmiumService.trackEvent({
-        name: 'relayer_service-merge_positions-finished',
-        metadata: {
-          ...commonTrackingProperties,
-          transactionHash: result.transactionHash,
-        },
+        name: 'relayer_service-merge_positions-failed',
+        metadata: failureMetadata,
       });
-      return result.transactionID;
-    }
+      throw new Error(`Failed to submit merge positions transaction (txId: ${response.transactionID})`);
+    } catch (error) {
+      // If already handled above (re-thrown), propagate as-is
+      if (error instanceof Error && error.message.startsWith('Failed to submit merge positions')) {
+        throw error;
+      }
 
-    this.osmiumService.trackEvent({
-      name: 'relayer_service-merge_positions-failed',
-      metadata: commonTrackingProperties,
-    });
-    throw new Error(`Failed to submit merge positions transaction (txId: ${response.transactionID})`);
+      // Unexpected error from execute() or wait()
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Merge positions unexpected error: ${errorMessage}`);
+      this.osmiumService.trackEvent({
+        name: 'relayer_service-merge_positions-failed',
+        metadata: { ...commonTrackingProperties, error: errorMessage },
+      });
+      throw new Error(`Merge positions error: ${errorMessage}`);
+    }
   }
 
   private validateConditionId(conditionId: string): conditionId is `0x${string}` {
@@ -174,7 +146,7 @@ export class RelayerService implements OnModuleInit {
   }
 }
 
-const CTF_EXCHANGE_ABI = [
+const CONDITIONAL_TOKENS_ABI = [
   {
     inputs: [
       { internalType: 'address', name: 'collateralToken', type: 'address' },
