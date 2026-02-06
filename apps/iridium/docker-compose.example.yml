@@ -17,6 +17,7 @@ services:
       MIN_SKEW_PRICE_CUTOFF: 0.25 # don't trade if any leg is less than 25 cents (too much skew)
       MIN_TOTAL_COST: 0.8 # don't trade if total cost is less than 80% of theoretical (skew is too high)
       MAX_TOTAL_COST: 1.01 # don't trade if total cost is more than 101% of theoretical (complement purchase is auto losing)
+      MERGE_DEBOUNCE_MS: 5000 # when we detect a merge opportunity, wait this long for price updates before executing the merge
       # stop loss config
       PANIC_PRICE_DROP_THRESHOLD: 0.10 # dollar drop from entry price that triggers sustained-drop timer
       PANIC_SUSTAINED_DROP_MS: 30000 # how long price must stay below threshold before panic sell

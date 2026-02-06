@@ -14,6 +14,7 @@ export const environmentSchema = z
     minSkewPriceCutoff: z.coerce.number().min(0).default(0.25),
     minTotalCost: z.coerce.number().min(0).default(0.8),
     maxTotalCost: z.coerce.number().min(0).default(1.01),
+    mergeDebounceMs: z.coerce.number().min(0).default(5000),
 
     // stop loss config
     panicPriceDropThreshold: z.coerce.number().min(0).max(1).default(0.1),

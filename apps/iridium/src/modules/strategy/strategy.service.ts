@@ -32,6 +32,10 @@ interface ActiveStraddle {
   yesStatus: 'OPEN' | 'FILLED' | 'CANCELED';
   noStatus: 'OPEN' | 'FILLED' | 'CANCELED';
 
+  // Merge concurrency control
+  mergeInProgress: boolean;
+  mergeDebounceTimer?: NodeJS.Timeout;
+
   // Legging risk timers
   priceDropTimer?: NodeJS.Timeout;
   absoluteTimer?: NodeJS.Timeout;
@@ -291,6 +295,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
         noCumulativeFilled: 0,
         yesStatus: 'OPEN',
         noStatus: 'OPEN',
+        mergeInProgress: false,
         isImbalanced: false,
       });
       this.orderMap.set(yesOrderId, tick.conditionId);
@@ -304,7 +309,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async handleOrderUpdate(update: OrderMessage) {
+  private handleOrderUpdate(update: OrderMessage) {
     // MARK: find context
     const conditionId = this.orderMap.get(update.id);
     if (!conditionId) {
@@ -361,24 +366,10 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    // MARK: check for merge
-    const match = Math.min(straddle.yesHoldings, straddle.noHoldings);
-    if (match > 0) {
-      straddle.yesHoldings -= match;
-      straddle.noHoldings -= match;
+    // MARK: schedule merge (debounced to allow fills to accumulate and settle on-chain)
+    this.scheduleMerge(straddle);
 
-      this.logger.log(`Merging ${match} positions on condition ${conditionId}`);
-      try {
-        await this.executionService.mergePositions({ conditionId, amount: match });
-        this.ledgerService.credit(match * 1.0);
-      } catch (error) {
-        this.logger.error(`Failed to merge positions on ${conditionId}: ${(error as Error).message}`);
-        straddle.yesHoldings += match;
-        straddle.noHoldings += match;
-      }
-    }
-
-    // MARK: check for complete exit
+    // MARK: check for complete exit (after scheduling merge, not awaiting it)
     const isYesDone = straddle.yesStatus === 'FILLED' || straddle.yesStatus === 'CANCELED';
     const isNoDone = straddle.noStatus === 'FILLED' || straddle.noStatus === 'CANCELED';
     if (isYesDone && isNoDone) {
@@ -403,6 +394,60 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       this.logger.debug(`Imbalance resolved for ${conditionId}. Clearing all risk timers.`);
       straddle.isImbalanced = false;
       this.clearAllRiskTimers(straddle);
+    }
+  }
+
+  /**
+   * Debounces merge attempts so rapid fills accumulate before we send a single
+   * on-chain transaction. The 5-second window also gives Polygon time to settle
+   * the CLOB fills on-chain before we attempt to merge.
+   */
+  private scheduleMerge(straddle: ActiveStraddle) {
+    const match = Math.min(straddle.yesHoldings, straddle.noHoldings);
+    if (match <= 0 || straddle.mergeInProgress) {
+      return;
+    }
+
+    // Reset the debounce timer on every new fill so we batch them together
+    if (straddle.mergeDebounceTimer) {
+      clearTimeout(straddle.mergeDebounceTimer);
+    }
+
+    straddle.mergeDebounceTimer = setTimeout(() => {
+      straddle.mergeDebounceTimer = undefined;
+      this.executeMerge(straddle);
+    }, this.environmentService.environment.mergeDebounceMs);
+  }
+
+  private async executeMerge(straddle: ActiveStraddle) {
+    if (straddle.mergeInProgress) {
+      return;
+    }
+
+    const match = Math.min(straddle.yesHoldings, straddle.noHoldings);
+    if (match <= 0) {
+      return;
+    }
+
+    straddle.mergeInProgress = true;
+    straddle.yesHoldings -= match;
+    straddle.noHoldings -= match;
+
+    this.logger.log(`Merging ${match} positions on condition ${straddle.conditionId}`);
+    try {
+      await this.executionService.mergePositions({ conditionId: straddle.conditionId, amount: match });
+      this.ledgerService.credit(match * 1.0);
+    } catch (error) {
+      this.logger.error(`Failed to merge positions on ${straddle.conditionId}: ${(error as Error).message}`);
+      straddle.yesHoldings += match;
+      straddle.noHoldings += match;
+    } finally {
+      straddle.mergeInProgress = false;
+    }
+
+    // Check if more holdings accumulated while we were merging
+    if (Math.min(straddle.yesHoldings, straddle.noHoldings) > 0) {
+      this.scheduleMerge(straddle);
     }
   }
 
@@ -488,6 +533,10 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   }
 
   private clearAllRiskTimers(straddle: ActiveStraddle) {
+    if (straddle.mergeDebounceTimer) {
+      clearTimeout(straddle.mergeDebounceTimer);
+      straddle.mergeDebounceTimer = undefined;
+    }
     if (straddle.priceDropTimer) {
       clearTimeout(straddle.priceDropTimer);
       straddle.priceDropTimer = undefined;
