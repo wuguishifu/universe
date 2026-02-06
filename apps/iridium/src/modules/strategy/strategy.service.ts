@@ -524,6 +524,17 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     // Check if more holdings accumulated while we were merging
     if (Math.min(straddle.yesHoldings, straddle.noHoldings) > 0) {
       this.scheduleMerge(straddle);
+      return;
+    }
+
+    // Check if the straddle is fully complete now that holdings are merged.
+    // The cleanup check in handleOrderUpdate may have been skipped because
+    // holdings were still > 0 at the time (merge hadn't run yet).
+    const isYesDone = straddle.yesStatus === 'FILLED' || straddle.yesStatus === 'CANCELED';
+    const isNoDone = straddle.noStatus === 'FILLED' || straddle.noStatus === 'CANCELED';
+    if (isYesDone && isNoDone && straddle.yesHoldings < 0.001 && straddle.noHoldings < 0.001) {
+      this.logger.log(`Straddle on condition ${straddle.conditionId} is complete (post-merge). Cleaning up state.`);
+      this.cleanupStraddle(straddle);
     }
   }
 
