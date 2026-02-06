@@ -206,6 +206,8 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
           return true;
         }),
         // MARK: filter for price stability (prevents entering during spikes)
+        // TODO: there is a known edge case where a market could be unstable but near a skew boundary which would cause
+        // TODO: ticks to be filtered out earlier and would make this market appear stable.
         filter((tick) => this.updatePriceHistoryAndCheckStability(tick)),
         // MARK: throttle per-market to avoid rapid re-evaluation
         filter((tick) => {
