@@ -20,7 +20,6 @@ export type MarketTick = {
   bestBidNo: number;
   timestamp: number;
   timeRemaining: number;
-  timeElapsed: number;
   minTickSize: TickSize;
 };
 
@@ -93,7 +92,6 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
         bestBidNo: state[market.noToken],
         timestamp: parseInt(message.timestamp),
         timeRemaining: market.endDate.getTime() - Date.now(),
-        timeElapsed: Date.now() - market.eventStartTime.getTime(),
         minTickSize: market.orderPriceMinTickSize,
       });
     }

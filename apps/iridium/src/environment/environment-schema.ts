@@ -8,8 +8,8 @@ export const environmentSchema = z
 
     // strategy config
     targetEntry: z.coerce.number().min(0).max(1).default(0.97),
-    minTimeRemainingMs: z.coerce.number().min(0).default(300_000),
-    minTimeElapsedMs: z.coerce.number().min(0).default(0),
+    minTimeRemainingMs: z.coerce.number().min(0).default(300_000), // 5 minutes
+    maxTimeRemainingMs: z.coerce.number().min(0).default(3_300_000), // 55 minutes - this makes a 50 minute window
     targetPositionSize: z.coerce.number().min(0).default(10),
     minSkewPriceCutoff: z.coerce.number().min(0).default(0.25),
     enableSkewCheck: z.preprocess(preprocessBoolean, z.boolean()).default(true),

@@ -189,21 +189,16 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
         }),
         // MARK: filter for time remaining
         filter((tick) => {
-          if (tick.timeElapsed < 0) {
-            this.logger.debug(`Skipping market ${tick.conditionId} which has not yet started`);
+          if (tick.timeRemaining > this.environmentService.environment.maxTimeRemainingMs) {
+            this.logger.debug(
+              `Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too much)`,
+            );
             return false;
           }
 
           if (tick.timeRemaining <= this.environmentService.environment.minTimeRemainingMs) {
             this.logger.debug(
               `Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too little)`,
-            );
-            return false;
-          }
-
-          if (tick.timeElapsed <= this.environmentService.environment.minTimeElapsedMs) {
-            this.logger.debug(
-              `Skipping market ${tick.conditionId} with time elapsed ${tick.timeElapsed}ms (too little)`,
             );
             return false;
           }
