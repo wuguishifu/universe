@@ -162,6 +162,10 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       .pipe(
         // MARK: filter for valid straddle opportunities
         filter((tick) => {
+          if (!this.environmentService.environment.enableSkewCheck) {
+            return true;
+          }
+
           const { minSkewPriceCutoff, minTotalCost, maxTotalCost } = this.environmentService.environment;
           if (tick.bestBidNo <= minSkewPriceCutoff || tick.bestBidYes <= minSkewPriceCutoff) {
             this.logger.debug(

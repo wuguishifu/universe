@@ -12,6 +12,7 @@ export const environmentSchema = z
     minTimeElapsedMs: z.coerce.number().min(0).default(0),
     targetPositionSize: z.coerce.number().min(0).default(10),
     minSkewPriceCutoff: z.coerce.number().min(0).default(0.25),
+    enableSkewCheck: z.preprocess(preprocessBoolean, z.boolean()).default(true),
     minTotalCost: z.coerce.number().min(0).default(0.8),
     maxTotalCost: z.coerce.number().min(0).default(1.01),
     mergeDebounceMs: z.coerce.number().min(0).default(5000),
