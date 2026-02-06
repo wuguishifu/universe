@@ -11,6 +11,7 @@ export const marketSchema = z
     question: z.string(),
     endDate: z.preprocess(preprocessDate, z.date()),
     startDate: z.preprocess(preprocessDate, z.date()),
+    eventStartTime: z.preprocess(preprocessDate, z.date()),
     orderPriceMinTickSize: z.preprocess(preprocessTickSize, z.enum(['0.1', '0.01', '0.001', '0.0001'])),
   })
   .transform((data) => {
