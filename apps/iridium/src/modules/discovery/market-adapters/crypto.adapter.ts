@@ -56,7 +56,7 @@ export class CryptoAdapter extends MarketAdapter {
   protected readonly logger = new Logger(CryptoAdapter.name);
 
   async fetchMarkets() {
-    const { current, next } = getCurrentHourWindows();
+    const { current } = getCurrentHourWindows();
 
     const fetchEvent = async (asset: string, window: HourWindow): Promise<Event | null> => {
       const slug = generate1hSlug(asset, window);
@@ -77,7 +77,7 @@ export class CryptoAdapter extends MarketAdapter {
       return null;
     };
 
-    const events = await Promise.all(assets.flatMap((asset) => [fetchEvent(asset, current), fetchEvent(asset, next)]));
+    const events = await Promise.all(assets.flatMap((asset) => [fetchEvent(asset, current)]));
     return events.flatMap((event) => event?.markets ?? []);
   }
 }
