@@ -11,28 +11,30 @@ services:
       DRY_RUN: true
       DEBUG_LOGGING: true
       # strategy config
-      TARGET_ENTRY: 0.97 # enter when summed legs price is at 97% of theoretical price
-      MIN_TIME_REMAINING_MS: 300000 # don't trade if less than 5 minutes to expiry
-      MAX_TIME_REMAINING_MS: 3300000 # don't trade if more than 55 minutes to expiry
-      TARGET_POSITION_SIZE: 10 # 10 shares of each leg
-      MIN_SKEW_PRICE_CUTOFF: 0.25 # don't trade if any leg is less than 25 cents (too much skew)
-      ENABLE_SKEW_CHECK: true # enable or disable skew check
-      MIN_TOTAL_COST: 0.8 # don't trade if total cost is less than 80% of theoretical (skew is too high)
-      MAX_TOTAL_COST: 1.01 # don't trade if total cost is more than 101% of theoretical (complement purchase is auto losing)
-      MERGE_DEBOUNCE_MS: 5000 # when we detect a merge opportunity, wait this long for price updates before executing the merge
+      TARGET_ENTRY: 0.975
+      TARGET_POSITION_SIZE: 10
+      MERGE_DEBOUNCE_MS: 10000
+      # time filtering
+      MIN_TIME_REMAINING_MS: 300000
+      MAX_TIME_REMAINING_MS: 3300000
+      # skew config
+      ENABLE_SKEW_CHECK: true
+      MIN_SKEW_PRICE_CUTOFF: 0.15
+      MIN_TOTAL_COST: 0.8
+      MAX_TOTAL_COST: 1.01
       # price stability config
-      ENABLE_PRICE_STABILITY_CHECK: true # enable or disable price stability check
-      PRICE_STABILITY_RANGE_CENTS: 5
-      PRICE_STABILITY_DURATION_MS: 10000
+      ENABLE_PRICE_STABILITY_CHECK: true
+      PRICE_STABILITY_RANGE_CENTS: 3
+      PRICE_STABILITY_DURATION_MS: 2000
       # stop loss config
-      PANIC_PRICE_DROP_THRESHOLD: 0.10 # dollar drop from entry price that triggers sustained-drop timer
-      PANIC_SUSTAINED_DROP_MS: 30000 # how long price must stay below threshold before panic sell
-      PANIC_ABSOLUTE_TIMEOUT_MS: 300000 # safety-net max time for any imbalance (5 min)
-      # clob config (required)
+      PANIC_PRICE_DROP_THRESHOLD: 0.05
+      PANIC_SUSTAINED_DROP_MS: 30000
+      PANIC_ABSOLUTE_TIMEOUT_MS: 300000
+      # clob config 
       PRIVATE_KEY: ${PRIVATE_KEY}
       SIGNATURE_TYPE: 1
-      FUNDER_ADDRESS: ${FUNDER_ADDRESS} # optional unless signature type is 1
-      # relayer config (required)
+      FUNDER_ADDRESS: ${FUNDER_ADDRESS}
+      # relayer config 
       POLY_API_KEY: ${POLY_API_KEY}
       POLY_API_SECRET: ${POLY_API_SECRET}
       POLY_API_PASSPHRASE: ${POLY_API_PASSPHRASE}
