@@ -11,6 +11,8 @@ services:
       DRY_RUN: true
       DEBUG_LOGGING: true
       MAX_HISTORY_RETENTION_MS: 5000
+      RECONCILE_INTERVAL_MS: 30000
+      RECONCILE_LEDGER_SYNC: true
       # strategy config
       TARGET_ENTRY: 0.97
       TARGET_POSITION_SIZE: 10

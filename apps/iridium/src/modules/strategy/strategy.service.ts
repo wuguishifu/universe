@@ -117,8 +117,10 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     const reconnectSub = this.userWsService.reconnected$.subscribe(() => this.reconcileStraddles());
     this.subscriptions.push(reconnectSub);
 
-    // periodic reconciliation — catch any drift every 5 minutes
-    this.reconcileInterval = setInterval(() => this.reconcileStraddles(), 5 * 60 * 1000);
+    // periodic reconciliation — catch any drift on a configurable interval
+    const reconcileMs = this.environmentService.environment.reconcileIntervalMs;
+    this.logger.log(`Periodic reconciliation interval: ${reconcileMs}ms`);
+    this.reconcileInterval = setInterval(() => this.reconcileStraddles(), reconcileMs);
   }
 
   async onModuleDestroy() {
@@ -573,7 +575,9 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    this.logger.debug(`WebSocket reconnected — reconciling ${this.activeStraddles.size} active straddle(s)...`);
+    this.logger.debug(`Reconciling ${this.activeStraddles.size} active straddle(s)...`);
+
+    const staleStraddles: ActiveStraddle[] = [];
 
     for (const straddle of this.activeStraddles.values()) {
       try {
@@ -589,7 +593,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
           const apiMatched = parseFloat(yesOrder.size_matched);
           const delta = apiMatched - straddle.yesCumulativeFilled;
           if (delta > 0) {
-            this.logger.log(`Reconcile: YES order on ${straddle.conditionId} — missed ${delta.toFixed(6)} fills`);
+            this.logger.log(`Reconcile drift: YES order on ${straddle.conditionId} — missed ${delta.toFixed(6)} fills`);
             straddle.yesCumulativeFilled = apiMatched;
             straddle.yesHoldings += delta;
             changed = true;
@@ -597,6 +601,16 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
           if (yesOrder.status === 'MATCHED') {
             straddle.yesStatus = 'FILLED';
           } else if (yesOrder.status === 'CANCELED') {
+            // Refund unfilled capital for missed cancellation
+            if (straddle.yesStatus !== 'CANCELED') {
+              const unfilledQty = straddle.quantity - straddle.yesCumulativeFilled;
+              if (unfilledQty > 0) {
+                this.logger.warn(
+                  `Reconcile drift: YES order on ${straddle.conditionId} was CANCELED (missed WS). Refunding ${(straddle.yesPrice * unfilledQty).toFixed(4)}`,
+                );
+                this.ledgerService.credit(straddle.yesPrice * unfilledQty);
+              }
+            }
             straddle.yesStatus = 'CANCELED';
           }
         }
@@ -605,7 +619,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
           const apiMatched = parseFloat(noOrder.size_matched);
           const delta = apiMatched - straddle.noCumulativeFilled;
           if (delta > 0) {
-            this.logger.log(`Reconcile: NO order on ${straddle.conditionId} — missed ${delta.toFixed(6)} fills`);
+            this.logger.log(`Reconcile drift: NO order on ${straddle.conditionId} — missed ${delta.toFixed(6)} fills`);
             straddle.noCumulativeFilled = apiMatched;
             straddle.noHoldings += delta;
             changed = true;
@@ -613,6 +627,16 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
           if (noOrder.status === 'MATCHED') {
             straddle.noStatus = 'FILLED';
           } else if (noOrder.status === 'CANCELED') {
+            // Refund unfilled capital for missed cancellation
+            if (straddle.noStatus !== 'CANCELED') {
+              const unfilledQty = straddle.quantity - straddle.noCumulativeFilled;
+              if (unfilledQty > 0) {
+                this.logger.warn(
+                  `Reconcile drift: NO order on ${straddle.conditionId} was CANCELED (missed WS). Refunding ${(straddle.noPrice * unfilledQty).toFixed(4)}`,
+                );
+                this.ledgerService.credit(straddle.noPrice * unfilledQty);
+              }
+            }
             straddle.noStatus = 'CANCELED';
           }
         }
@@ -620,8 +644,41 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
         if (changed) {
           this.scheduleMerge(straddle);
         }
+
+        // Detect stale straddles: both legs terminal and holdings ~0
+        const isYesDone = straddle.yesStatus === 'FILLED' || straddle.yesStatus === 'CANCELED';
+        const isNoDone = straddle.noStatus === 'FILLED' || straddle.noStatus === 'CANCELED';
+        if (isYesDone && isNoDone && straddle.yesHoldings < 0.001 && straddle.noHoldings < 0.001) {
+          staleStraddles.push(straddle);
+        }
       } catch (error) {
         this.logger.error(`Failed to reconcile straddle ${straddle.conditionId}: ${(error as Error).message}`);
+      }
+    }
+
+    // Clean up stale straddles (after iteration to avoid mutating the map mid-loop)
+    for (const stale of staleStraddles) {
+      this.logger.debug(`Cleaning up stale straddle on ${stale.conditionId} (both legs terminal, holdings ~0)`);
+      this.cleanupStraddle(stale);
+    }
+
+    // Conditional ledger sync
+    if (this.environmentService.environment.reconcileLedgerSync) {
+      try {
+        const walletBalance = await this.ledgerService.getUserBalance();
+        const lockedCapital = this.calculateLockedCapital();
+        const expectedAvailable = walletBalance - lockedCapital;
+        const ghostBalance = this.ledgerService.getAvailableBalance();
+        const drift = Math.abs(expectedAvailable - ghostBalance);
+
+        if (drift > 0.01) {
+          this.logger.warn(
+            `Ledger drift: ${drift.toFixed(4)} (ghost=${ghostBalance.toFixed(4)}, expected=${expectedAvailable.toFixed(4)})`,
+          );
+          await this.ledgerService.sync(lockedCapital);
+        }
+      } catch (error) {
+        this.logger.error(`Failed to sync ledger during reconciliation: ${(error as Error).message}`);
       }
     }
 

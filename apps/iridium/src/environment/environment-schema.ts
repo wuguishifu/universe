@@ -5,11 +5,14 @@ import { preprocessBoolean } from '../utils/preprocessors';
 export const environmentSchema = z
   .object({
     dryRun: z.preprocess(preprocessBoolean, z.boolean()).default(true),
+    maxHistoryRetentionMs: z.coerce.number().min(0).default(5_000),
+    reconcileIntervalMs: z.coerce.number().min(5_000).default(30_000),
+    reconcileLedgerSync: z.preprocess(preprocessBoolean, z.boolean()).default(true),
+
     // strategy config
     targetEntry: z.coerce.number().min(0).max(1).default(0.97),
     targetPositionSize: z.coerce.number().min(0).default(10),
     mergeDebounceMs: z.coerce.number().min(0).default(10_000),
-    maxHistoryRetentionMs: z.coerce.number().min(0).default(5_000),
 
     // time filtering config
     minTimeRemainingMs: z.coerce.number().min(0).default(300_000),

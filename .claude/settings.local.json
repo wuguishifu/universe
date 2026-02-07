@@ -3,7 +3,8 @@
     "allow": [
       "Bash(find:*)",
       "Bash(npx nx build:*)",
-      "Bash(nx tsc:*)"
+      "Bash(nx tsc:*)",
+      "Bash(pnpm nx build:*)"
     ]
   }
 }
