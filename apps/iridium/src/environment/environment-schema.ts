@@ -5,7 +5,7 @@ import { preprocessBoolean } from '../utils/preprocessors';
 export const environmentSchema = z
   .object({
     dryRun: z.preprocess(preprocessBoolean, z.boolean()).default(true),
-    maxHistoryRetentionMs: z.coerce.number().min(0).default(5_000),
+    maxHistoryRetentionMs: z.coerce.number().min(0).default(60_000),
     reconcileIntervalMs: z.coerce.number().min(5_000).default(30_000),
     reconcileLedgerSync: z.preprocess(preprocessBoolean, z.boolean()).default(true),
 
@@ -28,6 +28,11 @@ export const environmentSchema = z
     enablePriceStabilityCheck: z.preprocess(preprocessBoolean, z.boolean()).default(true),
     priceStabilityRangeCents: z.coerce.number().min(0).default(3),
     priceStabilityDurationMs: z.coerce.number().min(0).default(2_000),
+
+    // trend filter config (prevents entering during trending markets)
+    enableTrendFilter: z.preprocess(preprocessBoolean, z.boolean()).default(true),
+    trendWindowMs: z.coerce.number().min(0).default(30_000),
+    maxTrendRatio: z.coerce.number().min(0).max(1).default(0.6),
 
     // momentum config
     enableMomentumDiscounting: z.preprocess(preprocessBoolean, z.boolean()).default(true),

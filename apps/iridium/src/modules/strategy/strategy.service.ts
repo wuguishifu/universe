@@ -87,6 +87,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
         filter((tick) => this.filterForTimeRemaining(tick)),
         filter((tick) => this.filterForSkew(tick)),
         filter((tick) => this.filterForStability(tick)),
+        filter((tick) => this.filterForTrend(tick)),
         filter((tick) => this.filterForThrottling(tick)),
         tap((tick) => this.lastEvalTime.set(tick.conditionId, Date.now())),
       )
@@ -889,6 +890,70 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
         );
         return false;
       }
+    }
+
+    return true;
+  }
+
+  /**
+   * MARK: filter for trend (prevents entering during trending markets)
+   * Uses an efficiency ratio: abs(net movement) / (high - low) over a rolling window.
+   * Near 0 = oscillating (safe), Near 1 = trending (block).
+   */
+  private filterForTrend(tick: MarketTick): boolean {
+    const { enableTrendFilter, trendWindowMs, maxTrendRatio } = this.environmentService.environment;
+    if (!enableTrendFilter) {
+      return true;
+    }
+
+    const history = this.priceHistory.get(tick.conditionId);
+    if (!history || history.length < 2) {
+      return false;
+    }
+
+    const windowStart = tick.timestamp - trendWindowMs;
+
+    // Cold start: history doesn't span the full window yet
+    if (history[0].timestamp > windowStart) {
+      return false;
+    }
+
+    // Find the oldest entry within the window
+    let oldestInWindow: { yesPrice: number; noPrice: number; timestamp: number } | undefined;
+    let high = -Infinity;
+    let low = Infinity;
+    history.forEach((entry) => {
+      if (entry.timestamp < windowStart) {
+        return;
+      }
+      if (!oldestInWindow) {
+        oldestInWindow = entry;
+      }
+      if (entry.yesPrice > high) {
+        high = entry.yesPrice;
+      }
+      if (entry.yesPrice < low) {
+        low = entry.yesPrice;
+      }
+    });
+
+    if (!oldestInWindow) {
+      return false;
+    }
+
+    const range = high - low;
+    if (range < 0.005) {
+      // Flat market — safe to enter
+      return true;
+    }
+
+    const trendRatio = Math.abs(tick.bestBidYes - oldestInWindow.yesPrice) / range;
+
+    if (trendRatio > maxTrendRatio) {
+      this.logger.debug(
+        `Trending ${tick.conditionId}: ratio=${trendRatio.toFixed(3)} > ${maxTrendRatio} over ${trendWindowMs}ms`,
+      );
+      return false;
     }
 
     return true;

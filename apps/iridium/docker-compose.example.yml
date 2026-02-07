@@ -29,6 +29,10 @@ services:
       ENABLE_PRICE_STABILITY_CHECK: true
       PRICE_STABILITY_RANGE_CENTS: 3
       PRICE_STABILITY_DURATION_MS: 2000
+      # trend filter config
+      ENABLE_TREND_FILTER: true
+      TREND_WINDOW_MS: 30000
+      MAX_TREND_RATIO: 0.6
       # momentum config
       ENABLE_MOMENTUM_DISCOUNTING: true
       VELOCITY_FACTOR: 0.8
