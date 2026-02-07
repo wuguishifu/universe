@@ -11,7 +11,7 @@ services:
       DRY_RUN: true
       DEBUG_LOGGING: true
       # strategy config
-      TARGET_ENTRY: 0.975
+      TARGET_ENTRY: 0.97
       TARGET_POSITION_SIZE: 10
       MERGE_DEBOUNCE_MS: 10000
       # time filtering
@@ -26,6 +26,10 @@ services:
       ENABLE_PRICE_STABILITY_CHECK: true
       PRICE_STABILITY_RANGE_CENTS: 3
       PRICE_STABILITY_DURATION_MS: 2000
+      # momentum config
+      ENABLE_MOMENTUM_DISCOUNTING: true
+      MOMENTUM_LOOKBACK_MS: 2000
+      MOMENTUM_FACTOR: 0.5
       # stop loss config
       PANIC_PRICE_DROP_THRESHOLD: 0.05
       PANIC_SUSTAINED_DROP_MS: 30000

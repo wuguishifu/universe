@@ -202,19 +202,34 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
 
   // #region core evaluation logic
 
+  // MARK: evaluate straddle
   private async evaluateStraddle(tick: MarketTick) {
-    // MARK: skip if already active or in progress
+    // skip if already active or in progress
     if (this.activeStraddles.has(tick.conditionId) || this.marketsInProgress.has(tick.conditionId)) {
       return;
     }
 
-    // MARK: calculate target bids
+    // calculate base target bids
     const targetEntry = this.environmentService.environment.targetEntry;
     const currentSpread = tick.bestBidYes + tick.bestBidNo;
-    const targetDiscount = Math.max((currentSpread - targetEntry) / 2, 0);
+    const baseDiscount = Math.max((currentSpread - targetEntry) / 2, 0);
+    let targetYes = tick.bestBidYes - baseDiscount;
+    let targetNo = tick.bestBidNo - baseDiscount;
 
-    const targetYes = this.roundDown(tick.bestBidYes - targetDiscount, tick.minTickSize);
-    const targetNo = this.roundDown(tick.bestBidNo - targetDiscount, tick.minTickSize);
+    // apply momentum
+    const momentumFactor = this.environmentService.environment.momentumFactor;
+    const { yesMomentum, noMomentum } = this.calculateMomentum({
+      conditionId: tick.conditionId,
+      currentYes: tick.bestBidYes,
+      currentNo: tick.bestBidNo,
+    });
+    if (this.environmentService.environment.enableMomentumDiscounting) {
+      targetYes = Math.min(targetYes + yesMomentum * momentumFactor, tick.bestBidYes);
+      targetNo = Math.min(targetNo + noMomentum * momentumFactor, tick.bestBidNo);
+    }
+
+    targetYes = this.roundDown(targetYes, tick.minTickSize);
+    targetNo = this.roundDown(targetNo, tick.minTickSize);
     if (targetYes <= 0 || targetNo <= 0) {
       return;
     }
@@ -228,7 +243,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    // MARK: check available capital
+    // check available capital
     const quantity = this.environmentService.environment.targetPositionSize;
     const requiredCapital = (targetYes + targetNo) * quantity;
     if (!this.ledgerService.hasAvailableCapital(requiredCapital)) {
@@ -244,10 +259,10 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     );
 
     try {
-      // MARK: debit capital from ghost ledger
+      // debit capital from ghost ledger
       this.ledgerService.debit(requiredCapital);
 
-      // MARK: place limit orders
+      // place limit orders
       const { yesOrderId, noOrderId } = await this.executionService.placeLimitOrder({
         conditionId: tick.conditionId,
         targetYes,
@@ -282,8 +297,9 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  // MARK: order update
   private handleOrderUpdate(update: OrderMessage) {
-    // MARK: find context
+    // find context
     const conditionId = this.orderMap.get(update.id);
     if (!conditionId) {
       this.logger.warn(`Received order update for unknown orderId: ${update.id}`);
@@ -296,7 +312,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    // MARK: update state
+    // update state
     let delta = 0;
     const newMatchedSize = parseFloat(update.size_matched);
     const originalSize = parseFloat(update.original_size);
@@ -339,10 +355,10 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    // MARK: schedule merge (debounced to allow fills to accumulate and settle on-chain)
+    // schedule merge (debounced to allow fills to accumulate and settle on-chain)
     this.scheduleMerge(straddle);
 
-    // MARK: check for complete exit (after scheduling merge, not awaiting it)
+    // check for complete exit (after scheduling merge, not awaiting it)
     const isYesDone = straddle.yesStatus === 'FILLED' || straddle.yesStatus === 'CANCELED';
     const isNoDone = straddle.noStatus === 'FILLED' || straddle.noStatus === 'CANCELED';
     if (isYesDone && isNoDone) {
@@ -354,7 +370,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    // MARK: evaluate legging risk (imbalance or price drop)
+    // evaluate legging risk (imbalance or price drop)
     const imbalance = Math.abs(straddle.yesHoldings - straddle.noHoldings);
     if (imbalance > 0 && !straddle.isImbalanced) {
       this.logger.warn(`Imbalance detected for ${conditionId}. Starting absolute safety timer.`);
@@ -368,6 +384,34 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       straddle.isImbalanced = false;
       this.clearAllRiskTimers(straddle);
     }
+  }
+
+  /**
+   * MARK: calculate momentum
+   * Calculates price velocity (¢/s)
+   * Returns positive for rising, negative for falling
+   */
+  private calculateMomentum({
+    conditionId,
+    currentYes,
+    currentNo,
+  }: {
+    conditionId: string;
+    currentYes: number;
+    currentNo: number;
+  }): { yesMomentum: number; noMomentum: number } {
+    const history = this.priceHistory.get(conditionId);
+    if (!history || history.length === 0) {
+      return { yesMomentum: 0, noMomentum: 0 };
+    }
+
+    const lookback = this.environmentService.environment.momentumLookbackMs;
+    const now = Date.now();
+    const pastEntry = history.find((h) => now - h.timestamp >= lookback) || history[0];
+
+    const yesDelta = currentYes - pastEntry.yesPrice;
+    const noDelta = currentNo - pastEntry.noPrice;
+    return { yesMomentum: yesDelta, noMomentum: noDelta };
   }
 
   // #endregion
