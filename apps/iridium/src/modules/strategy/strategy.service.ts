@@ -438,14 +438,21 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
 
     // PREDICTION FORMULA:
     // Future ≈ Current + (V * k1) + (A * k2)
-    const { velocityFactor, accelerationFactor } = this.environmentService.environment;
-    const yesAdj = vYes0 * velocityFactor + aYes * accelerationFactor;
-    const noAdj = vNo0 * velocityFactor + aNo * accelerationFactor;
+    const { velocityFactor, accelerationFactor, maxDiscount } = this.environmentService.environment;
+    const yesAdj = Math.max(-maxDiscount, Math.min(vYes0 * velocityFactor + aYes * accelerationFactor, 0));
+    const noAdj = Math.max(-maxDiscount, Math.min(vNo0 * velocityFactor + aNo * accelerationFactor, 0));
 
     return { yesAdj, noAdj };
   }
 
   private recordPriceHistory(tick: MarketTick) {
+    if (tick.bestBidYes <= 0.01 || tick.bestBidNo <= 0.01) {
+      return;
+    }
+    if (tick.bestBidYes >= 0.99 || tick.bestBidNo >= 0.99) {
+      return;
+    }
+
     let history = this.priceHistory.get(tick.conditionId);
     if (!history) {
       history = [];

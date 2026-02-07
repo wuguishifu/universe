@@ -30,6 +30,7 @@ export const environmentSchema = z
     enableMomentumDiscounting: z.preprocess(preprocessBoolean, z.boolean()).default(true),
     velocityFactor: z.coerce.number().min(0).default(0.8),
     accelerationFactor: z.coerce.number().min(0).default(0.4),
+    maxDiscount: z.coerce.number().min(0).default(0.05),
 
     // stop loss config
     panicPriceDropThreshold: z.coerce.number().min(0).max(1).default(0.05),
