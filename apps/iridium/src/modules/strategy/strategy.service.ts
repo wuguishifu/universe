@@ -83,6 +83,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     const marketTickSub = this.marketWsService.marketTicks$
       // MARK: market filtering
       .pipe(
+        tap((tick) => this.recordPriceHistory(tick)),
         filter((tick) => this.filterForTimeRemaining(tick)),
         filter((tick) => this.filterForSkew(tick)),
         filter((tick) => this.filterForStability(tick)),
@@ -217,15 +218,19 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     let targetNo = tick.bestBidNo - baseDiscount;
 
     // apply momentum
-    const momentumFactor = this.environmentService.environment.momentumFactor;
-    const { yesMomentum, noMomentum } = this.calculateMomentum({
+    const kinematics = this.calculateKinematics({
       conditionId: tick.conditionId,
       currentYes: tick.bestBidYes,
       currentNo: tick.bestBidNo,
     });
     if (this.environmentService.environment.enableMomentumDiscounting) {
-      targetYes = Math.min(targetYes + yesMomentum * momentumFactor, tick.bestBidYes);
-      targetNo = Math.min(targetNo + noMomentum * momentumFactor, tick.bestBidNo);
+      if (!kinematics) {
+        // warmup period - not enough data to calculate kinematics, so cancel this tick but allow future ticks to be evaluated
+        return;
+      }
+      const { yesAdj, noAdj } = kinematics;
+      targetYes = Math.min(targetYes + yesAdj, tick.bestBidYes);
+      targetNo = Math.min(targetNo + noAdj, tick.bestBidNo);
     }
 
     targetYes = this.roundDown(targetYes, tick.minTickSize);
@@ -387,11 +392,11 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * MARK: calculate momentum
-   * Calculates price velocity (¢/s)
-   * Returns positive for rising, negative for falling
+   * MARK: kinematics
+   * Calculates 2nd Order Dynamics (Velocity & Acceleration).
+   * Returns price adjustments based on the "Curve" of the movement.
    */
-  private calculateMomentum({
+  private calculateKinematics({
     conditionId,
     currentYes,
     currentNo,
@@ -399,19 +404,64 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     conditionId: string;
     currentYes: number;
     currentNo: number;
-  }): { yesMomentum: number; noMomentum: number } {
+  }): { yesAdj: number; noAdj: number } | null {
     const history = this.priceHistory.get(conditionId);
-    if (!history || history.length === 0) {
-      return { yesMomentum: 0, noMomentum: 0 };
+    if (!history || history.length < 3) {
+      return null;
     }
 
-    const lookback = this.environmentService.environment.momentumLookbackMs;
+    // Look back 2 seconds and 4 seconds
     const now = Date.now();
-    const pastEntry = history.find((h) => now - h.timestamp >= lookback) || history[0];
+    const t1 = now - 2000;
+    const t2 = now - 4000;
 
-    const yesDelta = currentYes - pastEntry.yesPrice;
-    const noDelta = currentNo - pastEntry.noPrice;
-    return { yesMomentum: yesDelta, noMomentum: noDelta };
+    if (history[0].timestamp > t2) {
+      return null;
+    }
+
+    // Find nearest history points
+    const p1 = history.find((h) => h.timestamp <= t1);
+    const p2 = history.find((h) => h.timestamp <= t2);
+    if (!p1 || !p2) {
+      return null;
+    }
+
+    // --- YES SIDE KINEMATICS ---
+    const vYes0 = currentYes - p1.yesPrice;
+    const vYes1 = p1.yesPrice - p2.yesPrice;
+    const aYes = vYes0 - vYes1;
+
+    // --- NO SIDE KINEMATICS ---
+    const vNo0 = currentNo - p1.noPrice;
+    const vNo1 = p1.noPrice - p2.noPrice;
+    const aNo = vNo0 - vNo1;
+
+    // PREDICTION FORMULA:
+    // Future ≈ Current + (V * k1) + (A * k2)
+    const { velocityFactor, accelerationFactor } = this.environmentService.environment;
+    const yesAdj = vYes0 * velocityFactor + aYes * accelerationFactor;
+    const noAdj = vNo0 * velocityFactor + aNo * accelerationFactor;
+
+    return { yesAdj, noAdj };
+  }
+
+  private recordPriceHistory(tick: MarketTick) {
+    let history = this.priceHistory.get(tick.conditionId);
+    if (!history) {
+      history = [];
+      this.priceHistory.set(tick.conditionId, history);
+    }
+
+    history.push({
+      yesPrice: tick.bestBidYes,
+      noPrice: tick.bestBidNo,
+      timestamp: tick.timestamp,
+    });
+
+    const cutoffTime = tick.timestamp - this.environmentService.environment.maxHistoryRetentionMs;
+    while (history.length > 0 && history[0].timestamp < cutoffTime) {
+      history.shift();
+    }
   }
 
   // #endregion
@@ -726,60 +776,52 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     const { priceStabilityRangeCents, priceStabilityDurationMs, enablePriceStabilityCheck } =
       this.environmentService.environment;
 
-    // 1. Bypass if disabled
-    if (!priceStabilityRangeCents || !priceStabilityDurationMs || !enablePriceStabilityCheck) {
+    if (!enablePriceStabilityCheck) {
+      return true;
+    }
+    if (!priceStabilityRangeCents || !priceStabilityDurationMs) {
       return true;
     }
 
-    const now = tick.timestamp;
-    const cutoffTime = now - priceStabilityDurationMs;
-    const rangeDollars = priceStabilityRangeCents / 100;
+    const history = this.priceHistory.get(tick.conditionId);
 
-    let history = this.priceHistory.get(tick.conditionId);
-    if (!history) {
-      history = [];
-      this.priceHistory.set(tick.conditionId, history);
-    }
-
-    // 2. Add new data point
-    history.push({
-      yesPrice: tick.bestBidYes,
-      noPrice: tick.bestBidNo,
-      timestamp: now,
-    });
-
-    // 3. Prune old history, BUT remember if we had old data
-    // If we shift items out, it means our history DID span the full duration.
-    let hasCoverage = false;
-    if (history.length > 0 && history[0].timestamp < cutoffTime) {
-      hasCoverage = true;
-    }
-    while (history.length > 0 && history[0].timestamp < cutoffTime) {
-      history.shift();
-    }
-
-    // 4. Sufficiency Check (Fixed for Illiquidity)
-    // We are "sufficient" if we have old data (even if pruned) OR the current buffer covers the span.
-    const bufferCoversSpan = history.length > 0 && history[0].timestamp <= cutoffTime;
-
-    if (!hasCoverage && !bufferCoversSpan) {
-      // Only log debug on the very first few ticks to avoid noise
-      if (history.length < 5) {
-        this.logger.debug(`Building price history for ${tick.conditionId}...`);
-      }
+    // 1. Cold Start Check
+    // If we have no history, or the history is too short to cover the required duration
+    if (!history || history.length < 2) {
+      // Optional: Log debug "Cold start"
       return false;
     }
 
-    // 5. Stability Check (Relative to CURRENT price)
-    // We check if ANY historical price is outside the [Current - Range, Current + Range]
-    // If historical price is far away, it means the CURRENT price is likely a spike.
-    for (const entry of history) {
+    // 2. Coverage Check
+    // We need to ensure our history spans at least 'priceStabilityDurationMs'
+    const oldestAllowedTimestamp = tick.timestamp - priceStabilityDurationMs;
+    const oldestDataPoint = history[0].timestamp;
+
+    if (oldestDataPoint > oldestAllowedTimestamp) {
+      // Our history only goes back 1 second, but we need 2 seconds to prove stability.
+      // We are not ready yet.
+      return false;
+    }
+
+    // 3. Stability Calculation
+    const rangeDollars = priceStabilityRangeCents / 100;
+
+    // We iterate backwards (newest to oldest) as an optimization,
+    // but forward works too. We only check points within the duration window.
+    for (let i = history.length - 1; i >= 0; i--) {
+      const entry = history[i];
+
+      // Stop checking if we go past the duration window
+      if (entry.timestamp < oldestAllowedTimestamp) {
+        break;
+      }
+
       const yesDelta = Math.abs(entry.yesPrice - tick.bestBidYes);
       const noDelta = Math.abs(entry.noPrice - tick.bestBidNo);
 
       if (yesDelta > rangeDollars || noDelta > rangeDollars) {
         this.logger.debug(
-          `Unstable Market ${tick.conditionId}: Deviation > ${rangeDollars}. YesDelta: ${yesDelta.toFixed(3)}, NoDelta: ${noDelta.toFixed(3)}`,
+          `Unstable ${tick.conditionId}: Deviation > ${rangeDollars} within last ${priceStabilityDurationMs}ms`,
         );
         return false;
       }

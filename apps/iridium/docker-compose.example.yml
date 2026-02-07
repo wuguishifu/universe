@@ -10,6 +10,7 @@ services:
       ENVIRONMENT: development
       DRY_RUN: true
       DEBUG_LOGGING: true
+      MAX_HISTORY_RETENTION_MS: 5000
       # strategy config
       TARGET_ENTRY: 0.97
       TARGET_POSITION_SIZE: 10
@@ -28,8 +29,8 @@ services:
       PRICE_STABILITY_DURATION_MS: 2000
       # momentum config
       ENABLE_MOMENTUM_DISCOUNTING: true
-      MOMENTUM_LOOKBACK_MS: 2000
-      MOMENTUM_FACTOR: 0.5
+      VELOCITY_FACTOR: 0.8
+      ACCELERATION_FACTOR: 0.4
       # stop loss config
       PANIC_PRICE_DROP_THRESHOLD: 0.05
       PANIC_SUSTAINED_DROP_MS: 30000

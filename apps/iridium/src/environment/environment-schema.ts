@@ -9,6 +9,7 @@ export const environmentSchema = z
     targetEntry: z.coerce.number().min(0).max(1).default(0.97),
     targetPositionSize: z.coerce.number().min(0).default(10),
     mergeDebounceMs: z.coerce.number().min(0).default(10_000),
+    maxHistoryRetentionMs: z.coerce.number().min(0).default(5_000),
 
     // time filtering config
     minTimeRemainingMs: z.coerce.number().min(0).default(300_000),
@@ -27,8 +28,8 @@ export const environmentSchema = z
 
     // momentum config
     enableMomentumDiscounting: z.preprocess(preprocessBoolean, z.boolean()).default(true),
-    momentumLookbackMs: z.coerce.number().min(0).default(2_000),
-    momentumFactor: z.coerce.number().min(0).default(0.5),
+    velocityFactor: z.coerce.number().min(0).default(0.8),
+    accelerationFactor: z.coerce.number().min(0).default(0.4),
 
     // stop loss config
     panicPriceDropThreshold: z.coerce.number().min(0).max(1).default(0.05),
