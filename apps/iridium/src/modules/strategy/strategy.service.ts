@@ -2,57 +2,18 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { TickSize } from '@polymarket/clob-client';
 import { filter, Subscription, tap } from 'rxjs';
 
-import { AlphaService } from './components/alpha.service';
 import { EnvironmentService } from '../../environment/environment-service';
 import { OrderMessage } from '../../types/clob/orderMessage';
 import { MarketTick, MarketWsService } from '../clob/ws/market-ws.service';
 import { UserWsService } from '../clob/ws/user-ws.service';
 import { ExecutionService } from '../execution/execution.service';
 import { LedgerService } from '../ledger/ledger.service';
-
-interface ActiveStraddle {
-  conditionId: string;
-
-  // Order IDs
-  yesOrderId: string;
-  noOrderId: string;
-
-  // Order parameters (needed for refund calculations)
-  yesPrice: number;
-  noPrice: number;
-  quantity: number;
-
-  // "Bag" - The shares we currently hold (Available to Merge)
-  yesHoldings: number;
-  noHoldings: number;
-
-  // API State - Used to calculate Deltas & Status
-  yesCumulativeFilled: number; // The 'size_matched' from last message
-  noCumulativeFilled: number; // The 'size_matched' from last message
-
-  yesStatus: 'OPEN' | 'FILLED' | 'CANCELED';
-  noStatus: 'OPEN' | 'FILLED' | 'CANCELED';
-
-  // Merge concurrency control
-  mergeInProgress: boolean;
-  mergeDebounceTimer?: NodeJS.Timeout;
-
-  // Legging risk timers
-  priceDropTimer?: NodeJS.Timeout;
-  absoluteTimer?: NodeJS.Timeout;
-  priceDropTimerStartedAt?: number;
-  isImbalanced: boolean;
-}
+import { AlphaService } from './components/alpha.service';
+import { ActiveStraddle, PositionService } from './components/position.service';
 
 @Injectable()
 export class StrategyService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(StrategyService.name);
-
-  /** conditionId -> StraddleState */
-  private readonly activeStraddles = new Map<string, ActiveStraddle>();
-
-  /** conditionId being processed */
-  private readonly marketsInProgress = new Set<string>();
 
   /** orderId -> conditionId */
   private readonly orderMap = new Map<string, string>();
@@ -70,6 +31,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     private readonly environmentService: EnvironmentService,
     private readonly ledgerService: LedgerService,
     private readonly alphaService: AlphaService,
+    private readonly positionService: PositionService,
   ) {}
 
   // #region: module lifecycle
@@ -93,12 +55,12 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     const riskTickSub = this.marketWsService.marketTicks$
       .pipe(
         filter((tick) => {
-          const straddle = this.activeStraddles.get(tick.conditionId);
+          const straddle = this.positionService.getStraddle(tick.conditionId);
           return !!straddle?.isImbalanced;
         }),
       )
       .subscribe((tick) => {
-        const straddle = this.activeStraddles.get(tick.conditionId);
+        const straddle = this.positionService.getStraddle(tick.conditionId);
         if (straddle) {
           this.evaluateLeggingRisk(tick, straddle);
         }
@@ -132,16 +94,16 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       this.reconcileInterval = null;
     }
 
-    if (this.activeStraddles.size === 0) {
+    if (this.positionService.straddleCount === 0) {
       this.logger.debug('No active straddles to clean up');
       return;
     }
 
-    this.logger.debug(`Cleaning up ${this.activeStraddles.size} active straddles...`);
+    this.logger.debug(`Cleaning up ${this.positionService.straddleCount} active straddles...`);
 
     // MARK: cancel open orders
     const cancelPromises: Promise<void>[] = [];
-    for (const straddle of this.activeStraddles.values()) {
+    for (const straddle of this.positionService.getStraddles()) {
       this.clearAllRiskTimers(straddle);
 
       if (straddle.yesStatus === 'OPEN') {
@@ -165,7 +127,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
 
     // MARK: sell excess holdings
     const sellPromises: Promise<void>[] = [];
-    for (const straddle of this.activeStraddles.values()) {
+    for (const straddle of this.positionService.getStraddles()) {
       const excessYes = Math.max(0, straddle.yesHoldings - straddle.noHoldings);
       const excessNo = Math.max(0, straddle.noHoldings - straddle.yesHoldings);
 
@@ -198,11 +160,8 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   // #endregion
 
   // #region core evaluation logic
-
-  // MARK: evaluate straddle
   private async evaluateStraddle(tick: MarketTick) {
-    // skip if already active or in progress
-    if (this.activeStraddles.has(tick.conditionId) || this.marketsInProgress.has(tick.conditionId)) {
+    if (this.positionService.isMarketInProgress(tick.conditionId)) {
       return;
     }
 
@@ -254,7 +213,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    this.marketsInProgress.add(tick.conditionId);
+    this.positionService.setMarketInProgress(tick.conditionId);
     this.logger.log(
       `Opportunity on ${tick.conditionId} (Skew: ${tick.bestBidYes}/${tick.bestBidNo}). Placing Skewed Limits: Yes@${targetYes} | No@${targetNo}`,
     );
@@ -271,7 +230,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
         quantity,
       });
 
-      this.activeStraddles.set(tick.conditionId, {
+      this.positionService.addStraddle({
         conditionId: tick.conditionId,
         yesOrderId,
         noOrderId,
@@ -289,11 +248,10 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       });
       this.orderMap.set(yesOrderId, tick.conditionId);
       this.orderMap.set(noOrderId, tick.conditionId);
-      this.marketsInProgress.delete(tick.conditionId);
+      this.positionService.setMarketInProgress(tick.conditionId, false);
     } catch (error) {
       this.logger.error(`Failed to place limit order on ${tick.conditionId}: ${(error as Error).message}`);
-      this.marketsInProgress.delete(tick.conditionId);
-
+      this.positionService.setMarketInProgress(tick.conditionId, false);
       this.ledgerService.credit(requiredCapital); // refund capital on failure
     }
   }
@@ -307,7 +265,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    const straddle = this.activeStraddles.get(conditionId);
+    const straddle = this.positionService.getStraddle(conditionId);
     if (!straddle) {
       this.logger.warn(`No active straddle found for conditionId: ${conditionId}`);
       return;
@@ -453,11 +411,9 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       this.cleanupStraddle(straddle);
     }
   }
-
   // #endregion
 
   // #region cleanup
-
   private async cleanupStraddle(straddle: ActiveStraddle) {
     this.logger.debug(`Cleaning up straddle for condition ${straddle.conditionId}`);
 
@@ -473,7 +429,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     }
 
     // Now safe to delete state
-    this.activeStraddles.delete(straddle.conditionId);
+    this.positionService.removeStraddle(straddle.conditionId);
     this.orderMap.delete(straddle.yesOrderId);
     this.orderMap.delete(straddle.noOrderId);
     this.alphaService.deleteCondition(straddle.conditionId);
@@ -482,15 +438,15 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async reconcileStraddles() {
-    if (this.activeStraddles.size === 0) {
+    if (this.positionService.straddleCount === 0) {
       return;
     }
 
-    this.logger.debug(`Reconciling ${this.activeStraddles.size} active straddle(s)...`);
+    this.logger.debug(`Reconciling ${this.positionService.straddleCount} active straddle(s)...`);
 
     const staleStraddles: ActiveStraddle[] = [];
 
-    for (const straddle of this.activeStraddles.values()) {
+    for (const straddle of this.positionService.getStraddles()) {
       try {
         // Fetch current order state from the CLOB API for both legs
         const [yesOrder, noOrder] = await Promise.all([
@@ -595,14 +551,12 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
 
     this.logger.debug('Reconciliation complete.');
   }
-
   // #endregion
 
   // #region risk management
-
   private async panicExit(straddle: ActiveStraddle, shouldCleanup = true) {
     // Guard against double-execution (both timers firing)
-    if (shouldCleanup && !this.activeStraddles.has(straddle.conditionId)) {
+    if (shouldCleanup && !this.positionService.getStraddle(straddle.conditionId)) {
       return;
     }
 
@@ -649,7 +603,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
 
     // Clean up state if called from timer (not from cleanupStraddle)
     if (shouldCleanup) {
-      this.activeStraddles.delete(straddle.conditionId);
+      this.positionService.removeStraddle(straddle.conditionId);
       this.orderMap.delete(straddle.yesOrderId);
       this.orderMap.delete(straddle.noOrderId);
     }
@@ -711,8 +665,8 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   /** Calculates total capital locked by active straddles (unfilled orders + unmerged shares). */
   private calculateLockedCapital(excludeConditionId?: string): number {
     let locked = 0;
-    for (const [conditionId, s] of this.activeStraddles) {
-      if (conditionId === excludeConditionId) {
+    for (const s of this.positionService.getStraddles()) {
+      if (s.conditionId === excludeConditionId) {
         continue;
       }
 
@@ -736,6 +690,5 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     const factor = 1 / parseFloat(tickSize);
     return Math.floor(value * factor) / factor;
   }
-
   // #endregion
 }
