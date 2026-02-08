@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OpenOrder } from '@polymarket/clob-client';
 import debounce from 'lodash.debounce';
+import { Subject } from 'rxjs';
 
 import { AlphaService, EntryPlan } from './alpha.service';
 import { ActiveStraddle, PositionService } from './position.service';
@@ -14,6 +15,11 @@ export class StraddleManagerService {
   private readonly logger = new Logger(StraddleManagerService.name);
 
   private readonly orderMap = new Map<string, string>();
+
+  private readonly fillProcessedSubject = new Subject<{
+    straddle: ActiveStraddle;
+  }>();
+  public readonly fillProcessed$ = this.fillProcessedSubject.asObservable();
 
   constructor(
     private readonly positionService: PositionService,
@@ -46,6 +52,7 @@ export class StraddleManagerService {
         yesStatus: 'OPEN',
         noStatus: 'OPEN',
         mergeInProgress: false,
+        skewInProgress: false,
       });
     } catch (error) {
       this.logger.error(`Failed to place limit order on ${conditionId}: ${(error as Error).message}`);
@@ -75,6 +82,7 @@ export class StraddleManagerService {
     straddle[`${legPrefix}CumulativeFilled`] = newMatched;
     if (delta > 0) {
       straddle[`${legPrefix}Holdings`] += delta;
+      this.fillProcessedSubject.next({ straddle });
     }
 
     const originalSize = parseFloat(update.original_size);
@@ -127,6 +135,11 @@ export class StraddleManagerService {
     }
     this.checkCompletion(straddle);
   }, this.environmentService.environment.mergeDebounceMs);
+
+  public updateOrderMapping(oldOrderId: string, newOrderId: string, conditionId: string) {
+    this.orderMap.delete(oldOrderId);
+    this.orderMap.set(newOrderId, conditionId);
+  }
 
   private cleanupStraddle(straddle: ActiveStraddle) {
     this.positionService.removeStraddle(straddle.conditionId);

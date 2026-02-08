@@ -35,10 +35,10 @@ export const environmentSchema = z
     accelerationFactor: z.coerce.number().min(0).default(0.4),
     maxDiscount: z.coerce.number().min(0).default(0.05),
 
-    // stop loss config
-    panicPriceDropThreshold: z.coerce.number().min(0).max(1).default(0.05),
-    panicSustainedDropMs: z.coerce.number().min(0).default(30_000),
-    panicAbsoluteTimeoutMs: z.coerce.number().min(0).default(300_000),
+    // inventory skew config
+    enableInventorySkew: z.preprocess(preprocessBoolean, z.boolean()).default(true),
+    skewCentsPerShare: z.coerce.number().min(0).default(1),
+    maxSkewAdjustment: z.coerce.number().min(0).default(0.05),
 
     // clob config
     privateKey: z.string().min(1, { message: 'private key required' }),

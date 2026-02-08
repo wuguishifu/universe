@@ -23,9 +23,10 @@ export type ActiveStraddle = {
   yesStatus: 'OPEN' | 'FILLED' | 'CANCELED';
   noStatus: 'OPEN' | 'FILLED' | 'CANCELED';
 
-  // Merge concurrency control
+  // Concurrency control
   mergeInProgress: boolean;
   mergeDebounceTimer?: NodeJS.Timeout;
+  skewInProgress: boolean;
 };
 
 type ConditionId = string;
