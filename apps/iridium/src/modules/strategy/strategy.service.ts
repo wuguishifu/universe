@@ -1,6 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { TickSize } from '@polymarket/clob-client';
-import { filter, Subscription, tap } from 'rxjs';
+import { filter, map, Subscription } from 'rxjs';
 
 import { EnvironmentService } from '../../environment/environment-service';
 import { OrderMessage } from '../../types/clob/orderMessage';
@@ -8,8 +7,9 @@ import { MarketTick, MarketWsService } from '../clob/ws/market-ws.service';
 import { UserWsService } from '../clob/ws/user-ws.service';
 import { ExecutionService } from '../execution/execution.service';
 import { LedgerService } from '../ledger/ledger.service';
-import { AlphaService } from './components/alpha.service';
+import { AlphaService, EntryPlan } from './components/alpha.service';
 import { ActiveStraddle, PositionService } from './components/position.service';
+import { StraddleManagerService } from './components/straddle-manager.service';
 
 @Injectable()
 export class StrategyService implements OnModuleInit, OnModuleDestroy {
@@ -32,6 +32,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     private readonly ledgerService: LedgerService,
     private readonly alphaService: AlphaService,
     private readonly positionService: PositionService,
+    private readonly straddleManagerService: StraddleManagerService,
   ) {}
 
   // #region: module lifecycle
@@ -41,14 +42,11 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     const marketTickSub = this.marketWsService.marketTicks$
       // MARK: market filtering
       .pipe(
-        tap((tick) => this.alphaService.recordPriceHistory(tick)),
-        filter((tick) => this.alphaService.filterForTimeRemaining(tick)),
-        filter((tick) => this.alphaService.filterForSkew(tick)),
-        filter((tick) => this.alphaService.filterForStability(tick)),
-        filter((tick) => this.alphaService.filterForThrottling(tick)),
-        tap((tick) => this.alphaService.recordEvaluation(tick.conditionId)),
+        filter((tick) => !this.positionService.isMarketInProgress(tick.conditionId)),
+        map((tick) => this.alphaService.analyzeTick(tick)),
+        filter((plan): plan is EntryPlan => plan !== null),
       )
-      .subscribe((tick) => this.evaluateStraddle(tick));
+      .subscribe((plan) => this.execute(plan));
     this.subscriptions.push(marketTickSub);
 
     // legging risk pipe — monitor price for imbalanced straddles
@@ -159,101 +157,16 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
 
   // #endregion
 
-  // #region core evaluation logic
-  private async evaluateStraddle(tick: MarketTick) {
-    if (this.positionService.isMarketInProgress(tick.conditionId)) {
-      return;
-    }
-
-    // calculate base target bids
-    const targetEntry = this.environmentService.environment.targetEntry;
-    const currentSpread = tick.bestBidYes + tick.bestBidNo;
-    const baseDiscount = Math.max((currentSpread - targetEntry) / 2, 0);
-    let targetYes = tick.bestBidYes - baseDiscount;
-    let targetNo = tick.bestBidNo - baseDiscount;
-
-    // apply momentum
-    const kinematics = this.alphaService.calculateKinematics({
-      conditionId: tick.conditionId,
-      currentYes: tick.bestBidYes,
-      currentNo: tick.bestBidNo,
-    });
-    if (this.environmentService.environment.enableMomentumDiscounting) {
-      if (!kinematics) {
-        // warmup period - not enough data to calculate kinematics, so cancel this tick but allow future ticks to be evaluated
-        return;
-      }
-      const { yesAdj, noAdj } = kinematics;
-      targetYes = Math.min(targetYes + yesAdj, tick.bestBidYes);
-      targetNo = Math.min(targetNo + noAdj, tick.bestBidNo);
-    }
-
-    targetYes = this.roundDown(targetYes, tick.minTickSize);
-    targetNo = this.roundDown(targetNo, tick.minTickSize);
-    if (targetYes <= 0 || targetNo <= 0) {
-      return;
-    }
-
-    if (targetYes > tick.bestBidYes || targetNo > tick.bestBidNo) {
-      this.logger.warn(`Calculated target bids are worse than current bids for market ${tick.conditionId}. Skipping.`);
-      return;
-    }
-
-    if (targetYes + targetNo > 1.0) {
-      return;
-    }
-
-    // check available capital
-    const quantity = this.environmentService.environment.targetPositionSize;
-    const requiredCapital = (targetYes + targetNo) * quantity;
+  private async execute(plan: EntryPlan) {
+    const requiredCapital = (plan.targetYes + plan.targetNo) * plan.quantity;
     if (!this.ledgerService.hasAvailableCapital(requiredCapital)) {
-      this.logger.debug(
-        `Insufficient capital for ${tick.conditionId}. Required: ${requiredCapital.toFixed(4)}, Available: ${this.ledgerService.getAvailableBalance().toFixed(4)}`,
-      );
       return;
     }
 
-    this.positionService.setMarketInProgress(tick.conditionId);
     this.logger.log(
-      `Opportunity on ${tick.conditionId} (Skew: ${tick.bestBidYes}/${tick.bestBidNo}). Placing Skewed Limits: Yes@${targetYes} | No@${targetNo}`,
+      `Placing straddle for ${plan.conditionId} with targets YES=${plan.targetYes}, NO=${plan.targetNo}, quantity=${plan.quantity} (capital: ${requiredCapital.toFixed(4)}). Reason: ${plan.reason}`,
     );
-
-    try {
-      // debit capital from ghost ledger
-      this.ledgerService.debit(requiredCapital);
-
-      // place limit orders
-      const { yesOrderId, noOrderId } = await this.executionService.placeLimitOrder({
-        conditionId: tick.conditionId,
-        targetYes,
-        targetNo,
-        quantity,
-      });
-
-      this.positionService.addStraddle({
-        conditionId: tick.conditionId,
-        yesOrderId,
-        noOrderId,
-        yesPrice: targetYes,
-        noPrice: targetNo,
-        quantity,
-        yesHoldings: 0,
-        noHoldings: 0,
-        yesCumulativeFilled: 0,
-        noCumulativeFilled: 0,
-        yesStatus: 'OPEN',
-        noStatus: 'OPEN',
-        mergeInProgress: false,
-        isImbalanced: false,
-      });
-      this.orderMap.set(yesOrderId, tick.conditionId);
-      this.orderMap.set(noOrderId, tick.conditionId);
-      this.positionService.setMarketInProgress(tick.conditionId, false);
-    } catch (error) {
-      this.logger.error(`Failed to place limit order on ${tick.conditionId}: ${(error as Error).message}`);
-      this.positionService.setMarketInProgress(tick.conditionId, false);
-      this.ledgerService.credit(requiredCapital); // refund capital on failure
-    }
+    await this.straddleManagerService.placeStraddle(plan);
   }
 
   // MARK: order update
@@ -683,12 +596,6 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       locked += s.noPrice * s.noHoldings;
     }
     return locked;
-  }
-
-  /** Rounds down to 2 decimal places (requirement by PolyMarket) */
-  private roundDown(value: number, tickSize: TickSize): number {
-    const factor = 1 / parseFloat(tickSize);
-    return Math.floor(value * factor) / factor;
   }
   // #endregion
 }

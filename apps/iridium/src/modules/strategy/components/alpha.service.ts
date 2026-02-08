@@ -1,4 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { TickSize } from '@polymarket/clob-client';
 
 import { EnvironmentService } from '../../../environment/environment-service';
 import { MarketTick } from '../../clob/ws/market-ws.service';
@@ -10,6 +11,14 @@ type PriceHistoryEntry = {
 };
 
 type ConditionId = string;
+
+export type EntryPlan = {
+  conditionId: ConditionId;
+  targetYes: number;
+  targetNo: number;
+  quantity: number;
+  reason: string;
+};
 
 @Injectable()
 export class AlphaService implements OnModuleDestroy {
@@ -26,8 +35,29 @@ export class AlphaService implements OnModuleDestroy {
     this.priceHistory.clear();
   }
 
+  public analyzeTick(tick: MarketTick): EntryPlan | null {
+    this.recordPriceHistory(tick);
+
+    if (
+      !this.filterForTimeRemaining(tick) ||
+      !this.filterForSkew(tick) ||
+      !this.filterForStability(tick) ||
+      !this.filterForThrottling(tick)
+    ) {
+      return null;
+    }
+
+    this.recordEvaluation(tick.conditionId);
+
+    const plan = this.calculateEntryPlan(tick);
+    if (plan) {
+      this.logger.debug(`Generated entry plan for ${tick.conditionId}: ${JSON.stringify(plan)}`);
+    }
+    return plan;
+  }
+
   // #region tapping
-  public recordPriceHistory(tick: MarketTick) {
+  private recordPriceHistory(tick: MarketTick) {
     if (tick.bestBidYes <= 0.01 || tick.bestBidNo <= 0.01 || tick.bestBidYes >= 0.99 || tick.bestBidNo >= 0.99) {
       return;
     }
@@ -46,13 +76,13 @@ export class AlphaService implements OnModuleDestroy {
     }
   }
 
-  public recordEvaluation(conditionId: ConditionId) {
+  private recordEvaluation(conditionId: ConditionId) {
     this.lastEvaluationTimestamp.set(conditionId, Date.now());
   }
   // #endregion
 
   // #region filters
-  public filterForTimeRemaining(tick: MarketTick): boolean {
+  private filterForTimeRemaining(tick: MarketTick): boolean {
     if (tick.timeRemaining > this.environmentService.environment.maxTimeRemainingMs) {
       this.logger.debug(`Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too much)`);
       return false;
@@ -66,7 +96,7 @@ export class AlphaService implements OnModuleDestroy {
     return true;
   }
 
-  public filterForSkew(tick: MarketTick): boolean {
+  private filterForSkew(tick: MarketTick): boolean {
     if (!this.environmentService.environment.enableSkewCheck) {
       return true;
     }
@@ -93,13 +123,13 @@ export class AlphaService implements OnModuleDestroy {
     return true;
   }
 
-  public filterForThrottling(tick: MarketTick): boolean {
+  private filterForThrottling(tick: MarketTick): boolean {
     const now = Date.now();
     const lastTime = this.lastEvaluationTimestamp.get(tick.conditionId) ?? 0;
     return now - lastTime >= 100;
   }
 
-  public filterForStability(tick: MarketTick): boolean {
+  private filterForStability(tick: MarketTick): boolean {
     const { priceStabilityRangeCents, priceStabilityDurationMs, enablePriceStabilityCheck } =
       this.environmentService.environment;
 
@@ -160,7 +190,7 @@ export class AlphaService implements OnModuleDestroy {
   // #endregion
 
   // #region kinematics
-  public calculateKinematics({
+  private calculateKinematics({
     conditionId,
     currentYes,
     currentNo,
@@ -225,6 +255,70 @@ export class AlphaService implements OnModuleDestroy {
   public deleteCondition(conditionId: ConditionId) {
     this.priceHistory.delete(conditionId);
     this.lastEvaluationTimestamp.delete(conditionId);
+  }
+  // #endregion
+
+  // #region entry calculation
+  private calculateEntryPlan(tick: MarketTick): EntryPlan | null {
+    const config = this.environmentService.environment;
+
+    // A. Base Calculation
+    const currentSpread = tick.bestBidYes + tick.bestBidNo;
+    const baseDiscount = Math.max((currentSpread - config.targetEntry) / 2, 0);
+
+    let targetYes = tick.bestBidYes - baseDiscount;
+    let targetNo = tick.bestBidNo - baseDiscount;
+
+    // B. Momentum Adjustment (Kinematics)
+    if (config.enableMomentumDiscounting) {
+      const kinematics = this.calculateKinematics({
+        conditionId: tick.conditionId,
+        currentYes: tick.bestBidYes,
+        currentNo: tick.bestBidNo,
+      });
+
+      // If warming up, we can't trade yet
+      if (!kinematics) {
+        return null;
+      }
+
+      targetYes = Math.min(targetYes + kinematics.yesAdj, tick.bestBidYes);
+      targetNo = Math.min(targetNo + kinematics.noAdj, tick.bestBidNo);
+    }
+
+    // C. Rounding (Polymarket Requirement)
+    targetYes = this.roundDown(targetYes, tick.minTickSize);
+    targetNo = this.roundDown(targetNo, tick.minTickSize);
+
+    // D. Sanity Checks
+    // 1. Must be positive
+    if (targetYes <= 0 || targetNo <= 0) {
+      return null;
+    }
+
+    // 2. Must be better than current market (Maker only)
+    if (targetYes > tick.bestBidYes || targetNo > tick.bestBidNo) {
+      this.logger.warn(`Alpha generated taker orders for ${tick.conditionId}. Skipping.`);
+      return null;
+    }
+
+    // 3. Probabilities must sum to <= 1.0 (Arbitrage check)
+    if (targetYes + targetNo > 1.0) {
+      return null;
+    }
+
+    return {
+      conditionId: tick.conditionId,
+      targetYes,
+      targetNo,
+      quantity: config.targetPositionSize,
+      reason: `Spread: ${currentSpread.toFixed(3)} | Discount: ${baseDiscount.toFixed(3)}`,
+    };
+  }
+
+  private roundDown(value: number, tickSize: TickSize): number {
+    const factor = 1 / parseFloat(tickSize);
+    return Math.floor(value * factor) / factor;
   }
   // #endregion
 }
