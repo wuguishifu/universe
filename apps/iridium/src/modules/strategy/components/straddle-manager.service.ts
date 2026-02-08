@@ -338,7 +338,7 @@ export class StraddleManagerService {
   }
 
   public clearAllStraddles() {
-    this.logger.warn('Debug: Clearing all straddles...');
+    this.logger.debug('Debug: Clearing all straddles...');
     this.positionService.getStraddles().forEach((straddle) => this.cleanupStraddle(straddle));
   }
 }
