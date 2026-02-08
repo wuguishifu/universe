@@ -274,35 +274,38 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
     });
   }
 
-  public subscribe(markets: Market[]) {
-    // Filter to only new tokens that aren't already subscribed
-    const allTokenIds = markets.flatMap((market) => [market.noToken, market.yesToken]);
-    const newTokenIds = allTokenIds.filter((id) => !this.subscribedTokenIds.has(id));
+  public syncSubscriptions(activeMarkets: Market[]) {
+    const desiredTokenIds = new Set(activeMarkets.flatMap((market) => [market.noToken, market.yesToken]));
+    const desiredConditionIds = new Set(activeMarkets.map((market) => market.conditionId));
 
-    if (newTokenIds.length === 0) {
-      this.logger.debug(`All ${markets.length} markets already subscribed, skipping`);
-      return;
+    const staleTokenIds = Array.from(this.subscribedTokenIds).filter((id) => !desiredTokenIds.has(id));
+    if (staleTokenIds.length > 0) {
+      this.logger.debug(`Unsubscribing from ${staleTokenIds.length} stale tokens`);
+      staleTokenIds.forEach((id) => this.subscribedTokenIds.delete(id));
+      this.send({ type: 'unsubscribe', channel: 'market', assets_ids: staleTokenIds });
     }
 
-    this.logger.debug(`Subscribing to ${newTokenIds.length} new tokens (${markets.length} markets requested)`);
-    newTokenIds.forEach((id) => this.subscribedTokenIds.add(id));
-    this.send({ type: 'subscribe', channel: 'market', assets_ids: newTokenIds });
-    markets.forEach((market) => this.getMarketState(market.conditionId));
-  }
+    const newTokenIds = Array.from(desiredTokenIds).filter((id) => !this.subscribedTokenIds.has(id));
+    if (newTokenIds.length > 0) {
+      this.logger.debug(`Subscribing to ${newTokenIds.length} new tokens (${activeMarkets.length} markets)`);
+      newTokenIds.forEach((id) => this.subscribedTokenIds.add(id));
+      this.send({ type: 'subscribe', channel: 'market', assets_ids: newTokenIds });
+    }
 
-  public unsubscribe(markets: Market[]) {
-    this.logger.debug(`Scheduling unsubscription for ${markets.length} markets`);
-    const tokenIds = markets.flatMap((market) => [market.noToken, market.yesToken]);
-    tokenIds.forEach((id) => this.subscribedTokenIds.delete(id));
-    this.send({ type: 'unsubscribe', channel: 'market', assets_ids: tokenIds });
-    markets.forEach((market) => this.marketState.delete(market.conditionId));
+    for (const conditionId of this.marketState.keys()) {
+      if (!desiredConditionIds.has(conditionId)) {
+        this.marketState.delete(conditionId);
+      }
+    }
+
+    activeMarkets.forEach((market) => this.getMarketState(market.conditionId));
   }
 
   private getMarketState(conditionId: string): MarketState {
     return (
       this.marketState.get(conditionId) ??
       (() => {
-        const state = {};
+        const state: MarketState = {};
         this.marketState.set(conditionId, state);
         return state;
       })()

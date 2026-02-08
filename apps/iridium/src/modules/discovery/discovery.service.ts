@@ -5,7 +5,6 @@ import { OsmiumService } from '@wuguishifu/nest-common';
 import { MarketAdapter } from './market-adapters/adapter';
 import { CryptoAdapter } from './market-adapters/crypto.adapter';
 import { EnvironmentService } from '../../environment/environment-service';
-import { Market } from '../../types/market';
 import { getTimeRemainingMs } from '../../utils/market.utils';
 import { CacheService } from '../cache/cache.service';
 import { MarketWsService } from '../clob/ws/market-ws.service';
@@ -40,14 +39,27 @@ export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
 
   public async refreshMarkets() {
     const markets = await this.marketAdapter.fetchMarkets();
+
     markets.forEach((market) => this.cacheService.markets.set(market.conditionId, market));
+    const now = Date.now();
+    let staleCount = 0;
+    for (const [key, market] of this.cacheService.markets.entries()) {
+      if (getTimeRemainingMs(market, now) <= 0) {
+        this.cacheService.markets.delete(key);
+        staleCount++;
+      }
+    }
+
+    const activeMarkets = Array.from(this.cacheService.markets.values());
+    this.marketWsService.syncSubscriptions(activeMarkets);
+
     this.osmiumService.trackEvent({
       name: 'discovery_service-markets-refreshed',
       metadata: { markets },
     });
-
-    this.marketWsService.subscribe(markets);
-    this.logger.debug(`Refreshed ${markets.length} markets in discovery cache`);
+    this.logger.debug(
+      `Refreshed markets: ${markets.length} fetched, ${staleCount} expired, ${activeMarkets.length} active`,
+    );
   }
 
   private scheduleHourlyRefresh() {
@@ -68,28 +80,11 @@ export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
 
     this.hourlyRefreshTimeout = setTimeout(async () => {
       try {
-        this.cleanStaleMarkets();
         await this.refreshMarkets();
       } catch (error) {
         this.logger.error(`Failed hourly market refresh: ${error}`);
       }
       this.scheduleHourlyRefresh();
     }, msUntilNextHour);
-  }
-
-  private cleanStaleMarkets() {
-    const now = Date.now();
-    const cleared: Market[] = [];
-    for (const [, market] of this.cacheService.markets.entries()) {
-      const timeRemaining = getTimeRemainingMs(market, now);
-      if (timeRemaining <= 0) {
-        cleared.push(market);
-      }
-    }
-
-    // Unsubscribe first so WS stops delivering updates before we remove from cache
-    this.marketWsService.unsubscribe(cleared);
-    cleared.forEach((market) => this.cacheService.markets.delete(market.conditionId));
-    this.logger.debug(`Cleaned up ${cleared.length} stale markets from discovery cache`);
   }
 }
