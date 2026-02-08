@@ -41,6 +41,8 @@ const appRootMap: Record<string, AppConfig> = {
       POLY_API_KEY: rootEnv.parsed?.POLY_API_KEY,
       POLY_API_SECRET: rootEnv.parsed?.POLY_API_SECRET,
       POLY_API_PASSPHRASE: rootEnv.parsed?.POLY_API_PASSPHRASE,
+      ENABLE_VERBOSE_EVENTS: rootEnv.parsed?.ENABLE_VERBOSE_EVENTS,
+      DEBUG_CLEAR_STRADDLES: rootEnv.parsed?.DEBUG_CLEAR_STRADDLES,
     }),
   },
   osmium: {
