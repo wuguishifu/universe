@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { TickSize } from '@polymarket/clob-client';
 import { filter, Subscription, tap } from 'rxjs';
 
+import { AlphaService } from './components/alpha.service';
 import { EnvironmentService } from '../../environment/environment-service';
 import { OrderMessage } from '../../types/clob/orderMessage';
 import { MarketTick, MarketWsService } from '../clob/ws/market-ws.service';
@@ -62,18 +63,13 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   /** Periodic reconciliation timer */
   private reconcileInterval: NodeJS.Timeout | null = null;
 
-  /** Per-market throttle tracking (conditionId -> last evaluation timestamp) */
-  private readonly lastEvalTime = new Map<string, number>();
-
-  /** Price history for stability checking (conditionId -> array of {yesPrice, noPrice, timestamp}) */
-  private readonly priceHistory = new Map<string, Array<{ yesPrice: number; noPrice: number; timestamp: number }>>();
-
   constructor(
     private readonly userWsService: UserWsService,
     private readonly marketWsService: MarketWsService,
     private readonly executionService: ExecutionService,
     private readonly environmentService: EnvironmentService,
     private readonly ledgerService: LedgerService,
+    private readonly alphaService: AlphaService,
   ) {}
 
   // #region: module lifecycle
@@ -83,12 +79,12 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     const marketTickSub = this.marketWsService.marketTicks$
       // MARK: market filtering
       .pipe(
-        tap((tick) => this.recordPriceHistory(tick)),
-        filter((tick) => this.filterForTimeRemaining(tick)),
-        filter((tick) => this.filterForSkew(tick)),
-        filter((tick) => this.filterForStability(tick)),
-        filter((tick) => this.filterForThrottling(tick)),
-        tap((tick) => this.lastEvalTime.set(tick.conditionId, Date.now())),
+        tap((tick) => this.alphaService.recordPriceHistory(tick)),
+        filter((tick) => this.alphaService.filterForTimeRemaining(tick)),
+        filter((tick) => this.alphaService.filterForSkew(tick)),
+        filter((tick) => this.alphaService.filterForStability(tick)),
+        filter((tick) => this.alphaService.filterForThrottling(tick)),
+        tap((tick) => this.alphaService.recordEvaluation(tick.conditionId)),
       )
       .subscribe((tick) => this.evaluateStraddle(tick));
     this.subscriptions.push(marketTickSub);
@@ -129,8 +125,6 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     // Unsubscribe from all RxJS subscriptions
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.subscriptions.length = 0;
-    this.lastEvalTime.clear();
-    this.priceHistory.clear();
 
     // Clear periodic reconciliation timer
     if (this.reconcileInterval) {
@@ -220,7 +214,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     let targetNo = tick.bestBidNo - baseDiscount;
 
     // apply momentum
-    const kinematics = this.calculateKinematics({
+    const kinematics = this.alphaService.calculateKinematics({
       conditionId: tick.conditionId,
       currentYes: tick.bestBidYes,
       currentNo: tick.bestBidNo,
@@ -392,91 +386,9 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       this.clearAllRiskTimers(straddle);
     }
   }
-
-  /**
-   * MARK: kinematics
-   * Calculates 2nd Order Dynamics (Velocity & Acceleration).
-   * Returns price adjustments based on the "Curve" of the movement.
-   */
-  private calculateKinematics({
-    conditionId,
-    currentYes,
-    currentNo,
-  }: {
-    conditionId: string;
-    currentYes: number;
-    currentNo: number;
-  }): { yesAdj: number; noAdj: number } | null {
-    const history = this.priceHistory.get(conditionId);
-    if (!history || history.length < 3) {
-      return null;
-    }
-
-    // Look back 2 seconds and 4 seconds
-    const now = Date.now();
-    const t1 = now - 2000;
-    const t2 = now - 4000;
-
-    if (history[0].timestamp > t2) {
-      return null;
-    }
-
-    // Find nearest history points
-    const p1 = history.find((h) => h.timestamp <= t1);
-    const p2 = history.find((h) => h.timestamp <= t2);
-    if (!p1 || !p2) {
-      return null;
-    }
-
-    // --- YES SIDE KINEMATICS ---
-    const vYes0 = currentYes - p1.yesPrice;
-    const vYes1 = p1.yesPrice - p2.yesPrice;
-    const aYes = vYes0 - vYes1;
-
-    // --- NO SIDE KINEMATICS ---
-    const vNo0 = currentNo - p1.noPrice;
-    const vNo1 = p1.noPrice - p2.noPrice;
-    const aNo = vNo0 - vNo1;
-
-    // PREDICTION FORMULA:
-    // Future ≈ Current + (V * k1) + (A * k2)
-    const { velocityFactor, accelerationFactor, maxDiscount } = this.environmentService.environment;
-    const yesAdj = Math.max(-maxDiscount, Math.min(vYes0 * velocityFactor + aYes * accelerationFactor, 0));
-    const noAdj = Math.max(-maxDiscount, Math.min(vNo0 * velocityFactor + aNo * accelerationFactor, 0));
-
-    return { yesAdj, noAdj };
-  }
-
-  private recordPriceHistory(tick: MarketTick) {
-    if (tick.bestBidYes <= 0.01 || tick.bestBidNo <= 0.01) {
-      return;
-    }
-    if (tick.bestBidYes >= 0.99 || tick.bestBidNo >= 0.99) {
-      return;
-    }
-
-    let history = this.priceHistory.get(tick.conditionId);
-    if (!history) {
-      history = [];
-      this.priceHistory.set(tick.conditionId, history);
-    }
-
-    history.push({
-      yesPrice: tick.bestBidYes,
-      noPrice: tick.bestBidNo,
-      timestamp: tick.timestamp,
-    });
-
-    const cutoffTime = tick.timestamp - this.environmentService.environment.maxHistoryRetentionMs;
-    while (history.length > 0 && history[0].timestamp < cutoffTime) {
-      history.shift();
-    }
-  }
-
   // #endregion
 
   // #region merging
-
   /**
    * Debounces merge attempts so rapid fills accumulate before we send a single
    * on-chain transaction. The 5-second window also gives Polygon time to settle
@@ -564,8 +476,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     this.activeStraddles.delete(straddle.conditionId);
     this.orderMap.delete(straddle.yesOrderId);
     this.orderMap.delete(straddle.noOrderId);
-    this.lastEvalTime.delete(straddle.conditionId);
-    this.priceHistory.delete(straddle.conditionId);
+    this.alphaService.deleteCondition(straddle.conditionId);
 
     this.logger.debug(`Straddle for condition ${straddle.conditionId} has been cleaned up.`);
   }
@@ -824,123 +735,6 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   private roundDown(value: number, tickSize: TickSize): number {
     const factor = 1 / parseFloat(tickSize);
     return Math.floor(value * factor) / factor;
-  }
-
-  // #endregion
-
-  // #region filtering
-
-  /**
-   * MARK: filter for price stability (prevents entering during spikes)
-   * TODO: there is a known edge case where a market could be unstable but near a skew boundary which would cause
-   * TODO: ticks to be filtered out earlier and would make this market appear stable.
-   * Updates price history and checks if the market has been stable.
-   */
-  private filterForStability(tick: MarketTick): boolean {
-    const { priceStabilityRangeCents, priceStabilityDurationMs, enablePriceStabilityCheck } =
-      this.environmentService.environment;
-
-    if (!enablePriceStabilityCheck) {
-      return true;
-    }
-    if (!priceStabilityRangeCents || !priceStabilityDurationMs) {
-      return true;
-    }
-
-    const history = this.priceHistory.get(tick.conditionId);
-
-    // 1. Cold Start Check
-    // If we have no history, or the history is too short to cover the required duration
-    if (!history || history.length < 2) {
-      // Optional: Log debug "Cold start"
-      return false;
-    }
-
-    // 2. Coverage Check
-    // We need to ensure our history spans at least 'priceStabilityDurationMs'
-    const oldestAllowedTimestamp = tick.timestamp - priceStabilityDurationMs;
-    const oldestDataPoint = history[0].timestamp;
-
-    if (oldestDataPoint > oldestAllowedTimestamp) {
-      // Our history only goes back 1 second, but we need 2 seconds to prove stability.
-      // We are not ready yet.
-      return false;
-    }
-
-    // 3. Stability Calculation
-    const rangeDollars = priceStabilityRangeCents / 100;
-
-    // We iterate backwards (newest to oldest) as an optimization,
-    // but forward works too. We only check points within the duration window.
-    for (let i = history.length - 1; i >= 0; i--) {
-      const entry = history[i];
-
-      // Stop checking if we go past the duration window
-      if (entry.timestamp < oldestAllowedTimestamp) {
-        break;
-      }
-
-      const yesDelta = Math.abs(entry.yesPrice - tick.bestBidYes);
-      const noDelta = Math.abs(entry.noPrice - tick.bestBidNo);
-
-      if (yesDelta > rangeDollars || noDelta > rangeDollars) {
-        this.logger.debug(
-          `Unstable ${tick.conditionId}: Deviation > ${rangeDollars} within last ${priceStabilityDurationMs}ms`,
-        );
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  private filterForTimeRemaining(tick: MarketTick): boolean {
-    if (tick.timeRemaining > this.environmentService.environment.maxTimeRemainingMs) {
-      this.logger.debug(`Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too much)`);
-      return false;
-    }
-
-    if (tick.timeRemaining <= this.environmentService.environment.minTimeRemainingMs) {
-      this.logger.debug(`Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too little)`);
-      return false;
-    }
-
-    return true;
-  }
-
-  // MARK: filter for skew and total cost (prevents entering when market is too skewed or illiquid)
-  private filterForSkew(tick: MarketTick): boolean {
-    if (!this.environmentService.environment.enableSkewCheck) {
-      return true;
-    }
-
-    const { minSkewPriceCutoff, minTotalCost, maxTotalCost } = this.environmentService.environment;
-    if (tick.bestBidNo <= minSkewPriceCutoff || tick.bestBidYes <= minSkewPriceCutoff) {
-      this.logger.debug(
-        `Skipping market ${tick.conditionId} with bids Yes:${tick.bestBidYes.toFixed(4)} No:${tick.bestBidNo.toFixed(4)} (too skewed)`,
-      );
-      return false;
-    }
-
-    const totalCost = tick.bestBidYes + tick.bestBidNo;
-    if (totalCost <= minTotalCost) {
-      this.logger.debug(`Skipping market ${tick.conditionId} with total cost ${totalCost.toFixed(4)} (too low)`);
-      return false;
-    }
-
-    if (totalCost >= maxTotalCost) {
-      this.logger.debug(`Skipping market ${tick.conditionId} with total cost ${totalCost.toFixed(4)} (too high)`);
-      return false;
-    }
-
-    return true;
-  }
-
-  // MARK: throttle per-market to avoid rapid re-evaluation
-  private filterForThrottling(tick: MarketTick): boolean {
-    const now = Date.now();
-    const lastTime = this.lastEvalTime.get(tick.conditionId) ?? 0;
-    return now - lastTime >= 100;
   }
 
   // #endregion
