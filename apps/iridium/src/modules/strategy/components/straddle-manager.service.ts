@@ -26,9 +26,9 @@ export class StraddleManagerService {
   public async placeStraddle(plan: EntryPlan) {
     const { conditionId, targetYes, targetNo, quantity } = plan;
     const capital = (targetYes + targetNo) * quantity;
-    this.ledgerService.debit(capital);
 
     try {
+      this.ledgerService.debit(capital);
       const { yesOrderId, noOrderId } = await this.executionService.placeLimitOrder(plan);
       this.orderMap.set(yesOrderId, conditionId);
       this.orderMap.set(noOrderId, conditionId);
