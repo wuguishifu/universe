@@ -88,11 +88,11 @@ export class AlphaService implements OnModuleDestroy {
         this.osmiumService.trackDebug({
           name: 'filter-pass-all',
           metadata: {
-            conditionId: tick.conditionId,
-            bestBidYes: tick.bestBidYes,
-            bestBidNo: tick.bestBidNo,
-            targetYes: plan.targetYes,
-            targetNo: plan.targetNo,
+            ...plan,
+            ...tick,
+            totalEntryCost: plan.targetYes + plan.targetNo,
+            yesSpread: tick.bestAskYes - tick.bestBidYes,
+            noSpread: tick.bestAskNo - tick.bestBidNo,
           },
         });
       }

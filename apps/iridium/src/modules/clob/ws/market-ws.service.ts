@@ -23,6 +23,8 @@ export type MarketTick = {
   noAssetId: string;
   bestBidYes: number;
   bestBidNo: number;
+  bestAskYes: number;
+  bestAskNo: number;
   timestamp: number;
   timeRemaining: number;
   minTickSize: TickSize;
@@ -47,6 +49,7 @@ type AssetOrderBook = {
   bids: OrderBookSide;
   asks: OrderBookSide;
   bestBid: number;
+  bestAsk: number;
   totalBidVolume: number;
   totalAskVolume: number;
 };
@@ -178,12 +181,18 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
       }
     });
 
+    let bestAsk = Infinity;
     let totalAskVolume = 0;
-    book.asks.forEach((size) => {
+    book.asks.forEach((size, priceStr) => {
       totalAskVolume += size;
+      const price = parseFloat(priceStr);
+      if (price < bestAsk) {
+        bestAsk = price;
+      }
     });
 
     book.bestBid = bestBid;
+    book.bestAsk = bestAsk === Infinity ? 0 : bestAsk;
     book.totalBidVolume = totalBidVolume;
     book.totalAskVolume = totalAskVolume;
   }
@@ -207,6 +216,8 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
           source,
           bestBidYes: yesBook.bestBid,
           bestBidNo: noBook.bestBid,
+          bestAskYes: yesBook.bestAsk,
+          bestAskNo: noBook.bestAsk,
           yesBidVolume: yesBook.totalBidVolume,
           yesAskVolume: yesBook.totalAskVolume,
           noBidVolume: noBook.totalBidVolume,
@@ -225,6 +236,8 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
       noAssetId: market.noToken,
       bestBidYes: yesBook.bestBid,
       bestBidNo: noBook.bestBid,
+      bestAskYes: yesBook.bestAsk,
+      bestAskNo: noBook.bestAsk,
       timestamp: Date.now(),
       timeRemaining: market.endDate.getTime() - Date.now(),
       minTickSize: market.orderPriceMinTickSize,
@@ -241,6 +254,7 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
         bids: new Map(),
         asks: new Map(),
         bestBid: 0,
+        bestAsk: 0,
         totalBidVolume: 0,
         totalAskVolume: 0,
       };
@@ -274,6 +288,12 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
     });
   }
 
+  public testUnsubscribeAll() {
+    this.logger.debug('Unsubscribing from all tokens for testing...');
+    const tokens = Array.from(this.subscribedTokenIds);
+    this.send({ operation: 'unsubscribe', channel: 'market', assets_ids: tokens });
+  }
+
   public syncSubscriptions(activeMarkets: Market[]) {
     const desiredTokenIds = new Set(activeMarkets.flatMap((market) => [market.noToken, market.yesToken]));
     const desiredConditionIds = new Set(activeMarkets.map((market) => market.conditionId));
@@ -282,14 +302,14 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
     if (staleTokenIds.length > 0) {
       this.logger.debug(`Unsubscribing from ${staleTokenIds.length} stale tokens`);
       staleTokenIds.forEach((id) => this.subscribedTokenIds.delete(id));
-      this.send({ type: 'unsubscribe', channel: 'market', assets_ids: staleTokenIds });
+      this.send({ operation: 'unsubscribe', channel: 'market', assets_ids: staleTokenIds });
     }
 
     const newTokenIds = Array.from(desiredTokenIds).filter((id) => !this.subscribedTokenIds.has(id));
     if (newTokenIds.length > 0) {
       this.logger.debug(`Subscribing to ${newTokenIds.length} new tokens (${activeMarkets.length} markets)`);
       newTokenIds.forEach((id) => this.subscribedTokenIds.add(id));
-      this.send({ type: 'subscribe', channel: 'market', assets_ids: newTokenIds });
+      this.send({ operation: 'subscribe', channel: 'market', assets_ids: newTokenIds });
     }
 
     for (const conditionId of this.marketState.keys()) {
