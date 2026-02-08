@@ -6,6 +6,7 @@ import WebSocket from 'ws';
 import { WebSocketService } from './ws-service';
 import { CLOB_MARKET_WS_URL } from '../../../constants/constants';
 import { BookMessage } from '../../../types/clob/bookMessage';
+import { LastTradePriceMessage } from '../../../types/clob/lastTradePriceMessage';
 import { Message } from '../../../types/clob/message';
 import { TickSizeChangeMessage } from '../../../types/clob/tickSizeChangeMessage';
 import { Market } from '../../../types/market';
@@ -21,9 +22,28 @@ export type MarketTick = {
   timestamp: number;
   timeRemaining: number;
   minTickSize: TickSize;
+  yesBidVolume?: number;
+  yesAskVolume?: number;
+  noBidVolume?: number;
+  noAskVolume?: number;
 };
 
-type MarketState = { [assetId: string]: number };
+export type TradeEvent = {
+  conditionId: string;
+  assetId: string;
+  side: 'BUY' | 'SELL';
+  price: number;
+  size: number;
+  timestamp: number;
+};
+
+type AssetState = {
+  bestBid: number;
+  totalBidVolume: number;
+  totalAskVolume: number;
+};
+
+type MarketState = { [assetId: string]: AssetState };
 
 @Injectable()
 export class MarketWsService extends WebSocketService implements OnModuleDestroy {
@@ -33,6 +53,8 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
   private subscribedTokenIds = new Set<string>();
   private readonly marketTickSubject = new Subject<MarketTick>();
   public readonly marketTicks$ = this.marketTickSubject.asObservable();
+  private readonly tradeEventsSubject = new Subject<TradeEvent>();
+  public readonly tradeEvents$ = this.tradeEventsSubject.asObservable();
 
   constructor(private readonly cacheService: CacheService) {
     super(CLOB_MARKET_WS_URL);
@@ -41,6 +63,7 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
   onModuleDestroy() {
     this.logger.debug('Shutting down Market WebSocket...');
     this.marketTickSubject.complete();
+    this.tradeEventsSubject.complete();
     this.close();
   }
 
@@ -63,6 +86,9 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
           case 'tick_size_change':
             this.processTickSizeChange(message);
             break;
+          case 'last_trade_price':
+            this.processLastTradePrice(message);
+            break;
         }
       });
     } catch (error) {
@@ -77,22 +103,33 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
       return;
     }
 
-    const bestBid = message.bids.length > 0 ? message.bids.map(parseOrderSummary).sort((a, b) => b[0] - a[0])[0][0] : 0;
+    const parsedBids = message.bids.map(parseOrderSummary);
+    const parsedAsks = message.asks.map(parseOrderSummary);
+
+    const bestBid = parsedBids.length > 0 ? parsedBids.sort((a, b) => b[0] - a[0])[0][0] : 0;
+    const totalBidVolume = parsedBids.reduce((sum, [, size]) => sum + size, 0);
+    const totalAskVolume = parsedAsks.reduce((sum, [, size]) => sum + size, 0);
 
     const state = this.getMarketState(message.market);
-    state[message.asset_id] = bestBid;
+    state[message.asset_id] = { bestBid, totalBidVolume, totalAskVolume };
     const assetIds = Object.keys(state);
 
     if (assetIds.length === 2) {
+      const yesState = state[market.yesToken];
+      const noState = state[market.noToken];
       this.marketTickSubject.next({
         conditionId: message.market,
         yesAssetId: market.yesToken,
         noAssetId: market.noToken,
-        bestBidYes: state[market.yesToken],
-        bestBidNo: state[market.noToken],
+        bestBidYes: yesState.bestBid,
+        bestBidNo: noState.bestBid,
         timestamp: parseInt(message.timestamp),
         timeRemaining: market.endDate.getTime() - Date.now(),
         minTickSize: market.orderPriceMinTickSize,
+        yesBidVolume: yesState.totalBidVolume,
+        yesAskVolume: yesState.totalAskVolume,
+        noBidVolume: noState.totalBidVolume,
+        noAskVolume: noState.totalAskVolume,
       });
     }
   }
@@ -105,6 +142,22 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
     }
 
     market.orderPriceMinTickSize = message.new_tick_size;
+  }
+
+  private processLastTradePrice(message: LastTradePriceMessage) {
+    const market = this.cacheService.markets.get(message.market);
+    if (!market) {
+      return;
+    }
+
+    this.tradeEventsSubject.next({
+      conditionId: message.market,
+      assetId: message.asset_id,
+      side: message.side,
+      price: parseFloat(message.price),
+      size: parseFloat(message.size),
+      timestamp: parseInt(message.timestamp),
+    });
   }
 
   public subscribe(markets: Market[]) {

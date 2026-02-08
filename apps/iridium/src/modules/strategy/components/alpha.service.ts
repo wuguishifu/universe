@@ -2,11 +2,17 @@ import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { TickSize } from '@polymarket/clob-client';
 
 import { EnvironmentService } from '../../../environment/environment-service';
-import { MarketTick } from '../../clob/ws/market-ws.service';
+import { MarketTick, TradeEvent } from '../../clob/ws/market-ws.service';
 
 type PriceHistoryEntry = {
   yesPrice: number;
   noPrice: number;
+  timestamp: number;
+};
+
+type TradeHistoryEntry = {
+  assetId: string;
+  side: 'BUY' | 'SELL';
   timestamp: number;
 };
 
@@ -25,6 +31,7 @@ export class AlphaService implements OnModuleDestroy {
   private readonly logger = new Logger(AlphaService.name);
 
   private readonly priceHistory = new Map<ConditionId, PriceHistoryEntry[]>();
+  private readonly tradeHistory = new Map<ConditionId, TradeHistoryEntry[]>();
   private readonly lastEvaluationTimestamp = new Map<ConditionId, number>();
 
   constructor(private readonly environmentService: EnvironmentService) {}
@@ -33,6 +40,7 @@ export class AlphaService implements OnModuleDestroy {
     this.logger.debug('Shutting down alpha service...');
     this.lastEvaluationTimestamp.clear();
     this.priceHistory.clear();
+    this.tradeHistory.clear();
   }
 
   public analyzeTick(tick: MarketTick): EntryPlan | null {
@@ -42,6 +50,9 @@ export class AlphaService implements OnModuleDestroy {
       !this.filterForTimeRemaining(tick) ||
       !this.filterForSkew(tick) ||
       !this.filterForStability(tick) ||
+      !this.filterForLinearRegression(tick) ||
+      !this.filterForObi(tick) ||
+      !this.filterForToxicFlow(tick) ||
       !this.filterForThrottling(tick)
     ) {
       return null;
@@ -187,6 +198,168 @@ export class AlphaService implements OnModuleDestroy {
     return true;
   }
 
+  private filterForLinearRegression(tick: MarketTick): boolean {
+    const { enableLinearRegressionFilter, maxPriceSlopePerSec, minRegressionDataPoints } =
+      this.environmentService.environment;
+
+    if (!enableLinearRegressionFilter) {
+      return true;
+    }
+
+    const history = this.priceHistory.get(tick.conditionId);
+    if (!history || history.length < minRegressionDataPoints) {
+      return false;
+    }
+
+    const yesPoints = history.map((h) => ({ t: h.timestamp, v: h.yesPrice }));
+    const noPoints = history.map((h) => ({ t: h.timestamp, v: h.noPrice }));
+
+    const yesSlope = this.computeLinearRegressionSlope(yesPoints);
+    const noSlope = this.computeLinearRegressionSlope(noPoints);
+
+    // slope is per-millisecond, convert to per-second
+    const yesSlopePerSec = Math.abs(yesSlope * 1000);
+    const noSlopePerSec = Math.abs(noSlope * 1000);
+
+    if (yesSlopePerSec > maxPriceSlopePerSec || noSlopePerSec > maxPriceSlopePerSec) {
+      this.logger.debug(
+        `Steep slope ${tick.conditionId}: YES=${yesSlopePerSec.toFixed(4)}/s NO=${noSlopePerSec.toFixed(4)}/s (max ${maxPriceSlopePerSec})`,
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  private computeLinearRegressionSlope(points: { t: number; v: number }[]): number {
+    const n = points.length;
+    if (n < 2) {
+      return 0;
+    }
+
+    // normalize timestamps to avoid float precision issues with large epoch values
+    const t0 = points[0].t;
+
+    let sumX = 0;
+    let sumY = 0;
+    let sumXY = 0;
+    let sumX2 = 0;
+
+    for (const p of points) {
+      const x = p.t - t0;
+      sumX += x;
+      sumY += p.v;
+      sumXY += x * p.v;
+      sumX2 += x * x;
+    }
+
+    const denom = n * sumX2 - sumX * sumX;
+    if (denom === 0) {
+      return 0;
+    }
+
+    return (n * sumXY - sumX * sumY) / denom;
+  }
+
+  private filterForObi(tick: MarketTick): boolean {
+    const { enableObiFilter, minObiBidAskRatio } = this.environmentService.environment;
+
+    if (!enableObiFilter) {
+      return true;
+    }
+
+    // guard against undefined volume fields for backward compat
+    if (
+      tick.yesBidVolume === undefined ||
+      tick.yesAskVolume === undefined ||
+      tick.noBidVolume === undefined ||
+      tick.noAskVolume === undefined
+    ) {
+      return true;
+    }
+
+    // check YES side: bid volume must be >= ratio * ask volume
+    if (tick.yesAskVolume > 0 && tick.yesBidVolume / tick.yesAskVolume < minObiBidAskRatio) {
+      this.logger.debug(
+        `OBI reject ${tick.conditionId}: YES bid/ask ratio ${(tick.yesBidVolume / tick.yesAskVolume).toFixed(3)} < ${minObiBidAskRatio}`,
+      );
+      return false;
+    }
+
+    // check NO side: bid volume must be >= ratio * ask volume
+    if (tick.noAskVolume > 0 && tick.noBidVolume / tick.noAskVolume < minObiBidAskRatio) {
+      this.logger.debug(
+        `OBI reject ${tick.conditionId}: NO bid/ask ratio ${(tick.noBidVolume / tick.noAskVolume).toFixed(3)} < ${minObiBidAskRatio}`,
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  private filterForToxicFlow(tick: MarketTick): boolean {
+    const { enableToxicFlowFilter, toxicFlowWindowMs, toxicFlowMinTrades, toxicFlowSellRatioThreshold } =
+      this.environmentService.environment;
+
+    if (!enableToxicFlowFilter) {
+      return true;
+    }
+
+    const history = this.tradeHistory.get(tick.conditionId);
+    if (!history || history.length === 0) {
+      return true; // optimistic cold start
+    }
+
+    const now = Date.now();
+    const cutoff = now - toxicFlowWindowMs;
+
+    // check each side (yes and no asset)
+    for (const assetId of [tick.yesAssetId, tick.noAssetId]) {
+      const recentTrades = history.filter((t) => t.assetId === assetId && t.timestamp >= cutoff);
+      if (recentTrades.length < toxicFlowMinTrades) {
+        continue;
+      }
+
+      const sellCount = recentTrades.filter((t) => t.side === 'SELL').length;
+      const sellRatio = sellCount / recentTrades.length;
+
+      if (sellRatio >= toxicFlowSellRatioThreshold) {
+        this.logger.debug(
+          `Toxic flow ${tick.conditionId} asset ${assetId}: ${sellCount}/${recentTrades.length} sells (${(sellRatio * 100).toFixed(0)}%) in ${toxicFlowWindowMs}ms`,
+        );
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  public recordTrade(event: TradeEvent) {
+    const history = this.getTradeHistory(event.conditionId);
+    history.push({
+      assetId: event.assetId,
+      side: event.side,
+      timestamp: event.timestamp,
+    });
+
+    // prune old entries
+    const cutoff = Date.now() - this.environmentService.environment.toxicFlowWindowMs;
+    const idx = history.findIndex((h) => h.timestamp >= cutoff);
+    if (idx > 0) {
+      history.splice(0, idx);
+    }
+  }
+
+  private getTradeHistory(conditionId: ConditionId): TradeHistoryEntry[] {
+    const existing = this.tradeHistory.get(conditionId);
+    if (existing) {
+      return existing;
+    }
+
+    const newHistory: TradeHistoryEntry[] = [];
+    this.tradeHistory.set(conditionId, newHistory);
+    return newHistory;
+  }
   // #endregion
 
   // #region kinematics
@@ -254,6 +427,7 @@ export class AlphaService implements OnModuleDestroy {
 
   public deleteCondition(conditionId: ConditionId) {
     this.priceHistory.delete(conditionId);
+    this.tradeHistory.delete(conditionId);
     this.lastEvaluationTimestamp.delete(conditionId);
   }
   // #endregion
