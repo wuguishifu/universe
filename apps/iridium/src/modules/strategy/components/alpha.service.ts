@@ -82,7 +82,11 @@ export class AlphaService implements OnModuleDestroy {
 
     const cutoffTime = tick.timestamp - this.environmentService.environment.maxHistoryRetentionMs;
     const idx = history.findIndex((h) => h.timestamp >= cutoffTime);
-    if (idx > 0) {
+    if (idx === -1) {
+      if (history.length > 0) {
+        history.length = 0;
+      }
+    } else if (idx > 0) {
       history.splice(0, idx);
     }
   }
@@ -345,7 +349,11 @@ export class AlphaService implements OnModuleDestroy {
     // prune old entries
     const cutoff = Date.now() - this.environmentService.environment.toxicFlowWindowMs;
     const idx = history.findIndex((h) => h.timestamp >= cutoff);
-    if (idx > 0) {
+    if (idx === -1) {
+      if (history.length > 0) {
+        history.length = 0;
+      }
+    } else if (idx > 0) {
       history.splice(0, idx);
     }
   }
