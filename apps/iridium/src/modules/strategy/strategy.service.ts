@@ -80,10 +80,12 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     if (!this.ledgerService.hasAvailableCapital(requiredCapital)) {
       return;
     }
-
     this.logger.log(
       `Placing straddle for ${plan.conditionId} with targets YES=${plan.targetYes}, NO=${plan.targetNo}, quantity=${plan.quantity} (capital: ${requiredCapital.toFixed(4)}). Reason: ${plan.reason}`,
     );
+
+    this.positionService.setMarketInProgress(plan.conditionId);
     await this.straddleManagerService.placeStraddle(plan);
+    this.positionService.setMarketInProgress(plan.conditionId, false);
   }
 }

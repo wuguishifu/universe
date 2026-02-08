@@ -25,7 +25,6 @@ export class StraddleManagerService {
 
   public async placeStraddle(plan: EntryPlan) {
     const { conditionId, targetYes, targetNo, quantity } = plan;
-    this.positionService.setMarketInProgress(conditionId);
     const capital = (targetYes + targetNo) * quantity;
     this.ledgerService.debit(capital);
 
@@ -48,10 +47,8 @@ export class StraddleManagerService {
         noStatus: 'OPEN',
         mergeInProgress: false,
       });
-      this.positionService.setMarketInProgress(conditionId, false);
     } catch (error) {
       this.logger.error(`Failed to place limit order on ${conditionId}: ${(error as Error).message}`);
-      this.positionService.setMarketInProgress(conditionId, false);
       this.ledgerService.credit(capital);
     }
   }
