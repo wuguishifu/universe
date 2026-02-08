@@ -14,6 +14,7 @@ import { Message } from '../../../types/clob/message';
 import { PriceChangeMessage } from '../../../types/clob/priceChangeMessage';
 import { TickSizeChangeMessage } from '../../../types/clob/tickSizeChangeMessage';
 import { Market } from '../../../types/market';
+import { isExpired } from '../../../utils/market.utils';
 import { CacheService } from '../../cache/cache.service';
 
 export type MarketTick = {
@@ -113,7 +114,7 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
   private processBookSnapshot(message: BookMessage) {
     const market = this.cacheService.markets.get(message.market);
     if (!market) {
-      this.logger.warn(`Received book update for unknown market: ${message.market}`);
+      this.logger.debug(`Received book update for unknown market: ${message.market}`);
       return;
     }
 
@@ -188,6 +189,10 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
   }
 
   private emitMarketTick(conditionId: string, market: Market, state: MarketState, source: 'book' | 'price_change') {
+    if (isExpired(market)) {
+      return;
+    }
+
     const yesBook = state[market.yesToken];
     const noBook = state[market.noToken];
     if (!yesBook || !noBook) {
@@ -246,7 +251,7 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
   private processTickSizeChange(message: TickSizeChangeMessage) {
     const market = this.cacheService.markets.get(message.market);
     if (!market) {
-      this.logger.warn(`Received tick size change for unknown market: ${message.market}`);
+      this.logger.debug(`Received tick size change for unknown market: ${message.market}`);
       return;
     }
 
