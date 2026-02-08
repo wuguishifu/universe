@@ -26,12 +26,6 @@ export type ActiveStraddle = {
   // Merge concurrency control
   mergeInProgress: boolean;
   mergeDebounceTimer?: NodeJS.Timeout;
-
-  // Legging risk timers
-  priceDropTimer?: NodeJS.Timeout;
-  absoluteTimer?: NodeJS.Timeout;
-  priceDropTimerStartedAt?: number;
-  isImbalanced: boolean;
 };
 
 type ConditionId = string;

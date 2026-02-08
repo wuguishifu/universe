@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 import { AllExceptionsFilter, CommonModule, HealthController, OsmiumModule } from '@wuguishifu/nest-common';
 
@@ -16,6 +17,7 @@ import { StrategyModule } from './modules/strategy/strategy.module';
     StrategyModule,
     EnvironmentModule,
     OsmiumModule.register({ serviceName: 'iridium' }, OSMIUM_SERVICE),
+    EventEmitterModule.forRoot(),
   ],
   controllers: [AppController, HealthController],
   providers: [
