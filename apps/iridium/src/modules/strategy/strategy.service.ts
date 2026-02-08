@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { filter, map, Subscription } from 'rxjs';
 
 import { AlphaService, EntryPlan } from './components/alpha.service';
+import { InventorySkewService } from './components/inventory-skew.service';
 import { PositionService } from './components/position.service';
 import { StraddleManagerService } from './components/straddle-manager.service';
 import { EnvironmentService } from '../../environment/environment-service';
@@ -27,6 +28,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     private readonly alphaService: AlphaService,
     private readonly positionService: PositionService,
     private readonly straddleManagerService: StraddleManagerService,
+    private readonly inventorySkewService: InventorySkewService,
   ) {}
 
   public onModuleInit() {
@@ -46,6 +48,12 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       this.straddleManagerService.handleOrderUpdate(update),
     );
     this.subscriptions.push(orderUpdateSub);
+
+    // inventory skew pipe — react to fills by adjusting order prices
+    const skewSub = this.straddleManagerService.fillProcessed$.subscribe(({ straddle }) =>
+      this.inventorySkewService.onFill(straddle),
+    );
+    this.subscriptions.push(skewSub);
 
     // reconciliation pipe — catch up on fills missed during WebSocket disconnects
     const reconnectSub = this.userWsService.reconnected$.subscribe(() =>

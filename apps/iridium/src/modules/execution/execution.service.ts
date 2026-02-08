@@ -134,6 +134,47 @@ export class ExecutionService implements OnModuleInit {
     };
   }
 
+  // MARK: place single order
+  public async placeSingleOrder(props: {
+    conditionId: string;
+    side: 'yes' | 'no';
+    price: number;
+    quantity: number;
+  }): Promise<string> {
+    const { conditionId, side, price, quantity } = props;
+
+    if (!this.isConfigured || !this.clobClient) {
+      throw new Error('CLOB client is not configured');
+    }
+
+    const { yesTokenId, noTokenId, minimumTickSize } = this.getMarketMetadata(conditionId);
+    const tokenId = side === 'yes' ? yesTokenId : noTokenId;
+
+    this.logger.log(
+      `Placing single ${side.toUpperCase()} order on condition ${conditionId}: @ ${price} for quantity ${quantity}`,
+    );
+
+    if (this.environmentService.environment.dryRun) {
+      this.logger.debug('Dry run mode enabled - skipping single order placement');
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return `dry-run-${side}-order-id`;
+    }
+
+    const response = await this.clobClient.createAndPostOrder(
+      { tokenID: tokenId, price, side: Side.BUY, size: quantity },
+      { tickSize: minimumTickSize },
+      OrderType.GTC,
+    );
+
+    const orderId = response.orderID || response.orderId;
+    if (!response.success || !orderId) {
+      throw new Error(`Failed to place ${side.toUpperCase()} order: ${response.errorMsg ?? 'Unknown error'}`);
+    }
+
+    this.logger.log(`Successfully placed single ${side.toUpperCase()} order: ${orderId}`);
+    return orderId;
+  }
+
   // MARK: cancel order
   public async cancelOrder(orderId: string) {
     if (!this.clobClient || !this.isConfigured) {
