@@ -58,9 +58,9 @@ export class InventorySkewService {
     const tickSize = market.orderPriceMinTickSize;
 
     // Heavy side: LOWER the bid (discourage more accumulation)
-    const newHeavyPrice = this.roundDown(straddle[`${heavySide}Price`] - adjustment, tickSize);
+    const newHeavyPrice = this.roundPrice(straddle[`${heavySide}Price`] - adjustment, tickSize, 'down');
     // Light side: RAISE the bid (attract the hedge)
-    const newLightPrice = this.roundDown(straddle[`${lightSide}Price`] + adjustment, tickSize);
+    const newLightPrice = this.roundPrice(straddle[`${lightSide}Price`] + adjustment, tickSize, 'up');
 
     if (newHeavyPrice < 0.01 || newLightPrice < 0.01) {
       this.logger.debug(`Skew adjustment would push price below minimum for ${straddle.conditionId}`);
@@ -110,27 +110,56 @@ export class InventorySkewService {
 
     const oldOrderId = straddle[orderIdKey];
 
-    // 1. Cancel the old order
-    // The CANCELLATION message will be processed by handleOrderUpdate,
-    // which refunds the unfilled capital via ledgerService.credit()
-    await this.executionService.cancelOrder(oldOrderId);
+    // * 1. Calculate the 'locked' capital we are about to free up
+    // We must use the OLD price and the REMAINING quantity
+    const currentFilled = straddle[filledKey];
+    const remaining = straddle.quantity - currentFilled;
 
-    // 2. Calculate remaining quantity after fills
-    const remaining = straddle.quantity - straddle[filledKey];
     if (remaining <= 0) {
+      this.logger.debug(`Skipping skew replacement: ${side} side fully filled.`);
       return;
     }
 
-    // 3. Debit capital for the replacement order
-    const cost = newPrice * remaining;
-    if (!this.ledgerService.hasAvailableCapital(cost)) {
-      this.logger.warn(`Insufficient capital for skew replacement on ${straddle.conditionId} ${side.toUpperCase()}`);
+    const oldPrice = straddle[priceKey];
+    const capitalFreed = remaining * oldPrice;
+
+    // * 2. Calculate the NEW capital requirement
+    const capitalRequired = remaining * newPrice;
+
+    // * 3. Net Capital Check
+    // We temporarily add 'capitalFreed' to our available balance for this check
+    // If (Available + Freed) < Required, we actually don't have enough money.
+    // Note: You might need to add a method to LedgerService for this specific check
+    // or just trust the math here if LedgerService exposes raw available balance.
+    if (!this.ledgerService.hasAvailableCapital(capitalRequired - capitalFreed)) {
+      this.logger.warn(
+        `Insufficient capital for skew replacement on ${straddle.conditionId} ${side.toUpperCase()}. ` +
+          `Need: ${capitalRequired.toFixed(2)}, Freed: ${capitalFreed.toFixed(2)}`,
+      );
       return;
     }
-    this.ledgerService.debit(cost);
 
-    // 4. Place replacement at the skewed price
+    // * 4. Cancel the old order
+    // ! We act as if the cancel is successful immediately for capital purposes.
+    // If the cancel fails, we must revert this logic.
     try {
+      await this.executionService.cancelOrder(oldOrderId);
+
+      // * 5. MANUAL Ledger Adjustment (Optimistic Unlock)
+      // We credit the ledger NOW, before the WebSocket confirms the cancel.
+      // This prevents the race condition where we wait for the WS to give us money back.
+      this.ledgerService.credit(capitalFreed);
+    } catch (error) {
+      this.logger.error(`Failed to cancel order ${oldOrderId}: ${(error as Error).message}`);
+      // If cancel fails, we never credited the ledger, so no rollback needed.
+      return;
+    }
+
+    // * 6. Place replacement at the skewed price
+    try {
+      // Debit for the new order
+      this.ledgerService.debit(capitalRequired);
+
       const newOrderId = await this.executionService.placeSingleOrder({
         conditionId: straddle.conditionId,
         side,
@@ -138,20 +167,31 @@ export class InventorySkewService {
         quantity: remaining,
       });
 
-      // 5. Update bookkeeping
+      // * 7. Update bookkeeping
       this.straddleManagerService.updateOrderMapping(oldOrderId, newOrderId, straddle.conditionId);
       straddle[orderIdKey] = newOrderId;
       straddle[priceKey] = newPrice;
       straddle[statusKey] = 'OPEN';
     } catch (error) {
-      // Refund on failure — the cancel already happened so the old order is gone
-      this.ledgerService.credit(cost);
-      throw error;
+      // * 8. ROLLBACK on Placement Failure
+      // If placement fails, we have already credited 'capitalFreed' (from the cancel)
+      // and debited 'capitalRequired'. We need to refund the debit.
+      // The 'capitalFreed' stays credited because the old order IS canceled.
+      this.ledgerService.credit(capitalRequired);
+
+      this.logger.error(`Failed to place replacement order for ${straddle.conditionId}: ${(error as Error).message}`);
+
+      // Note: The straddle is now in a "broken" state (one leg canceled, no replacement).
+      // You might want to set status to 'CANCELED' here or trigger a full close.
+      straddle[statusKey] = 'CANCELED';
     }
   }
 
-  private roundDown(value: number, tickSize: TickSize): number {
+  private roundPrice(value: number, tickSize: TickSize, direction: 'up' | 'down'): number {
     const factor = 1 / parseFloat(tickSize);
+    if (direction === 'up') {
+      return Math.ceil(value * factor) / factor;
+    }
     return Math.floor(value * factor) / factor;
   }
 }

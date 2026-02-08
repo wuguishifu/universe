@@ -37,7 +37,7 @@ export const environmentSchema = z
 
     // inventory skew config
     enableInventorySkew: z.preprocess(preprocessBoolean, z.boolean()).default(true),
-    skewCentsPerShare: z.coerce.number().min(0).default(1),
+    skewCentsPerShare: z.coerce.number().min(0).default(0.1),
     maxSkewAdjustment: z.coerce.number().min(0).default(0.05),
 
     // clob config
