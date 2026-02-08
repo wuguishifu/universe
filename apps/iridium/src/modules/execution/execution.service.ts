@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ClobClient, OrderType, Side, TickSize } from '@polymarket/clob-client';
+import { ClobClient, OpenOrder, OrderType, Side, TickSize } from '@polymarket/clob-client';
 import { take } from 'rxjs';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
@@ -282,9 +282,14 @@ export class ExecutionService implements OnModuleInit {
   }
 
   // MARK: get order
-  public getOrder(orderId: string) {
+  public getOrder(orderId: string): Promise<OpenOrder | null> {
     if (!this.clobClient || !this.isConfigured) {
       throw new Error('CLOB client is not configured');
+    }
+
+    if (this.environmentService.environment.dryRun) {
+      this.logger.debug(`Dry run mode enabled - skipping retrieval of order ${orderId}`);
+      return Promise.resolve(null);
     }
 
     return this.clobClient.getOrder(orderId);

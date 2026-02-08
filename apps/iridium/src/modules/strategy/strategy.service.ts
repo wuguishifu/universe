@@ -1,24 +1,23 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { filter, map, Subscription } from 'rxjs';
 
-import { AlphaService, EntryPlan } from './components/alpha.service';
-import { InventorySkewService } from './components/inventory-skew.service';
-import { PositionService } from './components/position.service';
-import { StraddleManagerService } from './components/straddle-manager.service';
 import { EnvironmentService } from '../../environment/environment-service';
 import { MarketWsService } from '../clob/ws/market-ws.service';
 import { UserWsService } from '../clob/ws/user-ws.service';
 import { LedgerService } from '../ledger/ledger.service';
+import { AlphaService, EntryPlan } from './components/alpha.service';
+import { InventorySkewService } from './components/inventory-skew.service';
+import { PositionService } from './components/position.service';
+import { StraddleManagerService } from './components/straddle-manager.service';
 
 @Injectable()
 export class StrategyService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(StrategyService.name);
 
-  /** RxJS subscriptions to clean up on destroy */
   private readonly subscriptions: Subscription[] = [];
 
-  /** Periodic reconciliation timer */
   private reconcileInterval: NodeJS.Timeout | null = null;
+  private debugClearStrategiesInterval: NodeJS.Timeout | null = null;
 
   constructor(
     private readonly userWsService: UserWsService,
@@ -69,6 +68,13 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     const reconcileMs = this.environmentService.environment.reconcileIntervalMs;
     this.logger.debug(`Periodic reconciliation interval: ${reconcileMs}ms`);
     this.reconcileInterval = setInterval(() => this.straddleManagerService.reconcileStraddles(), reconcileMs);
+
+    if (this.environmentService.environment.debugClearStraddles) {
+      this.logger.warn('Debug mode: Clearing all straddles every 10 seconds');
+      this.debugClearStrategiesInterval = setInterval(() => {
+        this.straddleManagerService.clearAllStraddles();
+      }, 10_000);
+    }
   }
 
   async onModuleDestroy() {
@@ -84,6 +90,11 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       this.reconcileInterval = null;
     }
 
+    if (this.debugClearStrategiesInterval) {
+      clearInterval(this.debugClearStrategiesInterval);
+      this.debugClearStrategiesInterval = null;
+    }
+
     await this.straddleManagerService.destroy();
   }
 
@@ -96,7 +107,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       `Placing straddle for ${plan.conditionId} with targets YES=${plan.targetYes}, NO=${plan.targetNo}, quantity=${plan.quantity} (capital: ${requiredCapital.toFixed(4)}). Reason: ${plan.reason}`,
     );
 
-    this.positionService.setMarketInProgress(plan.conditionId);
+    this.positionService.setMarketInProgress(plan.conditionId, true);
     await this.straddleManagerService.placeStraddle(plan);
     this.positionService.setMarketInProgress(plan.conditionId, false);
   }

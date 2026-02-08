@@ -5,6 +5,9 @@ import { preprocessBoolean } from '../utils/preprocessors';
 export const environmentSchema = z
   .object({
     dryRun: z.preprocess(preprocessBoolean, z.boolean()).default(true),
+    enableVerboseEvents: z.preprocess(preprocessBoolean, z.boolean()).default(false),
+    debugClearStraddles: z.preprocess(preprocessBoolean, z.boolean()).default(false),
+
     maxHistoryRetentionMs: z.coerce.number().min(0).default(5_000),
     reconcileIntervalMs: z.coerce.number().min(5_000).default(30_000),
     reconcileLedgerSync: z.preprocess(preprocessBoolean, z.boolean()).default(true),
@@ -30,16 +33,16 @@ export const environmentSchema = z
     priceStabilityDurationMs: z.coerce.number().min(0).default(2_000),
 
     // linear regression filter (alternative to stability check)
-    enableLinearRegressionFilter: z.preprocess(preprocessBoolean, z.boolean()).default(false),
+    enableLinearRegressionFilter: z.preprocess(preprocessBoolean, z.boolean()).default(true),
     maxPriceSlopePerSec: z.coerce.number().min(0).default(0.02),
     minRegressionDataPoints: z.coerce.number().min(2).default(5),
 
     // order book imbalance filter
-    enableObiFilter: z.preprocess(preprocessBoolean, z.boolean()).default(false),
+    enableObiFilter: z.preprocess(preprocessBoolean, z.boolean()).default(true),
     minObiBidAskRatio: z.coerce.number().min(0).default(0.5),
 
     // toxic flow filter
-    enableToxicFlowFilter: z.preprocess(preprocessBoolean, z.boolean()).default(false),
+    enableToxicFlowFilter: z.preprocess(preprocessBoolean, z.boolean()).default(true),
     toxicFlowWindowMs: z.coerce.number().min(0).default(10_000),
     toxicFlowMinTrades: z.coerce.number().min(1).default(5),
     toxicFlowSellRatioThreshold: z.coerce.number().min(0).max(1).default(0.8),
@@ -68,4 +71,8 @@ export const environmentSchema = z
   .refine((data) => data.signatureType !== 1 || !!data.funderAddress, {
     message: 'funderAddress is required when signatureType is 1',
     path: ['funderAddress'],
-  });
+  })
+  .transform((data) => ({
+    ...data,
+    dryRun: data.dryRun || data.debugClearStraddles, // force dry run if debugClearStraddles is enabled
+  }));

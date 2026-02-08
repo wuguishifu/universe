@@ -3,8 +3,11 @@ import { TickSize } from '@polymarket/clob-client';
 import { Subject } from 'rxjs';
 import WebSocket from 'ws';
 
+import { OsmiumService } from '@wuguishifu/nest-common';
+
 import { WebSocketService } from './ws-service';
 import { CLOB_MARKET_WS_URL } from '../../../constants/constants';
+import { EnvironmentService } from '../../../environment/environment-service';
 import { BookMessage } from '../../../types/clob/bookMessage';
 import { LastTradePriceMessage } from '../../../types/clob/lastTradePriceMessage';
 import { Message } from '../../../types/clob/message';
@@ -60,7 +63,11 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
   private readonly tradeEventsSubject = new Subject<TradeEvent>();
   public readonly tradeEvents$ = this.tradeEventsSubject.asObservable();
 
-  constructor(private readonly cacheService: CacheService) {
+  constructor(
+    private readonly cacheService: CacheService,
+    private readonly osmiumService: OsmiumService,
+    private readonly environmentService: EnvironmentService,
+  ) {
     super(CLOB_MARKET_WS_URL);
   }
 
@@ -131,7 +138,7 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
     }
 
     this.recomputeAggregates(book);
-    this.emitMarketTick(message.market, market, state);
+    this.emitMarketTick(message.market, market, state, 'book');
   }
 
   private processPriceChange(message: PriceChangeMessage) {
@@ -156,7 +163,7 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
       this.recomputeAggregates(book);
     }
 
-    this.emitMarketTick(message.market, market, state);
+    this.emitMarketTick(message.market, market, state, 'price_change');
   }
 
   private recomputeAggregates(book: AssetOrderBook) {
@@ -180,11 +187,31 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
     book.totalAskVolume = totalAskVolume;
   }
 
-  private emitMarketTick(conditionId: string, market: Market, state: MarketState) {
+  private emitMarketTick(conditionId: string, market: Market, state: MarketState, source: 'book' | 'price_change') {
     const yesBook = state[market.yesToken];
     const noBook = state[market.noToken];
     if (!yesBook || !noBook) {
       return;
+    }
+
+    if (this.environmentService.environment.enableVerboseEvents) {
+      this.osmiumService.trackDebug({
+        name: 'book-update',
+        metadata: {
+          conditionId,
+          source,
+          bestBidYes: yesBook.bestBid,
+          bestBidNo: noBook.bestBid,
+          yesBidVolume: yesBook.totalBidVolume,
+          yesAskVolume: yesBook.totalAskVolume,
+          noBidVolume: noBook.totalBidVolume,
+          noAskVolume: noBook.totalAskVolume,
+          yesBidLevels: yesBook.bids.size,
+          yesAskLevels: yesBook.asks.size,
+          noBidLevels: noBook.bids.size,
+          noAskLevels: noBook.asks.size,
+        },
+      });
     }
 
     this.marketTickSubject.next({

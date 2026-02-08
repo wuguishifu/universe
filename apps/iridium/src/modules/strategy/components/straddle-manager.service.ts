@@ -141,7 +141,7 @@ export class StraddleManagerService {
     this.orderMap.set(newOrderId, conditionId);
   }
 
-  private cleanupStraddle(straddle: ActiveStraddle) {
+  public cleanupStraddle(straddle: ActiveStraddle) {
     this.positionService.removeStraddle(straddle.conditionId);
     this.orderMap.delete(straddle.yesOrderId);
     this.orderMap.delete(straddle.noOrderId);
@@ -335,5 +335,10 @@ export class StraddleManagerService {
         }
       }),
     );
+  }
+
+  public clearAllStraddles() {
+    this.logger.warn('Debug: Clearing all straddles...');
+    this.positionService.getStraddles().forEach((straddle) => this.cleanupStraddle(straddle));
   }
 }

@@ -60,7 +60,7 @@ export class PositionService {
     return this.marketsInProgress.has(conditionId) || this.activeStraddles.has(conditionId);
   }
 
-  public setMarketInProgress(conditionId: ConditionId, isInProgress = true) {
+  public setMarketInProgress(conditionId: ConditionId, isInProgress: boolean) {
     if (isInProgress) {
       this.marketsInProgress.add(conditionId);
     } else {

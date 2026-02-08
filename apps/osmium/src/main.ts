@@ -10,7 +10,11 @@ import { appDevLogger } from '@wuguishifu/nest-common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const fastifyAdapter = new FastifyAdapter({ ignoreTrailingSlash: true, trustProxy: true });
+  const fastifyAdapter = new FastifyAdapter({
+    ignoreTrailingSlash: true,
+    trustProxy: true,
+    bodyLimit: 10 * 1024 * 1024, // 10 MB
+  });
 
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, fastifyAdapter, { rawBody: true });
 

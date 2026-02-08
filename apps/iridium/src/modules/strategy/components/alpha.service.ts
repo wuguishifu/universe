@@ -1,6 +1,8 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { TickSize } from '@polymarket/clob-client';
 
+import { OsmiumService } from '@wuguishifu/nest-common';
+
 import { EnvironmentService } from '../../../environment/environment-service';
 import { MarketTick, TradeEvent } from '../../clob/ws/market-ws.service';
 
@@ -34,7 +36,10 @@ export class AlphaService implements OnModuleDestroy {
   private readonly tradeHistory = new Map<ConditionId, TradeHistoryEntry[]>();
   private readonly lastEvaluationTimestamp = new Map<ConditionId, number>();
 
-  constructor(private readonly environmentService: EnvironmentService) {}
+  constructor(
+    private readonly environmentService: EnvironmentService,
+    private readonly osmiumService: OsmiumService,
+  ) {}
 
   onModuleDestroy() {
     this.logger.debug('Shutting down alpha service...');
@@ -46,16 +51,32 @@ export class AlphaService implements OnModuleDestroy {
   public analyzeTick(tick: MarketTick): EntryPlan | null {
     this.recordPriceHistory(tick);
 
-    if (
-      !this.filterForTimeRemaining(tick) ||
-      !this.filterForSkew(tick) ||
-      !this.filterForStability(tick) ||
-      !this.filterForLinearRegression(tick) ||
-      !this.filterForObi(tick) ||
-      !this.filterForToxicFlow(tick) ||
-      !this.filterForThrottling(tick)
-    ) {
-      return null;
+    const filters: { name: string; fn: () => boolean }[] = [
+      { name: 'time_remaining', fn: () => this.filterForTimeRemaining(tick) },
+      { name: 'skew', fn: () => this.filterForSkew(tick) },
+      { name: 'stability', fn: () => this.filterForStability(tick) },
+      { name: 'linear_regression', fn: () => this.filterForLinearRegression(tick) },
+      { name: 'obi', fn: () => this.filterForObi(tick) },
+      { name: 'toxic_flow', fn: () => this.filterForToxicFlow(tick) },
+      { name: 'throttling', fn: () => this.filterForThrottling(tick) },
+    ];
+
+    for (const { name, fn } of filters) {
+      if (!fn()) {
+        if (this.environmentService.environment.enableVerboseEvents) {
+          this.osmiumService.trackDebug({
+            name: `filter-reject`,
+            metadata: {
+              conditionId: tick.conditionId,
+              filter: name,
+              bestBidYes: tick.bestBidYes,
+              bestBidNo: tick.bestBidNo,
+              timeRemaining: tick.timeRemaining,
+            },
+          });
+        }
+        return null;
+      }
     }
 
     this.recordEvaluation(tick.conditionId);
@@ -63,6 +84,18 @@ export class AlphaService implements OnModuleDestroy {
     const plan = this.calculateEntryPlan(tick);
     if (plan) {
       this.logger.debug(`Generated entry plan for ${tick.conditionId}: ${JSON.stringify(plan)}`);
+      if (this.environmentService.environment.enableVerboseEvents) {
+        this.osmiumService.trackDebug({
+          name: 'filter-pass-all',
+          metadata: {
+            conditionId: tick.conditionId,
+            bestBidYes: tick.bestBidYes,
+            bestBidNo: tick.bestBidNo,
+            targetYes: plan.targetYes,
+            targetNo: plan.targetNo,
+          },
+        });
+      }
     }
     return plan;
   }
@@ -212,6 +245,16 @@ export class AlphaService implements OnModuleDestroy {
 
     const history = this.priceHistory.get(tick.conditionId);
     if (!history || history.length < minRegressionDataPoints) {
+      if (this.environmentService.environment.enableVerboseEvents) {
+        this.osmiumService.trackDebug({
+          name: 'linreg-cold-start',
+          metadata: {
+            conditionId: tick.conditionId,
+            dataPoints: history?.length ?? 0,
+            required: minRegressionDataPoints,
+          },
+        });
+      }
       return false;
     }
 
@@ -225,7 +268,23 @@ export class AlphaService implements OnModuleDestroy {
     const yesSlopePerSec = Math.abs(yesSlope * 1000);
     const noSlopePerSec = Math.abs(noSlope * 1000);
 
-    if (yesSlopePerSec > maxPriceSlopePerSec || noSlopePerSec > maxPriceSlopePerSec) {
+    const passed = yesSlopePerSec <= maxPriceSlopePerSec && noSlopePerSec <= maxPriceSlopePerSec;
+
+    if (this.environmentService.environment.enableVerboseEvents) {
+      this.osmiumService.trackDebug({
+        name: 'linreg-eval',
+        metadata: {
+          conditionId: tick.conditionId,
+          yesSlopePerSec,
+          noSlopePerSec,
+          maxPriceSlopePerSec,
+          dataPoints: history.length,
+          passed,
+        },
+      });
+    }
+
+    if (!passed) {
       this.logger.debug(
         `Steep slope ${tick.conditionId}: YES=${yesSlopePerSec.toFixed(4)}/s NO=${noSlopePerSec.toFixed(4)}/s (max ${maxPriceSlopePerSec})`,
       );
@@ -282,18 +341,32 @@ export class AlphaService implements OnModuleDestroy {
       return true;
     }
 
-    // check YES side: bid volume must be >= ratio * ask volume
-    if (tick.yesAskVolume > 0 && tick.yesBidVolume / tick.yesAskVolume < minObiBidAskRatio) {
-      this.logger.debug(
-        `OBI reject ${tick.conditionId}: YES bid/ask ratio ${(tick.yesBidVolume / tick.yesAskVolume).toFixed(3)} < ${minObiBidAskRatio}`,
-      );
-      return false;
+    const yesRatio = tick.yesAskVolume > 0 ? tick.yesBidVolume / tick.yesAskVolume : Infinity;
+    const noRatio = tick.noAskVolume > 0 ? tick.noBidVolume / tick.noAskVolume : Infinity;
+    const passed = yesRatio >= minObiBidAskRatio && noRatio >= minObiBidAskRatio;
+
+    if (this.environmentService.environment.enableVerboseEvents) {
+      this.osmiumService.trackDebug({
+        name: 'obi-eval',
+        metadata: {
+          conditionId: tick.conditionId,
+          yesBidVolume: tick.yesBidVolume,
+          yesAskVolume: tick.yesAskVolume,
+          noBidVolume: tick.noBidVolume,
+          noAskVolume: tick.noAskVolume,
+          yesRatio: yesRatio === Infinity ? null : yesRatio,
+          noRatio: noRatio === Infinity ? null : noRatio,
+          minObiBidAskRatio,
+          passed,
+        },
+      });
     }
 
-    // check NO side: bid volume must be >= ratio * ask volume
-    if (tick.noAskVolume > 0 && tick.noBidVolume / tick.noAskVolume < minObiBidAskRatio) {
+    if (!passed) {
+      const rejectSide = yesRatio < minObiBidAskRatio ? 'YES' : 'NO';
+      const rejectRatio = rejectSide === 'YES' ? yesRatio : noRatio;
       this.logger.debug(
-        `OBI reject ${tick.conditionId}: NO bid/ask ratio ${(tick.noBidVolume / tick.noAskVolume).toFixed(3)} < ${minObiBidAskRatio}`,
+        `OBI reject ${tick.conditionId}: ${rejectSide} bid/ask ratio ${rejectRatio.toFixed(3)} < ${minObiBidAskRatio}`,
       );
       return false;
     }
@@ -325,7 +398,27 @@ export class AlphaService implements OnModuleDestroy {
       }
 
       const sellCount = recentTrades.filter((t) => t.side === 'SELL').length;
+      const buyCount = recentTrades.length - sellCount;
       const sellRatio = sellCount / recentTrades.length;
+
+      const side = assetId === tick.yesAssetId ? 'YES' : 'NO';
+
+      if (this.environmentService.environment.enableVerboseEvents) {
+        this.osmiumService.trackDebug({
+          name: 'toxic-flow-eval',
+          metadata: {
+            conditionId: tick.conditionId,
+            side,
+            assetId,
+            recentTradeCount: recentTrades.length,
+            sellCount,
+            buyCount,
+            sellRatio,
+            toxicFlowSellRatioThreshold,
+            toxic: sellRatio >= toxicFlowSellRatioThreshold,
+          },
+        });
+      }
 
       if (sellRatio >= toxicFlowSellRatioThreshold) {
         this.logger.debug(
