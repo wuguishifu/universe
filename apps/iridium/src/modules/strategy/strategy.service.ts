@@ -43,6 +43,10 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       .subscribe((plan) => this.execute(plan));
     this.subscriptions.push(marketTickSub);
 
+    // trade events pipe — feed trade data to alpha service for toxic flow detection
+    const tradeEventSub = this.marketWsService.tradeEvents$.subscribe((event) => this.alphaService.recordTrade(event));
+    this.subscriptions.push(tradeEventSub);
+
     // lifecycle pipe
     const orderUpdateSub = this.userWsService.orderUpdates$.subscribe((update) =>
       this.straddleManagerService.handleOrderUpdate(update),
