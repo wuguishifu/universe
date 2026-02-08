@@ -19,7 +19,6 @@ export class StraddleManagerService {
 
   public async placeStraddle(plan: EntryPlan) {
     const { conditionId, targetYes, targetNo, quantity } = plan;
-
     this.positionService.setMarketInProgress(conditionId);
     const capital = (targetYes + targetNo) * quantity;
     this.ledgerService.debit(capital);
