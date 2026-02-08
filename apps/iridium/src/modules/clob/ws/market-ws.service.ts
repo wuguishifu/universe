@@ -8,9 +8,9 @@ import { CLOB_MARKET_WS_URL } from '../../../constants/constants';
 import { BookMessage } from '../../../types/clob/bookMessage';
 import { LastTradePriceMessage } from '../../../types/clob/lastTradePriceMessage';
 import { Message } from '../../../types/clob/message';
+import { PriceChangeMessage } from '../../../types/clob/priceChangeMessage';
 import { TickSizeChangeMessage } from '../../../types/clob/tickSizeChangeMessage';
 import { Market } from '../../../types/market';
-import { parseOrderSummary } from '../../../utils/market.utils';
 import { CacheService } from '../../cache/cache.service';
 
 export type MarketTick = {
@@ -37,13 +37,17 @@ export type TradeEvent = {
   timestamp: number;
 };
 
-type AssetState = {
+type OrderBookSide = Map<string, number>; // price string → size
+
+type AssetOrderBook = {
+  bids: OrderBookSide;
+  asks: OrderBookSide;
   bestBid: number;
   totalBidVolume: number;
   totalAskVolume: number;
 };
 
-type MarketState = { [assetId: string]: AssetState };
+type MarketState = { [assetId: string]: AssetOrderBook };
 
 @Injectable()
 export class MarketWsService extends WebSocketService implements OnModuleDestroy {
@@ -81,7 +85,10 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
       messages.forEach((message) => {
         switch (message.event_type) {
           case 'book':
-            this.processBookUpdate(message);
+            this.processBookSnapshot(message);
+            break;
+          case 'price_change':
+            this.processPriceChange(message);
             break;
           case 'tick_size_change':
             this.processTickSizeChange(message);
@@ -96,42 +103,117 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
     }
   }
 
-  private processBookUpdate(message: BookMessage) {
+  private processBookSnapshot(message: BookMessage) {
     const market = this.cacheService.markets.get(message.market);
     if (!market) {
       this.logger.warn(`Received book update for unknown market: ${message.market}`);
       return;
     }
 
-    const parsedBids = message.bids.map(parseOrderSummary);
-    const parsedAsks = message.asks.map(parseOrderSummary);
+    const state = this.getMarketState(message.market);
+    const book = this.getOrInitBook(state, message.asset_id);
 
-    const bestBid = parsedBids.length > 0 ? parsedBids.sort((a, b) => b[0] - a[0])[0][0] : 0;
-    const totalBidVolume = parsedBids.reduce((sum, [, size]) => sum + size, 0);
-    const totalAskVolume = parsedAsks.reduce((sum, [, size]) => sum + size, 0);
+    // full snapshot — clear and replace
+    book.bids.clear();
+    book.asks.clear();
+
+    for (const level of message.bids) {
+      const size = parseFloat(level.size);
+      if (size > 0) {
+        book.bids.set(level.price, size);
+      }
+    }
+    for (const level of message.asks) {
+      const size = parseFloat(level.size);
+      if (size > 0) {
+        book.asks.set(level.price, size);
+      }
+    }
+
+    this.recomputeAggregates(book);
+    this.emitMarketTick(message.market, market, state);
+  }
+
+  private processPriceChange(message: PriceChangeMessage) {
+    const market = this.cacheService.markets.get(message.market);
+    if (!market) {
+      return;
+    }
 
     const state = this.getMarketState(message.market);
-    state[message.asset_id] = { bestBid, totalBidVolume, totalAskVolume };
-    const assetIds = Object.keys(state);
 
-    if (assetIds.length === 2) {
-      const yesState = state[market.yesToken];
-      const noState = state[market.noToken];
-      this.marketTickSubject.next({
-        conditionId: message.market,
-        yesAssetId: market.yesToken,
-        noAssetId: market.noToken,
-        bestBidYes: yesState.bestBid,
-        bestBidNo: noState.bestBid,
-        timestamp: parseInt(message.timestamp),
-        timeRemaining: market.endDate.getTime() - Date.now(),
-        minTickSize: market.orderPriceMinTickSize,
-        yesBidVolume: yesState.totalBidVolume,
-        yesAskVolume: yesState.totalAskVolume,
-        noBidVolume: noState.totalBidVolume,
-        noAskVolume: noState.totalAskVolume,
-      });
+    for (const change of message.price_changes) {
+      const book = this.getOrInitBook(state, change.asset_id);
+      const sideMap = change.side === 'BUY' ? book.bids : book.asks;
+      const newSize = parseFloat(change.size);
+
+      if (newSize === 0) {
+        sideMap.delete(change.price);
+      } else {
+        sideMap.set(change.price, newSize);
+      }
+
+      this.recomputeAggregates(book);
     }
+
+    this.emitMarketTick(message.market, market, state);
+  }
+
+  private recomputeAggregates(book: AssetOrderBook) {
+    let bestBid = 0;
+    let totalBidVolume = 0;
+    book.bids.forEach((size, priceStr) => {
+      totalBidVolume += size;
+      const price = parseFloat(priceStr);
+      if (price > bestBid) {
+        bestBid = price;
+      }
+    });
+
+    let totalAskVolume = 0;
+    book.asks.forEach((size) => {
+      totalAskVolume += size;
+    });
+
+    book.bestBid = bestBid;
+    book.totalBidVolume = totalBidVolume;
+    book.totalAskVolume = totalAskVolume;
+  }
+
+  private emitMarketTick(conditionId: string, market: Market, state: MarketState) {
+    const yesBook = state[market.yesToken];
+    const noBook = state[market.noToken];
+    if (!yesBook || !noBook) {
+      return;
+    }
+
+    this.marketTickSubject.next({
+      conditionId,
+      yesAssetId: market.yesToken,
+      noAssetId: market.noToken,
+      bestBidYes: yesBook.bestBid,
+      bestBidNo: noBook.bestBid,
+      timestamp: Date.now(),
+      timeRemaining: market.endDate.getTime() - Date.now(),
+      minTickSize: market.orderPriceMinTickSize,
+      yesBidVolume: yesBook.totalBidVolume,
+      yesAskVolume: yesBook.totalAskVolume,
+      noBidVolume: noBook.totalBidVolume,
+      noAskVolume: noBook.totalAskVolume,
+    });
+  }
+
+  private getOrInitBook(state: MarketState, assetId: string): AssetOrderBook {
+    if (!state[assetId]) {
+      state[assetId] = {
+        bids: new Map(),
+        asks: new Map(),
+        bestBid: 0,
+        totalBidVolume: 0,
+        totalAskVolume: 0,
+      };
+    }
+    return state[assetId];
   }
 
   private processTickSizeChange(message: TickSizeChangeMessage) {
