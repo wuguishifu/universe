@@ -110,7 +110,7 @@ export class AlphaService implements OnModuleDestroy {
     history.push({
       yesPrice: tick.bestBidYes,
       noPrice: tick.bestBidNo,
-      timestamp: Date.now(),
+      timestamp: tick.timestamp,
     });
 
     const cutoffTime = tick.timestamp - this.environmentService.environment.maxHistoryRetentionMs;

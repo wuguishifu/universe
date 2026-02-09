@@ -38,6 +38,16 @@ export class StraddleManagerService {
 
     try {
       this.ledgerService.debit(capital);
+    } catch (error) {
+      this.logger.error(`Failed to debit ledger for straddle on ${conditionId}: ${(error as Error).message}`);
+      this.osmiumService.trackEvent({
+        name: 'straddle-place-failed',
+        metadata: { conditionId, reason: (error as Error).message },
+      });
+      return;
+    }
+
+    try {
       const { yesOrderId, noOrderId } = await this.executionService.placeLimitOrder(plan);
       this.orderMap.set(yesOrderId, conditionId);
       this.orderMap.set(noOrderId, conditionId);

@@ -53,6 +53,7 @@ export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
     const activeMarkets = Array.from(this.cacheService.markets.values());
     this.marketWsService.syncSubscriptions(activeMarkets);
 
+    // ! In the future this may be a huge object, but for now since we only use 4 markets it's okay for now.
     this.osmiumService.trackEvent({
       name: 'discovery_service-markets-refreshed',
       metadata: { markets },
