@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { OpenOrder } from '@polymarket/clob-client';
 import debounce from 'lodash.debounce';
 import { Subject } from 'rxjs';
@@ -13,7 +13,7 @@ import { ExecutionService } from '../../execution/execution.service';
 import { LedgerService } from '../../ledger/ledger.service';
 
 @Injectable()
-export class StraddleManagerService {
+export class StraddleManagerService implements OnModuleInit {
   private readonly logger = new Logger(StraddleManagerService.name);
 
   private readonly orderMap = new Map<string, string>();
@@ -23,6 +23,8 @@ export class StraddleManagerService {
   }>();
   public readonly fillProcessed$ = this.fillProcessedSubject.asObservable();
 
+  public attemptMerge: ReturnType<typeof debounce<(straddle: ActiveStraddle) => Promise<void>>> | null = null;
+
   constructor(
     private readonly positionService: PositionService,
     private readonly executionService: ExecutionService,
@@ -31,6 +33,50 @@ export class StraddleManagerService {
     private readonly alphaService: AlphaService,
     private readonly osmiumService: OsmiumService,
   ) {}
+
+  onModuleInit() {
+    this.attemptMerge = debounce(async (straddle: ActiveStraddle) => {
+      if (straddle.mergeInProgress) {
+        return;
+      }
+
+      const match = Math.min(straddle.yesHoldings, straddle.noHoldings);
+      if (match <= 0) {
+        return;
+      }
+
+      straddle.mergeInProgress = true;
+      straddle.yesHoldings -= match;
+      straddle.noHoldings -= match;
+
+      this.logger.log(`Merging ${match} positions on condition ${straddle.conditionId}`);
+      try {
+        await this.executionService.mergePositions({ conditionId: straddle.conditionId, amount: match });
+        this.ledgerService.credit(match * 1.0);
+        this.osmiumService.trackEvent({
+          name: 'straddle-merge',
+          metadata: {
+            conditionId: straddle.conditionId,
+            amount: match,
+            yesHoldingsAfter: straddle.yesHoldings,
+            noHoldingsAfter: straddle.noHoldings,
+            profit: match * (1.0 - straddle.yesPrice - straddle.noPrice),
+          },
+        });
+      } catch (error) {
+        this.logger.error(`Failed to merge positions on ${straddle.conditionId}: ${(error as Error).message}`);
+        straddle.yesHoldings += match;
+        straddle.noHoldings += match;
+        this.osmiumService.trackEvent({
+          name: 'straddle-merge-failed',
+          metadata: { conditionId: straddle.conditionId, amount: match, reason: (error as Error).message },
+        });
+      } finally {
+        straddle.mergeInProgress = false;
+      }
+      this.checkCompletion(straddle);
+    }, this.environmentService.environment.mergeDebounceMs);
+  }
 
   public async placeStraddle(plan: EntryPlan) {
     const { conditionId, targetYes, targetNo, quantity } = plan;
@@ -127,7 +173,7 @@ export class StraddleManagerService {
     const originalSize = parseFloat(update.original_size);
     if (update.type === 'CANCELLATION') {
       straddle[`${legPrefix}Status`] = 'CANCELED';
-      const unfilled = straddle.quantity - newMatched;
+      const unfilled = originalSize - newMatched;
       if (unfilled > 0) {
         this.ledgerService.credit(straddle[`${legPrefix}Price`] * unfilled);
       }
@@ -136,7 +182,7 @@ export class StraddleManagerService {
     }
 
     // Trigger Side Effects
-    this.attemptMerge(straddle);
+    this.attemptMerge?.(straddle);
     this.checkCompletion(straddle);
   }
 
@@ -146,48 +192,6 @@ export class StraddleManagerService {
       this.cleanupStraddle(straddle);
     }
   }
-
-  public attemptMerge = debounce(async (straddle: ActiveStraddle) => {
-    if (straddle.mergeInProgress) {
-      return;
-    }
-
-    const match = Math.min(straddle.yesHoldings, straddle.noHoldings);
-    if (match <= 0) {
-      return;
-    }
-
-    straddle.mergeInProgress = true;
-    straddle.yesHoldings -= match;
-    straddle.noHoldings -= match;
-
-    this.logger.log(`Merging ${match} positions on condition ${straddle.conditionId}`);
-    try {
-      await this.executionService.mergePositions({ conditionId: straddle.conditionId, amount: match });
-      this.ledgerService.credit(match * 1.0);
-      this.osmiumService.trackEvent({
-        name: 'straddle-merge',
-        metadata: {
-          conditionId: straddle.conditionId,
-          amount: match,
-          yesHoldingsAfter: straddle.yesHoldings,
-          noHoldingsAfter: straddle.noHoldings,
-          profit: match * (1.0 - straddle.yesPrice - straddle.noPrice),
-        },
-      });
-    } catch (error) {
-      this.logger.error(`Failed to merge positions on ${straddle.conditionId}: ${(error as Error).message}`);
-      straddle.yesHoldings += match;
-      straddle.noHoldings += match;
-      this.osmiumService.trackEvent({
-        name: 'straddle-merge-failed',
-        metadata: { conditionId: straddle.conditionId, amount: match, reason: (error as Error).message },
-      });
-    } finally {
-      straddle.mergeInProgress = false;
-    }
-    this.checkCompletion(straddle);
-  }, this.environmentService.environment.mergeDebounceMs);
 
   public updateOrderMapping(oldOrderId: string, newOrderId: string, conditionId: string) {
     this.orderMap.delete(oldOrderId);
@@ -229,7 +233,7 @@ export class StraddleManagerService {
       this.positionService.getStraddles().map(async (straddle) => {
         const hasChanged = await this.reconcileSingleStraddle(straddle);
         if (hasChanged) {
-          this.attemptMerge(straddle);
+          this.attemptMerge?.(straddle);
           if (this.isStraddleComplete(straddle)) {
             staleStraddles.push(straddle);
           }
