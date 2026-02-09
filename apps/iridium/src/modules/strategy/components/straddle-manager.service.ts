@@ -364,14 +364,14 @@ export class StraddleManagerService {
         const promises: Promise<void>[] = [];
         if (straddle.yesStatus === 'OPEN') {
           promises.push(
-            this.executionService.cancelOrder(straddle.yesOrderId).catch((err) => {
+            this.executionService.cancelOrder(straddle.yesOrderId, straddle.conditionId).catch((err) => {
               this.logger.error(`Failed to cancel YES order ${straddle.yesOrderId}: ${(err as Error).message}`);
             }),
           );
         }
         if (straddle.noStatus === 'OPEN') {
           promises.push(
-            this.executionService.cancelOrder(straddle.noOrderId).catch((err) => {
+            this.executionService.cancelOrder(straddle.noOrderId, straddle.conditionId).catch((err) => {
               this.logger.error(`Failed to cancel NO order ${straddle.noOrderId}: ${(err as Error).message}`);
             }),
           );

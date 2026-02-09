@@ -167,7 +167,7 @@ export class InventorySkewService {
     // ! We act as if the cancel is successful immediately for capital purposes.
     // If the cancel fails, we must revert this logic.
     try {
-      await this.executionService.cancelOrder(oldOrderId);
+      await this.executionService.cancelOrder(oldOrderId, straddle.conditionId);
 
       // * 5. MANUAL Ledger Adjustment (Optimistic Unlock)
       // We credit the ledger NOW, before the WebSocket confirms the cancel.

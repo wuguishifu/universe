@@ -176,12 +176,12 @@ export class ExecutionService implements OnModuleInit {
   }
 
   // MARK: cancel order
-  public async cancelOrder(orderId: string) {
+  public async cancelOrder(orderId: string, conditionId?: string) {
     if (!this.clobClient || !this.isConfigured) {
       throw new Error('CLOB client is not configured');
     }
 
-    const trackingProps = { orderId, dryRun: this.environmentService.environment.dryRun };
+    const trackingProps = { orderId, conditionId, dryRun: this.environmentService.environment.dryRun };
 
     this.osmiumService.trackEvent({ name: 'execution_service-order-cancel-started', metadata: trackingProps });
     if (this.environmentService.environment.dryRun) {
@@ -256,7 +256,7 @@ export class ExecutionService implements OnModuleInit {
             { tickSize: minimumTickSize },
             type,
           )
-          .then((res) => this.logSellResult(res, 'YES')),
+          .then((res) => this.logSellResult(res, 'YES', conditionId)),
       );
     }
 
@@ -268,7 +268,7 @@ export class ExecutionService implements OnModuleInit {
             { tickSize: minimumTickSize },
             type,
           )
-          .then((res) => this.logSellResult(res, 'NO')),
+          .then((res) => this.logSellResult(res, 'NO', conditionId)),
       );
     }
 
@@ -296,18 +296,22 @@ export class ExecutionService implements OnModuleInit {
   }
 
   // #region helper methods
-  private logSellResult(response: Awaited<ReturnType<typeof ClobClient.prototype.createAndPostOrder>>, side: string) {
+  private logSellResult(
+    response: Awaited<ReturnType<typeof ClobClient.prototype.createAndPostOrder>>,
+    side: string,
+    conditionId: string,
+  ) {
     if (response.success) {
       this.logger.log(`Panic Sell ${side} Success: Order ${response.orderID}`);
       this.osmiumService.trackEvent({
         name: 'execution_service-panic_sell-success',
-        metadata: { side, orderId: response.orderID || response.orderId },
+        metadata: { conditionId, side, orderId: response.orderID || response.orderId },
       });
     } else {
       this.logger.error(`Panic Sell ${side} Failed: ${response.errorMsg}`);
       this.osmiumService.trackEvent({
         name: 'execution_service-panic_sell-failed',
-        metadata: { side, reason: response.errorMsg },
+        metadata: { conditionId, side, reason: response.errorMsg },
       });
     }
   }
