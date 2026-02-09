@@ -5,6 +5,9 @@ import { preprocessBoolean } from '../utils/preprocessors';
 export const environmentSchema = z
   .object({
     dryRun: z.preprocess(preprocessBoolean, z.boolean()).default(true),
+    enableVerboseEvents: z.preprocess(preprocessBoolean, z.boolean()).default(false),
+    debugClearStraddles: z.preprocess(preprocessBoolean, z.boolean()).default(false),
+
     maxHistoryRetentionMs: z.coerce.number().min(0).default(5_000),
     reconcileIntervalMs: z.coerce.number().min(5_000).default(30_000),
     reconcileLedgerSync: z.preprocess(preprocessBoolean, z.boolean()).default(true),
@@ -29,16 +32,35 @@ export const environmentSchema = z
     priceStabilityRangeCents: z.coerce.number().min(0).default(3),
     priceStabilityDurationMs: z.coerce.number().min(0).default(2_000),
 
+    // linear regression filter (alternative to stability check)
+    enableLinearRegressionFilter: z.preprocess(preprocessBoolean, z.boolean()).default(true),
+    maxPriceSlopePerSec: z.coerce.number().min(0).default(0.02),
+    minRegressionDataPoints: z.coerce.number().min(2).default(5),
+
+    // order book imbalance filter
+    enableObiFilter: z.preprocess(preprocessBoolean, z.boolean()).default(true),
+    minObiBidAskRatio: z.coerce.number().min(0).default(0.5),
+
+    // toxic flow filter
+    enableToxicFlowFilter: z.preprocess(preprocessBoolean, z.boolean()).default(true),
+    toxicFlowWindowMs: z.coerce.number().min(0).default(10_000),
+    toxicFlowMinTrades: z.coerce.number().min(1).default(5),
+    toxicFlowSellRatioThreshold: z.coerce.number().min(0).max(1).default(0.8),
+
+    // fill gap cap — prevents one-legged fills from asymmetric momentum
+    enableFillGapCap: z.preprocess(preprocessBoolean, z.boolean()).default(true),
+    maxAskDistance: z.coerce.number().min(0).default(0.03),
+
     // momentum config
     enableMomentumDiscounting: z.preprocess(preprocessBoolean, z.boolean()).default(true),
     velocityFactor: z.coerce.number().min(0).default(0.8),
     accelerationFactor: z.coerce.number().min(0).default(0.4),
     maxDiscount: z.coerce.number().min(0).default(0.05),
 
-    // stop loss config
-    panicPriceDropThreshold: z.coerce.number().min(0).max(1).default(0.05),
-    panicSustainedDropMs: z.coerce.number().min(0).default(30_000),
-    panicAbsoluteTimeoutMs: z.coerce.number().min(0).default(300_000),
+    // inventory skew config
+    enableInventorySkew: z.preprocess(preprocessBoolean, z.boolean()).default(true),
+    skewCentsPerShare: z.coerce.number().min(0).default(0.1),
+    maxSkewAdjustment: z.coerce.number().min(0).default(0.05),
 
     // clob config
     privateKey: z.string().min(1, { message: 'private key required' }),
@@ -53,4 +75,8 @@ export const environmentSchema = z
   .refine((data) => data.signatureType !== 1 || !!data.funderAddress, {
     message: 'funderAddress is required when signatureType is 1',
     path: ['funderAddress'],
-  });
+  })
+  .transform((data) => ({
+    ...data,
+    dryRun: data.dryRun || data.debugClearStraddles, // force dry run if debugClearStraddles is enabled
+  }));

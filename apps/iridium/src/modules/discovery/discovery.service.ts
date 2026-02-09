@@ -1,8 +1,10 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 
+import { OsmiumService } from '@wuguishifu/nest-common';
+
 import { MarketAdapter } from './market-adapters/adapter';
 import { CryptoAdapter } from './market-adapters/crypto.adapter';
-import { Market } from '../../types/market';
+import { EnvironmentService } from '../../environment/environment-service';
 import { getTimeRemainingMs } from '../../utils/market.utils';
 import { CacheService } from '../cache/cache.service';
 import { MarketWsService } from '../clob/ws/market-ws.service';
@@ -12,57 +14,78 @@ export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DiscoveryService.name);
   private readonly marketAdapter: MarketAdapter;
 
-  private refreshInterval: NodeJS.Timeout | null = null;
+  private hourlyRefreshTimeout: NodeJS.Timeout | null = null;
 
   constructor(
     private readonly marketWsService: MarketWsService,
     private readonly cacheService: CacheService,
+    private readonly environmentService: EnvironmentService,
+    private readonly osmiumService: OsmiumService,
   ) {
     this.marketAdapter = new CryptoAdapter();
   }
 
   public async onModuleInit() {
     await this.refreshMarkets();
-    this.refreshInterval = setInterval(
-      async () => {
-        try {
-          await this.refreshMarkets();
-        } catch (error) {
-          this.logger.error(`Failed to refresh markets: ${error}`);
-        }
-        this.cleanStaleMarkets();
-      },
-      5 * 60 * 1000,
-    );
+    this.scheduleHourlyRefresh();
   }
 
   public onModuleDestroy() {
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-      this.refreshInterval = null;
+    if (this.hourlyRefreshTimeout) {
+      clearTimeout(this.hourlyRefreshTimeout);
+      this.hourlyRefreshTimeout = null;
     }
   }
 
   public async refreshMarkets() {
     const markets = await this.marketAdapter.fetchMarkets();
+
     markets.forEach((market) => this.cacheService.markets.set(market.conditionId, market));
-
-    this.marketWsService.subscribe(markets);
-    this.logger.debug(`Refreshed ${markets.length} markets in discovery cache`);
-  }
-
-  private cleanStaleMarkets() {
     const now = Date.now();
-    const cleared: Market[] = [];
+    let staleCount = 0;
     for (const [key, market] of this.cacheService.markets.entries()) {
-      const timeRemaining = getTimeRemainingMs(market, now);
-      if (timeRemaining <= 0) {
+      if (getTimeRemainingMs(market, now) <= 0) {
         this.cacheService.markets.delete(key);
-        cleared.push(market);
+        staleCount++;
       }
     }
 
-    this.marketWsService.unsubscribe(cleared);
-    this.logger.debug(`Cleaned up ${cleared.length} stale markets from discovery cache`);
+    const activeMarkets = Array.from(this.cacheService.markets.values());
+    this.marketWsService.syncSubscriptions(activeMarkets);
+
+    // ! In the future this may be a huge object, but for now since we only use 4 markets it's okay for now.
+    this.osmiumService.trackEvent({
+      name: 'discovery_service-markets-refreshed',
+      metadata: { markets },
+    });
+    this.logger.debug(
+      `Refreshed markets: ${markets.length} fetched, ${staleCount} expired, ${activeMarkets.length} active`,
+    );
+  }
+
+  private scheduleHourlyRefresh() {
+    const now = Date.now();
+    const nextHour = Math.ceil(now / (60 * 60 * 1000)) * (60 * 60 * 1000);
+    const msUntilNextHour = nextHour - now + 1000; // 1s buffer for market data to settle
+
+    this.logger.debug(`Next hourly refresh scheduled in ${Math.round(msUntilNextHour / 1000)}s`);
+    if (this.environmentService.environment.enableVerboseEvents) {
+      this.osmiumService.trackDebug({
+        name: 'discovery_service-hourly_refresh-schedule',
+        metadata: {
+          msUntilNextHour,
+          timestamp: new Date(nextHour).toISOString(),
+        },
+      });
+    }
+
+    this.hourlyRefreshTimeout = setTimeout(async () => {
+      try {
+        await this.refreshMarkets();
+      } catch (error) {
+        this.logger.error(`Failed hourly market refresh: ${error}`);
+      }
+      this.scheduleHourlyRefresh();
+    }, msUntilNextHour);
   }
 }

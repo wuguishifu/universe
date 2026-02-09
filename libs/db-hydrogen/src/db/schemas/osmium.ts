@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { index, jsonb, pgSchema, serial, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const osmiumPgSchema = pgSchema('osmium');
@@ -11,7 +12,10 @@ export const events = osmiumPgSchema.table(
     source: text('source').notNull(),
     metadata: jsonb('metadata').notNull(),
   },
-  (table) => [index('osmium_events_name_created_at_idx').on(table.name, table.createdAt)],
+  (table) => [
+    index('osmium_events_name_created_at_idx').on(table.name, table.createdAt),
+    index('osmium_events_condition_id_idx').on(sql`(${table.metadata}->>'conditionId')`),
+  ],
 );
 
 export const osmiumSchema = {

@@ -37,11 +37,14 @@ export class LedgerService implements OnModuleInit {
   }
 
   public debit(amount: number): void {
+    if (!this.hasAvailableCapital(amount)) {
+      this.logger.warn(`Attempted to debit ${amount} USDC, but only ${this.availableBalance} USDC is available.`);
+      throw new Error(
+        `Insufficient available balance. Attempted to debit ${amount}, but only ${this.availableBalance} is available.`,
+      );
+    }
     this.availableBalance -= amount;
     this.logger.debug(`Debit ${amount.toFixed(4)} USDC. Available: ${this.availableBalance.toFixed(4)}`);
-    if (this.availableBalance < 0) {
-      this.logger.warn(`Ghost balance went negative: ${this.availableBalance.toFixed(4)}`);
-    }
   }
 
   public credit(amount: number): void {
