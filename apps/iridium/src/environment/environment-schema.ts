@@ -47,6 +47,10 @@ export const environmentSchema = z
     toxicFlowMinTrades: z.coerce.number().min(1).default(5),
     toxicFlowSellRatioThreshold: z.coerce.number().min(0).max(1).default(0.8),
 
+    // fill gap cap — prevents one-legged fills from asymmetric momentum
+    enableFillGapCap: z.preprocess(preprocessBoolean, z.boolean()).default(true),
+    maxAskDistance: z.coerce.number().min(0).default(0.03),
+
     // momentum config
     enableMomentumDiscounting: z.preprocess(preprocessBoolean, z.boolean()).default(true),
     velocityFactor: z.coerce.number().min(0).default(0.8),

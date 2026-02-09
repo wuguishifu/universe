@@ -561,11 +561,20 @@ export class AlphaService implements OnModuleDestroy {
       targetNo = Math.min(targetNo + kinematics.noAdj, tick.bestBidNo);
     }
 
-    // C. Rounding (Polymarket Requirement)
+    // C. Fill Gap Cap — prevent one-legged fills from asymmetric momentum
+    // Clamp each target so it's never more than maxAskDistance below the best ask.
+    if (tick.bestAskYes > 0 && config.enableFillGapCap) {
+      targetYes = Math.max(targetYes, tick.bestAskYes - config.maxAskDistance);
+    }
+    if (tick.bestAskNo > 0 && config.enableFillGapCap) {
+      targetNo = Math.max(targetNo, tick.bestAskNo - config.maxAskDistance);
+    }
+
+    // D. Rounding (Polymarket Requirement)
     targetYes = this.roundDown(targetYes, tick.minTickSize);
     targetNo = this.roundDown(targetNo, tick.minTickSize);
 
-    // D. Sanity Checks
+    // E. Sanity Checks
     // 1. Must be positive
     if (targetYes <= 0 || targetNo <= 0) {
       return null;
