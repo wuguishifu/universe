@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { TickSize } from '@polymarket/clob-client';
 
+import { OsmiumService } from '@wuguishifu/nest-common';
+
 import { ActiveStraddle } from './position.service';
 import { StraddleManagerService } from './straddle-manager.service';
 import { EnvironmentService } from '../../../environment/environment-service';
@@ -18,6 +20,7 @@ export class InventorySkewService {
     private readonly straddleManagerService: StraddleManagerService,
     private readonly environmentService: EnvironmentService,
     private readonly cacheService: CacheService,
+    private readonly osmiumService: OsmiumService,
   ) {}
 
   public async onFill(straddle: ActiveStraddle) {
@@ -81,6 +84,23 @@ export class InventorySkewService {
 
     straddle.skewInProgress = true;
 
+    this.osmiumService.trackEvent({
+      name: 'skew-adjustment',
+      metadata: {
+        conditionId: straddle.conditionId,
+        heavySide,
+        lightSide,
+        imbalance,
+        adjustment,
+        oldHeavyPrice: straddle[`${heavySide}Price`],
+        newHeavyPrice,
+        oldLightPrice: straddle[`${lightSide}Price`],
+        newLightPrice,
+        yesHoldings: straddle.yesHoldings,
+        noHoldings: straddle.noHoldings,
+      },
+    });
+
     this.logger.log(
       `Skewing ${straddle.conditionId}: imbalance=${imbalance.toFixed(2)} (${heavySide} heavy). ` +
         `${heavySide.toUpperCase()} ${straddle[`${heavySide}Price`]}→${newHeavyPrice}, ` +
@@ -97,6 +117,10 @@ export class InventorySkewService {
       }
     } catch (error) {
       this.logger.error(`Skew adjustment failed on ${straddle.conditionId}: ${(error as Error).message}`);
+      this.osmiumService.trackEvent({
+        name: 'skew-adjustment-failed',
+        metadata: { conditionId: straddle.conditionId, reason: (error as Error).message },
+      });
     } finally {
       straddle.skewInProgress = false;
     }

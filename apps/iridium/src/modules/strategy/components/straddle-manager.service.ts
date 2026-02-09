@@ -3,6 +3,8 @@ import { OpenOrder } from '@polymarket/clob-client';
 import debounce from 'lodash.debounce';
 import { Subject } from 'rxjs';
 
+import { OsmiumService } from '@wuguishifu/nest-common';
+
 import { AlphaService, EntryPlan } from './alpha.service';
 import { ActiveStraddle, PositionService } from './position.service';
 import { EnvironmentService } from '../../../environment/environment-service';
@@ -27,6 +29,7 @@ export class StraddleManagerService {
     private readonly ledgerService: LedgerService,
     private readonly environmentService: EnvironmentService,
     private readonly alphaService: AlphaService,
+    private readonly osmiumService: OsmiumService,
   ) {}
 
   public async placeStraddle(plan: EntryPlan) {
@@ -54,9 +57,17 @@ export class StraddleManagerService {
         mergeInProgress: false,
         skewInProgress: false,
       });
+      this.osmiumService.trackEvent({
+        name: 'straddle-placed',
+        metadata: { conditionId, yesOrderId, noOrderId, yesPrice: targetYes, noPrice: targetNo, quantity, capital },
+      });
     } catch (error) {
       this.logger.error(`Failed to place limit order on ${conditionId}: ${(error as Error).message}`);
       this.ledgerService.credit(capital);
+      this.osmiumService.trackEvent({
+        name: 'straddle-place-failed',
+        metadata: { conditionId, reason: (error as Error).message },
+      });
     }
   }
 
@@ -82,6 +93,24 @@ export class StraddleManagerService {
     straddle[`${legPrefix}CumulativeFilled`] = newMatched;
     if (delta > 0) {
       straddle[`${legPrefix}Holdings`] += delta;
+      const otherSide = isYes ? 'no' : 'yes';
+      this.osmiumService.trackEvent({
+        name: 'straddle-fill',
+        metadata: {
+          conditionId,
+          side: legPrefix,
+          delta,
+          cumulativeFilled: newMatched,
+          holdings: straddle[`${legPrefix}Holdings`],
+          price: straddle[`${legPrefix}Price`],
+          otherSideFilled: straddle[`${otherSide}CumulativeFilled`],
+          otherSideHoldings: straddle[`${otherSide}Holdings`],
+          otherSideStatus: straddle[`${otherSide}Status`],
+          yesStatus: straddle.yesStatus,
+          noStatus: straddle.noStatus,
+          quantity: straddle.quantity,
+        },
+      });
       this.fillProcessedSubject.next({ straddle });
     }
 
@@ -126,10 +155,24 @@ export class StraddleManagerService {
     try {
       await this.executionService.mergePositions({ conditionId: straddle.conditionId, amount: match });
       this.ledgerService.credit(match * 1.0);
+      this.osmiumService.trackEvent({
+        name: 'straddle-merge',
+        metadata: {
+          conditionId: straddle.conditionId,
+          amount: match,
+          yesHoldingsAfter: straddle.yesHoldings,
+          noHoldingsAfter: straddle.noHoldings,
+          profit: match * (1.0 - straddle.yesPrice - straddle.noPrice),
+        },
+      });
     } catch (error) {
       this.logger.error(`Failed to merge positions on ${straddle.conditionId}: ${(error as Error).message}`);
       straddle.yesHoldings += match;
       straddle.noHoldings += match;
+      this.osmiumService.trackEvent({
+        name: 'straddle-merge-failed',
+        metadata: { conditionId: straddle.conditionId, amount: match, reason: (error as Error).message },
+      });
     } finally {
       straddle.mergeInProgress = false;
     }
@@ -142,6 +185,22 @@ export class StraddleManagerService {
   }
 
   public cleanupStraddle(straddle: ActiveStraddle) {
+    this.osmiumService.trackEvent({
+      name: 'straddle-complete',
+      metadata: {
+        conditionId: straddle.conditionId,
+        yesStatus: straddle.yesStatus,
+        noStatus: straddle.noStatus,
+        yesPrice: straddle.yesPrice,
+        noPrice: straddle.noPrice,
+        quantity: straddle.quantity,
+        yesCumulativeFilled: straddle.yesCumulativeFilled,
+        noCumulativeFilled: straddle.noCumulativeFilled,
+        yesHoldings: straddle.yesHoldings,
+        noHoldings: straddle.noHoldings,
+        totalCost: straddle.yesPrice + straddle.noPrice,
+      },
+    });
     this.positionService.removeStraddle(straddle.conditionId);
     this.orderMap.delete(straddle.yesOrderId);
     this.orderMap.delete(straddle.noOrderId);
@@ -208,6 +267,16 @@ export class StraddleManagerService {
       );
       straddle[filledKey] = apiMatched;
       straddle[holdingsKey] += delta;
+      this.osmiumService.trackEvent({
+        name: 'straddle-reconcile-drift',
+        metadata: {
+          conditionId: straddle.conditionId,
+          side,
+          delta,
+          newCumulativeFilled: apiMatched,
+          holdings: straddle[holdingsKey],
+        },
+      });
     }
 
     if (apiOrder.status === 'MATCHED') {
