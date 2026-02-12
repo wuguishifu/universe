@@ -99,7 +99,8 @@ export class MergeService implements OnModuleInit, OnModuleDestroy {
               amount: mergeable,
             });
 
-            this.ledgerService.credit(mergeable * 1.0);
+            // 1 unit of merged position is worth 1 USDC in the ledger
+            this.ledgerService.credit(mergeable);
 
             const straddle = this.positionService.getStraddle(market.conditionId);
             if (straddle) {
