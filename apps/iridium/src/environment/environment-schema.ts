@@ -10,12 +10,12 @@ export const environmentSchema = z
 
     maxHistoryRetentionMs: z.coerce.number().min(0).default(5_000),
     reconcileIntervalMs: z.coerce.number().min(5_000).default(30_000),
-    ledgerSyncIntervalMs: z.coerce.number().min(5_000).default(30_000),
+    ledgerSyncIntervalMs: z.coerce.number().min(5_000).default(10_000),
 
     // strategy config
     targetEntry: z.coerce.number().min(0).max(1).default(0.97),
     targetPositionSize: z.coerce.number().min(0).default(10),
-    maxAllocationRatio: z.coerce.number().min(0).max(1).default(1.0),
+    maxAllocationRatio: z.coerce.number().min(0).max(1).default(0.8),
     mergeIntervalMs: z.coerce.number().min(5_000).default(30_000),
 
     // time filtering config

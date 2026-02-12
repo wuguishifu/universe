@@ -10,49 +10,69 @@ services:
       ENVIRONMENT: development
       DRY_RUN: true
       DEBUG_LOGGING: true
+      ENABLE_VERBOSE_EVENTS: true
+      DEBUG_CLEAR_STRATEGIES: false
+
       MAX_HISTORY_RETENTION_MS: 5000
       RECONCILE_INTERVAL_MS: 30000
-      RECONCILE_LEDGER_SYNC: true
+      LEDGER_SYNC_INTERVAL_MS: 10000
+
       # strategy config
       TARGET_ENTRY: 0.97
       TARGET_POSITION_SIZE: 10
+      MAX_ALLOCATION_RATIO: 0.8
       MERGE_DEBOUNCE_MS: 10000
+
       # time filter config
       MIN_TIME_REMAINING_MS: 300000
       MAX_TIME_REMAINING_MS: 3300000
+
       # skew filter config
       ENABLE_SKEW_CHECK: true
       MIN_SKEW_PRICE_CUTOFF: 0.15
       MIN_TOTAL_COST: 0.8
       MAX_TOTAL_COST: 1.01
+
       # price stability filter config
       ENABLE_PRICE_STABILITY_CHECK: true
       PRICE_STABILITY_RANGE_CENTS: 3
       PRICE_STABILITY_DURATION_MS: 2000
+
       # linear regression filter config
       ENABLE_LINEAR_REGRESSION_FILTER: true
       MAX_PRICE_SLOPE_PER_SEC: 0.02
       MIN_REGRESSION_DATA_POINTS: 5
+
       # obi filter config
       ENABLE_OBI_FILTER: true
       MIN_OBI_BID_ASK_RATIO: 0.5
+
       # toxic flow filter config
       ENABLE_TOXIC_FLOW_FILTER: true
       TOXIC_FLOW_WINDOW_MS: 10000
       TOXIC_FLOW_MIN_TRADES: 5
       TOXIC_FLOW_SELL_RATIO_THRESHOLD: 0.8
+
       # fill gap cap config
       ENABLE_FILL_GAP_CAP: true
       MAX_ASK_DISTANCE: 0.03
+
       # momentum config
       ENABLE_MOMENTUM_DISCOUNTING: true
       VELOCITY_FACTOR: 0.8
       ACCELERATION_FACTOR: 0.4
       MAX_DISCOUNT: 0.05
+
+      # inventory skew config
+      ENABLE_INVENTORY_SKEW: true
+      SKEW_CENTS_PER_SHARE: 0.1
+      MAX_SKEW_ADJUSTMENT: 0.05
+
       # clob config 
       PRIVATE_KEY: ${PRIVATE_KEY}
       SIGNATURE_TYPE: 1
       FUNDER_ADDRESS: ${FUNDER_ADDRESS}
+
       # relayer config 
       POLY_API_KEY: ${POLY_API_KEY}
       POLY_API_SECRET: ${POLY_API_SECRET}
