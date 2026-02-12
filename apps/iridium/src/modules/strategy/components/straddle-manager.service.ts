@@ -34,7 +34,7 @@ export class StraddleManagerService {
     const capital = (targetYes + targetNo) * quantity;
 
     try {
-      this.ledgerService.debit(capital);
+      this.ledgerService.debit(capital, 'StraddleManagerService.placeStraddle');
     } catch (error) {
       this.logger.error(`Failed to debit ledger for straddle on ${conditionId}: ${(error as Error).message}`);
       this.osmiumService.trackEvent({

@@ -3,6 +3,8 @@ import { AssetType, ClobClient } from '@polymarket/clob-client';
 import { take } from 'rxjs';
 import { formatUnits } from 'viem';
 
+import { OsmiumService } from '@wuguishifu/nest-common';
+
 import { EnvironmentService } from '../../environment/environment-service';
 import { ClobClientService } from '../clob/client/clob-client.service';
 
@@ -17,6 +19,7 @@ export class LedgerService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly clobClientService: ClobClientService,
     private readonly environmentService: EnvironmentService,
+    private readonly osmiumService: OsmiumService,
   ) {}
 
   onModuleInit() {
@@ -53,9 +56,17 @@ export class LedgerService implements OnModuleInit, OnModuleDestroy {
     return parseFloat(formatUnits(BigInt(balance), 6)); // USDC has 6 decimals
   }
 
-  public debit(amount: number): void {
+  public debit(amount: number, callSource: string): void {
     if (!this.hasAvailableCapital(amount)) {
       this.logger.warn(`Attempted to debit ${amount} USDC, but only ${this.availableBalance} USDC is available.`);
+      this.osmiumService.trackEvent({
+        name: 'ledger-insufficient-funds',
+        metadata: {
+          attemptedDebit: amount.toFixed(4),
+          availableBalance: this.availableBalance.toFixed(4),
+          callSource,
+        },
+      });
       throw new Error(
         `Insufficient available balance. Attempted to debit ${amount}, but only ${this.availableBalance} is available.`,
       );
@@ -101,11 +112,28 @@ export class LedgerService implements OnModuleInit, OnModuleDestroy {
         this.logger.warn(
           `Ledger drift detected: ${drift.toFixed(4)}. Was: ${this.availableBalance.toFixed(4)}, Adjusted: ${adjusted.toFixed(4)} (wallet=${walletBalance.toFixed(4)}, ratio=${maxAllocationRatio}, locked=${lockedCapital.toFixed(4)})`,
         );
+        this.osmiumService.trackEvent({
+          name: 'ledger-drift',
+          metadata: {
+            drift: drift.toFixed(4),
+            previousBalance: this.availableBalance.toFixed(4),
+            adjustedBalance: adjusted.toFixed(4),
+            walletBalance: walletBalance.toFixed(4),
+            maxAllocationRatio,
+            lockedCapital: lockedCapital.toFixed(4),
+          },
+        });
       }
 
       this.availableBalance = adjusted;
     } catch (error) {
       this.logger.error(`Failed to sync ledger: ${(error as Error).message}`);
+      this.osmiumService.trackEvent({
+        name: 'ledger-sync-error',
+        metadata: {
+          message: (error as Error).message,
+        },
+      });
     }
   }
 }
