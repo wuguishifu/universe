@@ -133,10 +133,6 @@ export class StraddleManagerService {
       straddle[`${legPrefix}Status`] = 'FILLED';
     }
 
-    this.checkCompletion(straddle);
-  }
-
-  private checkCompletion(straddle: ActiveStraddle) {
     if (this.isStraddleComplete(straddle)) {
       this.logger.debug(`Straddle on condition ${straddle.conditionId} is complete. Cleaning up state.`);
       this.cleanupStraddle(straddle);
@@ -180,7 +176,7 @@ export class StraddleManagerService {
     this.logger.debug(`Reconciling ${activeStraddles.length} active straddle(s)...`);
     const staleStraddles: ActiveStraddle[] = [];
     await Promise.all(
-      this.positionService.getStraddles().map(async (straddle) => {
+      activeStraddles.map(async (straddle) => {
         const hasChanged = await this.reconcileSingleStraddle(straddle);
         if (hasChanged) {
           if (this.isStraddleComplete(straddle)) {
@@ -283,13 +279,9 @@ export class StraddleManagerService {
     }
   }
 
-  private calculateLockedCapital(excludeConditionId?: string): number {
+  private calculateLockedCapital(): number {
     let locked = 0;
     for (const s of this.positionService.getStraddles()) {
-      if (s.conditionId === excludeConditionId) {
-        continue;
-      }
-
       // Unfilled portions of OPEN orders (locked by the exchange)
       if (s.yesStatus === 'OPEN') {
         locked += s.yesPrice * (s.quantity - s.yesCumulativeFilled);
