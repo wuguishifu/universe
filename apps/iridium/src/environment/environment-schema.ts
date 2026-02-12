@@ -15,7 +15,7 @@ export const environmentSchema = z
     // strategy config
     targetEntry: z.coerce.number().min(0).max(1).default(0.97),
     targetPositionSize: z.coerce.number().min(0).default(10),
-    mergeDebounceMs: z.coerce.number().min(0).default(10_000),
+    mergeIntervalMs: z.coerce.number().min(5_000).default(30_000),
 
     // time filtering config
     minTimeRemainingMs: z.coerce.number().min(0).default(300_000),

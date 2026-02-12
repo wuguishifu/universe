@@ -7,7 +7,7 @@ import { UserWsService } from '../clob/ws/user-ws.service';
 import { LedgerService } from '../ledger/ledger.service';
 import { AlphaService, EntryPlan } from './components/alpha.service';
 import { InventorySkewService } from './components/inventory-skew.service';
-import { PositionService } from './components/position.service';
+import { PositionService } from '../position/position.service';
 import { StraddleManagerService } from './components/straddle-manager.service';
 
 @Injectable()

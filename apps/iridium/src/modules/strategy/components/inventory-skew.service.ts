@@ -3,12 +3,12 @@ import { TickSize } from '@polymarket/clob-client';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
 
-import { ActiveStraddle } from './position.service';
 import { StraddleManagerService } from './straddle-manager.service';
 import { EnvironmentService } from '../../../environment/environment-service';
 import { CacheService } from '../../cache/cache.service';
 import { ExecutionService } from '../../execution/execution.service';
 import { LedgerService } from '../../ledger/ledger.service';
+import { ActiveStraddle } from '../../position/position.service';
 
 @Injectable()
 export class InventorySkewService {

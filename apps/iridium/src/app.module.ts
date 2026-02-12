@@ -8,12 +8,14 @@ import { AppController } from './app.controller';
 import { OSMIUM_SERVICE } from './constants/constants';
 import { EnvironmentModule } from './environment/environment-module';
 import { DiscoveryModule } from './modules/discovery/discovery.module';
+import { MergeModule } from './modules/merge/merge.module';
 import { StrategyModule } from './modules/strategy/strategy.module';
 
 @Module({
   imports: [
     CommonModule,
     DiscoveryModule,
+    MergeModule,
     StrategyModule,
     EnvironmentModule,
     OsmiumModule.register({ serviceName: 'iridium' }, OSMIUM_SERVICE),
