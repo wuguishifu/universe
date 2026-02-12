@@ -5,7 +5,6 @@ import { Subject } from 'rxjs';
 import { OsmiumService } from '@wuguishifu/nest-common';
 
 import { AlphaService, EntryPlan } from './alpha.service';
-import { EnvironmentService } from '../../../environment/environment-service';
 import { OrderMessage } from '../../../types/clob/orderMessage';
 import { ExecutionService } from '../../execution/execution.service';
 import { LedgerService } from '../../ledger/ledger.service';
@@ -26,7 +25,6 @@ export class StraddleManagerService {
     private readonly positionService: PositionService,
     private readonly executionService: ExecutionService,
     private readonly ledgerService: LedgerService,
-    private readonly environmentService: EnvironmentService,
     private readonly alphaService: AlphaService,
     private readonly osmiumService: OsmiumService,
   ) {}
@@ -190,10 +188,6 @@ export class StraddleManagerService {
       this.logger.debug(`Cleaning up stale straddle on ${straddle.conditionId} (both legs terminal, holdings ~0)`);
       this.cleanupStraddle(straddle);
     });
-
-    if (this.environmentService.environment.reconcileLedgerSync) {
-      await this.syncLedgerWithReality();
-    }
   }
 
   private async reconcileSingleStraddle(straddle: ActiveStraddle): Promise<boolean> {
@@ -260,41 +254,6 @@ export class StraddleManagerService {
     const noDone = s.noStatus === 'FILLED' || s.noStatus === 'CANCELED';
     const empty = s.yesHoldings < 0.001 && s.noHoldings < 0.001;
     return yesDone && noDone && empty;
-  }
-
-  private async syncLedgerWithReality() {
-    try {
-      const walletBalance = await this.ledgerService.getUserBalance();
-      const lockedCapital = this.calculateLockedCapital();
-      const expectedAvailable = walletBalance - lockedCapital;
-      const ghostBalance = this.ledgerService.getAvailableBalance();
-      const drift = Math.abs(expectedAvailable - ghostBalance);
-
-      if (drift > 0.01) {
-        this.logger.warn(`Ledger drift detected: ${drift.toFixed(4)}. Syncing.`);
-        await this.ledgerService.sync(lockedCapital);
-      }
-    } catch (error) {
-      this.logger.error(`Failed to sync ledger: ${(error as Error).message}`);
-    }
-  }
-
-  private calculateLockedCapital(): number {
-    let locked = 0;
-    for (const s of this.positionService.getStraddles()) {
-      // Unfilled portions of OPEN orders (locked by the exchange)
-      if (s.yesStatus === 'OPEN') {
-        locked += s.yesPrice * (s.quantity - s.yesCumulativeFilled);
-      }
-      if (s.noStatus === 'OPEN') {
-        locked += s.noPrice * (s.quantity - s.noCumulativeFilled);
-      }
-
-      // Unmerged shares (capital that left the wallet as fills)
-      locked += s.yesPrice * s.yesHoldings;
-      locked += s.noPrice * s.noHoldings;
-    }
-    return locked;
   }
 
   public async destroy() {
