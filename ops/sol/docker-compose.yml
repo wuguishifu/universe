@@ -1,0 +1,97 @@
+services:
+  osmium:
+    image: ghcr.io/wuguishifu/universe/osmium:latest
+    container_name: osmium
+    ports:
+      - 3001:3001
+    networks:
+      - universe-network
+    restart: unless-stopped
+    environment:
+      HYDROGEN_DB_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/hydrogen"
+      ENVIRONMENT: production
+  postgres:
+    image: postgres:16-alpine
+    container_name: hydrogen-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    networks:
+      - universe-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d redash"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: hydrogen-pgadmin
+    depends_on:
+      - postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_SERVER_JSON_FILE: /var/lib/pgadmin/servers.json
+      PGPASS_FILE: /var/lib/pgadmin/pgpass
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - ./pgadmin/servers.json:/var/lib/pgadmin/servers.json:ro
+      - ./pgadmin/pgpass:/var/lib/pgadmin/pgpass:ro
+    ports:
+      - 5050:80
+    networks:
+      - universe-network
+  redis:
+    image: redis:7-alpine
+    container_name: hydrogen-redis
+    volumes:
+      - redis-data:/data
+    networks:
+      - universe-network
+  redash-server:
+    image: redash/redash:latest
+    container_name: hydrogen-redash
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      # Note: 'postgres' here refers to the service name, not container_name
+      REDASH_DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/redash"
+      REDASH_REDIS_URL: "redis://redis:6379/0"
+      REDASH_SECRET_KEY: ${REDASH_SECRET_KEY}
+      REDASH_COOKIE_SECRET: ${REDASH_COOKIE_SECRET}
+    ports:
+      - 5051:5000
+    command: server
+    networks:
+      - universe-network
+  redash-worker:
+    image: redash/redash:latest
+    container_name: hydrogen-redash-worker
+    depends_on:
+      - redash-server
+    environment:
+      REDASH_DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/redash"
+      REDASH_REDIS_URL: "redis://redis:6379/0"
+      REDASH_SECRET_KEY: ${REDASH_SECRET_KEY}
+      REDASH_COOKIE_SECRET: ${REDASH_COOKIE_SECRET}
+    command: worker
+    networks:
+      - universe-network
+  
+networks:
+  universe-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  pgadmin-data:
+  redis-data:
+
