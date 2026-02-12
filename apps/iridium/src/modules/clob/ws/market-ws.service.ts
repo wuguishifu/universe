@@ -89,6 +89,14 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
     }
   }
 
+  protected onError(error: Error): void {
+    this.osmiumService.trackDebug({ name: 'clob_ws-error', metadata: { message: error.message } });
+  }
+
+  protected onClose(code: number, reason: string): void {
+    this.osmiumService.trackDebug({ name: 'clob_ws-closed', metadata: { code, reason } });
+  }
+
   protected handleMessage(data: WebSocket.Data) {
     try {
       const parsed = JSON.parse(data.toString());

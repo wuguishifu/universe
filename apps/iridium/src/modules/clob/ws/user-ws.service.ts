@@ -2,6 +2,8 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { Subject, take } from 'rxjs';
 import { Data } from 'ws';
 
+import { OsmiumService } from '@wuguishifu/nest-common';
+
 import { WebSocketService } from './ws-service';
 import { CLOB_USER_WS_URL } from '../../../constants/constants';
 import { Message } from '../../../types/clob/message';
@@ -26,7 +28,10 @@ export class UserWsService extends WebSocketService implements OnModuleInit, OnM
   /** Emits after the user WebSocket reconnects and re-authenticates. */
   public readonly reconnected$ = this.reconnectedSubject.asObservable();
 
-  constructor(private readonly authService: AuthService) {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly osmiumService: OsmiumService,
+  ) {
     super(CLOB_USER_WS_URL);
   }
 
@@ -67,6 +72,14 @@ export class UserWsService extends WebSocketService implements OnModuleInit, OnM
       this.send({ type: 'user', auth: this.userCredentials });
       this.reconnectedSubject.next();
     }
+  }
+
+  protected onError(error: Error): void {
+    this.osmiumService.trackDebug({ name: 'clob_ws-error', metadata: { message: error.message } });
+  }
+
+  protected onClose(code: number, reason: string): void {
+    this.osmiumService.trackDebug({ name: 'clob_ws-closed', metadata: { code, reason } });
   }
 
   public authenticate(userCredentials: UserCredentials) {
