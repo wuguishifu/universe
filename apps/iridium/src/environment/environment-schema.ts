@@ -10,13 +10,13 @@ export const environmentSchema = z
 
     maxHistoryRetentionMs: z.coerce.number().min(0).default(5_000),
     reconcileIntervalMs: z.coerce.number().min(5_000).default(30_000),
+    mergeIntervalMs: z.coerce.number().min(5_000).default(30_000),
     ledgerSyncIntervalMs: z.coerce.number().min(5_000).default(10_000),
 
     // strategy config
-    targetEntry: z.coerce.number().min(0).max(1).default(0.97),
+    targetEntry: z.coerce.number().min(0).max(1).default(0.95),
     targetPositionSize: z.coerce.number().min(0).default(10),
     maxAllocationRatio: z.coerce.number().min(0).max(1).default(0.8),
-    mergeIntervalMs: z.coerce.number().min(5_000).default(30_000),
 
     // time filtering config
     minTimeRemainingMs: z.coerce.number().min(0).default(300_000),
@@ -36,7 +36,7 @@ export const environmentSchema = z
     // linear regression filter (alternative to stability check)
     enableLinearRegressionFilter: z.preprocess(preprocessBoolean, z.boolean()).default(true),
     maxPriceSlopePerSec: z.coerce.number().min(0).default(0.02),
-    minRegressionDataPoints: z.coerce.number().min(2).default(5),
+    minRegressionDataPoints: z.coerce.number().min(2).default(20),
 
     // order book imbalance filter
     enableObiFilter: z.preprocess(preprocessBoolean, z.boolean()).default(true),
@@ -50,7 +50,7 @@ export const environmentSchema = z
 
     // fill gap cap — prevents one-legged fills from asymmetric momentum
     enableFillGapCap: z.preprocess(preprocessBoolean, z.boolean()).default(true),
-    maxAskDistance: z.coerce.number().min(0).default(0.03),
+    maxAskDistance: z.coerce.number().min(0).default(0.02),
 
     // momentum config
     enableMomentumDiscounting: z.preprocess(preprocessBoolean, z.boolean()).default(true),
