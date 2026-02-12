@@ -24,8 +24,6 @@ export type ActiveStraddle = {
   noStatus: 'OPEN' | 'FILLED' | 'CANCELED';
 
   // Concurrency control
-  mergeInProgress: boolean;
-  mergeDebounceTimer?: NodeJS.Timeout;
   skewInProgress: boolean;
 };
 
