@@ -182,7 +182,7 @@ export class InventorySkewService {
     // * 6. Place replacement at the skewed price
     try {
       // Debit for the new order
-      this.ledgerService.debit(capitalRequired);
+      this.ledgerService.debit(capitalRequired, 'InventorySkewService.cancelAndReplace');
 
       const newOrderId = await this.executionService.placeSingleOrder({
         conditionId: straddle.conditionId,
