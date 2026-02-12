@@ -550,7 +550,13 @@ export class AlphaService implements OnModuleDestroy {
     targetYes = this.roundDown(targetYes, tick.minTickSize);
     targetNo = this.roundDown(targetNo, tick.minTickSize);
 
-    // E. Sanity Checks
+    // E. Total Cost Ceiling — reject if fill gap cap pushed cost above target entry
+    const totalCost = targetYes + targetNo;
+    if (totalCost > config.targetEntry) {
+      return null;
+    }
+
+    // F. Sanity Checks
     // 1. Must be positive
     if (targetYes <= 0 || targetNo <= 0) {
       return null;
@@ -572,7 +578,7 @@ export class AlphaService implements OnModuleDestroy {
       targetYes,
       targetNo,
       quantity: config.targetPositionSize,
-      reason: `Spread: ${currentSpread.toFixed(3)} | Discount: ${baseDiscount.toFixed(3)}`,
+      reason: `Spread: ${currentSpread.toFixed(3)} | Discount: ${baseDiscount.toFixed(3)} | Total: ${totalCost.toFixed(3)}`,
     };
   }
 
