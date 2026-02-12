@@ -288,12 +288,6 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
     });
   }
 
-  public testUnsubscribeAll() {
-    this.logger.debug('Unsubscribing from all tokens for testing...');
-    const tokens = Array.from(this.subscribedTokenIds);
-    this.send({ operation: 'unsubscribe', channel: 'market', assets_ids: tokens });
-  }
-
   public syncSubscriptions(activeMarkets: Market[]) {
     const desiredTokenIds = new Set(activeMarkets.flatMap((market) => [market.noToken, market.yesToken]));
     const desiredConditionIds = new Set(activeMarkets.map((market) => market.conditionId));

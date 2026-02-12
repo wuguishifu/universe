@@ -4,6 +4,7 @@ import { TickSize } from '@polymarket/clob-client';
 import { OsmiumService } from '@wuguishifu/nest-common';
 
 import { EnvironmentService } from '../../../environment/environment-service';
+import { getOrCreateList } from '../../../utils/map.utils';
 import { MarketTick, TradeEvent } from '../../clob/ws/market-ws.service';
 
 type PriceHistoryEntry = {
@@ -106,7 +107,7 @@ export class AlphaService implements OnModuleDestroy {
       return;
     }
 
-    const history = this.getPriceHistory(tick.conditionId);
+    const history = getOrCreateList(this.priceHistory, tick.conditionId);
     history.push({
       yesPrice: tick.bestBidYes,
       noPrice: tick.bestBidNo,
@@ -114,14 +115,7 @@ export class AlphaService implements OnModuleDestroy {
     });
 
     const cutoffTime = tick.timestamp - this.environmentService.environment.maxHistoryRetentionMs;
-    const idx = history.findIndex((h) => h.timestamp >= cutoffTime);
-    if (idx === -1) {
-      if (history.length > 0) {
-        history.length = 0;
-      }
-    } else if (idx > 0) {
-      history.splice(0, idx);
-    }
+    this.pruneOldEntries(history, cutoffTime);
   }
 
   private recordEvaluation(conditionId: ConditionId) {
@@ -188,7 +182,7 @@ export class AlphaService implements OnModuleDestroy {
       return true;
     }
 
-    const history = this.priceHistory.get(tick.conditionId);
+    const history = getOrCreateList(this.priceHistory, tick.conditionId);
 
     // 1. Cold Start Check
     // If we have no history, or the history is too short to cover the required duration
@@ -382,6 +376,7 @@ export class AlphaService implements OnModuleDestroy {
       return true;
     }
 
+    // do not want to create an empty list here if it does not exist
     const history = this.tradeHistory.get(tick.conditionId);
     if (!history || history.length === 0) {
       return true; // optimistic cold start
@@ -432,34 +427,15 @@ export class AlphaService implements OnModuleDestroy {
   }
 
   public recordTrade(event: TradeEvent) {
-    const history = this.getTradeHistory(event.conditionId);
+    const history = getOrCreateList(this.tradeHistory, event.conditionId);
     history.push({
       assetId: event.assetId,
       side: event.side,
       timestamp: event.timestamp,
     });
 
-    // prune old entries
     const cutoff = Date.now() - this.environmentService.environment.toxicFlowWindowMs;
-    const idx = history.findIndex((h) => h.timestamp >= cutoff);
-    if (idx === -1) {
-      if (history.length > 0) {
-        history.length = 0;
-      }
-    } else if (idx > 0) {
-      history.splice(0, idx);
-    }
-  }
-
-  private getTradeHistory(conditionId: ConditionId): TradeHistoryEntry[] {
-    const existing = this.tradeHistory.get(conditionId);
-    if (existing) {
-      return existing;
-    }
-
-    const newHistory: TradeHistoryEntry[] = [];
-    this.tradeHistory.set(conditionId, newHistory);
-    return newHistory;
+    this.pruneOldEntries(history, cutoff);
   }
   // #endregion
 
@@ -515,15 +491,15 @@ export class AlphaService implements OnModuleDestroy {
   // #endregion
 
   // #region util
-  private getPriceHistory(conditionId: ConditionId): PriceHistoryEntry[] {
-    const existingHistory = this.priceHistory.get(conditionId);
-    if (existingHistory) {
-      return existingHistory;
+  private pruneOldEntries(entries: { timestamp: number }[], cutoffTime: number) {
+    const idx = entries.findIndex((h) => h.timestamp >= cutoffTime);
+    if (idx === -1) {
+      if (entries.length > 0) {
+        entries.length = 0;
+      }
+    } else if (idx > 0) {
+      entries.splice(0, idx);
     }
-
-    const newHistory: PriceHistoryEntry[] = [];
-    this.priceHistory.set(conditionId, newHistory);
-    return newHistory;
   }
 
   public deleteCondition(conditionId: ConditionId) {
