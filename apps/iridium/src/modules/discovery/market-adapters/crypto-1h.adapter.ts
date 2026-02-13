@@ -52,8 +52,9 @@ function makeHourWindow(startTimeUtc: Date): HourWindow {
 
 const assets = ['bitcoin', 'ethereum', 'solana', 'xrp'] as const;
 
-export class CryptoAdapter extends MarketAdapter {
-  protected readonly logger = new Logger(CryptoAdapter.name);
+export class Crypto1hAdapter extends MarketAdapter {
+  protected readonly logger = new Logger(Crypto1hAdapter.name);
+  public refreshIntervalMs = 60 * 60 * 1000; // 1 hour
 
   async fetchMarkets() {
     const { current } = getCurrentHourWindows();
