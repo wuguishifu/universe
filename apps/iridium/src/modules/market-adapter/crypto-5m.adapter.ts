@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 
 import { MarketAdapter } from './adapter';
-import { eventSchema } from '../../../types/event';
+import { eventSchema } from '../../types/event';
 
 // Built as an array to allow for easy extension once polymarket adds other coins
 const assets = ['btc'] as const;

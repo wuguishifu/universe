@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 
 import { MarketAdapter } from './adapter';
-import { Event, eventSchema } from '../../../types/event';
+import { eventSchema } from '../../types/event';
 
 type Period = 'am' | 'pm';
 type HourWindow = { start: { month: string; day: number; hour12: number; period: Period }; timeSlug: string };
@@ -59,7 +59,7 @@ export class Crypto1hAdapter extends MarketAdapter {
   async fetchMarkets() {
     const { current } = getCurrentHourWindows();
 
-    const fetchEvent = async (asset: string, window: HourWindow): Promise<Event | null> => {
+    const fetchEvent = async (asset: string, window: HourWindow) => {
       const slug = generate1hSlug(asset, window);
       const response = await this.httpService.get(`/events/slug/${slug}`);
       if (response.status === 200) {

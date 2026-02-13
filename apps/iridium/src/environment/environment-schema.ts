@@ -2,11 +2,13 @@ import z from 'zod';
 
 import { preprocessBoolean } from '../utils/preprocessors';
 
+export type EnvironmentSchema = z.infer<typeof environmentSchema>;
 export const environmentSchema = z
   .object({
     dryRun: z.preprocess(preprocessBoolean, z.boolean()).default(true),
     enableVerboseEvents: z.preprocess(preprocessBoolean, z.boolean()).default(false),
     debugClearStraddles: z.preprocess(preprocessBoolean, z.boolean()).default(false),
+    adapter: z.enum(['crypto-5m', 'crypto-1h']).default('crypto-5m'),
 
     maxHistoryRetentionMs: z.coerce.number().min(0).default(5_000),
     reconcileIntervalMs: z.coerce.number().min(5_000).default(30_000),

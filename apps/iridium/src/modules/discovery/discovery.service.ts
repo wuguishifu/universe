@@ -2,17 +2,15 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 
 import { OsmiumService } from '@wuguishifu/nest-common';
 
-import { MarketAdapter } from './market-adapters/adapter';
-import { Crypto1hAdapter } from './market-adapters/crypto-1h.adapter';
 import { EnvironmentService } from '../../environment/environment-service';
 import { getTimeRemainingMs } from '../../utils/market.utils';
 import { CacheService } from '../cache/cache.service';
 import { MarketWsService } from '../clob/ws/market-ws.service';
+import { MarketAdapterService } from '../market-adapter/market-adapter.service';
 
 @Injectable()
 export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DiscoveryService.name);
-  private readonly marketAdapter: MarketAdapter;
 
   private marketRefreshTimeout: NodeJS.Timeout | null = null;
 
@@ -21,9 +19,8 @@ export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
     private readonly cacheService: CacheService,
     private readonly environmentService: EnvironmentService,
     private readonly osmiumService: OsmiumService,
-  ) {
-    this.marketAdapter = new Crypto1hAdapter();
-  }
+    private readonly marketAdapterService: MarketAdapterService,
+  ) {}
 
   public async onModuleInit() {
     await this.refreshMarkets();
@@ -38,7 +35,7 @@ export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
   }
 
   public async refreshMarkets() {
-    const markets = await this.marketAdapter.fetchMarkets();
+    const markets = await this.marketAdapterService.adapter.fetchMarkets();
 
     markets.forEach((market) => this.cacheService.markets.set(market.conditionId, market));
     const now = Date.now();
@@ -65,7 +62,8 @@ export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
 
   private scheduleMarketRefresh() {
     const now = Date.now();
-    const nextInterval = Math.ceil(now / this.marketAdapter.refreshIntervalMs) * this.marketAdapter.refreshIntervalMs;
+    const refreshInterval = this.marketAdapterService.adapter.refreshIntervalMs;
+    const nextInterval = Math.ceil(now / refreshInterval) * refreshInterval;
     const msUntilNextInterval = nextInterval - now;
 
     this.logger.debug(`Next refresh scheduled in ${Math.round(msUntilNextInterval / 1000)}s`);
