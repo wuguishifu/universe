@@ -5,9 +5,9 @@ import { EnvironmentService } from '../../environment/environment-service';
 import { MarketWsService } from '../clob/ws/market-ws.service';
 import { UserWsService } from '../clob/ws/user-ws.service';
 import { LedgerService } from '../ledger/ledger.service';
+import { PositionService } from '../position/position.service';
 import { AlphaService, EntryPlan } from './components/alpha.service';
 import { InventorySkewService } from './components/inventory-skew.service';
-import { PositionService } from '../position/position.service';
 import { StraddleManagerService } from './components/straddle-manager.service';
 
 @Injectable()
