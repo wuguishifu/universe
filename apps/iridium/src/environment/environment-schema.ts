@@ -11,9 +11,9 @@ export const environmentSchema = z
     adapter: z.enum(['crypto-5m', 'crypto-1h']).default('crypto-5m'),
 
     maxHistoryRetentionMs: z.coerce.number().min(0).default(5_000),
-    reconcileIntervalMs: z.coerce.number().min(5_000).default(30_000),
-    mergeIntervalMs: z.coerce.number().min(5_000).default(30_000),
-    ledgerSyncIntervalMs: z.coerce.number().min(5_000).default(10_000),
+    reconcileIntervalMs: z.coerce.number().min(5_000).default(10_000),
+    mergeIntervalMs: z.coerce.number().min(5_000).default(10_000),
+    ledgerSyncIntervalMs: z.coerce.number().min(5_000).default(5_000),
 
     // strategy config
     targetEntry: z.coerce.number().min(0).max(1).default(0.95),
@@ -33,12 +33,12 @@ export const environmentSchema = z
     // price stability config (prevents entering during spikes)
     enablePriceStabilityCheck: z.preprocess(preprocessBoolean, z.boolean()).default(true),
     priceStabilityRangeCents: z.coerce.number().min(0).default(3),
-    priceStabilityDurationMs: z.coerce.number().min(0).default(2_000),
+    priceStabilityDurationMs: z.coerce.number().min(0).default(1_000),
 
     // linear regression filter (alternative to stability check)
     enableLinearRegressionFilter: z.preprocess(preprocessBoolean, z.boolean()).default(true),
     maxPriceSlopePerSec: z.coerce.number().min(0).default(0.02),
-    minRegressionDataPoints: z.coerce.number().min(2).default(20),
+    minRegressionDataPoints: z.coerce.number().min(2).default(10),
 
     // order book imbalance filter
     enableObiFilter: z.preprocess(preprocessBoolean, z.boolean()).default(true),
@@ -46,7 +46,7 @@ export const environmentSchema = z
 
     // toxic flow filter
     enableToxicFlowFilter: z.preprocess(preprocessBoolean, z.boolean()).default(true),
-    toxicFlowWindowMs: z.coerce.number().min(0).default(10_000),
+    toxicFlowWindowMs: z.coerce.number().min(0).default(3_000),
     toxicFlowMinTrades: z.coerce.number().min(1).default(5),
     toxicFlowSellRatioThreshold: z.coerce.number().min(0).max(1).default(0.8),
 
@@ -61,7 +61,7 @@ export const environmentSchema = z
     maxDiscount: z.coerce.number().min(0).default(0.05),
 
     // inventory skew config
-    enableInventorySkew: z.preprocess(preprocessBoolean, z.boolean()).default(true),
+    enableInventorySkew: z.preprocess(preprocessBoolean, z.boolean()).default(false),
     skewCentsPerShare: z.coerce.number().min(0).default(0.1),
     maxSkewAdjustment: z.coerce.number().min(0).default(0.05),
 
