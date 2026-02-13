@@ -23,6 +23,9 @@ export type ActiveStraddle = {
   yesStatus: 'OPEN' | 'FILLED' | 'CANCELED';
   noStatus: 'OPEN' | 'FILLED' | 'CANCELED';
 
+  // Stop-loss timing
+  placedAt: number; // Date.now() at placement
+
   // Concurrency control
   skewInProgress: boolean;
   skewApplied: boolean;

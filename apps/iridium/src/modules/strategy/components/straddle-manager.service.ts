@@ -15,6 +15,7 @@ export class StraddleManagerService {
   private readonly logger = new Logger(StraddleManagerService.name);
 
   private readonly orderMap = new Map<string, string>();
+  private readonly stopLossTimers = new Map<string, NodeJS.Timeout>();
 
   private readonly fillProcessedSubject = new Subject<{
     straddle: ActiveStraddle;
@@ -29,7 +30,7 @@ export class StraddleManagerService {
     private readonly osmiumService: OsmiumService,
   ) {}
 
-  public async placeStraddle(plan: EntryPlan) {
+  public async placeStraddle(plan: EntryPlan, stopLossTimeoutMs: number | null) {
     const { conditionId, targetYes, targetNo, quantity } = plan;
     const capital = (targetYes + targetNo) * quantity;
 
@@ -61,9 +62,13 @@ export class StraddleManagerService {
         noCumulativeFilled: 0,
         yesStatus: 'OPEN',
         noStatus: 'OPEN',
+        placedAt: Date.now(),
         skewInProgress: false,
         skewApplied: false,
       });
+      if (stopLossTimeoutMs) {
+        this.startStopLossTimer(conditionId, stopLossTimeoutMs);
+      }
       this.osmiumService.trackEvent({
         name: 'straddle-placed',
         metadata: { conditionId, yesOrderId, noOrderId, yesPrice: targetYes, noPrice: targetNo, quantity, capital },
@@ -143,6 +148,81 @@ export class StraddleManagerService {
     this.orderMap.set(newOrderId, conditionId);
   }
 
+  private startStopLossTimer(conditionId: string, timeoutMs: number) {
+    const timer = setTimeout(() => this.handleStopLoss(conditionId), timeoutMs);
+    this.stopLossTimers.set(conditionId, timer);
+  }
+
+  private async handleStopLoss(conditionId: string) {
+    this.stopLossTimers.delete(conditionId);
+
+    const straddle = this.positionService.getStraddle(conditionId);
+    if (!straddle) {
+      return;
+    }
+
+    // Both sides filled — not a one-legged straddle
+    const minSide = Math.min(straddle.yesHoldings, straddle.noHoldings);
+    if (minSide >= straddle.quantity * 0.99) {
+      return;
+    }
+
+    const yesFilled = straddle.yesHoldings > 0;
+    const noFilled = straddle.noHoldings > 0;
+
+    // Only act on true one-legged straddles (one side has holdings, other has ~0)
+    if (yesFilled === noFilled) {
+      return;
+    } // both or neither filled — skip
+
+    const filledSide: 'yes' | 'no' = yesFilled ? 'yes' : 'no';
+    const unfilledSide: 'yes' | 'no' = yesFilled ? 'no' : 'yes';
+    const unfilledOrderId = straddle[`${unfilledSide}OrderId`];
+    const filledHoldings = straddle[`${filledSide}Holdings`];
+    const timeElapsed = Date.now() - straddle.placedAt;
+
+    this.logger.warn(
+      `Stop-loss triggered on ${conditionId}: ${filledSide.toUpperCase()} filled (${filledHoldings.toFixed(2)}), ${unfilledSide.toUpperCase()} unfilled after ${(timeElapsed / 1000).toFixed(1)}s`,
+    );
+
+    try {
+      // Cancel the unfilled side's order
+      if (straddle[`${unfilledSide}Status`] === 'OPEN') {
+        await this.executionService.cancelOrder(unfilledOrderId, conditionId).catch((err) => {
+          this.logger.error(
+            `Stop-loss: failed to cancel ${unfilledSide.toUpperCase()} order: ${(err as Error).message}`,
+          );
+        });
+      }
+
+      // Market-sell the filled side's holdings
+      if (filledHoldings > 0) {
+        await this.executionService.sellMarketPosition({
+          conditionId,
+          yesAmount: filledSide === 'yes' ? filledHoldings : 0,
+          noAmount: filledSide === 'no' ? filledHoldings : 0,
+        });
+      }
+
+      this.osmiumService.trackEvent({
+        name: 'straddle-stop-loss',
+        metadata: {
+          conditionId,
+          filledSide,
+          holdings: filledHoldings,
+          timeElapsed,
+          yesPrice: straddle.yesPrice,
+          noPrice: straddle.noPrice,
+          quantity: straddle.quantity,
+        },
+      });
+
+      this.cleanupStraddle(straddle);
+    } catch (err) {
+      this.logger.error(`Stop-loss failed on ${conditionId}: ${(err as Error).message}`);
+    }
+  }
+
   public cleanupStraddle(straddle: ActiveStraddle) {
     this.osmiumService.trackEvent({
       name: 'straddle-complete',
@@ -160,6 +240,11 @@ export class StraddleManagerService {
         totalCost: straddle.yesPrice + straddle.noPrice,
       },
     });
+    const timer = this.stopLossTimers.get(straddle.conditionId);
+    if (timer) {
+      clearTimeout(timer);
+      this.stopLossTimers.delete(straddle.conditionId);
+    }
     this.positionService.removeStraddle(straddle.conditionId);
     this.orderMap.delete(straddle.yesOrderId);
     this.orderMap.delete(straddle.noOrderId);
@@ -258,6 +343,11 @@ export class StraddleManagerService {
   }
 
   public async destroy() {
+    for (const timer of this.stopLossTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.stopLossTimers.clear();
+
     if (this.positionService.straddleCount === 0) {
       this.logger.debug('  No active straddles to clean up');
       return;

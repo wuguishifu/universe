@@ -15,6 +15,7 @@ export class Crypto5mAdapter extends MarketAdapter {
   public readonly refreshIntervalMs = 5 * 60 * 1000; // 5:00
   public maxTimeRemainingMs = 4.5 * 60 * 1000; // 4:30
   public minTimeRemainingMs = 30 * 1000; // 0:30
+  public stopLossTimeoutMs = 200_000; // 200 seconds — all good straddles empirically fill within 184s
 
   async fetchMarkets() {
     const windowTimestamp = Math.floor(Date.now() / FIVE_MINUTES_MS) * FIVE_MINUTES_S;

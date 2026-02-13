@@ -12,6 +12,7 @@ export abstract class MarketAdapter {
   public abstract readonly refreshIntervalMs: number;
   public abstract minTimeRemainingMs: number;
   public abstract maxTimeRemainingMs: number;
+  public abstract stopLossTimeoutMs: number | null; // falsy values = disabled
 
   abstract fetchMarkets(): Promise<Market[]>;
 }

@@ -24,6 +24,9 @@ export const environmentSchema = z
     minTimeRemainingMsOverride: z.coerce.number().min(0).optional(),
     maxTimeRemainingMsOverride: z.coerce.number().min(0).optional(),
 
+    // stop loss config
+    stopLossTimeoutMsOverride: z.coerce.number().min(0).optional(),
+
     // skew config
     enableSkewCheck: z.preprocess(preprocessBoolean, z.boolean()).default(true),
     minSkewPriceCutoff: z.coerce.number().min(0).default(0.15),

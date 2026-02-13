@@ -5,6 +5,7 @@ import { EnvironmentService } from '../../environment/environment-service';
 import { MarketWsService } from '../clob/ws/market-ws.service';
 import { UserWsService } from '../clob/ws/user-ws.service';
 import { LedgerService } from '../ledger/ledger.service';
+import { MarketAdapterService } from '../market-adapter/market-adapter.service';
 import { PositionService } from '../position/position.service';
 import { AlphaService, EntryPlan } from './components/alpha.service';
 import { InventorySkewService } from './components/inventory-skew.service';
@@ -28,6 +29,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     private readonly positionService: PositionService,
     private readonly straddleManagerService: StraddleManagerService,
     private readonly inventorySkewService: InventorySkewService,
+    private readonly marketAdapterService: MarketAdapterService,
   ) {}
 
   public onModuleInit() {
@@ -107,8 +109,12 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       `Placing straddle for ${plan.conditionId} with targets YES=${plan.targetYes}, NO=${plan.targetNo}, quantity=${plan.quantity} (capital: ${requiredCapital.toFixed(4)}). Reason: ${plan.reason}`,
     );
 
+    const stopLossTimeoutMs =
+      this.environmentService.environment.stopLossTimeoutMsOverride ??
+      this.marketAdapterService.adapter.stopLossTimeoutMs;
+
     this.positionService.setMarketInProgress(plan.conditionId, true);
-    await this.straddleManagerService.placeStraddle(plan);
+    await this.straddleManagerService.placeStraddle(plan, stopLossTimeoutMs);
     this.positionService.setMarketInProgress(plan.conditionId, false);
   }
 }

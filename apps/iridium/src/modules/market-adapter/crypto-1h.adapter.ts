@@ -58,6 +58,7 @@ export class Crypto1hAdapter extends MarketAdapter {
   public readonly refreshIntervalMs = 60 * 60 * 1000; // 1 hour
   public maxTimeRemainingMs = 3_300_000; // 55 minutes
   public minTimeRemainingMs = 300_000; // 5 minutes
+  public stopLossTimeoutMs = null; // disabled — fill gaps empirically range up to 27 minutes
 
   async fetchMarkets() {
     const { current } = getCurrentHourWindows();
