@@ -9,7 +9,9 @@ export abstract class MarketAdapter {
   protected readonly httpService = new HttpService({ baseURL: GAMMA_API_BASE });
   protected abstract readonly logger: Logger;
 
-  public abstract refreshIntervalMs: number;
+  public abstract readonly refreshIntervalMs: number;
+  public abstract minTimeRemainingMs: number;
+  public abstract maxTimeRemainingMs: number;
 
   abstract fetchMarkets(): Promise<Market[]>;
 }

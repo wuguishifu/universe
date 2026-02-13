@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 
-import { MarketAdapter } from './adapter';
+import { MarketAdapter } from './market-adapter';
 import { eventSchema } from '../../types/event';
 
 type Period = 'am' | 'pm';
@@ -54,7 +54,10 @@ const assets = ['bitcoin', 'ethereum', 'solana', 'xrp'] as const;
 
 export class Crypto1hAdapter extends MarketAdapter {
   protected readonly logger = new Logger(Crypto1hAdapter.name);
-  public refreshIntervalMs = 60 * 60 * 1000; // 1 hour
+
+  public readonly refreshIntervalMs = 60 * 60 * 1000; // 1 hour
+  public maxTimeRemainingMs = 3_300_000; // 55 minutes
+  public minTimeRemainingMs = 300_000; // 5 minutes
 
   async fetchMarkets() {
     const { current } = getCurrentHourWindows();

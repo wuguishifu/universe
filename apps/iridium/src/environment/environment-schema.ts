@@ -21,8 +21,8 @@ export const environmentSchema = z
     maxAllocationRatio: z.coerce.number().min(0).max(1).default(0.8),
 
     // time filtering config
-    minTimeRemainingMs: z.coerce.number().min(0).default(300_000),
-    maxTimeRemainingMs: z.coerce.number().min(0).default(3_300_000),
+    minTimeRemainingMsOverride: z.coerce.number().min(0),
+    maxTimeRemainingMsOverride: z.coerce.number().min(0),
 
     // skew config
     enableSkewCheck: z.preprocess(preprocessBoolean, z.boolean()).default(true),

@@ -6,4 +6,4 @@ import { MarketAdapterService } from './market-adapter.service';
   providers: [MarketAdapterService],
   exports: [MarketAdapterService],
 })
-export class AdapterModule {}
+export class MarketAdapterModule {}

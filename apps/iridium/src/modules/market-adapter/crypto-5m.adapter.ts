@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 
-import { MarketAdapter } from './adapter';
+import { MarketAdapter } from './market-adapter';
 import { eventSchema } from '../../types/event';
 
 // Built as an array to allow for easy extension once polymarket adds other coins
@@ -11,7 +11,10 @@ const FIVE_MINUTES_MS = FIVE_MINUTES_S * 1000;
 
 export class Crypto5mAdapter extends MarketAdapter {
   protected readonly logger = new Logger(Crypto5mAdapter.name);
-  public refreshIntervalMs = 5 * 60 * 1000; // 5 minutes
+
+  public readonly refreshIntervalMs = 5 * 60 * 1000; // 5:00
+  public maxTimeRemainingMs = 4.5 * 60 * 1000; // 4:30
+  public minTimeRemainingMs = 30 * 1000; // 0:30
 
   async fetchMarkets() {
     const windowTimestamp = Math.floor(Date.now() / FIVE_MINUTES_MS) * FIVE_MINUTES_S;

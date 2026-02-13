@@ -6,6 +6,7 @@ import { OsmiumService } from '@wuguishifu/nest-common';
 import { EnvironmentService } from '../../../environment/environment-service';
 import { getOrCreateList } from '../../../utils/map.utils';
 import { MarketTick, TradeEvent } from '../../clob/ws/market-ws.service';
+import { MarketAdapterService } from '../../market-adapter/market-adapter.service';
 
 type PriceHistoryEntry = {
   yesPrice: number;
@@ -40,6 +41,7 @@ export class AlphaService implements OnModuleDestroy {
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly osmiumService: OsmiumService,
+    private readonly marketAdapterService: MarketAdapterService,
   ) {}
 
   onModuleDestroy() {
@@ -125,12 +127,18 @@ export class AlphaService implements OnModuleDestroy {
 
   // #region filters
   private filterForTimeRemaining(tick: MarketTick): boolean {
-    if (tick.timeRemaining > this.environmentService.environment.maxTimeRemainingMs) {
+    const maxTimeRemainingMs =
+      this.environmentService.environment.maxTimeRemainingMsOverride ??
+      this.marketAdapterService.adapter.maxTimeRemainingMs;
+    if (tick.timeRemaining > maxTimeRemainingMs) {
       this.logger.debug(`Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too much)`);
       return false;
     }
 
-    if (tick.timeRemaining <= this.environmentService.environment.minTimeRemainingMs) {
+    const minTimeRemainingMs =
+      this.environmentService.environment.minTimeRemainingMsOverride ??
+      this.marketAdapterService.adapter.minTimeRemainingMs;
+    if (tick.timeRemaining <= minTimeRemainingMs) {
       this.logger.debug(`Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too little)`);
       return false;
     }

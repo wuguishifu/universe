@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { MarketAdapter } from './adapter';
+import { MarketAdapter } from './market-adapter';
 import { Crypto1hAdapter } from './crypto-1h.adapter';
 import { Crypto5mAdapter } from './crypto-5m.adapter';
 import { EnvironmentSchema } from '../../environment/environment-schema';
