@@ -2,43 +2,40 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 
 import { OsmiumService } from '@wuguishifu/nest-common';
 
-import { MarketAdapter } from './market-adapters/adapter';
-import { CryptoAdapter } from './market-adapters/crypto.adapter';
 import { EnvironmentService } from '../../environment/environment-service';
 import { getTimeRemainingMs } from '../../utils/market.utils';
 import { CacheService } from '../cache/cache.service';
 import { MarketWsService } from '../clob/ws/market-ws.service';
+import { MarketAdapterService } from '../market-adapter/market-adapter.service';
 
 @Injectable()
 export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DiscoveryService.name);
-  private readonly marketAdapter: MarketAdapter;
 
-  private hourlyRefreshTimeout: NodeJS.Timeout | null = null;
+  private marketRefreshTimeout: NodeJS.Timeout | null = null;
 
   constructor(
     private readonly marketWsService: MarketWsService,
     private readonly cacheService: CacheService,
     private readonly environmentService: EnvironmentService,
     private readonly osmiumService: OsmiumService,
-  ) {
-    this.marketAdapter = new CryptoAdapter();
-  }
+    private readonly marketAdapterService: MarketAdapterService,
+  ) {}
 
   public async onModuleInit() {
     await this.refreshMarkets();
-    this.scheduleHourlyRefresh();
+    this.scheduleMarketRefresh();
   }
 
   public onModuleDestroy() {
-    if (this.hourlyRefreshTimeout) {
-      clearTimeout(this.hourlyRefreshTimeout);
-      this.hourlyRefreshTimeout = null;
+    if (this.marketRefreshTimeout) {
+      clearTimeout(this.marketRefreshTimeout);
+      this.marketRefreshTimeout = null;
     }
   }
 
   public async refreshMarkets() {
-    const markets = await this.marketAdapter.fetchMarkets();
+    const markets = await this.marketAdapterService.adapter.fetchMarkets();
 
     markets.forEach((market) => this.cacheService.markets.set(market.conditionId, market));
     const now = Date.now();
@@ -63,29 +60,30 @@ export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
-  private scheduleHourlyRefresh() {
+  private scheduleMarketRefresh() {
     const now = Date.now();
-    const nextHour = Math.ceil(now / (60 * 60 * 1000)) * (60 * 60 * 1000);
-    const msUntilNextHour = nextHour - now + 1000; // 1s buffer for market data to settle
+    const refreshInterval = this.marketAdapterService.adapter.refreshIntervalMs;
+    const nextInterval = Math.ceil(now / refreshInterval) * refreshInterval;
+    const msUntilNextInterval = nextInterval - now;
 
-    this.logger.debug(`Next hourly refresh scheduled in ${Math.round(msUntilNextHour / 1000)}s`);
+    this.logger.debug(`Next refresh scheduled in ${Math.round(msUntilNextInterval / 1000)}s`);
     if (this.environmentService.environment.enableVerboseEvents) {
       this.osmiumService.trackDebug({
-        name: 'discovery_service-hourly_refresh-schedule',
+        name: 'discovery_service-refresh-schedule',
         metadata: {
-          msUntilNextHour,
-          timestamp: new Date(nextHour).toISOString(),
+          msUntilNextInterval,
+          timestamp: new Date(nextInterval).toISOString(),
         },
       });
     }
 
-    this.hourlyRefreshTimeout = setTimeout(async () => {
+    this.marketRefreshTimeout = setTimeout(async () => {
       try {
         await this.refreshMarkets();
       } catch (error) {
-        this.logger.error(`Failed hourly market refresh: ${error}`);
+        this.logger.error(`Failed to refresh markets: ${(error as Error).message}`);
       }
-      this.scheduleHourlyRefresh();
-    }, msUntilNextHour);
+      this.scheduleMarketRefresh();
+    }, msUntilNextInterval);
   }
 }

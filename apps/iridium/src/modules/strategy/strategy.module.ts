@@ -9,9 +9,10 @@ import { AlphaService } from './components/alpha.service';
 import { InventorySkewService } from './components/inventory-skew.service';
 import { StraddleManagerService } from './components/straddle-manager.service';
 import { StrategyService } from './strategy.service';
+import { MarketAdapterModule } from '../market-adapter/market-adapter.module';
 
 @Module({
-  imports: [CacheModule, ClobWsModule, ExecutionModule, LedgerModule, PositionModule],
+  imports: [CacheModule, ClobWsModule, ExecutionModule, LedgerModule, PositionModule, MarketAdapterModule],
   providers: [StrategyService, AlphaService, StraddleManagerService, InventorySkewService],
 })
 export class StrategyModule {}

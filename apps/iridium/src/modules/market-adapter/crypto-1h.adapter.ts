@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 
-import { MarketAdapter } from './adapter';
-import { Event, eventSchema } from '../../../types/event';
+import { MarketAdapter } from './market-adapter';
+import { eventSchema } from '../../types/event';
 
 type Period = 'am' | 'pm';
 type HourWindow = { start: { month: string; day: number; hour12: number; period: Period }; timeSlug: string };
@@ -52,13 +52,17 @@ function makeHourWindow(startTimeUtc: Date): HourWindow {
 
 const assets = ['bitcoin', 'ethereum', 'solana', 'xrp'] as const;
 
-export class CryptoAdapter extends MarketAdapter {
-  protected readonly logger = new Logger(CryptoAdapter.name);
+export class Crypto1hAdapter extends MarketAdapter {
+  protected readonly logger = new Logger(Crypto1hAdapter.name);
+
+  public readonly refreshIntervalMs = 60 * 60 * 1000; // 1 hour
+  public maxTimeRemainingMs = 3_300_000; // 55 minutes
+  public minTimeRemainingMs = 300_000; // 5 minutes
 
   async fetchMarkets() {
     const { current } = getCurrentHourWindows();
 
-    const fetchEvent = async (asset: string, window: HourWindow): Promise<Event | null> => {
+    const fetchEvent = async (asset: string, window: HourWindow) => {
       const slug = generate1hSlug(asset, window);
       const response = await this.httpService.get(`/events/slug/${slug}`);
       if (response.status === 200) {
