@@ -3,10 +3,10 @@ import { Module } from '@nestjs/common';
 import { DiscoveryService } from './discovery.service';
 import { CacheModule } from '../cache/cache.module';
 import { ClobWsModule } from '../clob/ws/clob-ws.module';
-import { MarketAdapterService } from '../market-adapter/market-adapter.service';
+import { MarketAdapterModule } from '../market-adapter/market-adapter.module';
 
 @Module({
-  imports: [CacheModule, ClobWsModule, MarketAdapterService],
+  imports: [CacheModule, ClobWsModule, MarketAdapterModule],
   providers: [DiscoveryService],
 })
 export class DiscoveryModule {}
