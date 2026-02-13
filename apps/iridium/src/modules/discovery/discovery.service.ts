@@ -7,6 +7,7 @@ import { getTimeRemainingMs } from '../../utils/market.utils';
 import { CacheService } from '../cache/cache.service';
 import { MarketWsService } from '../clob/ws/market-ws.service';
 import { MarketAdapterService } from '../market-adapter/market-adapter.service';
+import { PositionService } from '../position/position.service';
 
 @Injectable()
 export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
@@ -20,6 +21,7 @@ export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
     private readonly environmentService: EnvironmentService,
     private readonly osmiumService: OsmiumService,
     private readonly marketAdapterService: MarketAdapterService,
+    private readonly positionService: PositionService,
   ) {}
 
   public async onModuleInit() {
@@ -41,14 +43,15 @@ export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
     const now = Date.now();
     let staleCount = 0;
     for (const [key, market] of this.cacheService.markets.entries()) {
-      if (getTimeRemainingMs(market, now) <= 0) {
+      if (getTimeRemainingMs(market, now) <= 0 && !this.positionService.getStraddle(key)) {
         this.cacheService.markets.delete(key);
         staleCount++;
       }
     }
 
     const activeMarkets = Array.from(this.cacheService.markets.values());
-    this.marketWsService.syncSubscriptions(activeMarkets);
+    const tradableMarkets = activeMarkets.filter((market) => getTimeRemainingMs(market, now) > 0);
+    this.marketWsService.syncSubscriptions(tradableMarkets);
 
     // ! In the future this may be a huge object, but for now since we only use 4 markets it's okay for now.
     this.osmiumService.trackEvent({
