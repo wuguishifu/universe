@@ -12,7 +12,7 @@ export const environmentSchema = z
 
     maxHistoryRetentionMs: z.coerce.number().min(0).default(5_000),
     reconcileIntervalMs: z.coerce.number().min(5_000).default(10_000),
-    mergeIntervalMs: z.coerce.number().min(5_000).default(10_000),
+    mergeIntervalMs: z.coerce.number().min(5_000).default(5_000),
     ledgerSyncIntervalMs: z.coerce.number().min(5_000).default(5_000),
 
     // strategy config
