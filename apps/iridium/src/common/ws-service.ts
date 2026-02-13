@@ -31,6 +31,10 @@ export abstract class WebSocketService {
       this.handleMessage(data);
     });
 
+    this.ws.on('ping', () => {
+      this.onPing();
+    });
+
     this.ws.on('error', (error) => {
       this.onError(error);
       this.logger.error(`WebSocket error: ${error.message}`);
@@ -53,6 +57,10 @@ export abstract class WebSocketService {
   }
 
   protected onClose(_code: number, _reason: string) {
+    // empty
+  }
+
+  protected onPing() {
     // empty
   }
 
@@ -94,6 +102,14 @@ export abstract class WebSocketService {
     }
 
     this.logger.debug('WebSocket connection closed gracefully');
+  }
+
+  public reconnect() {
+    this.logger.debug('Restarting WebSocket connection...');
+    this.close();
+    this.isShuttingDown = false;
+    this.ws = new WebSocket(this.websocketUrl);
+    this.setupLifecycleEventListeners();
   }
 
   protected send(message: unknown) {

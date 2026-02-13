@@ -4,7 +4,7 @@ import { Data } from 'ws';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
 
-import { WebSocketService } from './ws-service';
+import { WebSocketService } from '../../../common/ws-service';
 import { CLOB_USER_WS_URL } from '../../../constants/constants';
 import { Message } from '../../../types/clob/message';
 import { OrderMessage } from '../../../types/clob/orderMessage';

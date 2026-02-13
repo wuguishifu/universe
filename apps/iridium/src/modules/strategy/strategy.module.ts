@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { BinanceModule } from '../binance/binance.module';
 import { CacheModule } from '../cache/cache.module';
 import { ClobWsModule } from '../clob/ws/clob-ws.module';
 import { ExecutionModule } from '../execution/execution.module';
@@ -12,7 +13,15 @@ import { StrategyService } from './strategy.service';
 import { MarketAdapterModule } from '../market-adapter/market-adapter.module';
 
 @Module({
-  imports: [CacheModule, ClobWsModule, ExecutionModule, LedgerModule, PositionModule, MarketAdapterModule],
+  imports: [
+    BinanceModule,
+    CacheModule,
+    ClobWsModule,
+    ExecutionModule,
+    LedgerModule,
+    PositionModule,
+    MarketAdapterModule,
+  ],
   providers: [StrategyService, AlphaService, StraddleManagerService, InventorySkewService],
 })
 export class StrategyModule {}

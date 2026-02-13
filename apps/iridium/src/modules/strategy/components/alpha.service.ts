@@ -5,6 +5,7 @@ import { OsmiumService } from '@wuguishifu/nest-common';
 
 import { EnvironmentService } from '../../../environment/environment-service';
 import { getOrCreateList } from '../../../utils/map.utils';
+import { BinancePriceService } from '../../binance/binance-price.service';
 import { MarketTick, TradeEvent } from '../../clob/ws/market-ws.service';
 import { MarketAdapterService } from '../../market-adapter/market-adapter.service';
 
@@ -42,6 +43,7 @@ export class AlphaService implements OnModuleDestroy {
     private readonly environmentService: EnvironmentService,
     private readonly osmiumService: OsmiumService,
     private readonly marketAdapterService: MarketAdapterService,
+    private readonly binancePriceService: BinancePriceService,
   ) {}
 
   onModuleDestroy() {
@@ -53,6 +55,22 @@ export class AlphaService implements OnModuleDestroy {
 
   public analyzeTick(tick: MarketTick): EntryPlan | null {
     this.recordPriceHistory(tick);
+
+    if (this.environmentService.environment.enableVerboseEvents) {
+      const btcSnapshot = this.binancePriceService.getSnapshot();
+      this.osmiumService.trackDebug({
+        name: 'btc-correlation',
+        metadata: {
+          conditionId: tick.conditionId,
+          polyBestBidYes: tick.bestBidYes,
+          polyBestBidNo: tick.bestBidNo,
+          btcPrice: btcSnapshot.currentPrice,
+          btcVelocity: btcSnapshot.velocityPerSecond,
+          btcAcceleration: btcSnapshot.accelerationPerSecond2,
+          msSinceLastBtcTick: btcSnapshot.msSinceLastTick,
+        },
+      });
+    }
 
     const filters: { name: string; fn: () => boolean }[] = [
       { name: 'time_remaining', fn: () => this.filterForTimeRemaining(tick) },

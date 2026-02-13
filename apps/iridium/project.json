@@ -62,6 +62,15 @@
         "maxWarnings": 0
       }
     },
+    "lint:fix": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/iridium/**/*.ts"],
+        "maxWarnings": 0,
+        "fix": true
+      }
+    },
     "prepush": {
       "executor": "nx:run-commands",
       "dependsOn": ["tsc", "lint"],

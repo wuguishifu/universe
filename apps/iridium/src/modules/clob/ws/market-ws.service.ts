@@ -5,7 +5,7 @@ import WebSocket from 'ws';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
 
-import { WebSocketService } from './ws-service';
+import { WebSocketService } from '../../../common/ws-service';
 import { CLOB_MARKET_WS_URL } from '../../../constants/constants';
 import { EnvironmentService } from '../../../environment/environment-service';
 import { BookMessage } from '../../../types/clob/bookMessage';
