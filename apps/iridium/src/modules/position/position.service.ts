@@ -25,6 +25,7 @@ export type ActiveStraddle = {
 
   // Concurrency control
   skewInProgress: boolean;
+  skewApplied: boolean;
 };
 
 type ConditionId = string;

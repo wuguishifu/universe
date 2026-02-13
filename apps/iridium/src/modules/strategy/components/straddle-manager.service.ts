@@ -62,6 +62,7 @@ export class StraddleManagerService {
         yesStatus: 'OPEN',
         noStatus: 'OPEN',
         skewInProgress: false,
+        skewApplied: false,
       });
       this.osmiumService.trackEvent({
         name: 'straddle-placed',

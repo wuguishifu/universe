@@ -28,7 +28,7 @@ export class InventorySkewService {
       return;
     }
 
-    if (straddle.skewInProgress) {
+    if (straddle.skewInProgress || straddle.skewApplied) {
       return;
     }
 
@@ -37,13 +37,11 @@ export class InventorySkewService {
       return;
     }
 
-    const heavySide: 'yes' | 'no' = netPosition > 0 ? 'yes' : 'no';
     const lightSide: 'yes' | 'no' = netPosition > 0 ? 'no' : 'yes';
-    const heavyStatus = straddle[`${heavySide}Status`];
     const lightStatus = straddle[`${lightSide}Status`];
 
-    // Nothing to adjust if both sides are terminal
-    if (heavyStatus !== 'OPEN' && lightStatus !== 'OPEN') {
+    // Nothing to adjust if light side is already terminal
+    if (lightStatus !== 'OPEN') {
       return;
     }
 
@@ -60,25 +58,16 @@ export class InventorySkewService {
 
     const tickSize = market.orderPriceMinTickSize;
 
-    // Heavy side: LOWER the bid (discourage more accumulation)
-    const newHeavyPrice = this.roundPrice(straddle[`${heavySide}Price`] - adjustment, tickSize, 'down');
     // Light side: RAISE the bid (attract the hedge)
-    const newLightPrice = this.roundPrice(straddle[`${lightSide}Price`] + adjustment, tickSize, 'up');
+    const oldLightPrice = straddle[`${lightSide}Price`];
+    const newLightPrice = this.roundPrice(oldLightPrice + adjustment, tickSize, 'up');
 
-    if (newHeavyPrice < 0.01 || newLightPrice < 0.01) {
-      this.logger.debug(`Skew adjustment would push price below minimum for ${straddle.conditionId}`);
+    if (newLightPrice > 0.99) {
+      this.logger.debug(`Skew adjustment would push light side price above 0.99 for ${straddle.conditionId}`);
       return;
     }
 
-    if (newHeavyPrice + newLightPrice > 1.0) {
-      this.logger.debug(`Skew adjustment would violate no-arbitrage for ${straddle.conditionId}`);
-      return;
-    }
-
-    // Check if any price actually changed
-    const heavyPriceChanged = newHeavyPrice !== straddle[`${heavySide}Price`];
-    const lightPriceChanged = newLightPrice !== straddle[`${lightSide}Price`];
-    if (!heavyPriceChanged && !lightPriceChanged) {
+    if (newLightPrice === oldLightPrice) {
       return;
     }
 
@@ -88,13 +77,10 @@ export class InventorySkewService {
       name: 'skew-adjustment',
       metadata: {
         conditionId: straddle.conditionId,
-        heavySide,
         lightSide,
         imbalance,
         adjustment,
-        oldHeavyPrice: straddle[`${heavySide}Price`],
-        newHeavyPrice,
-        oldLightPrice: straddle[`${lightSide}Price`],
+        oldLightPrice,
         newLightPrice,
         yesHoldings: straddle.yesHoldings,
         noHoldings: straddle.noHoldings,
@@ -102,19 +88,13 @@ export class InventorySkewService {
     });
 
     this.logger.log(
-      `Skewing ${straddle.conditionId}: imbalance=${imbalance.toFixed(2)} (${heavySide} heavy). ` +
-        `${heavySide.toUpperCase()} ${straddle[`${heavySide}Price`]}→${newHeavyPrice}, ` +
-        `${lightSide.toUpperCase()} ${straddle[`${lightSide}Price`]}→${newLightPrice}`,
+      `Skewing ${straddle.conditionId}: imbalance=${imbalance.toFixed(2)}. ` +
+        `${lightSide.toUpperCase()} ${oldLightPrice}→${newLightPrice}`,
     );
 
     try {
-      // Adjust light side first — getting the hedge is the priority
-      if (lightPriceChanged && lightStatus === 'OPEN') {
-        await this.cancelAndReplace(straddle, lightSide, newLightPrice, tickSize);
-      }
-      if (heavyPriceChanged && heavyStatus === 'OPEN') {
-        await this.cancelAndReplace(straddle, heavySide, newHeavyPrice, tickSize);
-      }
+      await this.cancelAndReplace(straddle, lightSide, newLightPrice, tickSize);
+      straddle.skewApplied = true;
     } catch (error) {
       this.logger.error(`Skew adjustment failed on ${straddle.conditionId}: ${(error as Error).message}`);
       this.osmiumService.trackEvent({
