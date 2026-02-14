@@ -109,12 +109,23 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       `Placing straddle for ${plan.conditionId} with targets YES=${plan.targetYes}, NO=${plan.targetNo}, quantity=${plan.quantity} (capital: ${requiredCapital.toFixed(4)}). Reason: ${plan.reason}`,
     );
 
-    const stopLossTimeoutMs =
-      this.environmentService.environment.stopLossTimeoutMsOverride ??
-      this.marketAdapterService.adapter.stopLossTimeoutMs;
+    const stopLossConfig = {
+      timeoutMs:
+        this.environmentService.environment.stopLossTimeoutMsOverride ??
+        this.marketAdapterService.adapter.stopLossTimeoutMs,
+      maxDropCents:
+        this.environmentService.environment.stopLossMaxDropCents ??
+        this.marketAdapterService.adapter.stopLossMaxDropCents,
+      gracePeriodMs:
+        this.environmentService.environment.stopLossGracePeriodMs ??
+        this.marketAdapterService.adapter.stopLossGracePeriodMs,
+      minTimeRemainingMs:
+        this.environmentService.environment.stopLossMinTimeRemainingMs ??
+        this.marketAdapterService.adapter.stopLossMinTimeRemainingMs,
+    };
 
     this.positionService.setMarketInProgress(plan.conditionId, true);
-    await this.straddleManagerService.placeStraddle(plan, stopLossTimeoutMs);
+    await this.straddleManagerService.placeStraddle(plan, stopLossConfig);
     this.positionService.setMarketInProgress(plan.conditionId, false);
   }
 }
