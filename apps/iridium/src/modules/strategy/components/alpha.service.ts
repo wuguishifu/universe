@@ -186,11 +186,6 @@ export class AlphaService implements OnModuleDestroy {
       return true;
     }
 
-    // guard against undefined for backward compat
-    if (tick.yesNearAskDepth === undefined || tick.noNearAskDepth === undefined) {
-      return true;
-    }
-
     const passed = tick.yesNearAskDepth >= minBookDepth && tick.noNearAskDepth >= minBookDepth;
 
     if (this.environmentService.environment.enableVerboseEvents) {

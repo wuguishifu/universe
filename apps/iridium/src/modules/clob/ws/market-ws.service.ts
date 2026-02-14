@@ -32,8 +32,8 @@ export type MarketTick = {
   yesAskVolume?: number;
   noBidVolume?: number;
   noAskVolume?: number;
-  yesNearAskDepth?: number;
-  noNearAskDepth?: number;
+  yesNearAskDepth: number;
+  noNearAskDepth: number;
 };
 
 export type TradeEvent = {
