@@ -12,6 +12,7 @@ on:
         options:
           - iridium
           - osmium
+          - platinum
       environment:
         description: 'Environment'
         required: true

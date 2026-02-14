@@ -1,0 +1,13 @@
+services:
+  platinum:
+    image: ghcr.io/wuguishifu/universe/platinum:latest
+    container_name: platinum
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: development
+      PRIVATE_KEY: ${PRIVATE_KEY}
+      SIGNATURE_TYPE: 1
+      FUNDER_ADDRESS: ${FUNDER_ADDRESS}
+      POLY_API_KEY: ${POLY_API_KEY}
+      POLY_API_SECRET: ${POLY_API_SECRET}
+      POLY_API_PASSPHRASE: ${POLY_API_PASSPHRASE}
