@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OpenOrder } from '@polymarket/clob-client';
-import { Subject } from 'rxjs';
+import { filter, Subject, Subscription } from 'rxjs';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
 
@@ -11,12 +11,25 @@ import { ExecutionService } from '../../execution/execution.service';
 import { LedgerService } from '../../ledger/ledger.service';
 import { ActiveStraddle, PositionService } from '../../position/position.service';
 
+export type StopLossConfig = {
+  timeoutMs: number | null;
+  maxDropCents: number | null;
+  gracePeriodMs: number | null;
+  minTimeRemainingMs: number | null;
+};
+
+type StopLossState = {
+  subscription: Subscription | null;
+  fallbackTimer: NodeJS.Timeout | null;
+  triggered: boolean;
+};
+
 @Injectable()
 export class StraddleManagerService {
   private readonly logger = new Logger(StraddleManagerService.name);
 
   private readonly orderMap = new Map<string, string>();
-  private readonly stopLossTimers = new Map<string, NodeJS.Timeout>();
+  private readonly stopLossState = new Map<string, StopLossState>();
 
   private readonly fillProcessedSubject = new Subject<{
     straddle: ActiveStraddle;
@@ -32,7 +45,7 @@ export class StraddleManagerService {
     private readonly marketWsService: MarketWsService,
   ) {}
 
-  public async placeStraddle(plan: EntryPlan, stopLossTimeoutMs: number | null) {
+  public async placeStraddle(plan: EntryPlan, stopLossConfig: StopLossConfig) {
     const { conditionId, targetYes, targetNo, quantity } = plan;
     const capital = (targetYes + targetNo) * quantity;
 
@@ -68,9 +81,7 @@ export class StraddleManagerService {
         skewInProgress: false,
         skewApplied: false,
       });
-      if (stopLossTimeoutMs) {
-        this.startStopLossTimer(conditionId, stopLossTimeoutMs);
-      }
+      this.startStopLossMonitor(conditionId, stopLossConfig);
       this.osmiumService.trackEvent({
         name: 'straddle-placed',
         metadata: { conditionId, yesOrderId, noOrderId, yesPrice: targetYes, noPrice: targetNo, quantity, capital },
@@ -150,13 +161,67 @@ export class StraddleManagerService {
     this.orderMap.set(newOrderId, conditionId);
   }
 
-  private startStopLossTimer(conditionId: string, timeoutMs: number) {
-    const timer = setTimeout(() => this.handleStopLoss(conditionId), timeoutMs);
-    this.stopLossTimers.set(conditionId, timer);
+  private startStopLossMonitor(conditionId: string, config: StopLossConfig) {
+    const state: StopLossState = { subscription: null, fallbackTimer: null, triggered: false };
+
+    // 1. Fallback timer (safety net)
+    if (config.timeoutMs) {
+      state.fallbackTimer = setTimeout(() => this.handleStopLoss(conditionId, 'timeout'), config.timeoutMs);
+    }
+
+    // 2. Tick-based monitor (only if price/time params exist)
+    if (config.maxDropCents || config.minTimeRemainingMs) {
+      state.subscription = this.marketWsService.marketTicks$
+        .pipe(filter((tick) => tick.conditionId === conditionId))
+        .subscribe((tick) => {
+          const straddle = this.positionService.getStraddle(conditionId);
+          if (!straddle) {
+            return;
+          }
+
+          const yesFilled = straddle.yesHoldings > 0;
+          const noFilled = straddle.noHoldings > 0;
+
+          // Not one-legged? Skip.
+          if (yesFilled === noFilled) {
+            return;
+          }
+
+          // Grace period not elapsed? Skip.
+          if (config.gracePeriodMs && Date.now() - straddle.placedAt < config.gracePeriodMs) {
+            return;
+          }
+
+          const filledSide = yesFilled ? 'yes' : 'no';
+          const entryPrice = yesFilled ? straddle.yesPrice : straddle.noPrice;
+          const currentBid = filledSide === 'yes' ? tick.bestBidYes : tick.bestBidNo;
+
+          // Price drop check
+          if (config.maxDropCents && (entryPrice - currentBid) * 100 >= config.maxDropCents) {
+            this.handleStopLoss(conditionId, 'price_drop');
+            return;
+          }
+
+          // Time remaining check
+          if (config.minTimeRemainingMs && tick.timeRemaining <= config.minTimeRemainingMs) {
+            this.handleStopLoss(conditionId, 'time_remaining');
+            return;
+          }
+        });
+    }
+
+    this.stopLossState.set(conditionId, state);
   }
 
-  private async handleStopLoss(conditionId: string) {
-    this.stopLossTimers.delete(conditionId);
+  private async handleStopLoss(conditionId: string, trigger: 'price_drop' | 'time_remaining' | 'timeout') {
+    // Prevent double execution from fallback timer + tick monitor racing
+    const state = this.stopLossState.get(conditionId);
+    if (state?.triggered) {
+      return;
+    }
+    if (state) {
+      state.triggered = true;
+    }
 
     const straddle = this.positionService.getStraddle(conditionId);
     if (!straddle) {
@@ -184,7 +249,7 @@ export class StraddleManagerService {
     const timeElapsed = Date.now() - straddle.placedAt;
 
     this.logger.warn(
-      `Stop-loss triggered on ${conditionId}: ${filledSide.toUpperCase()} filled (${filledHoldings.toFixed(2)}), ${unfilledSide.toUpperCase()} unfilled after ${(timeElapsed / 1000).toFixed(1)}s`,
+      `Stop-loss triggered on ${conditionId} [${trigger}]: ${filledSide.toUpperCase()} filled (${filledHoldings.toFixed(2)}), ${unfilledSide.toUpperCase()} unfilled after ${(timeElapsed / 1000).toFixed(1)}s`,
     );
 
     try {
@@ -220,6 +285,7 @@ export class StraddleManagerService {
           noPrice: straddle.noPrice,
           quantity: straddle.quantity,
           exitPrice,
+          trigger,
         },
       });
 
@@ -246,10 +312,15 @@ export class StraddleManagerService {
         totalCost: straddle.yesPrice + straddle.noPrice,
       },
     });
-    const timer = this.stopLossTimers.get(straddle.conditionId);
-    if (timer) {
-      clearTimeout(timer);
-      this.stopLossTimers.delete(straddle.conditionId);
+    const state = this.stopLossState.get(straddle.conditionId);
+    if (state) {
+      if (state.fallbackTimer) {
+        clearTimeout(state.fallbackTimer);
+      }
+      if (state.subscription) {
+        state.subscription.unsubscribe();
+      }
+      this.stopLossState.delete(straddle.conditionId);
     }
     this.positionService.removeStraddle(straddle.conditionId);
     this.orderMap.delete(straddle.yesOrderId);
@@ -349,10 +420,15 @@ export class StraddleManagerService {
   }
 
   public async destroy() {
-    for (const timer of this.stopLossTimers.values()) {
-      clearTimeout(timer);
+    for (const state of this.stopLossState.values()) {
+      if (state.fallbackTimer) {
+        clearTimeout(state.fallbackTimer);
+      }
+      if (state.subscription) {
+        state.subscription.unsubscribe();
+      }
     }
-    this.stopLossTimers.clear();
+    this.stopLossState.clear();
 
     if (this.positionService.straddleCount === 0) {
       this.logger.debug('  No active straddles to clean up');

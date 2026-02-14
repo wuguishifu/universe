@@ -13,9 +13,12 @@ export class Crypto5mAdapter extends MarketAdapter {
   protected readonly logger = new Logger(Crypto5mAdapter.name);
 
   public readonly refreshIntervalMs = 5 * 60 * 1000; // 5:00
-  public maxTimeRemainingMs = 4.5 * 60 * 1000; // 4:30
-  public minTimeRemainingMs = 30 * 1000; // 0:30
+  public maxTimeRemainingMs = 4 * 60 * 1000; // 4:00
+  public minTimeRemainingMs = 30 * 1000; // 1:00
   public stopLossTimeoutMs = 200_000; // 200 seconds — all good straddles empirically fill within 184s
+  public stopLossMaxDropCents = 15; // 15c — catches all observed failures, 1 FP with 60s grace
+  public stopLossGracePeriodMs = 60_000; // 60s — eliminates most false positives
+  public stopLossMinTimeRemainingMs = 45_000; // 45s — hard cutoff before resolution
 
   async fetchMarkets() {
     const windowTimestamp = Math.floor(Date.now() / FIVE_MINUTES_MS) * FIVE_MINUTES_S;

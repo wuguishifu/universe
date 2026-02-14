@@ -26,6 +26,9 @@ export const environmentSchema = z
 
     // stop loss config
     stopLossTimeoutMsOverride: z.coerce.number().min(0).optional(),
+    stopLossMaxDropCents: z.coerce.number().min(0).optional(),
+    stopLossGracePeriodMs: z.coerce.number().min(0).optional(),
+    stopLossMinTimeRemainingMs: z.coerce.number().min(0).optional(),
 
     // skew config
     enableSkewCheck: z.preprocess(preprocessBoolean, z.boolean()).default(true),

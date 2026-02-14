@@ -59,6 +59,9 @@ export class Crypto1hAdapter extends MarketAdapter {
   public maxTimeRemainingMs = 3_300_000; // 55 minutes
   public minTimeRemainingMs = 300_000; // 5 minutes
   public stopLossTimeoutMs = null; // disabled — fill gaps empirically range up to 27 minutes
+  public stopLossMaxDropCents = null;
+  public stopLossGracePeriodMs = null;
+  public stopLossMinTimeRemainingMs = null;
 
   async fetchMarkets() {
     const { current } = getCurrentHourWindows();
