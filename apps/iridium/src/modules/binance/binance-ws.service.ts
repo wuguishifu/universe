@@ -76,6 +76,7 @@ export class BinanceWsService extends WebSocketService implements OnModuleDestro
     }
 
     this.watchdogTimer = setTimeout(() => {
+      this.watchdogTimer = null;
       this.reconnect();
     }, 300_000);
   }
