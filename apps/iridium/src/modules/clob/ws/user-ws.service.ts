@@ -75,11 +75,11 @@ export class UserWsService extends WebSocketService implements OnModuleInit, OnM
   }
 
   protected onError(error: Error): void {
-    this.osmiumService.trackDebug({ name: 'clob_ws-error', metadata: { message: error.message } });
+    this.osmiumService.trackDebug({ name: 'clob_ws-error', metadata: { message: error.message, type: 'user' } });
   }
 
   protected onClose(code: number, reason: string): void {
-    this.osmiumService.trackDebug({ name: 'clob_ws-closed', metadata: { code, reason } });
+    this.osmiumService.trackDebug({ name: 'clob_ws-closed', metadata: { code, reason, type: 'user' } });
   }
 
   public authenticate(userCredentials: UserCredentials) {

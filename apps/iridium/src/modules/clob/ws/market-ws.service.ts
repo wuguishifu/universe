@@ -90,11 +90,11 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
   }
 
   protected onError(error: Error): void {
-    this.osmiumService.trackDebug({ name: 'clob_ws-error', metadata: { message: error.message } });
+    this.osmiumService.trackDebug({ name: 'clob_ws-error', metadata: { message: error.message, type: 'market' } });
   }
 
   protected onClose(code: number, reason: string): void {
-    this.osmiumService.trackDebug({ name: 'clob_ws-closed', metadata: { code, reason } });
+    this.osmiumService.trackDebug({ name: 'clob_ws-closed', metadata: { code, reason, type: 'market' } });
   }
 
   protected handleMessage(data: WebSocket.Data) {

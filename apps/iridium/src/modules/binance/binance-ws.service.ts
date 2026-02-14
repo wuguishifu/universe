@@ -2,6 +2,8 @@ import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Subject } from 'rxjs';
 import WebSocket from 'ws';
 
+import { OsmiumService } from '@wuguishifu/nest-common';
+
 import { WebSocketService } from '../../common/ws-service';
 import { BINANCE_BTC_WS_URL } from '../../constants/constants';
 
@@ -24,7 +26,7 @@ export class BinanceWsService extends WebSocketService implements OnModuleDestro
 
   private watchdogTimer: NodeJS.Timeout | null = null;
 
-  constructor() {
+  constructor(private readonly osmiumService: OsmiumService) {
     super(BINANCE_BTC_WS_URL);
   }
 
@@ -37,6 +39,14 @@ export class BinanceWsService extends WebSocketService implements OnModuleDestro
       clearTimeout(this.watchdogTimer);
       this.watchdogTimer = null;
     }
+  }
+
+  protected onError(error: Error): void {
+    this.osmiumService.trackDebug({ name: 'binance_ws-error', metadata: { message: error.message } });
+  }
+
+  protected onClose(code: number, reason: string): void {
+    this.osmiumService.trackDebug({ name: 'binance_ws-closed', metadata: { code, reason } });
   }
 
   protected handleMessage(data: WebSocket.Data): void {
