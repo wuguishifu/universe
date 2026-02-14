@@ -20,6 +20,8 @@ export class Crypto5mAdapter extends MarketAdapter {
   public stopLossGracePeriodMs = 30_000; // 30s — validated: zero false positives at 30s threshold
   public stopLossMinTimeRemainingMs = 45_000; // 45s — hard cutoff before resolution
   public straddleCooldownMs = 300_000; // 5 minutes
+  public tradingStartHourUtc = 10; // 10:00 UTC (5am EST) — validated: loss rate drops from 67% to ~25% after this hour
+  public tradingEndHourUtc = null; // no end restriction
 
   async fetchMarkets() {
     const windowTimestamp = Math.floor(Date.now() / FIVE_MINUTES_MS) * FIVE_MINUTES_S;

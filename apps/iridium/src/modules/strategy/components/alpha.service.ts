@@ -73,6 +73,7 @@ export class AlphaService implements OnModuleDestroy {
     }
 
     const filters: { name: string; fn: () => boolean }[] = [
+      { name: 'trading_hours', fn: () => this.filterForTradingHours() },
       { name: 'time_remaining', fn: () => this.filterForTimeRemaining(tick) },
       { name: 'skew', fn: () => this.filterForSkew(tick) },
       { name: 'stability', fn: () => this.filterForStability(tick) },
@@ -144,6 +145,39 @@ export class AlphaService implements OnModuleDestroy {
   // #endregion
 
   // #region filters
+  private filterForTradingHours(): boolean {
+    const startHour =
+      this.environmentService.environment.tradingStartHourUtcOverride ??
+      this.marketAdapterService.adapter.tradingStartHourUtc;
+    const endHour =
+      this.environmentService.environment.tradingEndHourUtcOverride ??
+      this.marketAdapterService.adapter.tradingEndHourUtc;
+
+    if (startHour == null && endHour == null) {
+      return true;
+    }
+
+    const currentHour = new Date().getUTCHours();
+
+    if (startHour != null && endHour != null) {
+      if (startHour <= endHour) {
+        return currentHour >= startHour && currentHour < endHour;
+      }
+      // Wrap-around (e.g., start=22, end=6 means 22:00-06:00 UTC)
+      return currentHour >= startHour || currentHour < endHour;
+    }
+
+    if (startHour != null) {
+      return currentHour >= startHour;
+    }
+
+    if (endHour != null) {
+      return currentHour < endHour;
+    }
+
+    return false;
+  }
+
   private filterForTimeRemaining(tick: MarketTick): boolean {
     const maxTimeRemainingMs =
       this.environmentService.environment.maxTimeRemainingMsOverride ??

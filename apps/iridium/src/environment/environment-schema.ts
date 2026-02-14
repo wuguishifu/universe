@@ -15,6 +15,8 @@ export const environmentSchema = z
     mergeIntervalMs: z.coerce.number().min(5_000).default(5_000),
     ledgerSyncIntervalMs: z.coerce.number().min(5_000).default(5_000),
     straddleCooldownMsOverride: z.coerce.number().min(0).optional(),
+    tradingStartHourUtcOverride: z.coerce.number().min(0).max(23).optional(),
+    tradingEndHourUtcOverride: z.coerce.number().min(0).max(23).optional(),
 
     // strategy config
     targetEntry: z.coerce.number().min(0).max(1).default(0.95),

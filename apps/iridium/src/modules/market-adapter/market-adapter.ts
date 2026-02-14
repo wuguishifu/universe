@@ -17,6 +17,8 @@ export abstract class MarketAdapter {
   public abstract stopLossGracePeriodMs: number | null;
   public abstract stopLossMinTimeRemainingMs: number | null;
   public straddleCooldownMs = 300_000; // 5 minutes
+  public tradingStartHourUtc: number | null = null; // null = no restriction
+  public tradingEndHourUtc: number | null = null; // null = no restriction
 
   abstract fetchMarkets(): Promise<Market[]>;
 }
