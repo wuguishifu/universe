@@ -17,8 +17,9 @@ export class Crypto5mAdapter extends MarketAdapter {
   public minTimeRemainingMs = 30 * 1000; // 1:00
   public stopLossTimeoutMs = 200_000; // 200 seconds — all good straddles empirically fill within 184s
   public stopLossMaxDropCents = 15; // 15c — catches all observed failures, 1 FP with 60s grace
-  public stopLossGracePeriodMs = 60_000; // 60s — eliminates most false positives
+  public stopLossGracePeriodMs = 30_000; // 30s — validated: zero false positives at 30s threshold
   public stopLossMinTimeRemainingMs = 45_000; // 45s — hard cutoff before resolution
+  public straddleCooldownMs = 300_000; // 5 minutes
 
   async fetchMarkets() {
     const windowTimestamp = Math.floor(Date.now() / FIVE_MINUTES_MS) * FIVE_MINUTES_S;

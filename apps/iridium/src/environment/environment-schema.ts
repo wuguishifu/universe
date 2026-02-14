@@ -14,6 +14,7 @@ export const environmentSchema = z
     reconcileIntervalMs: z.coerce.number().min(5_000).default(10_000),
     mergeIntervalMs: z.coerce.number().min(5_000).default(5_000),
     ledgerSyncIntervalMs: z.coerce.number().min(5_000).default(5_000),
+    straddleCooldownMsOverride: z.coerce.number().min(0).optional(),
 
     // strategy config
     targetEntry: z.coerce.number().min(0).max(1).default(0.95),
