@@ -8,6 +8,8 @@ import { AlphaService, EntryPlan } from './alpha.service';
 import { EnvironmentService } from '../../../environment/environment-service';
 import { OrderMessage } from '../../../types/clob/orderMessage';
 import { BinancePriceService } from '../../binance/binance-price.service';
+import { CacheService } from '../../cache/cache.service';
+import { ClaimService } from '../../claim/claim.service';
 import { MarketWsService } from '../../clob/ws/market-ws.service';
 import { ExecutionService } from '../../execution/execution.service';
 import { LedgerService } from '../../ledger/ledger.service';
@@ -49,6 +51,8 @@ export class StraddleManagerService {
     private readonly marketWsService: MarketWsService,
     private readonly binancePriceService: BinancePriceService,
     private readonly environmentService: EnvironmentService,
+    private readonly cacheService: CacheService,
+    private readonly claimService: ClaimService,
   ) {}
 
   public async placeStraddle(plan: EntryPlan, stopLossConfig: StopLossConfig) {
@@ -99,6 +103,12 @@ export class StraddleManagerService {
           skewApplied: false,
         });
         this.startStopLossMonitor(conditionId, stopLossConfig);
+
+        const market = this.cacheService.markets.get(conditionId);
+        if (market) {
+          this.claimService.trackMarket(conditionId, market.yesToken, market.noToken);
+        }
+
         this.osmiumService.trackEvent({
           name: 'straddle-placed',
           metadata: {

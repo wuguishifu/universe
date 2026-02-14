@@ -281,6 +281,11 @@ export class ExecutionService implements OnModuleInit {
     return this.relayerService.mergePositions({ conditionId, amount });
   }
 
+  // MARK: redeem positions
+  public redeemPositions({ conditionId }: { conditionId: string }) {
+    return this.relayerService.redeemPositions({ conditionId });
+  }
+
   // MARK: get order
   public getOrder(orderId: string): Promise<OpenOrder | null> {
     if (!this.clobClient || !this.isConfigured) {

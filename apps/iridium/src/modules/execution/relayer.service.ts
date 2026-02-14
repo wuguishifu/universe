@@ -141,6 +141,84 @@ export class RelayerService implements OnModuleInit {
     }
   }
 
+  public async redeemPositions({ conditionId }: { conditionId: string }): Promise<string> {
+    if (!this.client) {
+      throw new Error('Relayer client not initialized');
+    }
+
+    if (!this.validateConditionId(conditionId)) {
+      throw new Error('Invalid conditionId format');
+    }
+
+    this.logger.log(`Redeeming positions for condition ${conditionId}`);
+    const commonTrackingProperties = { conditionId, dryRun: this.environmentService.environment.dryRun };
+    this.osmiumService.trackEvent({
+      name: 'relayer_service-redeem_positions-started',
+      metadata: commonTrackingProperties,
+    });
+
+    if (this.environmentService.environment.dryRun) {
+      this.logger.debug('Dry run mode enabled - skipping redeem positions');
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      this.osmiumService.trackEvent({
+        name: 'relayer_service-redeem_positions-finished',
+        metadata: commonTrackingProperties,
+      });
+      return 'dry-run-redeem-positions-tx-id';
+    }
+
+    const data = encodeFunctionData({
+      abi: CONDITIONAL_TOKENS_ABI,
+      functionName: 'redeemPositions',
+      args: [USDC_ADDRESS, '0x0000000000000000000000000000000000000000000000000000000000000000', conditionId, [1n, 2n]],
+    });
+
+    const tx = { to: CONDITIONAL_TOKENS_ADDRESS, data, value: '0' };
+
+    try {
+      const response = await this.client.execute([tx]);
+      const result = await response.wait();
+
+      if (result) {
+        this.logger.log(`Redeem positions transaction submitted: ${result.transactionHash}`);
+        this.osmiumService.trackEvent({
+          name: 'relayer_service-redeem_positions-finished',
+          metadata: {
+            ...commonTrackingProperties,
+            transactionHash: result.transactionHash,
+          },
+        });
+        return result.transactionID;
+      }
+
+      const txDetails = await response.getTransaction().catch(() => undefined);
+      const failureMetadata = {
+        ...commonTrackingProperties,
+        relayerTxId: response.transactionID,
+        transactionHash: txDetails?.[0]?.transactionHash,
+        state: txDetails?.[0]?.state,
+      };
+      this.logger.error(`Redeem positions failed on-chain: ${JSON.stringify(failureMetadata)}`);
+      this.osmiumService.trackEvent({
+        name: 'relayer_service-redeem_positions-failed',
+        metadata: failureMetadata,
+      });
+      throw new Error(`Failed to submit redeem positions transaction (txId: ${response.transactionID})`);
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('Failed to submit redeem positions')) {
+        throw error;
+      }
+
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Redeem positions unexpected error: ${errorMessage}`);
+      this.osmiumService.trackEvent({
+        name: 'relayer_service-redeem_positions-failed',
+        metadata: { ...commonTrackingProperties, error: errorMessage },
+      });
+      throw new Error(`Redeem positions error: ${errorMessage}`);
+    }
+  }
+
   private validateConditionId(conditionId: string): conditionId is `0x${string}` {
     return conditionId.startsWith('0x');
   }
@@ -156,6 +234,18 @@ const CONDITIONAL_TOKENS_ABI = [
       { internalType: 'uint256', name: 'amount', type: 'uint256' },
     ],
     name: 'mergePositions',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'address', name: 'collateralToken', type: 'address' },
+      { internalType: 'bytes32', name: 'parentCollectionId', type: 'bytes32' },
+      { internalType: 'bytes32', name: 'conditionId', type: 'bytes32' },
+      { internalType: 'uint256[]', name: 'indexSets', type: 'uint256[]' },
+    ],
+    name: 'redeemPositions',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',

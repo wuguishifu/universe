@@ -7,6 +7,7 @@ import { OsmiumService } from '@wuguishifu/nest-common';
 
 import { EnvironmentService } from '../../environment/environment-service';
 import { CacheService } from '../cache/cache.service';
+import { ClaimService } from '../claim/claim.service';
 import { ClobClientService } from '../clob/client/clob-client.service';
 import { ExecutionService } from '../execution/execution.service';
 import { LedgerService } from '../ledger/ledger.service';
@@ -24,6 +25,7 @@ export class MergeService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly clobClientService: ClobClientService,
     private readonly cacheService: CacheService,
+    private readonly claimService: ClaimService,
     private readonly executionService: ExecutionService,
     private readonly ledgerService: LedgerService,
     private readonly environmentService: EnvironmentService,
@@ -111,6 +113,10 @@ export class MergeService implements OnModuleInit, OnModuleDestroy {
 
           straddle.yesHoldings = Math.max(0, straddle.yesHoldings - mergeable);
           straddle.noHoldings = Math.max(0, straddle.noHoldings - mergeable);
+
+          if (straddle.yesHoldings <= 0.001 && straddle.noHoldings <= 0.001) {
+            this.claimService.untrackMarket(market.conditionId);
+          }
 
           this.osmiumService.trackEvent({
             name: 'merge_service-merge-success',
