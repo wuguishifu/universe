@@ -323,6 +323,20 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
     activeMarkets.forEach((market) => this.getMarketState(market.conditionId));
   }
 
+  public getBestBid(conditionId: string, side: 'yes' | 'no'): number | undefined {
+    const market = this.cacheService.markets.get(conditionId);
+    if (!market) {
+      return undefined;
+    }
+    const state = this.marketState.get(conditionId);
+    if (!state) {
+      return undefined;
+    }
+    const tokenId = side === 'yes' ? market.yesToken : market.noToken;
+    const book = state[tokenId];
+    return book?.bestBid ?? undefined;
+  }
+
   private getMarketState(conditionId: string): MarketState {
     return (
       this.marketState.get(conditionId) ??

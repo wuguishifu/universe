@@ -6,6 +6,7 @@ import { OsmiumService } from '@wuguishifu/nest-common';
 
 import { AlphaService, EntryPlan } from './alpha.service';
 import { OrderMessage } from '../../../types/clob/orderMessage';
+import { MarketWsService } from '../../clob/ws/market-ws.service';
 import { ExecutionService } from '../../execution/execution.service';
 import { LedgerService } from '../../ledger/ledger.service';
 import { ActiveStraddle, PositionService } from '../../position/position.service';
@@ -28,6 +29,7 @@ export class StraddleManagerService {
     private readonly ledgerService: LedgerService,
     private readonly alphaService: AlphaService,
     private readonly osmiumService: OsmiumService,
+    private readonly marketWsService: MarketWsService,
   ) {}
 
   public async placeStraddle(plan: EntryPlan, stopLossTimeoutMs: number | null) {
@@ -195,6 +197,9 @@ export class StraddleManagerService {
         });
       }
 
+      // Capture exit price before selling
+      const exitPrice = this.marketWsService.getBestBid(conditionId, filledSide);
+
       // Market-sell the filled side's holdings
       if (filledHoldings > 0) {
         await this.executionService.sellMarketPosition({
@@ -214,6 +219,7 @@ export class StraddleManagerService {
           yesPrice: straddle.yesPrice,
           noPrice: straddle.noPrice,
           quantity: straddle.quantity,
+          exitPrice,
         },
       });
 
