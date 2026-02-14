@@ -32,6 +32,11 @@ export class BinanceWsService extends WebSocketService implements OnModuleDestro
     this.logger.debug('Shutting down Binance WebSocket...');
     this.tickSubject.complete();
     this.close();
+
+    if (this.watchdogTimer) {
+      clearInterval(this.watchdogTimer);
+      this.watchdogTimer = null;
+    }
   }
 
   protected handleMessage(data: WebSocket.Data): void {
