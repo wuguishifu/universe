@@ -5,7 +5,7 @@ import WebSocket from 'ws';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
 
-import { WebSocketService } from './ws-service';
+import { WebSocketService } from '../../../common/ws-service';
 import { CLOB_MARKET_WS_URL } from '../../../constants/constants';
 import { EnvironmentService } from '../../../environment/environment-service';
 import { BookMessage } from '../../../types/clob/bookMessage';
@@ -90,11 +90,11 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
   }
 
   protected onError(error: Error): void {
-    this.osmiumService.trackDebug({ name: 'clob_ws-error', metadata: { message: error.message } });
+    this.osmiumService.trackDebug({ name: 'clob_ws-error', metadata: { message: error.message, type: 'market' } });
   }
 
   protected onClose(code: number, reason: string): void {
-    this.osmiumService.trackDebug({ name: 'clob_ws-closed', metadata: { code, reason } });
+    this.osmiumService.trackDebug({ name: 'clob_ws-closed', metadata: { code, reason, type: 'market' } });
   }
 
   protected handleMessage(data: WebSocket.Data) {

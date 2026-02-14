@@ -31,6 +31,10 @@ export abstract class WebSocketService {
       this.handleMessage(data);
     });
 
+    this.ws.on('ping', () => {
+      this.onPing();
+    });
+
     this.ws.on('error', (error) => {
       this.onError(error);
       this.logger.error(`WebSocket error: ${error.message}`);
@@ -56,6 +60,10 @@ export abstract class WebSocketService {
     // empty
   }
 
+  protected onPing() {
+    // empty
+  }
+
   private flushQueuedMessages() {
     while (this.queuedMessages.length > 0) {
       const message = this.queuedMessages.shift();
@@ -71,7 +79,7 @@ export abstract class WebSocketService {
     }
 
     const delay = reconnectionDelays[Math.min(this.reconnectionAttempts, reconnectionDelays.length - 1)];
-    this.logger.debug(`Reconnecting to CLOB WebSocket in ${delay} ms`);
+    this.logger.debug(`Reconnecting to WebSocket in ${delay} ms`);
     this.reconnectionTimer = setTimeout(() => {
       this.reconnectionAttempts++;
       this.reconnectionTimer = null;
@@ -94,6 +102,14 @@ export abstract class WebSocketService {
     }
 
     this.logger.debug('WebSocket connection closed gracefully');
+  }
+
+  public reconnect() {
+    this.logger.debug('Restarting WebSocket connection...');
+    this.close();
+    this.isShuttingDown = false;
+    this.ws = new WebSocket(this.websocketUrl);
+    this.setupLifecycleEventListeners();
   }
 
   protected send(message: unknown) {
