@@ -13,7 +13,7 @@ import {
   POLYGON_RPC_URL,
   RELAYER_API_BASE,
   USDC_ADDRESS,
-} from '../../constants/constants';
+} from '../../constants';
 import { EnvironmentService } from '../../environment/environment-service';
 
 @Injectable()
@@ -60,21 +60,11 @@ export class RelayerService implements OnModuleInit {
     }
 
     this.logger.log(`Merging positions for condition ${conditionId} with amount ${amount}`);
-    const commonTrackingProperties = { conditionId, amount, dryRun: this.environmentService.environment.dryRun };
+    const commonTrackingProperties = { conditionId, amount };
     this.osmiumService.trackEvent({
       name: 'relayer_service-merge_positions-started',
       metadata: commonTrackingProperties,
     });
-
-    if (this.environmentService.environment.dryRun) {
-      this.logger.debug('Dry run mode enabled - skipping merge positions');
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      this.osmiumService.trackEvent({
-        name: 'relayer_service-merge_positions-finished',
-        metadata: commonTrackingProperties,
-      });
-      return 'dry-run-merge-positions-tx-id';
-    }
 
     // encode transaction data
     const rawAmount = parseUnits(amount.toFixed(6), 6);
@@ -151,21 +141,11 @@ export class RelayerService implements OnModuleInit {
     }
 
     this.logger.log(`Redeeming positions for condition ${conditionId}`);
-    const commonTrackingProperties = { conditionId, dryRun: this.environmentService.environment.dryRun };
+    const commonTrackingProperties = { conditionId };
     this.osmiumService.trackEvent({
       name: 'relayer_service-redeem_positions-started',
       metadata: commonTrackingProperties,
     });
-
-    if (this.environmentService.environment.dryRun) {
-      this.logger.debug('Dry run mode enabled - skipping redeem positions');
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      this.osmiumService.trackEvent({
-        name: 'relayer_service-redeem_positions-finished',
-        metadata: commonTrackingProperties,
-      });
-      return 'dry-run-redeem-positions-tx-id';
-    }
 
     const data = encodeFunctionData({
       abi: CONDITIONAL_TOKENS_ABI,
