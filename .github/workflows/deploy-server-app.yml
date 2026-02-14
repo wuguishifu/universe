@@ -43,7 +43,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           ref: ${{ github.ref_name }}
       
       - name: Load config
@@ -87,3 +87,8 @@ jobs:
             --build-arg GPG_PASSPHRASE=${{ secrets.GPG_PASSPHRASE }} .
           docker push ${{ steps.docker_version.outputs.docker_image }}
           docker push ${{ steps.docker_version.outputs.docker_image_latest }}
+
+      - name: Create and push version tag
+        run: |
+          git tag ${{ steps.version.outputs.version }}
+          git push origin ${{ steps.version.outputs.version }}
