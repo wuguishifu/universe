@@ -45,6 +45,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.ref_name }}
+          token: ${{ secrets.GHCR_TOKEN }}
       
       - name: Load config
         id: config
