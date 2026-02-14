@@ -53,6 +53,10 @@ export const environmentSchema = z
     enableObiFilter: z.preprocess(preprocessBoolean, z.boolean()).default(true),
     minObiBidAskRatio: z.coerce.number().min(0).default(0.5),
 
+    // book depth filter
+    enableBookDepthFilter: z.preprocess(preprocessBoolean, z.boolean()).default(false),
+    minBookDepth: z.coerce.number().min(0).default(20),
+
     // toxic flow filter
     enableToxicFlowFilter: z.preprocess(preprocessBoolean, z.boolean()).default(true),
     toxicFlowWindowMs: z.coerce.number().min(0).default(3_000),
