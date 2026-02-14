@@ -29,8 +29,6 @@ export class BinancePriceService implements OnModuleInit, OnModuleDestroy {
   private lastTick: BinanceBookTick | null = null;
   private subscription: Subscription | null = null;
 
-  public readonly btcTicks$ = this.binanceWsService.ticks$;
-
   constructor(private readonly binanceWsService: BinanceWsService) {}
 
   onModuleInit() {

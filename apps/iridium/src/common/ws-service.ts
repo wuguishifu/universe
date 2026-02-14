@@ -79,7 +79,7 @@ export abstract class WebSocketService {
     }
 
     const delay = reconnectionDelays[Math.min(this.reconnectionAttempts, reconnectionDelays.length - 1)];
-    this.logger.debug(`Reconnecting to CLOB WebSocket in ${delay} ms`);
+    this.logger.debug(`Reconnecting to WebSocket in ${delay} ms`);
     this.reconnectionTimer = setTimeout(() => {
       this.reconnectionAttempts++;
       this.reconnectionTimer = null;

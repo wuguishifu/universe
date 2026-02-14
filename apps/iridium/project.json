@@ -77,6 +77,13 @@
       "options": {
         "command": "echo Prepush Done!"
       }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsx {args.file}",
+        "cwd": "apps/iridium/src/smoke"
+      }
     }
   }
 }
