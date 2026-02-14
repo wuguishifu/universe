@@ -74,6 +74,7 @@ export class AlphaService implements OnModuleDestroy {
 
     const filters: { name: string; fn: () => boolean }[] = [
       { name: 'trading_hours', fn: () => this.filterForTradingHours() },
+      { name: 'book_depth', fn: () => this.filterForBookDepth(tick) },
       { name: 'time_remaining', fn: () => this.filterForTimeRemaining(tick) },
       { name: 'skew', fn: () => this.filterForSkew(tick) },
       { name: 'stability', fn: () => this.filterForStability(tick) },
@@ -176,6 +177,45 @@ export class AlphaService implements OnModuleDestroy {
     }
 
     return false;
+  }
+
+  private filterForBookDepth(tick: MarketTick): boolean {
+    const { enableBookDepthFilter, minBookDepth } = this.environmentService.environment;
+
+    if (!enableBookDepthFilter) {
+      return true;
+    }
+
+    // guard against undefined for backward compat
+    if (tick.yesNearAskDepth === undefined || tick.noNearAskDepth === undefined) {
+      return true;
+    }
+
+    const passed = tick.yesNearAskDepth >= minBookDepth && tick.noNearAskDepth >= minBookDepth;
+
+    if (this.environmentService.environment.enableVerboseEvents) {
+      this.osmiumService.trackDebug({
+        name: 'book-depth-eval',
+        metadata: {
+          conditionId: tick.conditionId,
+          yesNearAskDepth: tick.yesNearAskDepth,
+          noNearAskDepth: tick.noNearAskDepth,
+          minBookDepth,
+          passed,
+        },
+      });
+    }
+
+    if (!passed) {
+      const rejectSide = tick.yesNearAskDepth < minBookDepth ? 'YES' : 'NO';
+      const rejectValue = rejectSide === 'YES' ? tick.yesNearAskDepth : tick.noNearAskDepth;
+      this.logger.debug(
+        `Book depth reject ${tick.conditionId}: ${rejectSide} near-ask depth ${rejectValue.toFixed(1)} < ${minBookDepth}`,
+      );
+      return false;
+    }
+
+    return true;
   }
 
   private filterForTimeRemaining(tick: MarketTick): boolean {
