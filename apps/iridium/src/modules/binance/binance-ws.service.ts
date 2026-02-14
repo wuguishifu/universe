@@ -72,6 +72,7 @@ export class BinanceWsService extends WebSocketService implements OnModuleDestro
   private scheduleWatchdogReconnect() {
     if (this.watchdogTimer) {
       clearTimeout(this.watchdogTimer);
+      this.watchdogTimer = null;
     }
 
     this.watchdogTimer = setTimeout(() => {
