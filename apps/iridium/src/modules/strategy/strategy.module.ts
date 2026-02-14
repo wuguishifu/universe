@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { BinanceModule } from '../binance/binance.module';
 import { CacheModule } from '../cache/cache.module';
+import { ClaimModule } from '../claim/claim.module';
 import { ClobWsModule } from '../clob/ws/clob-ws.module';
 import { ExecutionModule } from '../execution/execution.module';
 import { LedgerModule } from '../ledger/ledger.module';
@@ -16,6 +17,7 @@ import { MarketAdapterModule } from '../market-adapter/market-adapter.module';
   imports: [
     BinanceModule,
     CacheModule,
+    ClaimModule,
     ClobWsModule,
     ExecutionModule,
     LedgerModule,
