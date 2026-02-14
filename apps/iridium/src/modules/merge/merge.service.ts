@@ -61,75 +61,77 @@ export class MergeService implements OnModuleInit, OnModuleDestroy {
 
     this.cycleInProgress = true;
     try {
-      const markets = Array.from(this.cacheService.markets.values());
-      if (markets.length === 0) {
+      const straddles = this.positionService.getStraddles();
+      const mergeableStraddles = straddles.filter((s) => s.yesHoldings > 0 || s.noHoldings > 0);
+      if (mergeableStraddles.length === 0) {
         return;
       }
 
-      this.logger.debug(`Merge cycle: checking ${markets.length} market(s)`);
+      this.logger.debug(`Merge cycle: checking ${mergeableStraddles.length} straddle(s) with holdings`);
 
-      await Promise.all(
-        markets.map(async (market) => {
-          if (!this.clobClient) {
-            // this condition is required to satisfy the type checker because we are inside an async callback
-            // technically, `clobClient` may become null between the check at the start of the function and here
-            return;
+      for (const straddle of mergeableStraddles) {
+        if (!this.clobClient) {
+          break;
+        }
+
+        const market = this.cacheService.markets.get(straddle.conditionId);
+        if (!market) {
+          continue;
+        }
+
+        try {
+          const [yesBalance, noBalance] = await Promise.allSettled([
+            this.clobClient.getBalanceAllowance({ asset_type: AssetType.CONDITIONAL, token_id: market.yesToken }),
+            this.clobClient.getBalanceAllowance({ asset_type: AssetType.CONDITIONAL, token_id: market.noToken }),
+          ]).then(([yesResult, noResult]) => [
+            yesResult.status === 'fulfilled' && yesResult.value.balance != null
+              ? parseFloat(formatUnits(BigInt(yesResult.value.balance), 6))
+              : 0,
+            noResult.status === 'fulfilled' && noResult.value.balance != null
+              ? parseFloat(formatUnits(BigInt(noResult.value.balance), 6))
+              : 0,
+          ]);
+
+          const mergeable = Math.min(yesBalance, noBalance);
+          if (mergeable <= 0.001) {
+            continue;
           }
 
-          try {
-            const [yesBalance, noBalance] = await Promise.allSettled([
-              this.clobClient.getBalanceAllowance({ asset_type: AssetType.CONDITIONAL, token_id: market.yesToken }),
-              this.clobClient.getBalanceAllowance({ asset_type: AssetType.CONDITIONAL, token_id: market.noToken }),
-            ]).then(([yesResult, noResult]) => [
-              yesResult.status === 'fulfilled' ? parseFloat(formatUnits(BigInt(yesResult.value.balance), 6)) : 0,
-              noResult.status === 'fulfilled' ? parseFloat(formatUnits(BigInt(noResult.value.balance), 6)) : 0,
-            ]);
+          this.logger.log(
+            `Merging ${mergeable.toFixed(6)} positions on condition ${market.conditionId} (YES=${yesBalance.toFixed(6)}, NO=${noBalance.toFixed(6)})`,
+          );
 
-            const mergeable = Math.min(yesBalance, noBalance);
-            if (mergeable <= 0.001) {
-              return;
-            }
+          await this.executionService.mergePositions({
+            conditionId: market.conditionId,
+            amount: mergeable,
+          });
 
-            this.logger.log(
-              `Merging ${mergeable.toFixed(6)} positions on condition ${market.conditionId} (YES=${yesBalance.toFixed(6)}, NO=${noBalance.toFixed(6)})`,
-            );
+          // 1 unit of merged position is worth 1 USDC in the ledger
+          this.ledgerService.credit(mergeable);
 
-            await this.executionService.mergePositions({
+          straddle.yesHoldings = Math.max(0, straddle.yesHoldings - mergeable);
+          straddle.noHoldings = Math.max(0, straddle.noHoldings - mergeable);
+
+          this.osmiumService.trackEvent({
+            name: 'merge_service-merge-success',
+            metadata: {
               conditionId: market.conditionId,
               amount: mergeable,
-            });
-
-            // 1 unit of merged position is worth 1 USDC in the ledger
-            this.ledgerService.credit(mergeable);
-
-            const straddle = this.positionService.getStraddle(market.conditionId);
-            if (straddle) {
-              straddle.yesHoldings = Math.max(0, straddle.yesHoldings - mergeable);
-              straddle.noHoldings = Math.max(0, straddle.noHoldings - mergeable);
-            }
-
-            this.osmiumService.trackEvent({
-              name: 'merge_service-merge-success',
-              metadata: {
-                conditionId: market.conditionId,
-                amount: mergeable,
-                yesBalance,
-                noBalance,
-                straddleTracked: !!straddle,
-              },
-            });
-          } catch (error) {
-            this.logger.error(`Failed to merge positions on ${market.conditionId}: ${(error as Error).message}`);
-            this.osmiumService.trackEvent({
-              name: 'merge_service-merge-failed',
-              metadata: {
-                conditionId: market.conditionId,
-                reason: (error as Error).message,
-              },
-            });
-          }
-        }),
-      );
+              yesBalance,
+              noBalance,
+            },
+          });
+        } catch (error) {
+          this.logger.error(`Failed to merge positions on ${market.conditionId}: ${(error as Error).message}`);
+          this.osmiumService.trackEvent({
+            name: 'merge_service-merge-failed',
+            metadata: {
+              conditionId: market.conditionId,
+              reason: (error as Error).message,
+            },
+          });
+        }
+      }
     } finally {
       this.cycleInProgress = false;
     }

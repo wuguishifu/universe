@@ -421,11 +421,9 @@ export class StraddleManagerService {
     const staleStraddles: ActiveStraddle[] = [];
     await Promise.all(
       activeStraddles.map(async (straddle) => {
-        const hasChanged = await this.reconcileSingleStraddle(straddle);
-        if (hasChanged) {
-          if (this.isStraddleComplete(straddle)) {
-            staleStraddles.push(straddle);
-          }
+        await this.reconcileSingleStraddle(straddle);
+        if (this.isStraddleComplete(straddle)) {
+          staleStraddles.push(straddle);
         }
       }),
     );
