@@ -25,6 +25,7 @@ export type ActiveStraddle = {
 
   // Stop-loss timing
   placedAt: number; // Date.now() at placement
+  btcPriceAtEntry: number | null; // BTC mid price when straddle was placed
 
   // Concurrency control
   skewInProgress: boolean;

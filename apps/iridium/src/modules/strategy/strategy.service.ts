@@ -101,6 +101,13 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async execute(plan: EntryPlan) {
+    const straddleCooldownMs =
+      this.environmentService.environment.straddleCooldownMsOverride ??
+      this.marketAdapterService.adapter.straddleCooldownMs;
+    if (!this.straddleManagerService.canPlace(plan.conditionId, straddleCooldownMs)) {
+      return;
+    }
+
     const requiredCapital = (plan.targetYes + plan.targetNo) * plan.quantity;
     if (!this.ledgerService.hasAvailableCapital(requiredCapital)) {
       return;
