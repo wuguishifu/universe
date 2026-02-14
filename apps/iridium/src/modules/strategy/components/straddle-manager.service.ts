@@ -5,6 +5,7 @@ import { filter, Subject, Subscription } from 'rxjs';
 import { OsmiumService } from '@wuguishifu/nest-common';
 
 import { AlphaService, EntryPlan } from './alpha.service';
+import { EnvironmentService } from '../../../environment/environment-service';
 import { OrderMessage } from '../../../types/clob/orderMessage';
 import { BinancePriceService } from '../../binance/binance-price.service';
 import { MarketWsService } from '../../clob/ws/market-ws.service';
@@ -47,6 +48,7 @@ export class StraddleManagerService {
     private readonly osmiumService: OsmiumService,
     private readonly marketWsService: MarketWsService,
     private readonly binancePriceService: BinancePriceService,
+    private readonly environmentService: EnvironmentService,
   ) {}
 
   public async placeStraddle(plan: EntryPlan, stopLossConfig: StopLossConfig) {
@@ -217,26 +219,28 @@ export class StraddleManagerService {
           const filledSide = yesFilled ? 'yes' : 'no';
 
           // Emit BTC tracking data for every one-legged tick
-          const btcSnapshot = this.binancePriceService.getSnapshot();
-          this.osmiumService.trackDebug({
-            name: 'straddle-btc-monitor',
-            metadata: {
-              conditionId,
-              btcPriceAtEntry: straddle.btcPriceAtEntry,
-              btcCurrentPrice: btcSnapshot.currentPrice,
-              btcDelta:
-                btcSnapshot.currentPrice != null && straddle.btcPriceAtEntry != null
-                  ? btcSnapshot.currentPrice - straddle.btcPriceAtEntry
+          if (this.environmentService.environment.enableVerboseEvents) {
+            const btcSnapshot = this.binancePriceService.getSnapshot();
+            this.osmiumService.trackDebug({
+              name: 'straddle-btc-monitor',
+              metadata: {
+                conditionId,
+                btcPriceAtEntry: straddle.btcPriceAtEntry,
+                btcCurrentPrice: btcSnapshot.currentPrice,
+                btcDelta:
+                  btcSnapshot.currentPrice != null && straddle.btcPriceAtEntry != null
+                    ? btcSnapshot.currentPrice - straddle.btcPriceAtEntry
+                    : null,
+                btcVelocity: btcSnapshot.velocityPerSecond,
+                btcAcceleration: btcSnapshot.accelerationPerSecond2,
+                filledSide,
+                timeElapsed: Date.now() - straddle.placedAt,
+                graceRemaining: config.gracePeriodMs
+                  ? Math.max(0, config.gracePeriodMs - (Date.now() - straddle.placedAt))
                   : null,
-              btcVelocity: btcSnapshot.velocityPerSecond,
-              btcAcceleration: btcSnapshot.accelerationPerSecond2,
-              filledSide,
-              timeElapsed: Date.now() - straddle.placedAt,
-              graceRemaining: config.gracePeriodMs
-                ? Math.max(0, config.gracePeriodMs - (Date.now() - straddle.placedAt))
-                : null,
-            },
-          });
+              },
+            });
+          }
 
           // Grace period not elapsed? Skip.
           if (config.gracePeriodMs && Date.now() - straddle.placedAt < config.gracePeriodMs) {
