@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nest
 import { TrackingEvent } from '@wuguishifu/contracts-osmium';
 
 import { OSMIUM_CONFIG } from '../../constants';
-import { HttpService } from '../http.service';
+import { HttpService } from '../../services/http.service';
 
 type TrackEventParams = Omit<TrackingEvent, 'createdAt' | 'source'>;
 

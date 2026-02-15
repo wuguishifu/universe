@@ -2,8 +2,8 @@ import { DynamicModule, Global, Module } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { z } from 'zod';
 
-import { HYDROGEN_DB } from '../constants';
-import { getDbClient } from '../utils';
+import { HYDROGEN_DB } from '../../constants';
+import { getDbClient } from '../../utils';
 
 export type HydrogenDb = PostgresJsDatabase;
 
