@@ -2,13 +2,14 @@ import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nest
 import { TrackingEvent } from '@wuguishifu/contracts-osmium';
 
 import { OSMIUM_CONFIG } from '../../constants';
-import { ConfigService } from '../config.service';
 import { HttpService } from '../http.service';
 
 type TrackEventParams = Omit<TrackingEvent, 'createdAt' | 'source'>;
 
 export type OsmiumConfig = {
   serviceName: string;
+  osmiumBaseUrl: string;
+  osmiumApiAccessKey: string;
 };
 
 @Injectable()
@@ -19,14 +20,11 @@ export class OsmiumService implements OnModuleInit, OnModuleDestroy {
   private eventsQueue: TrackingEvent[] = [];
   private eventQueueInterval: NodeJS.Timeout | null = null;
 
-  constructor(
-    @Inject(OSMIUM_CONFIG) private readonly config: OsmiumConfig,
-    private readonly configService: ConfigService,
-  ) {
+  constructor(@Inject(OSMIUM_CONFIG) private readonly config: OsmiumConfig) {
     this.httpService = new HttpService({
-      baseURL: `${this.configService.config.osmium.baseUrl}/api/v1/tracking`,
+      baseURL: `${this.config.osmiumBaseUrl}/api/v1/tracking`,
       headers: {
-        Authorization: `Bearer ${this.configService.config.osmium.apiAccessKey}`,
+        Authorization: `Bearer ${this.config.osmiumApiAccessKey}`,
       },
     });
   }

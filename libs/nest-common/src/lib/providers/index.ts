@@ -1,1 +1,1 @@
-export * from './hydrogen-db.provider';
+export * from './hydrogen-db.module';

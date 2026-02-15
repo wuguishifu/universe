@@ -3,7 +3,6 @@ import { APP_FILTER } from '@nestjs/core';
 
 import { AllExceptionsFilter, CommonModule, HealthController, OsmiumModule } from '@wuguishifu/nest-common';
 
-import { AppController } from './app.controller';
 import { OSMIUM_SERVICE } from './constants';
 import { EnvironmentModule } from './environment/environment-module';
 import { LiquidatorModule } from './modules/liquidator/liquidator.module';
@@ -15,7 +14,7 @@ import { LiquidatorModule } from './modules/liquidator/liquidator.module';
     OsmiumModule.register({ serviceName: 'platinum' }, OSMIUM_SERVICE),
     LiquidatorModule,
   ],
-  controllers: [AppController, HealthController],
+  controllers: [HealthController],
   providers: [
     {
       provide: APP_FILTER,
