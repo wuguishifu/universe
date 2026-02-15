@@ -17,12 +17,14 @@ export class PositionMathService {
   }
 
   public getRedeemableConditionIds(positions: Position[]): `0x${string}`[] {
-    return positions.reduce<`0x${string}`[]>((acc, position) => {
-      if (validateConditionId(position.conditionId)) {
-        acc.push(position.conditionId);
-      }
-      return acc;
-    }, []);
+    return Array.from(
+      positions.reduce((acc, position) => {
+        if (validateConditionId(position.conditionId)) {
+          acc.add(position.conditionId);
+        }
+        return acc;
+      }, new Set<`0x${string}`>()),
+    );
   }
 
   public getPositionCompliments(positions: Position[]): [Position, Position][] {
