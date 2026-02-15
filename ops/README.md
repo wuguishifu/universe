@@ -4,7 +4,7 @@
 
    ```sh
    git clone --filter=blob:none --no-checkout https://github.com/wuguishifu/universe.git universe
-   cd ops
+   cd universe
    ```
 
 1. Add the machine's ops (e.g. `ops/sol`) directory to the sparse checkout
