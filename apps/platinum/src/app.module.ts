@@ -11,7 +11,7 @@ import { LiquidatorModule } from './modules/liquidator/liquidator.module';
   imports: [
     CommonModule,
     EnvironmentModule,
-    OsmiumModule.register({ serviceName: 'platinum' }, OSMIUM_SERVICE),
+    OsmiumModule.register({ serviceName: 'platinum', enableBatching: true }, OSMIUM_SERVICE),
     LiquidatorModule,
   ],
   controllers: [HealthController],

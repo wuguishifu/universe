@@ -17,7 +17,7 @@ import { StrategyModule } from './modules/strategy/strategy.module';
     DiscoveryModule,
     StrategyModule,
     EnvironmentModule,
-    OsmiumModule.register({ serviceName: 'iridium' }, OSMIUM_SERVICE),
+    OsmiumModule.register({ serviceName: 'iridium', enableBatching: true }, OSMIUM_SERVICE),
     EventEmitterModule.forRoot(),
   ],
   controllers: [HealthController],
