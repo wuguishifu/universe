@@ -57,8 +57,8 @@ export class LiquidatorService {
       }),
     );
 
-    const compliments = this.positionMathService.getPositionCompliments(rest);
-    const mergeData = this.positionMathService.getMergeData(compliments);
+    const complements = this.positionMathService.getPositionCompliments(rest);
+    const mergeData = this.positionMathService.getMergeData(complements);
     const encodedMergeTransactions = mergeData.map(({ conditionId, amount }) =>
       this.conditionalTokensService.encodeMergePositions({
         collateralToken: USDC_ADDRESS,

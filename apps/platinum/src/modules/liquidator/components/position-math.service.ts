@@ -34,9 +34,9 @@ export class PositionMathService {
     }, new Map<string, Position>());
 
     return positions.reduce<[Position, Position][]>((acc, position) => {
-      const complimentAsset = assetToPositionMap.get(position.oppositeAsset);
-      if (complimentAsset) {
-        acc.push([position, complimentAsset]);
+      const complementAsset = assetToPositionMap.get(position.oppositeAsset);
+      if (complementAsset) {
+        acc.push([position, complementAsset]);
         // prevent duplicates by removing both positions from the map
         assetToPositionMap.delete(position.asset);
         assetToPositionMap.delete(position.oppositeAsset);
@@ -46,10 +46,10 @@ export class PositionMathService {
   }
 
   public getMergeData(
-    compliments: [Position, Position][],
+    complements: [Position, Position][],
     minimumMergeAmount = 0.01,
   ): { conditionId: `0x${string}`; amount: number }[] {
-    return compliments
+    return complements
       .map(([posA, posB]) => {
         const amount = Math.min(posA.size, posB.size);
         if (amount < minimumMergeAmount) {
