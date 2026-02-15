@@ -1,13 +1,16 @@
 {
   "apps": {
     "iridium": {
-      "registryPath": "wuguishifu/universe/iridium"
+      "registryPath": "wuguishifu/universe/iridium",
+      "imageArch": "amd64"
     },
     "osmium": {
-      "registryPath": "wuguishifu/universe/osmium"
+      "registryPath": "wuguishifu/universe/osmium",
+      "imageArch": "arm64"
     },
     "platinum": {
-      "registryPath": "wuguishifu/universe/platinum"
+      "registryPath": "wuguishifu/universe/platinum",
+      "imageArch": "amd64,arm64"
     }
   }
 }
