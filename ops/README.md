@@ -25,10 +25,10 @@
 
    ```sshconfig
    Host sol
-      HostName 100.81.149.1
+      HostName <TAILSCALE IP>
       User bo
       Port 22
-      IdentityFile ~/Documents/.Authentication/ssh-keys/sol/sol
+      IdentityFile <PATH>
       RequestTTY yes
       RemoteCommand cd ~/Documents/universe/ops/sol && exec zsh -l
    ```
