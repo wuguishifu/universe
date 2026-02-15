@@ -50,7 +50,7 @@ export class RelayerService {
         this.logger.log(`${actionName} transaction submitted: ${result.transactionHash}`);
         this.osmiumService.trackEvent({
           name: `relayer_service-${actionName}-finished`,
-          metadata: { ...metadata, transactionHash: result.transactionHash },
+          metadata: { ...metadata, transaction: result },
         });
         return result.transactionID;
       }
@@ -60,8 +60,7 @@ export class RelayerService {
       const failureMetadata = {
         ...metadata,
         relayerTxId: response.transactionID,
-        transactionHash: txDetails?.[0]?.transactionHash,
-        state: txDetails?.[0]?.state,
+        transaction: txDetails?.[0],
       };
 
       this.logger.error(`${actionName} failed on-chain: ${JSON.stringify(failureMetadata)}`);
