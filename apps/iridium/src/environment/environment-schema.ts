@@ -12,8 +12,6 @@ export const environmentSchema = z
 
     maxHistoryRetentionMs: z.coerce.number().min(0).default(5_000),
     reconcileIntervalMs: z.coerce.number().min(10_000).default(10_000),
-    mergeIntervalMs: z.coerce.number().min(10_000).default(10_000),
-    claimIntervalMs: z.coerce.number().min(0).default(1_800_000),
     ledgerSyncIntervalMs: z.coerce.number().min(10_000).default(10_000),
     straddleCooldownMsOverride: z.coerce.number().min(0).optional(),
     tradingStartHourUtcOverride: z.coerce.number().min(0).max(23).optional(),

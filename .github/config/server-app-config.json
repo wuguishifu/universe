@@ -5,6 +5,9 @@
     },
     "osmium": {
       "registryPath": "wuguishifu/universe/osmium"
+    },
+    "platinum": {
+      "registryPath": "wuguishifu/universe/platinum"
     }
   }
 }
