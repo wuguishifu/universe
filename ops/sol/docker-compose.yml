@@ -94,4 +94,3 @@ volumes:
   postgres-data:
   pgadmin-data:
   redis-data:
-
