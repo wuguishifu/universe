@@ -3,7 +3,7 @@
 Public IP: N/A\
 Location: San Francisco, CA
 
-## TailScale
+## Tailscale
 
 Name: `bos-mac-mini`\
 IP: `<tailscale ip>`
