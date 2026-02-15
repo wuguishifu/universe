@@ -30,5 +30,5 @@
       Port 22
       IdentityFile ~/Documents/.Authentication/ssh-keys/sol/sol
       RequestTTY yes
-      RemoteCommand cd ~/Documents/universe/ops/sol && exec $SHELL
+      RemoteCommand cd ~/Documents/universe/ops/sol && exec zsh -l
    ```
