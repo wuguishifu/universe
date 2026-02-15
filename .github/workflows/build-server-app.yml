@@ -189,7 +189,7 @@ jobs:
     name: Build ${{ matrix.app }} (arm64)
     needs: detect
     if: needs.detect.outputs.has_arm64 == 'true'
-    runs-on: self-hosted
+    runs-on: [self-hosted, macOS, ARM64, mac-mini-m4]
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.detect.outputs.matrix_arm64) }}
