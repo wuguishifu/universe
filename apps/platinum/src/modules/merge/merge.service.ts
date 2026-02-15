@@ -1,50 +1,23 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
 
 import { EnvironmentService } from '../../environment/environment-service';
 import { Position } from '../../types/position';
-import { DataService } from '../data/data.service';
 import { RelayerService } from '../relayer/relayer.service';
 
 @Injectable()
-export class MergeService implements OnModuleInit, OnModuleDestroy {
+export class MergeService {
   private readonly logger = new Logger(MergeService.name);
-
-  private mergeInterval: NodeJS.Timeout | null = null;
 
   constructor(
     private readonly environmentService: EnvironmentService,
-    private readonly dataService: DataService,
     private readonly relayerService: RelayerService,
     private readonly osmiumService: OsmiumService,
   ) {}
 
-  onModuleInit() {
-    this.mergeInterval = setInterval(
-      () => this.executeMergeCycle(),
-      this.environmentService.environment.mergeIntervalMs,
-    );
-  }
-
-  onModuleDestroy() {
-    if (this.mergeInterval) {
-      clearInterval(this.mergeInterval);
-      this.mergeInterval = null;
-    }
-  }
-
-  private async executeMergeCycle() {
-    this.logger.debug('Starting merge cycle');
-    this.osmiumService.trackEvent({ name: 'merge_cycle-start' });
-
-    const positions = await this.dataService.getUserPositions({ callSource: 'merge_service' });
-    if (!positions.length) {
-      if (this.environmentService.environment.enableVerboseEvents) {
-        this.osmiumService.trackDebug({ name: 'merge_cycle-skipped', metadata: { reason: 'no_positions' } });
-      }
-      return;
-    }
+  public async merge(positions: Position[]) {
+    this.osmiumService.trackEvent({ name: 'merge-start' });
 
     const assetToPositionMap = positions.reduce((acc, position) => {
       acc.set(position.asset, position);

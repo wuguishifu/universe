@@ -15,33 +15,36 @@ export class DataService {
     private readonly osmiumService: OsmiumService,
   ) {}
 
-  public async getUserPositions({ callSource }: { callSource: string }): Promise<Position[]> {
-    const { data } = await this.dataApi.get(`/positions?user=${this.environmentService.environment.userAddress}`);
-    const parsed = positionSchema.array().safeParse(data);
+  public async getUserPositions(): Promise<Position[]> {
+    try {
+      const { data } = await this.dataApi.get(`/positions?user=${this.environmentService.environment.userAddress}`);
+      const parsed = positionSchema.array().safeParse(data);
 
-    if (!parsed.success) {
+      if (!parsed.success) {
+        if (this.environmentService.environment.enableVerboseEvents) {
+          this.osmiumService.trackDebug({
+            name: 'data_service-get_user_positions_parse_error',
+            metadata: { error: parsed.error, rawData: data },
+          });
+        }
+        return [];
+      }
+
       if (this.environmentService.environment.enableVerboseEvents) {
         this.osmiumService.trackDebug({
-          name: 'data_service-get_user_positions_parse_error',
-          metadata: {
-            callSource,
-            error: parsed.error,
-            rawData: data,
-          },
+          name: 'data_service-get_user_positions',
+          metadata: { positionCount: parsed.data.length },
+        });
+      }
+      return parsed.data;
+    } catch (error) {
+      if (this.environmentService.environment.enableVerboseEvents) {
+        this.osmiumService.trackDebug({
+          name: 'data_service-get_user_positions_error',
+          metadata: { error: error instanceof Error ? error.message : String(error) },
         });
       }
       return [];
     }
-
-    if (this.environmentService.environment.enableVerboseEvents) {
-      this.osmiumService.trackDebug({
-        name: 'data_service-get_user_positions',
-        metadata: {
-          callSource,
-          positionCount: parsed.data.length,
-        },
-      });
-    }
-    return parsed.data;
   }
 }

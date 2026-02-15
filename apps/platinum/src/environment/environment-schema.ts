@@ -15,8 +15,7 @@ export const environmentSchema = z
     dryRun: z.preprocess(preprocessBoolean, z.boolean()).default(true),
 
     userAddress: z.string(),
-    mergeIntervalMs: z.coerce.number().min(10_000).default(10_000),
-    claimIntervalMs: z.coerce.number().min(10_000).default(60_000),
+    executionIntervalMs: z.coerce.number().min(10_000).default(10_000),
 
     // clob config
     privateKey: z.string().min(1, { message: 'private key required' }),
