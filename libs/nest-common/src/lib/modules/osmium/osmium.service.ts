@@ -2,13 +2,16 @@ import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nest
 import { TrackingEvent } from '@wuguishifu/contracts-osmium';
 
 import { OSMIUM_CONFIG } from '../../constants';
-import { ConfigService } from '../config.service';
-import { HttpService } from '../http.service';
+import { HttpService } from '../../services/http.service';
 
 type TrackEventParams = Omit<TrackingEvent, 'createdAt' | 'source'>;
 
 export type OsmiumConfig = {
   serviceName: string;
+  enableBatching?: boolean;
+  debugPrefix?: string;
+  osmiumBaseUrl: string;
+  osmiumApiAccessKey: string;
 };
 
 @Injectable()
@@ -19,14 +22,11 @@ export class OsmiumService implements OnModuleInit, OnModuleDestroy {
   private eventsQueue: TrackingEvent[] = [];
   private eventQueueInterval: NodeJS.Timeout | null = null;
 
-  constructor(
-    @Inject(OSMIUM_CONFIG) private readonly config: OsmiumConfig,
-    private readonly configService: ConfigService,
-  ) {
+  constructor(@Inject(OSMIUM_CONFIG) private readonly config: OsmiumConfig) {
     this.httpService = new HttpService({
-      baseURL: `${this.configService.config.osmium.baseUrl}/api/v1/tracking`,
+      baseURL: `${this.config.osmiumBaseUrl}/api/v1/tracking`,
       headers: {
-        Authorization: `Bearer ${this.configService.config.osmium.apiAccessKey}`,
+        Authorization: `Bearer ${this.config.osmiumApiAccessKey}`,
       },
     });
   }
@@ -34,6 +34,10 @@ export class OsmiumService implements OnModuleInit, OnModuleDestroy {
   private readonly BATCH_SIZE = 500;
 
   onModuleInit() {
+    if (!this.config.enableBatching) {
+      return;
+    }
+
     this.eventQueueInterval = setInterval(() => {
       const currentEvents = this.eventsQueue;
       this.eventsQueue = [];
@@ -70,16 +74,30 @@ export class OsmiumService implements OnModuleInit, OnModuleDestroy {
       source: this.config.serviceName,
       createdAt: Date.now(),
     };
-    this.eventsQueue.push(event);
+    this.dispatchEvent(event);
   }
 
   public trackDebug(params: TrackEventParams) {
     const event: TrackingEvent = {
       ...params,
-      name: `debug-${params.name}`,
+      name: this.formatDebugEventName(params.name),
       source: this.config.serviceName,
       createdAt: Date.now(),
     };
-    this.eventsQueue.push(event);
+    this.dispatchEvent(event);
+  }
+
+  private formatDebugEventName(name: string) {
+    return `${this.config.debugPrefix ?? 'debug'}-${name}`;
+  }
+
+  private dispatchEvent(event: TrackingEvent) {
+    if (this.config.enableBatching) {
+      this.eventsQueue.push(event);
+    } else {
+      this.httpService.post('/events', event).catch((error) => {
+        this.logger.warn(`Failed to send tracking event to Osmium: ${error.message}`);
+      });
+    }
   }
 }

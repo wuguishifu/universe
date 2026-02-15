@@ -4,7 +4,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 
 import { AllExceptionsFilter, CommonModule, HealthController, OsmiumModule } from '@wuguishifu/nest-common';
 
-import { AppController } from './app.controller';
 import { OSMIUM_SERVICE } from './constants/constants';
 import { EnvironmentModule } from './environment/environment-module';
 import { DiscoveryModule } from './modules/discovery/discovery.module';
@@ -18,10 +17,10 @@ import { StrategyModule } from './modules/strategy/strategy.module';
     DiscoveryModule,
     StrategyModule,
     EnvironmentModule,
-    OsmiumModule.register({ serviceName: 'iridium' }, OSMIUM_SERVICE),
+    OsmiumModule.register({ serviceName: 'iridium', enableBatching: true }, OSMIUM_SERVICE),
     EventEmitterModule.forRoot(),
   ],
-  controllers: [AppController, HealthController],
+  controllers: [HealthController],
   providers: [
     {
       provide: APP_FILTER,
