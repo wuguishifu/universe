@@ -71,16 +71,18 @@ export class LiquidatorService {
 
     const encodedTransactions = [...encodedRedeemTransactions, ...encodedMergeTransactions];
     try {
-      const txHash = await this.relayerService.executeRelayerTx('liquidation', encodedTransactions, {
+      const transaction = await this.relayerService.executeRelayerTx('liquidation', encodedTransactions, {
         redeemCount: encodedRedeemTransactions.length,
         mergeCount: encodedMergeTransactions.length,
       });
 
-      this.logger.log(`Liquidation transaction submitted: ${txHash}`);
+      this.logger.log(`Liquidation transaction submitted: ${transaction.transactionID}`);
       this.osmiumService.trackEvent({
         name: 'liquidation_submitted',
         metadata: {
-          transactionHash: txHash,
+          ...(this.environmentService.environment.enableVerboseEvents
+            ? { transaction }
+            : { transactionId: transaction.transactionID, transactionHash: transaction.transactionHash }),
           redeemCount: encodedRedeemTransactions.length,
           mergeCount: encodedMergeTransactions.length,
         },

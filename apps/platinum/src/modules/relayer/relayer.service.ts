@@ -1,10 +1,26 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { RelayClient } from '@polymarket/builder-relayer-client';
+import { RelayClient, RelayerTransaction } from '@polymarket/builder-relayer-client';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
 
 import { CONDITIONAL_TOKENS_ADDRESS, POLYMARKET_RELAY_CLIENT } from '../../constants';
 import { EnvironmentService } from '../../environment/environment-service';
+
+const dummyRelayerTransaction: RelayerTransaction = {
+  transactionID: 'dummy-tx-id',
+  transactionHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+  from: '0x0000000000000000000000000000000000000000',
+  to: '0x0000000000000000000000000000000000000000',
+  proxyAddress: '0x0000000000000000000000000000000000000000',
+  data: '0x',
+  nonce: '0',
+  value: '0',
+  state: 'STATE_NEW',
+  type: 'DummySafeTransaction',
+  metadata: '',
+  updatedAt: new Date(),
+  createdAt: new Date(),
+};
 
 @Injectable()
 export class RelayerService {
@@ -20,7 +36,7 @@ export class RelayerService {
     actionName: string,
     data: `0x${string}`[],
     metadata: Record<string, unknown>,
-  ): Promise<string> {
+  ): Promise<RelayerTransaction> {
     if (!this.relayClient) {
       throw new Error('Relayer client not initialized');
     }
@@ -39,7 +55,7 @@ export class RelayerService {
         name: `relayer_service-${actionName}-skipped`,
         metadata,
       });
-      return 'dry-run-tx-id';
+      return dummyRelayerTransaction;
     }
 
     try {
@@ -50,9 +66,14 @@ export class RelayerService {
         this.logger.log(`${actionName} transaction submitted: ${result.transactionHash}`);
         this.osmiumService.trackEvent({
           name: `relayer_service-${actionName}-finished`,
-          metadata: { ...metadata, transaction: result },
+          metadata: {
+            ...metadata,
+            ...(this.environmentService.environment.enableVerboseEvents
+              ? { transaction: result }
+              : { transactionId: response.transactionID, transactionHash: result.transactionHash }),
+          },
         });
-        return result.transactionID;
+        return result;
       }
 
       // wait() returns undefined when the tx hits STATE_FAILED or polling times out
