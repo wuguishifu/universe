@@ -1,53 +1,27 @@
-import { JsonRpcProvider } from '@ethersproject/providers';
-import { Wallet } from '@ethersproject/wallet';
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { RelayClient, RelayerTxType } from '@polymarket/builder-relayer-client';
-import { BuilderConfig } from '@polymarket/builder-signing-sdk';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { RelayClient } from '@polymarket/builder-relayer-client';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
 
-import { CONDITIONAL_TOKENS_ADDRESS, POLYGON_CHAIN_ID, POLYGON_RPC_URL, RELAYER_API_BASE } from '../../constants';
+import { CONDITIONAL_TOKENS_ADDRESS, POLYMARKET_RELAY_CLIENT } from '../../constants';
 import { EnvironmentService } from '../../environment/environment-service';
 
 @Injectable()
-export class RelayerService implements OnModuleInit {
+export class RelayerService {
   private readonly logger = new Logger(RelayerService.name);
 
-  private client: RelayClient | null = null;
-  private signer: Wallet | null = null;
-
   constructor(
-    private readonly environmentService: EnvironmentService,
     private readonly osmiumService: OsmiumService,
+    private readonly environmentService: EnvironmentService,
+    @Inject(POLYMARKET_RELAY_CLIENT) private readonly relayClient: RelayClient,
   ) {}
-
-  public onModuleInit() {
-    this.logger.debug('Initializing Relayer Client');
-
-    const { privateKey, polyApiKey, polyApiSecret, polyApiPassphrase } = this.environmentService.environment;
-    const formattedKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
-
-    const provider = new JsonRpcProvider(POLYGON_RPC_URL);
-    this.signer = new Wallet(formattedKey, provider);
-
-    const builderConfig = new BuilderConfig({
-      localBuilderCreds: {
-        key: polyApiKey,
-        secret: polyApiSecret,
-        passphrase: polyApiPassphrase,
-      },
-    });
-
-    this.client = new RelayClient(RELAYER_API_BASE, POLYGON_CHAIN_ID, this.signer, builderConfig, RelayerTxType.PROXY);
-    this.logger.debug(`Relayer initialized for wallet: ${this.signer.address} (PROXY mode)`);
-  }
 
   public async executeRelayerTx(
     actionName: string,
     data: `0x${string}`[],
     metadata: Record<string, unknown>,
   ): Promise<string> {
-    if (!this.client) {
+    if (!this.relayClient) {
       throw new Error('Relayer client not initialized');
     }
 
@@ -59,8 +33,17 @@ export class RelayerService implements OnModuleInit {
 
     const tx = data.map((d) => ({ to: CONDITIONAL_TOKENS_ADDRESS, data: d, value: '0' }));
 
+    if (this.environmentService.environment.dryRun) {
+      this.logger.warn(`Dry run enabled - skipping ${actionName} execution`);
+      this.osmiumService.trackEvent({
+        name: `relayer_service-${actionName}-skipped`,
+        metadata,
+      });
+      return 'dry-run-tx-id';
+    }
+
     try {
-      const response = await this.client.execute(tx);
+      const response = await this.relayClient.execute(tx);
       const result = await response.wait();
 
       if (result) {
