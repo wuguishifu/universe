@@ -4,7 +4,7 @@ import { Data } from 'ws';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
 
-import { WebSocketService } from './ws-service';
+import { WebSocketService } from '../../../common/ws-service';
 import { CLOB_USER_WS_URL } from '../../../constants/constants';
 import { Message } from '../../../types/clob/message';
 import { OrderMessage } from '../../../types/clob/orderMessage';
@@ -75,11 +75,11 @@ export class UserWsService extends WebSocketService implements OnModuleInit, OnM
   }
 
   protected onError(error: Error): void {
-    this.osmiumService.trackDebug({ name: 'clob_ws-error', metadata: { message: error.message } });
+    this.osmiumService.trackDebug({ name: 'clob_ws-error', metadata: { message: error.message, type: 'user' } });
   }
 
   protected onClose(code: number, reason: string): void {
-    this.osmiumService.trackDebug({ name: 'clob_ws-closed', metadata: { code, reason } });
+    this.osmiumService.trackDebug({ name: 'clob_ws-closed', metadata: { code, reason, type: 'user' } });
   }
 
   public authenticate(userCredentials: UserCredentials) {

@@ -1,0 +1,13 @@
+
+{
+  "mcpServers": {
+    "osmium-events": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://claude_mcp:f29076362c21459f9f31e4c5ecac9a81@100.81.149.1:5432/hydrogen"
+      ]
+    }
+  }
+}

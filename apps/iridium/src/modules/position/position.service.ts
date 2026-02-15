@@ -23,8 +23,13 @@ export type ActiveStraddle = {
   yesStatus: 'OPEN' | 'FILLED' | 'CANCELED';
   noStatus: 'OPEN' | 'FILLED' | 'CANCELED';
 
+  // Stop-loss timing
+  placedAt: number; // Date.now() at placement
+  btcPriceAtEntry: number | null; // BTC mid price when straddle was placed
+
   // Concurrency control
   skewInProgress: boolean;
+  skewApplied: boolean;
 };
 
 type ConditionId = string;

@@ -5,7 +5,17 @@
       "Bash(npx nx build:*)",
       "Bash(nx tsc:*)",
       "Bash(pnpm nx build:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "WebSearch",
+      "Bash(git -C /Users/bo/Developer/wuguishifu/universe log --oneline --all --since=\"2026-02-13\")",
+      "Bash(git -C /Users/bo/Developer/wuguishifu/universe log --oneline --all)",
+      "Bash(git -C /Users/bo/Developer/wuguishifu/universe show:*)",
+      "Bash(git -C /Users/bo/Developer/wuguishifu/universe log --all --graph --oneline)",
+      "Bash(claude mcp list:*)",
+      "mcp__osmium-events__query"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "osmium-events"
+  ]
 }

@@ -5,7 +5,9 @@ import { OsmiumService } from '@wuguishifu/nest-common';
 
 import { EnvironmentService } from '../../../environment/environment-service';
 import { getOrCreateList } from '../../../utils/map.utils';
+import { BinancePriceService } from '../../binance/binance-price.service';
 import { MarketTick, TradeEvent } from '../../clob/ws/market-ws.service';
+import { MarketAdapterService } from '../../market-adapter/market-adapter.service';
 
 type PriceHistoryEntry = {
   yesPrice: number;
@@ -40,6 +42,8 @@ export class AlphaService implements OnModuleDestroy {
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly osmiumService: OsmiumService,
+    private readonly marketAdapterService: MarketAdapterService,
+    private readonly binancePriceService: BinancePriceService,
   ) {}
 
   onModuleDestroy() {
@@ -52,7 +56,25 @@ export class AlphaService implements OnModuleDestroy {
   public analyzeTick(tick: MarketTick): EntryPlan | null {
     this.recordPriceHistory(tick);
 
+    if (this.environmentService.environment.enableVerboseEvents) {
+      const btcSnapshot = this.binancePriceService.getSnapshot();
+      this.osmiumService.trackDebug({
+        name: 'btc-correlation',
+        metadata: {
+          conditionId: tick.conditionId,
+          polyBestBidYes: tick.bestBidYes,
+          polyBestBidNo: tick.bestBidNo,
+          btcPrice: btcSnapshot.currentPrice,
+          btcVelocity: btcSnapshot.velocityPerSecond,
+          btcAcceleration: btcSnapshot.accelerationPerSecond2,
+          msSinceLastBtcTick: btcSnapshot.msSinceLastTick,
+        },
+      });
+    }
+
     const filters: { name: string; fn: () => boolean }[] = [
+      { name: 'trading_hours', fn: () => this.filterForTradingHours() },
+      { name: 'book_depth', fn: () => this.filterForBookDepth(tick) },
       { name: 'time_remaining', fn: () => this.filterForTimeRemaining(tick) },
       { name: 'skew', fn: () => this.filterForSkew(tick) },
       { name: 'stability', fn: () => this.filterForStability(tick) },
@@ -124,13 +146,86 @@ export class AlphaService implements OnModuleDestroy {
   // #endregion
 
   // #region filters
+  private filterForTradingHours(): boolean {
+    const startHour =
+      this.environmentService.environment.tradingStartHourUtcOverride ??
+      this.marketAdapterService.adapter.tradingStartHourUtc;
+    const endHour =
+      this.environmentService.environment.tradingEndHourUtcOverride ??
+      this.marketAdapterService.adapter.tradingEndHourUtc;
+
+    if (startHour == null && endHour == null) {
+      return true;
+    }
+
+    const currentHour = new Date().getUTCHours();
+
+    if (startHour != null && endHour != null) {
+      if (startHour <= endHour) {
+        return currentHour >= startHour && currentHour < endHour;
+      }
+      // Wrap-around (e.g., start=22, end=6 means 22:00-06:00 UTC)
+      return currentHour >= startHour || currentHour < endHour;
+    }
+
+    if (startHour != null) {
+      return currentHour >= startHour;
+    }
+
+    if (endHour != null) {
+      return currentHour < endHour;
+    }
+
+    return false;
+  }
+
+  private filterForBookDepth(tick: MarketTick): boolean {
+    const { enableBookDepthFilter, minBookDepth } = this.environmentService.environment;
+
+    if (!enableBookDepthFilter) {
+      return true;
+    }
+
+    const passed = tick.yesNearAskDepth >= minBookDepth && tick.noNearAskDepth >= minBookDepth;
+
+    if (this.environmentService.environment.enableVerboseEvents) {
+      this.osmiumService.trackDebug({
+        name: 'book-depth-eval',
+        metadata: {
+          conditionId: tick.conditionId,
+          yesNearAskDepth: tick.yesNearAskDepth,
+          noNearAskDepth: tick.noNearAskDepth,
+          minBookDepth,
+          passed,
+        },
+      });
+    }
+
+    if (!passed) {
+      const rejectSide = tick.yesNearAskDepth < minBookDepth ? 'YES' : 'NO';
+      const rejectValue = rejectSide === 'YES' ? tick.yesNearAskDepth : tick.noNearAskDepth;
+      this.logger.debug(
+        `Book depth reject ${tick.conditionId}: ${rejectSide} near-ask depth ${rejectValue.toFixed(1)} < ${minBookDepth}`,
+      );
+      return false;
+    }
+
+    return true;
+  }
+
   private filterForTimeRemaining(tick: MarketTick): boolean {
-    if (tick.timeRemaining > this.environmentService.environment.maxTimeRemainingMs) {
+    const maxTimeRemainingMs =
+      this.environmentService.environment.maxTimeRemainingMsOverride ??
+      this.marketAdapterService.adapter.maxTimeRemainingMs;
+    if (tick.timeRemaining > maxTimeRemainingMs) {
       this.logger.debug(`Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too much)`);
       return false;
     }
 
-    if (tick.timeRemaining <= this.environmentService.environment.minTimeRemainingMs) {
+    const minTimeRemainingMs =
+      this.environmentService.environment.minTimeRemainingMsOverride ??
+      this.marketAdapterService.adapter.minTimeRemainingMs;
+    if (tick.timeRemaining <= minTimeRemainingMs) {
       this.logger.debug(`Skipping market ${tick.conditionId} with time remaining ${tick.timeRemaining}ms (too little)`);
       return false;
     }
@@ -539,18 +634,26 @@ export class AlphaService implements OnModuleDestroy {
 
     // C. Fill Gap Cap — prevent one-legged fills from asymmetric momentum
     // Clamp each target so it's never more than maxAskDistance below the best ask.
-    if (tick.bestAskYes > 0 && config.enableFillGapCap) {
-      targetYes = Math.max(targetYes, tick.bestAskYes - config.maxAskDistance);
-    }
-    if (tick.bestAskNo > 0 && config.enableFillGapCap) {
-      targetNo = Math.max(targetNo, tick.bestAskNo - config.maxAskDistance);
+    if (config.enableFillGapCap) {
+      if (tick.bestAskYes > 0) {
+        targetYes = Math.max(targetYes, tick.bestAskYes - config.maxAskDistance);
+      }
+      if (tick.bestAskNo > 0) {
+        targetNo = Math.max(targetNo, tick.bestAskNo - config.maxAskDistance);
+      }
     }
 
     // D. Rounding (Polymarket Requirement)
     targetYes = this.roundDown(targetYes, tick.minTickSize);
     targetNo = this.roundDown(targetNo, tick.minTickSize);
 
-    // E. Sanity Checks
+    // E. Total Cost Ceiling — reject if fill gap cap pushed cost above target entry
+    const totalCost = targetYes + targetNo;
+    if (totalCost > config.targetEntry) {
+      return null;
+    }
+
+    // F. Sanity Checks
     // 1. Must be positive
     if (targetYes <= 0 || targetNo <= 0) {
       return null;
@@ -572,7 +675,7 @@ export class AlphaService implements OnModuleDestroy {
       targetYes,
       targetNo,
       quantity: config.targetPositionSize,
-      reason: `Spread: ${currentSpread.toFixed(3)} | Discount: ${baseDiscount.toFixed(3)}`,
+      reason: `Spread: ${currentSpread.toFixed(3)} | Discount: ${baseDiscount.toFixed(3)} | Total: ${totalCost.toFixed(3)}`,
     };
   }
 

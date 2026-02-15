@@ -5,7 +5,7 @@ import WebSocket from 'ws';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
 
-import { WebSocketService } from './ws-service';
+import { WebSocketService } from '../../../common/ws-service';
 import { CLOB_MARKET_WS_URL } from '../../../constants/constants';
 import { EnvironmentService } from '../../../environment/environment-service';
 import { BookMessage } from '../../../types/clob/bookMessage';
@@ -32,6 +32,8 @@ export type MarketTick = {
   yesAskVolume?: number;
   noBidVolume?: number;
   noAskVolume?: number;
+  yesNearAskDepth: number;
+  noNearAskDepth: number;
 };
 
 export type TradeEvent = {
@@ -52,6 +54,7 @@ type AssetOrderBook = {
   bestAsk: number;
   totalBidVolume: number;
   totalAskVolume: number;
+  nearAskDepth: number;
 };
 
 type MarketState = { [assetId: string]: AssetOrderBook };
@@ -90,11 +93,11 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
   }
 
   protected onError(error: Error): void {
-    this.osmiumService.trackDebug({ name: 'clob_ws-error', metadata: { message: error.message } });
+    this.osmiumService.trackDebug({ name: 'clob_ws-error', metadata: { message: error.message, type: 'market' } });
   }
 
   protected onClose(code: number, reason: string): void {
-    this.osmiumService.trackDebug({ name: 'clob_ws-closed', metadata: { code, reason } });
+    this.osmiumService.trackDebug({ name: 'clob_ws-closed', metadata: { code, reason, type: 'market' } });
   }
 
   protected handleMessage(data: WebSocket.Data) {
@@ -199,10 +202,22 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
       }
     });
 
+    const resolvedBestAsk = bestAsk === Infinity ? 0 : bestAsk;
+
+    let nearAskDepth = 0;
+    const depthRange = 0.05;
+    book.asks.forEach((size, priceStr) => {
+      const price = parseFloat(priceStr);
+      if (price <= resolvedBestAsk + depthRange) {
+        nearAskDepth += size;
+      }
+    });
+
     book.bestBid = bestBid;
-    book.bestAsk = bestAsk === Infinity ? 0 : bestAsk;
+    book.bestAsk = resolvedBestAsk;
     book.totalBidVolume = totalBidVolume;
     book.totalAskVolume = totalAskVolume;
+    book.nearAskDepth = nearAskDepth;
   }
 
   private emitMarketTick(conditionId: string, market: Market, state: MarketState, source: 'book' | 'price_change') {
@@ -253,6 +268,8 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
       yesAskVolume: yesBook.totalAskVolume,
       noBidVolume: noBook.totalBidVolume,
       noAskVolume: noBook.totalAskVolume,
+      yesNearAskDepth: yesBook.nearAskDepth,
+      noNearAskDepth: noBook.nearAskDepth,
     });
   }
 
@@ -265,6 +282,7 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
         bestAsk: 0,
         totalBidVolume: 0,
         totalAskVolume: 0,
+        nearAskDepth: 0,
       };
     }
     return state[assetId];
@@ -321,6 +339,20 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
     }
 
     activeMarkets.forEach((market) => this.getMarketState(market.conditionId));
+  }
+
+  public getBestBid(conditionId: string, side: 'yes' | 'no'): number | undefined {
+    const market = this.cacheService.markets.get(conditionId);
+    if (!market) {
+      return undefined;
+    }
+    const state = this.marketState.get(conditionId);
+    if (!state) {
+      return undefined;
+    }
+    const tokenId = side === 'yes' ? market.yesToken : market.noToken;
+    const book = state[tokenId];
+    return book?.bestBid ?? undefined;
   }
 
   private getMarketState(conditionId: string): MarketState {

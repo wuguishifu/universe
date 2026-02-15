@@ -8,5 +8,10 @@ services:
     ports:
       - "3001:3001"
     environment:
-      # Required when postgres runs in another container - use service name as host
-      HYDROGEN_DB_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/hydrogen"
+      ENVIRONMENT: production
+      HYDROGEN_DATABASE: hydrogen
+      HYDROGEN_HOST: postgres
+      HYDROGEN_PORT: 5432
+      HYDROGEN_USER: ${POSTGRES_USER}
+      HYDROGEN_PASSWORD: ${POSTGRES_PASSWORD}
+      OSMIUM_API_ACCESS_KEY: ${OSMIUM_API_ACCESS_KEY}

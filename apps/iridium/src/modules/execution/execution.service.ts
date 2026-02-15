@@ -4,7 +4,6 @@ import { take } from 'rxjs';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
 
-import { RelayerService } from './relayer.service';
 import { EnvironmentService } from '../../environment/environment-service';
 import { CacheService } from '../cache/cache.service';
 import { ClobClientService } from '../clob/client/clob-client.service';
@@ -19,7 +18,6 @@ export class ExecutionService implements OnModuleInit {
   constructor(
     private readonly clobClientService: ClobClientService,
     private readonly cacheService: CacheService,
-    private readonly relayerService: RelayerService,
     private readonly environmentService: EnvironmentService,
     private readonly osmiumService: OsmiumService,
   ) {}
@@ -274,11 +272,6 @@ export class ExecutionService implements OnModuleInit {
 
     await Promise.all(promises);
     this.osmiumService.trackEvent({ name: 'execution_service-panic_sell-finished', metadata: trackingProps });
-  }
-
-  // MARK: merge positions
-  public mergePositions({ conditionId, amount }: { conditionId: string; amount: number }) {
-    return this.relayerService.mergePositions({ conditionId, amount });
   }
 
   // MARK: get order

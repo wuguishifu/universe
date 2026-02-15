@@ -5,9 +5,10 @@ import { EnvironmentService } from '../../environment/environment-service';
 import { MarketWsService } from '../clob/ws/market-ws.service';
 import { UserWsService } from '../clob/ws/user-ws.service';
 import { LedgerService } from '../ledger/ledger.service';
+import { MarketAdapterService } from '../market-adapter/market-adapter.service';
+import { PositionService } from '../position/position.service';
 import { AlphaService, EntryPlan } from './components/alpha.service';
 import { InventorySkewService } from './components/inventory-skew.service';
-import { PositionService } from '../position/position.service';
 import { StraddleManagerService } from './components/straddle-manager.service';
 
 @Injectable()
@@ -28,6 +29,7 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     private readonly positionService: PositionService,
     private readonly straddleManagerService: StraddleManagerService,
     private readonly inventorySkewService: InventorySkewService,
+    private readonly marketAdapterService: MarketAdapterService,
   ) {}
 
   public onModuleInit() {
@@ -99,6 +101,13 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async execute(plan: EntryPlan) {
+    const straddleCooldownMs =
+      this.environmentService.environment.straddleCooldownMsOverride ??
+      this.marketAdapterService.adapter.straddleCooldownMs;
+    if (!this.straddleManagerService.canPlace(plan.conditionId, straddleCooldownMs)) {
+      return;
+    }
+
     const requiredCapital = (plan.targetYes + plan.targetNo) * plan.quantity;
     if (!this.ledgerService.hasAvailableCapital(requiredCapital)) {
       return;
@@ -107,8 +116,23 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       `Placing straddle for ${plan.conditionId} with targets YES=${plan.targetYes}, NO=${plan.targetNo}, quantity=${plan.quantity} (capital: ${requiredCapital.toFixed(4)}). Reason: ${plan.reason}`,
     );
 
+    const stopLossConfig = {
+      timeoutMs:
+        this.environmentService.environment.stopLossTimeoutMsOverride ??
+        this.marketAdapterService.adapter.stopLossTimeoutMs,
+      maxDropCents:
+        this.environmentService.environment.stopLossMaxDropCents ??
+        this.marketAdapterService.adapter.stopLossMaxDropCents,
+      gracePeriodMs:
+        this.environmentService.environment.stopLossGracePeriodMs ??
+        this.marketAdapterService.adapter.stopLossGracePeriodMs,
+      minTimeRemainingMs:
+        this.environmentService.environment.stopLossMinTimeRemainingMs ??
+        this.marketAdapterService.adapter.stopLossMinTimeRemainingMs,
+    };
+
     this.positionService.setMarketInProgress(plan.conditionId, true);
-    await this.straddleManagerService.placeStraddle(plan);
+    await this.straddleManagerService.placeStraddle(plan, stopLossConfig);
     this.positionService.setMarketInProgress(plan.conditionId, false);
   }
 }

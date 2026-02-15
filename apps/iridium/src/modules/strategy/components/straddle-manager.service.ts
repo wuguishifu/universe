@@ -1,20 +1,39 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OpenOrder } from '@polymarket/clob-client';
-import { Subject } from 'rxjs';
+import { filter, Subject, Subscription } from 'rxjs';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
 
 import { AlphaService, EntryPlan } from './alpha.service';
+import { EnvironmentService } from '../../../environment/environment-service';
 import { OrderMessage } from '../../../types/clob/orderMessage';
+import { BinancePriceService } from '../../binance/binance-price.service';
+import { MarketWsService } from '../../clob/ws/market-ws.service';
 import { ExecutionService } from '../../execution/execution.service';
 import { LedgerService } from '../../ledger/ledger.service';
 import { ActiveStraddle, PositionService } from '../../position/position.service';
+
+export type StopLossConfig = {
+  timeoutMs: number | null;
+  maxDropCents: number | null;
+  gracePeriodMs: number | null;
+  minTimeRemainingMs: number | null;
+};
+
+type StopLossState = {
+  subscription: Subscription | null;
+  fallbackTimer: NodeJS.Timeout | null;
+  triggered: boolean;
+};
 
 @Injectable()
 export class StraddleManagerService {
   private readonly logger = new Logger(StraddleManagerService.name);
 
   private readonly orderMap = new Map<string, string>();
+  private readonly stopLossState = new Map<string, StopLossState>();
+  private readonly placementInFlight = new Set<string>();
+  private readonly recentlyCompleted = new Map<string, number>();
 
   private readonly fillProcessedSubject = new Subject<{
     straddle: ActiveStraddle;
@@ -27,53 +46,83 @@ export class StraddleManagerService {
     private readonly ledgerService: LedgerService,
     private readonly alphaService: AlphaService,
     private readonly osmiumService: OsmiumService,
+    private readonly marketWsService: MarketWsService,
+    private readonly binancePriceService: BinancePriceService,
+    private readonly environmentService: EnvironmentService,
   ) {}
 
-  public async placeStraddle(plan: EntryPlan) {
+  public async placeStraddle(plan: EntryPlan, stopLossConfig: StopLossConfig) {
     const { conditionId, targetYes, targetNo, quantity } = plan;
-    const capital = (targetYes + targetNo) * quantity;
 
-    try {
-      this.ledgerService.debit(capital, 'StraddleManagerService.placeStraddle');
-    } catch (error) {
-      this.logger.error(`Failed to debit ledger for straddle on ${conditionId}: ${(error as Error).message}`);
-      this.osmiumService.trackEvent({
-        name: 'straddle-place-failed',
-        metadata: { conditionId, reason: (error as Error).message },
-      });
+    if (this.placementInFlight.has(conditionId)) {
       return;
     }
+    this.placementInFlight.add(conditionId);
 
     try {
-      const { yesOrderId, noOrderId } = await this.executionService.placeLimitOrder(plan);
-      this.orderMap.set(yesOrderId, conditionId);
-      this.orderMap.set(noOrderId, conditionId);
-      this.positionService.addStraddle({
-        conditionId,
-        yesOrderId,
-        noOrderId,
-        yesPrice: targetYes,
-        noPrice: targetNo,
-        quantity,
-        yesHoldings: 0,
-        noHoldings: 0,
-        yesCumulativeFilled: 0,
-        noCumulativeFilled: 0,
-        yesStatus: 'OPEN',
-        noStatus: 'OPEN',
-        skewInProgress: false,
-      });
-      this.osmiumService.trackEvent({
-        name: 'straddle-placed',
-        metadata: { conditionId, yesOrderId, noOrderId, yesPrice: targetYes, noPrice: targetNo, quantity, capital },
-      });
-    } catch (error) {
-      this.logger.error(`Failed to place limit order on ${conditionId}: ${(error as Error).message}`);
-      this.ledgerService.credit(capital);
-      this.osmiumService.trackEvent({
-        name: 'straddle-place-failed',
-        metadata: { conditionId, reason: (error as Error).message },
-      });
+      const capital = (targetYes + targetNo) * quantity;
+
+      try {
+        this.ledgerService.debit(capital, 'StraddleManagerService.placeStraddle');
+      } catch (error) {
+        this.logger.error(`Failed to debit ledger for straddle on ${conditionId}: ${(error as Error).message}`);
+        this.osmiumService.trackEvent({
+          name: 'straddle-place-failed',
+          metadata: { conditionId, reason: (error as Error).message },
+        });
+        return;
+      }
+
+      try {
+        const { yesOrderId, noOrderId } = await this.executionService.placeLimitOrder(plan);
+        const btcSnapshot = this.binancePriceService.getSnapshot();
+        const btcPriceAtEntry = btcSnapshot.currentPrice;
+
+        this.orderMap.set(yesOrderId, conditionId);
+        this.orderMap.set(noOrderId, conditionId);
+        this.positionService.addStraddle({
+          conditionId,
+          yesOrderId,
+          noOrderId,
+          yesPrice: targetYes,
+          noPrice: targetNo,
+          quantity,
+          yesHoldings: 0,
+          noHoldings: 0,
+          yesCumulativeFilled: 0,
+          noCumulativeFilled: 0,
+          yesStatus: 'OPEN',
+          noStatus: 'OPEN',
+          placedAt: Date.now(),
+          btcPriceAtEntry,
+          skewInProgress: false,
+          skewApplied: false,
+        });
+        this.startStopLossMonitor(conditionId, stopLossConfig);
+
+        this.osmiumService.trackEvent({
+          name: 'straddle-placed',
+          metadata: {
+            conditionId,
+            yesOrderId,
+            noOrderId,
+            yesPrice: targetYes,
+            noPrice: targetNo,
+            quantity,
+            capital,
+            btcPriceAtEntry,
+          },
+        });
+      } catch (error) {
+        this.logger.error(`Failed to place limit order on ${conditionId}: ${(error as Error).message}`);
+        this.ledgerService.credit(capital);
+        this.osmiumService.trackEvent({
+          name: 'straddle-place-failed',
+          metadata: { conditionId, reason: (error as Error).message },
+        });
+      }
+    } finally {
+      this.placementInFlight.delete(conditionId);
     }
   }
 
@@ -142,7 +191,195 @@ export class StraddleManagerService {
     this.orderMap.set(newOrderId, conditionId);
   }
 
+  private startStopLossMonitor(conditionId: string, config: StopLossConfig) {
+    const state: StopLossState = { subscription: null, fallbackTimer: null, triggered: false };
+
+    // 1. Fallback timer (safety net)
+    if (config.timeoutMs) {
+      state.fallbackTimer = setTimeout(() => this.handleStopLoss(conditionId, 'timeout'), config.timeoutMs);
+    }
+
+    // 2. Tick-based monitor (only if price/time params exist)
+    if (config.maxDropCents || config.minTimeRemainingMs) {
+      state.subscription = this.marketWsService.marketTicks$
+        .pipe(filter((tick) => tick.conditionId === conditionId))
+        .subscribe((tick) => {
+          const straddle = this.positionService.getStraddle(conditionId);
+          if (!straddle) {
+            return;
+          }
+
+          const yesFilled = straddle.yesHoldings > 0;
+          const noFilled = straddle.noHoldings > 0;
+
+          // Not one-legged? Skip.
+          if (yesFilled === noFilled) {
+            return;
+          }
+
+          const filledSide = yesFilled ? 'yes' : 'no';
+
+          // Emit BTC tracking data for every one-legged tick
+          if (this.environmentService.environment.enableVerboseEvents) {
+            const btcSnapshot = this.binancePriceService.getSnapshot();
+            this.osmiumService.trackDebug({
+              name: 'straddle-btc-monitor',
+              metadata: {
+                conditionId,
+                btcPriceAtEntry: straddle.btcPriceAtEntry,
+                btcCurrentPrice: btcSnapshot.currentPrice,
+                btcDelta:
+                  btcSnapshot.currentPrice != null && straddle.btcPriceAtEntry != null
+                    ? btcSnapshot.currentPrice - straddle.btcPriceAtEntry
+                    : null,
+                btcVelocity: btcSnapshot.velocityPerSecond,
+                btcAcceleration: btcSnapshot.accelerationPerSecond2,
+                filledSide,
+                timeElapsed: Date.now() - straddle.placedAt,
+                graceRemaining: config.gracePeriodMs
+                  ? Math.max(0, config.gracePeriodMs - (Date.now() - straddle.placedAt))
+                  : null,
+              },
+            });
+          }
+
+          // Grace period not elapsed? Skip.
+          if (config.gracePeriodMs && Date.now() - straddle.placedAt < config.gracePeriodMs) {
+            return;
+          }
+          const entryPrice = yesFilled ? straddle.yesPrice : straddle.noPrice;
+          const currentBid = filledSide === 'yes' ? tick.bestBidYes : tick.bestBidNo;
+
+          // Price drop check
+          if (config.maxDropCents && (entryPrice - currentBid) * 100 >= config.maxDropCents) {
+            this.handleStopLoss(conditionId, 'price_drop');
+            return;
+          }
+
+          // Time remaining check
+          if (config.minTimeRemainingMs && tick.timeRemaining <= config.minTimeRemainingMs) {
+            this.handleStopLoss(conditionId, 'time_remaining');
+            return;
+          }
+        });
+    }
+
+    this.stopLossState.set(conditionId, state);
+  }
+
+  private async handleStopLoss(conditionId: string, trigger: 'price_drop' | 'time_remaining' | 'timeout') {
+    // Prevent double execution from fallback timer + tick monitor racing
+    const state = this.stopLossState.get(conditionId);
+    if (state?.triggered) {
+      return;
+    }
+    if (state) {
+      state.triggered = true;
+    }
+
+    const straddle = this.positionService.getStraddle(conditionId);
+    if (!straddle) {
+      return;
+    }
+
+    // Both sides filled — not a one-legged straddle
+    const minSide = Math.min(straddle.yesHoldings, straddle.noHoldings);
+    if (minSide >= straddle.quantity * 0.99) {
+      return;
+    }
+
+    const yesFilled = straddle.yesHoldings > 0;
+    const noFilled = straddle.noHoldings > 0;
+
+    // Only act on true one-legged straddles (one side has holdings, other has ~0)
+    if (yesFilled === noFilled) {
+      return;
+    } // both or neither filled — skip
+
+    const filledSide: 'yes' | 'no' = yesFilled ? 'yes' : 'no';
+    const unfilledSide: 'yes' | 'no' = yesFilled ? 'no' : 'yes';
+    const unfilledOrderId = straddle[`${unfilledSide}OrderId`];
+    const filledHoldings = straddle[`${filledSide}Holdings`];
+    const timeElapsed = Date.now() - straddle.placedAt;
+
+    this.logger.warn(
+      `Stop-loss triggered on ${conditionId} [${trigger}]: ${filledSide.toUpperCase()} filled (${filledHoldings.toFixed(2)}), ${unfilledSide.toUpperCase()} unfilled after ${(timeElapsed / 1000).toFixed(1)}s`,
+    );
+
+    try {
+      // Cancel the unfilled side's order
+      if (straddle[`${unfilledSide}Status`] === 'OPEN') {
+        await this.executionService.cancelOrder(unfilledOrderId, conditionId).catch((err) => {
+          this.logger.error(
+            `Stop-loss: failed to cancel ${unfilledSide.toUpperCase()} order: ${(err as Error).message}`,
+          );
+        });
+      }
+
+      // Capture exit price before selling
+      const exitPrice = this.marketWsService.getBestBid(conditionId, filledSide);
+
+      // Market-sell the filled side's holdings
+      if (filledHoldings > 0) {
+        await this.executionService.sellMarketPosition({
+          conditionId,
+          yesAmount: filledSide === 'yes' ? filledHoldings : 0,
+          noAmount: filledSide === 'no' ? filledHoldings : 0,
+        });
+      }
+
+      const btcSnapshot = this.binancePriceService.getSnapshot();
+      this.osmiumService.trackEvent({
+        name: 'straddle-stop-loss',
+        metadata: {
+          conditionId,
+          filledSide,
+          holdings: filledHoldings,
+          timeElapsed,
+          yesPrice: straddle.yesPrice,
+          noPrice: straddle.noPrice,
+          quantity: straddle.quantity,
+          exitPrice,
+          trigger,
+          btcPriceAtEntry: straddle.btcPriceAtEntry,
+          btcCurrentPrice: btcSnapshot.currentPrice,
+          btcDelta:
+            btcSnapshot.currentPrice != null && straddle.btcPriceAtEntry != null
+              ? btcSnapshot.currentPrice - straddle.btcPriceAtEntry
+              : null,
+          btcVelocity: btcSnapshot.velocityPerSecond,
+        },
+      });
+
+      this.cleanupStraddle(straddle);
+    } catch (err) {
+      this.logger.error(`Stop-loss failed on ${conditionId}: ${(err as Error).message}`);
+    }
+  }
+
+  public canPlace(conditionId: string, cooldownMs: number): boolean {
+    if (this.placementInFlight.has(conditionId)) {
+      return false;
+    }
+
+    const completedAt = this.recentlyCompleted.get(conditionId);
+    if (completedAt && Date.now() - completedAt < cooldownMs) {
+      return false;
+    }
+
+    // Lazily prune stale entries (>10min old)
+    const pruneThreshold = Date.now() - 600_000;
+    for (const [id, ts] of this.recentlyCompleted) {
+      if (ts < pruneThreshold) {
+        this.recentlyCompleted.delete(id);
+      }
+    }
+
+    return true;
+  }
+
   public cleanupStraddle(straddle: ActiveStraddle) {
+    this.recentlyCompleted.set(straddle.conditionId, Date.now());
     this.osmiumService.trackEvent({
       name: 'straddle-complete',
       metadata: {
@@ -159,6 +396,16 @@ export class StraddleManagerService {
         totalCost: straddle.yesPrice + straddle.noPrice,
       },
     });
+    const state = this.stopLossState.get(straddle.conditionId);
+    if (state) {
+      if (state.fallbackTimer) {
+        clearTimeout(state.fallbackTimer);
+      }
+      if (state.subscription) {
+        state.subscription.unsubscribe();
+      }
+      this.stopLossState.delete(straddle.conditionId);
+    }
     this.positionService.removeStraddle(straddle.conditionId);
     this.orderMap.delete(straddle.yesOrderId);
     this.orderMap.delete(straddle.noOrderId);
@@ -175,11 +422,9 @@ export class StraddleManagerService {
     const staleStraddles: ActiveStraddle[] = [];
     await Promise.all(
       activeStraddles.map(async (straddle) => {
-        const hasChanged = await this.reconcileSingleStraddle(straddle);
-        if (hasChanged) {
-          if (this.isStraddleComplete(straddle)) {
-            staleStraddles.push(straddle);
-          }
+        await this.reconcileSingleStraddle(straddle);
+        if (this.isStraddleComplete(straddle)) {
+          staleStraddles.push(straddle);
         }
       }),
     );
@@ -257,6 +502,16 @@ export class StraddleManagerService {
   }
 
   public async destroy() {
+    for (const state of this.stopLossState.values()) {
+      if (state.fallbackTimer) {
+        clearTimeout(state.fallbackTimer);
+      }
+      if (state.subscription) {
+        state.subscription.unsubscribe();
+      }
+    }
+    this.stopLossState.clear();
+
     if (this.positionService.straddleCount === 0) {
       this.logger.debug('  No active straddles to clean up');
       return;
