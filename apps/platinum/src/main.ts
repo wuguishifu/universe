@@ -36,7 +36,7 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
 
   const url = await app.getUrl();
-  Logger.log(`🚀 Iridium is running on: ${url}`);
+  Logger.log(`🚀 Platinum is running on: ${url}`);
 }
 
 bootstrap();

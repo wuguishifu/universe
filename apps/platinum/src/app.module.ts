@@ -6,9 +6,15 @@ import { AllExceptionsFilter, CommonModule, HealthController, OsmiumModule } fro
 import { AppController } from './app.controller';
 import { OSMIUM_SERVICE } from './constants';
 import { EnvironmentModule } from './environment/environment-module';
+import { MergeModule } from './modules/merge/merge.module';
 
 @Module({
-  imports: [CommonModule, EnvironmentModule, OsmiumModule.register({ serviceName: 'platinum' }, OSMIUM_SERVICE)],
+  imports: [
+    CommonModule,
+    EnvironmentModule,
+    OsmiumModule.register({ serviceName: 'platinum' }, OSMIUM_SERVICE),
+    MergeModule,
+  ],
   controllers: [AppController, HealthController],
   providers: [
     {

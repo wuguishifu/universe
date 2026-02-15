@@ -16,6 +16,8 @@ import {
 } from '../../constants';
 import { EnvironmentService } from '../../environment/environment-service';
 
+const EMPTY_COLLECTION_ID = '0x0000000000000000000000000000000000000000000000000000000000000000';
+
 @Injectable()
 export class RelayerService implements OnModuleInit {
   private readonly logger = new Logger(RelayerService.name);
@@ -34,7 +36,6 @@ export class RelayerService implements OnModuleInit {
     const { privateKey, polyApiKey, polyApiSecret, polyApiPassphrase } = this.environmentService.environment;
     const formattedKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
 
-    // The RelayClient requires a signer with a provider attached
     const provider = new JsonRpcProvider(POLYGON_RPC_URL);
     this.signer = new Wallet(formattedKey, provider);
 
@@ -51,51 +52,60 @@ export class RelayerService implements OnModuleInit {
   }
 
   public async mergePositions({ conditionId, amount }: { conditionId: string; amount: number }): Promise<string> {
-    if (!this.client) {
-      throw new Error('Relayer client not initialized');
-    }
-
     if (!this.validateConditionId(conditionId)) {
       throw new Error('Invalid conditionId format');
     }
 
-    this.logger.log(`Merging positions for condition ${conditionId} with amount ${amount}`);
-    const commonTrackingProperties = { conditionId, amount };
-    this.osmiumService.trackEvent({
-      name: 'relayer_service-merge_positions-started',
-      metadata: commonTrackingProperties,
-    });
-
-    // encode transaction data
     const rawAmount = parseUnits(amount.toFixed(6), 6);
     const data = encodeFunctionData({
       abi: CONDITIONAL_TOKENS_ABI,
       functionName: 'mergePositions',
-      args: [
-        USDC_ADDRESS,
-        '0x0000000000000000000000000000000000000000000000000000000000000000', // parent collectionId (always empty for binary markets)
-        conditionId,
-        [1n, 2n], // partition set [1, 2] = [YES, NO]
-        rawAmount,
-      ],
+      args: [USDC_ADDRESS, EMPTY_COLLECTION_ID, conditionId, [1n, 2n], rawAmount],
     });
 
-    // create transaction object
+    return await this.executeRelayerTx('merge_positions', data, { conditionId, amount });
+  }
+
+  public async redeemPositions({ conditionId }: { conditionId: string }): Promise<string> {
+    if (!this.validateConditionId(conditionId)) {
+      throw new Error('Invalid conditionId format');
+    }
+
+    const data = encodeFunctionData({
+      abi: CONDITIONAL_TOKENS_ABI,
+      functionName: 'redeemPositions',
+      args: [USDC_ADDRESS, EMPTY_COLLECTION_ID, conditionId, [1n, 2n]],
+    });
+
+    return await this.executeRelayerTx('redeem_positions', data, { conditionId });
+  }
+
+  private async executeRelayerTx(
+    actionName: string,
+    data: `0x${string}`,
+    metadata: Record<string, unknown>,
+  ): Promise<string> {
+    if (!this.client) {
+      throw new Error('Relayer client not initialized');
+    }
+
+    this.logger.log(`Executing ${actionName} with metadata: ${JSON.stringify(metadata)}`);
+    this.osmiumService.trackEvent({
+      name: `relayer_service-${actionName}-started`,
+      metadata,
+    });
+
     const tx = { to: CONDITIONAL_TOKENS_ADDRESS, data, value: '0' };
 
     try {
-      // send to relayer
       const response = await this.client.execute([tx]);
       const result = await response.wait();
 
       if (result) {
-        this.logger.log(`Merge positions transaction submitted: ${result.transactionHash}`);
+        this.logger.log(`${actionName} transaction submitted: ${result.transactionHash}`);
         this.osmiumService.trackEvent({
-          name: 'relayer_service-merge_positions-finished',
-          metadata: {
-            ...commonTrackingProperties,
-            transactionHash: result.transactionHash,
-          },
+          name: `relayer_service-${actionName}-finished`,
+          metadata: { ...metadata, transactionHash: result.transactionHash },
         });
         return result.transactionID;
       }
@@ -103,99 +113,32 @@ export class RelayerService implements OnModuleInit {
       // wait() returns undefined when the tx hits STATE_FAILED or polling times out
       const txDetails = await response.getTransaction().catch(() => undefined);
       const failureMetadata = {
-        ...commonTrackingProperties,
+        ...metadata,
         relayerTxId: response.transactionID,
         transactionHash: txDetails?.[0]?.transactionHash,
         state: txDetails?.[0]?.state,
       };
-      this.logger.error(`Merge positions failed on-chain: ${JSON.stringify(failureMetadata)}`);
+
+      this.logger.error(`${actionName} failed on-chain: ${JSON.stringify(failureMetadata)}`);
       this.osmiumService.trackEvent({
-        name: 'relayer_service-merge_positions-failed',
+        name: `relayer_service-${actionName}-failed`,
         metadata: failureMetadata,
       });
-      throw new Error(`Failed to submit merge positions transaction (txId: ${response.transactionID})`);
+      throw new Error(`Failed to submit ${actionName} transaction (txId: ${response.transactionID})`);
     } catch (error) {
       // If already handled above (re-thrown), propagate as-is
-      if (error instanceof Error && error.message.startsWith('Failed to submit merge positions')) {
+      if (error instanceof Error && error.message.startsWith(`Failed to submit ${actionName}`)) {
         throw error;
       }
 
       // Unexpected error from execute() or wait()
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error(`Merge positions unexpected error: ${errorMessage}`);
+      this.logger.error(`${actionName} unexpected error: ${errorMessage}`);
       this.osmiumService.trackEvent({
-        name: 'relayer_service-merge_positions-failed',
-        metadata: { ...commonTrackingProperties, error: errorMessage },
+        name: `relayer_service-${actionName}-failed`,
+        metadata: { ...metadata, error: errorMessage },
       });
-      throw new Error(`Merge positions error: ${errorMessage}`);
-    }
-  }
-
-  public async redeemPositions({ conditionId }: { conditionId: string }): Promise<string> {
-    if (!this.client) {
-      throw new Error('Relayer client not initialized');
-    }
-
-    if (!this.validateConditionId(conditionId)) {
-      throw new Error('Invalid conditionId format');
-    }
-
-    this.logger.log(`Redeeming positions for condition ${conditionId}`);
-    const commonTrackingProperties = { conditionId };
-    this.osmiumService.trackEvent({
-      name: 'relayer_service-redeem_positions-started',
-      metadata: commonTrackingProperties,
-    });
-
-    const data = encodeFunctionData({
-      abi: CONDITIONAL_TOKENS_ABI,
-      functionName: 'redeemPositions',
-      args: [USDC_ADDRESS, '0x0000000000000000000000000000000000000000000000000000000000000000', conditionId, [1n, 2n]],
-    });
-
-    const tx = { to: CONDITIONAL_TOKENS_ADDRESS, data, value: '0' };
-
-    try {
-      const response = await this.client.execute([tx]);
-      const result = await response.wait();
-
-      if (result) {
-        this.logger.log(`Redeem positions transaction submitted: ${result.transactionHash}`);
-        this.osmiumService.trackEvent({
-          name: 'relayer_service-redeem_positions-finished',
-          metadata: {
-            ...commonTrackingProperties,
-            transactionHash: result.transactionHash,
-          },
-        });
-        return result.transactionID;
-      }
-
-      const txDetails = await response.getTransaction().catch(() => undefined);
-      const failureMetadata = {
-        ...commonTrackingProperties,
-        relayerTxId: response.transactionID,
-        transactionHash: txDetails?.[0]?.transactionHash,
-        state: txDetails?.[0]?.state,
-      };
-      this.logger.error(`Redeem positions failed on-chain: ${JSON.stringify(failureMetadata)}`);
-      this.osmiumService.trackEvent({
-        name: 'relayer_service-redeem_positions-failed',
-        metadata: failureMetadata,
-      });
-      throw new Error(`Failed to submit redeem positions transaction (txId: ${response.transactionID})`);
-    } catch (error) {
-      if (error instanceof Error && error.message.startsWith('Failed to submit redeem positions')) {
-        throw error;
-      }
-
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error(`Redeem positions unexpected error: ${errorMessage}`);
-      this.osmiumService.trackEvent({
-        name: 'relayer_service-redeem_positions-failed',
-        metadata: { ...commonTrackingProperties, error: errorMessage },
-      });
-      throw new Error(`Redeem positions error: ${errorMessage}`);
+      throw new Error(`${actionName} error: ${errorMessage}`);
     }
   }
 

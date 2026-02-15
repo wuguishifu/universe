@@ -2,6 +2,7 @@ export const CLOB_MARKET_WS_URL = 'wss://ws-subscriptions-clob.polymarket.com/ws
 export const CLOB_USER_WS_URL = 'wss://ws-subscriptions-clob.polymarket.com/ws/user';
 export const CLOB_API_BASE = 'https://clob.polymarket.com';
 export const GAMMA_API_BASE = 'https://gamma-api.polymarket.com';
+export const DATA_API_BASE = 'https://data-api.polymarket.com';
 export const RELAYER_API_BASE = 'https://relayer-v2.polymarket.com';
 export const POLYGON_RPC_URL = 'https://polygon-rpc.com';
 export const BINANCE_BTC_WS_URL = 'wss://stream.binance.com:9443/ws/btcusdt@bookTicker';
