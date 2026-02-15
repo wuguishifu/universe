@@ -8,6 +8,7 @@ services:
       - "3000:3000"
     environment:
       ENVIRONMENT: development
+      OSMIUM_API_ACCESS_KEY: ${OSMIUM_API_ACCESS_KEY}
       DRY_RUN: true
       DEBUG_LOGGING: true
       ENABLE_VERBOSE_EVENTS: true
