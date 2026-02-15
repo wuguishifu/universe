@@ -178,6 +178,7 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: ${{ matrix.image }}:${{ matrix.tag }}-amd64
+          provenance: false
           build-args: |
             VERSION=${{ matrix.version }}
             BUILD_ENV=production
@@ -218,6 +219,7 @@ jobs:
           push: true
           platforms: linux/arm64
           tags: ${{ matrix.image }}:${{ matrix.tag }}-arm64
+          provenance: false
           build-args: |
             VERSION=${{ matrix.version }}
             BUILD_ENV=production
