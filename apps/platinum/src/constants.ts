@@ -1,6 +1,5 @@
 export const DATA_API_BASE = 'https://data-api.polymarket.com';
 export const RELAYER_API_BASE = 'https://relayer-v2.polymarket.com';
-export const POLYGON_RPC_URL = 'https://polygon-rpc.com';
 
 // Chain info
 export const POLYGON_CHAIN_ID = 137;

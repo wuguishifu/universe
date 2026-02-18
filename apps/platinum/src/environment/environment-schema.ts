@@ -26,6 +26,7 @@ export const environmentSchema = z
     polyApiKey: z.string(),
     polyApiSecret: z.string(),
     polyApiPassphrase: z.string(),
+    polygonRpcUrl: z.string().url().default('https://polygon-rpc.com'),
   })
   .refine((data) => data.signatureType !== 1 || !!data.funderAddress, {
     message: 'funderAddress is required when signatureType is 1',

@@ -5,7 +5,7 @@ import { RelayClient, RelayerTxType } from '@polymarket/builder-relayer-client';
 import { BuilderConfig } from '@polymarket/builder-signing-sdk';
 
 import { RelayerService } from './relayer.service';
-import { POLYGON_CHAIN_ID, POLYGON_RPC_URL, POLYMARKET_RELAY_CLIENT, RELAYER_API_BASE } from '../../constants';
+import { POLYGON_CHAIN_ID, POLYMARKET_RELAY_CLIENT, RELAYER_API_BASE } from '../../constants';
 import { EnvironmentService } from '../../environment/environment-service';
 
 @Module({
@@ -13,10 +13,11 @@ import { EnvironmentService } from '../../environment/environment-service';
     {
       provide: POLYMARKET_RELAY_CLIENT,
       useFactory: (environmentService: EnvironmentService) => {
-        const { privateKey, polyApiKey, polyApiSecret, polyApiPassphrase } = environmentService.environment;
+        const { privateKey, polyApiKey, polyApiSecret, polyApiPassphrase, polygonRpcUrl } =
+          environmentService.environment;
         const formattedKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
 
-        const provider = new JsonRpcProvider(POLYGON_RPC_URL);
+        const provider = new JsonRpcProvider(polygonRpcUrl);
         const signer = new Wallet(formattedKey, provider);
 
         const builderConfig = new BuilderConfig({
