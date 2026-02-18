@@ -23,9 +23,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    configs:
-      - source: postgres-init
-        target: /docker-entrypoint-initdb.d/01-create-dbs.sql
     ports:
       - 5432:5432
     networks:
@@ -48,9 +45,7 @@ services:
       PGADMIN_SERVER_JSON_FILE: /var/lib/pgadmin/servers.json
     volumes:
       - pgadmin-data:/var/lib/pgadmin
-    configs:
-      - source: pgadmin-servers
-        target: /var/lib/pgadmin/servers.json
+      - ./pgadmin/servers.json:/var/lib/pgadmin/servers.json:ro
     ports:
       - 5050:80
     networks:
@@ -94,13 +89,7 @@ services:
     command: worker
     networks:
       - universe-network
-
-configs:
-  postgres-init:
-    file: ./postgres/init/01-create-dbs.sql
-  pgadmin-servers:
-    file: ./pgadmin/servers.json
-
+  
 networks:
   universe-network:
     driver: bridge
