@@ -1,5 +1,3 @@
-import { environmentConfig } from '@wuguishifu/environment';
-import { buildConnectionString } from '@wuguishifu/nest-common';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { drizzle as jsDrizzle } from 'drizzle-orm/postgres-js';
@@ -7,14 +5,7 @@ import { migrate as jsMigrate } from 'drizzle-orm/postgres-js/migrator';
 import { Pool, PoolConfig } from 'pg';
 import postgres from 'postgres';
 
-const connectionString = process.env['HYDROGEN_DB_URL'] || buildConnectionString(environmentConfig.hydrogen);
-
-const isLocalHost = (host?: string) => Boolean(host?.includes('localhost') || host?.includes('127.0.0.1'));
-
-const isLocalDb = isLocalHost(connectionString);
-
-// Set HYDROGEN_DB_SSL=false when connecting to servers that don't support SSL (e.g. via Tailscale)
-const useSsl = process.env['HYDROGEN_DB_SSL'] !== 'false' && process.env['HYDROGEN_DB_SSL'] !== '0';
+import { connectionString, isLocalDb, useSsl } from './environmentDbCredentials';
 
 const basePoolConfig: PoolConfig = {
   connectionString: connectionString,
