@@ -6,11 +6,11 @@
     },
     "osmium": {
       "registryPath": "wuguishifu/universe/osmium",
-      "imageArch": "arm64"
+      "imageArch": "amd64"
     },
     "platinum": {
       "registryPath": "wuguishifu/universe/platinum",
-      "imageArch": "amd64,arm64"
+      "imageArch": "amd64"
     }
   }
 }

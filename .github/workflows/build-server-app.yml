@@ -178,6 +178,7 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: ${{ matrix.image }}:${{ matrix.tag }}-amd64
+          provenance: false
           build-args: |
             VERSION=${{ matrix.version }}
             BUILD_ENV=production
@@ -206,6 +207,9 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker
+          use: true
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -215,6 +219,7 @@ jobs:
           push: true
           platforms: linux/arm64
           tags: ${{ matrix.image }}:${{ matrix.tag }}-arm64
+          provenance: false
           build-args: |
             VERSION=${{ matrix.version }}
             BUILD_ENV=production
