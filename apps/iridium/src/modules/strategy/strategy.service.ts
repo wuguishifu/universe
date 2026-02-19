@@ -132,6 +132,9 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       confirmationDelayMs:
         this.environmentService.environment.stopLossConfirmationDelayMs ??
         this.marketAdapterService.adapter.stopLossConfirmationDelayMs,
+      confirmationFastVelocityThreshold:
+        this.environmentService.environment.stopLossConfirmationFastVelocityThreshold ??
+        this.marketAdapterService.adapter.stopLossConfirmationFastVelocityThreshold,
     };
 
     this.positionService.setMarketInProgress(plan.conditionId, true);

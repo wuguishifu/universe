@@ -19,6 +19,7 @@ export type StopLossConfig = {
   gracePeriodMs: number | null;
   minTimeRemainingMs: number | null;
   confirmationDelayMs: number | null;
+  confirmationFastVelocityThreshold: number | null; // $/s — adverse velocity at or above this bypasses the confirmation delay
 };
 
 type StopLossState = {
@@ -269,26 +270,38 @@ export class StraddleManagerService {
 
           // Price drop check
           if (config.maxDropCents && (entryPrice - currentBid) * 100 >= config.maxDropCents) {
-            // Velocity divergence gate: if BTC velocity is already pointing back toward
-            // the filled leg's favorable direction, this is likely a temporary spike — skip.
             // directedVelocity > 0 means BTC is moving in the direction that HELPS the filled side.
-            if (btcSnapshot.velocityPerSecond != null) {
-              const directedVelocity =
-                filledSide === 'yes' ? btcSnapshot.velocityPerSecond : -btcSnapshot.velocityPerSecond;
-              if (directedVelocity > 0) {
+            const directedVelocity =
+              btcSnapshot.velocityPerSecond != null
+                ? filledSide === 'yes'
+                  ? btcSnapshot.velocityPerSecond
+                  : -btcSnapshot.velocityPerSecond
+                : null;
+
+            // Velocity divergence gate: BTC is already recovering — likely a temporary spike, skip.
+            if (directedVelocity != null && directedVelocity > 0) {
+              return;
+            }
+
+            // Confirmation delay: wait to allow brief slow-moving spikes to reverse.
+            // Bypassed for fast adverse moves — delaying there only produces worse exit prices.
+            if (config.confirmationDelayMs) {
+              const adverseSpeed = directedVelocity != null ? -directedVelocity : null;
+              const isFastMove =
+                config.confirmationFastVelocityThreshold != null &&
+                adverseSpeed != null &&
+                adverseSpeed >= config.confirmationFastVelocityThreshold;
+              if (!isFastMove) {
+                if (!state.pendingConfirmationTimer) {
+                  state.pendingConfirmationTimer = setTimeout(() => {
+                    state.pendingConfirmationTimer = null;
+                    this.handleStopLoss(conditionId, 'price_drop');
+                  }, config.confirmationDelayMs);
+                }
                 return;
               }
             }
-            // Confirmation delay: wait before executing to allow brief spikes to reverse.
-            if (config.confirmationDelayMs) {
-              if (!state.pendingConfirmationTimer) {
-                state.pendingConfirmationTimer = setTimeout(() => {
-                  state.pendingConfirmationTimer = null;
-                  this.handleStopLoss(conditionId, 'price_drop');
-                }, config.confirmationDelayMs);
-              }
-              return;
-            }
+
             this.handleStopLoss(conditionId, 'price_drop');
             return;
           } else {
