@@ -79,6 +79,7 @@ export class StraddleManagerService {
         const { yesOrderId, noOrderId } = await this.executionService.placeLimitOrder(plan);
         const btcSnapshot = this.binancePriceService.getSnapshot();
         const btcPriceAtEntry = btcSnapshot.currentPrice;
+        const btcCandleOpenAtEntry = this.binancePriceService.getCandleOpen();
 
         this.orderMap.set(yesOrderId, conditionId);
         this.orderMap.set(noOrderId, conditionId);
@@ -97,6 +98,7 @@ export class StraddleManagerService {
           noStatus: 'OPEN',
           placedAt: Date.now(),
           btcPriceAtEntry,
+          btcCandleOpenAtEntry,
           skewInProgress: false,
           skewApplied: false,
         });
@@ -113,6 +115,7 @@ export class StraddleManagerService {
             quantity,
             capital,
             btcPriceAtEntry,
+            btcCandleOpenAtEntry,
           },
         });
       } catch (error) {
@@ -228,6 +231,9 @@ export class StraddleManagerService {
 
           // Capture BTC snapshot once per tick (used for debug tracking and velocity gate)
           const btcSnapshot = this.binancePriceService.getSnapshot();
+          // Prefer the 5m candle open as the BTC reference — aligns with Polymarket's resolution
+          // logic (candle open vs candle close). Fall back to btcPriceAtEntry if unavailable.
+          const btcReference = straddle.btcCandleOpenAtEntry ?? straddle.btcPriceAtEntry;
 
           // Emit BTC tracking data for every one-legged tick
           if (this.environmentService.environment.enableVerboseEvents) {
@@ -236,10 +242,12 @@ export class StraddleManagerService {
               metadata: {
                 conditionId,
                 btcPriceAtEntry: straddle.btcPriceAtEntry,
+                btcCandleOpenAtEntry: straddle.btcCandleOpenAtEntry,
+                btcReference,
                 btcCurrentPrice: btcSnapshot.currentPrice,
                 btcDelta:
-                  btcSnapshot.currentPrice != null && straddle.btcPriceAtEntry != null
-                    ? btcSnapshot.currentPrice - straddle.btcPriceAtEntry
+                  btcSnapshot.currentPrice != null && btcReference != null
+                    ? btcSnapshot.currentPrice - btcReference
                     : null,
                 btcVelocity: btcSnapshot.velocityPerSecond,
                 btcAcceleration: btcSnapshot.accelerationPerSecond2,
@@ -364,6 +372,7 @@ export class StraddleManagerService {
       }
 
       const btcSnapshot = this.binancePriceService.getSnapshot();
+      const btcReference = straddle.btcCandleOpenAtEntry ?? straddle.btcPriceAtEntry;
       this.osmiumService.trackEvent({
         name: 'straddle-stop-loss',
         metadata: {
@@ -377,11 +386,10 @@ export class StraddleManagerService {
           exitPrice,
           trigger,
           btcPriceAtEntry: straddle.btcPriceAtEntry,
+          btcCandleOpenAtEntry: straddle.btcCandleOpenAtEntry,
           btcCurrentPrice: btcSnapshot.currentPrice,
           btcDelta:
-            btcSnapshot.currentPrice != null && straddle.btcPriceAtEntry != null
-              ? btcSnapshot.currentPrice - straddle.btcPriceAtEntry
-              : null,
+            btcSnapshot.currentPrice != null && btcReference != null ? btcSnapshot.currentPrice - btcReference : null,
           btcVelocity: btcSnapshot.velocityPerSecond,
         },
       });

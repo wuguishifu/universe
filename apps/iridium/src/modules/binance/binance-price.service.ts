@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Subscription } from 'rxjs';
 
+import { BinanceKlineWsService } from './binance-kline-ws.service';
 import { BinanceBookTick, BinanceWsService } from './binance-ws.service';
 
 type PriceHistoryEntry = {
@@ -28,8 +29,13 @@ export class BinancePriceService implements OnModuleInit, OnModuleDestroy {
   private readonly priceHistory: PriceHistoryEntry[] = [];
   private lastTick: BinanceBookTick | null = null;
   private subscription: Subscription | null = null;
+  private klineSubscription: Subscription | null = null;
+  private currentCandleOpenPrice: number | null = null;
 
-  constructor(private readonly binanceWsService: BinanceWsService) {}
+  constructor(
+    private readonly binanceWsService: BinanceWsService,
+    private readonly binanceKlineWsService: BinanceKlineWsService,
+  ) {}
 
   onModuleInit() {
     this.subscription = this.binanceWsService.ticks$.subscribe((tick) => {
@@ -37,13 +43,18 @@ export class BinancePriceService implements OnModuleInit, OnModuleDestroy {
       this.priceHistory.push({ mid: tick.mid, timestamp: tick.timestamp });
       this.pruneOldEntries(tick.timestamp);
     });
-    this.logger.debug('Subscribed to Binance BTC price feed');
+    this.klineSubscription = this.binanceKlineWsService.ticks$.subscribe((tick) => {
+      this.currentCandleOpenPrice = tick.openPrice;
+    });
+    this.logger.debug('Subscribed to Binance BTC price feed and 5m kline feed');
   }
 
   onModuleDestroy() {
     this.subscription?.unsubscribe();
+    this.klineSubscription?.unsubscribe();
     this.priceHistory.length = 0;
     this.lastTick = null;
+    this.currentCandleOpenPrice = null;
   }
 
   getSnapshot(): BtcPriceSnapshot {
@@ -105,6 +116,10 @@ export class BinancePriceService implements OnModuleInit, OnModuleDestroy {
       msSinceLastTick: Date.now() - this.lastTick.timestamp,
       historyLength: len,
     };
+  }
+
+  getCandleOpen(): number | null {
+    return this.currentCandleOpenPrice;
   }
 
   private pruneOldEntries(now: number) {
