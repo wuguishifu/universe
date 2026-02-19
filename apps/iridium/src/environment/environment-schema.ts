@@ -31,6 +31,7 @@ export const environmentSchema = z
     stopLossMaxDropCents: z.coerce.number().min(0).optional(),
     stopLossGracePeriodMs: z.coerce.number().min(0).optional(),
     stopLossMinTimeRemainingMs: z.coerce.number().min(0).optional(),
+    stopLossConfirmationDelayMs: z.coerce.number().min(0).optional(),
 
     // skew config
     enableSkewCheck: z.preprocess(preprocessBoolean, z.boolean()).default(true),

@@ -62,6 +62,7 @@ export class Crypto1hAdapter extends MarketAdapter {
   public stopLossMaxDropCents = null;
   public stopLossGracePeriodMs = null;
   public stopLossMinTimeRemainingMs = null;
+  public stopLossConfirmationDelayMs = null;
 
   async fetchMarkets() {
     const { current } = getCurrentHourWindows();

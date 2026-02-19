@@ -18,11 +18,13 @@ export type StopLossConfig = {
   maxDropCents: number | null;
   gracePeriodMs: number | null;
   minTimeRemainingMs: number | null;
+  confirmationDelayMs: number | null;
 };
 
 type StopLossState = {
   subscription: Subscription | null;
   fallbackTimer: NodeJS.Timeout | null;
+  pendingConfirmationTimer: NodeJS.Timeout | null;
   triggered: boolean;
 };
 
@@ -192,7 +194,12 @@ export class StraddleManagerService {
   }
 
   private startStopLossMonitor(conditionId: string, config: StopLossConfig) {
-    const state: StopLossState = { subscription: null, fallbackTimer: null, triggered: false };
+    const state: StopLossState = {
+      subscription: null,
+      fallbackTimer: null,
+      pendingConfirmationTimer: null,
+      triggered: false,
+    };
 
     // 1. Fallback timer (safety net)
     if (config.timeoutMs) {
@@ -264,8 +271,24 @@ export class StraddleManagerService {
                 return;
               }
             }
+            // Confirmation delay: wait before executing to allow brief spikes to reverse.
+            if (config.confirmationDelayMs) {
+              if (!state.pendingConfirmationTimer) {
+                state.pendingConfirmationTimer = setTimeout(() => {
+                  state.pendingConfirmationTimer = null;
+                  this.handleStopLoss(conditionId, 'price_drop');
+                }, config.confirmationDelayMs);
+              }
+              return;
+            }
             this.handleStopLoss(conditionId, 'price_drop');
             return;
+          } else {
+            // Condition no longer met — cancel any pending confirmation timer.
+            if (state.pendingConfirmationTimer) {
+              clearTimeout(state.pendingConfirmationTimer);
+              state.pendingConfirmationTimer = null;
+            }
           }
 
           // Time remaining check
@@ -413,6 +436,9 @@ export class StraddleManagerService {
       if (state.fallbackTimer) {
         clearTimeout(state.fallbackTimer);
       }
+      if (state.pendingConfirmationTimer) {
+        clearTimeout(state.pendingConfirmationTimer);
+      }
       if (state.subscription) {
         state.subscription.unsubscribe();
       }
@@ -517,6 +543,9 @@ export class StraddleManagerService {
     for (const state of this.stopLossState.values()) {
       if (state.fallbackTimer) {
         clearTimeout(state.fallbackTimer);
+      }
+      if (state.pendingConfirmationTimer) {
+        clearTimeout(state.pendingConfirmationTimer);
       }
       if (state.subscription) {
         state.subscription.unsubscribe();

@@ -19,6 +19,7 @@ export class Crypto5mAdapter extends MarketAdapter {
   public stopLossMaxDropCents = 15; // 15c — catches all observed failures, 1 FP with 60s grace
   public stopLossGracePeriodMs = 30_000; // 30s — validated: zero false positives at 30s threshold
   public stopLossMinTimeRemainingMs = 45_000; // 45s — hard cutoff before resolution
+  public stopLossConfirmationDelayMs = 12_000; // 12s confirmation window before executing price_drop stop loss
   public straddleCooldownMs = 300_000; // 5 minutes
   public tradingStartHourUtc = 10; // 10:00 UTC (5am EST) — validated: loss rate drops from 67% to ~25% after this hour
   public tradingEndHourUtc = null; // no end restriction

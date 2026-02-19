@@ -129,6 +129,9 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       minTimeRemainingMs:
         this.environmentService.environment.stopLossMinTimeRemainingMs ??
         this.marketAdapterService.adapter.stopLossMinTimeRemainingMs,
+      confirmationDelayMs:
+        this.environmentService.environment.stopLossConfirmationDelayMs ??
+        this.marketAdapterService.adapter.stopLossConfirmationDelayMs,
     };
 
     this.positionService.setMarketInProgress(plan.conditionId, true);
