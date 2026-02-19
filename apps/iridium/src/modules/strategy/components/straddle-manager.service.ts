@@ -219,9 +219,11 @@ export class StraddleManagerService {
 
           const filledSide = yesFilled ? 'yes' : 'no';
 
+          // Capture BTC snapshot once per tick (used for debug tracking and velocity gate)
+          const btcSnapshot = this.binancePriceService.getSnapshot();
+
           // Emit BTC tracking data for every one-legged tick
           if (this.environmentService.environment.enableVerboseEvents) {
-            const btcSnapshot = this.binancePriceService.getSnapshot();
             this.osmiumService.trackDebug({
               name: 'straddle-btc-monitor',
               metadata: {
@@ -252,6 +254,16 @@ export class StraddleManagerService {
 
           // Price drop check
           if (config.maxDropCents && (entryPrice - currentBid) * 100 >= config.maxDropCents) {
+            // Velocity divergence gate: if BTC velocity is already pointing back toward
+            // the filled leg's favorable direction, this is likely a temporary spike — skip.
+            // directedVelocity > 0 means BTC is moving in the direction that HELPS the filled side.
+            if (btcSnapshot.velocityPerSecond != null) {
+              const directedVelocity =
+                filledSide === 'yes' ? btcSnapshot.velocityPerSecond : -btcSnapshot.velocityPerSecond;
+              if (directedVelocity > 0) {
+                return;
+              }
+            }
             this.handleStopLoss(conditionId, 'price_drop');
             return;
           }
