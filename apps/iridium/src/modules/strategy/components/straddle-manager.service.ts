@@ -20,6 +20,7 @@ export type StopLossConfig = {
   minTimeRemainingMs: number | null;
   confirmationDelayMs: number | null;
   confirmationFastVelocityThreshold: number | null; // $/s — adverse velocity at or above this bypasses the confirmation delay
+  btcDeltaMinDollars: number | null; // $ — minimum |btcDelta| from candle open required to execute a price_drop stop
 };
 
 type StopLossState = {
@@ -281,6 +282,15 @@ export class StraddleManagerService {
             // Velocity divergence gate: BTC is already recovering — likely a temporary spike, skip.
             if (directedVelocity != null && directedVelocity > 0) {
               return;
+            }
+
+            // BTC delta minimum gate: if BTC hasn't moved far enough from candle open, the
+            // Polymarket book drop is likely noise — the position isn't fundamentally at risk yet.
+            if (config.btcDeltaMinDollars != null && btcSnapshot.currentPrice != null && btcReference != null) {
+              const absBtcDelta = Math.abs(btcSnapshot.currentPrice - btcReference);
+              if (absBtcDelta < config.btcDeltaMinDollars) {
+                return;
+              }
             }
 
             // Confirmation delay: wait to allow brief slow-moving spikes to reverse.

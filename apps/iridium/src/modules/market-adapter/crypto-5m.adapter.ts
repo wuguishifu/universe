@@ -21,9 +21,12 @@ export class Crypto5mAdapter extends MarketAdapter {
   public stopLossMinTimeRemainingMs = 45_000; // 45s — hard cutoff before resolution
   public stopLossConfirmationDelayMs = 12_000; // 12s confirmation window before executing price_drop stop loss
   public stopLossConfirmationFastVelocityThreshold = 0.5; // $/s — bypass confirmation delay above this adverse velocity
+  public stopLossBtcDeltaMinDollars = 25; // $ — BTC must move ≥$25 from candle open before price_drop fires
   public straddleCooldownMs = 300_000; // 5 minutes
   public tradingStartHourUtc = 10; // 10:00 UTC (5am EST) — validated: loss rate drops from 67% to ~25% after this hour
   public tradingEndHourUtc = null; // no end restriction
+  public tradingExcludeHoursUtcStart = 11; // exclude 11:00–13:59 UTC (London/NY handoff — elevated stop rate)
+  public tradingExcludeHoursUtcEnd = 14;
 
   async fetchMarkets() {
     const windowTimestamp = Math.floor(Date.now() / FIVE_MINUTES_MS) * FIVE_MINUTES_S;
