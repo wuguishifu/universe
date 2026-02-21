@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 
+import { ClobClientModule } from '@wuguishifu/nest-polymarket';
+
 import { LedgerService } from './ledger.service';
-import { ClobClientModule } from '../clob/client/clob-client.module';
 
 @Module({
   imports: [ClobClientModule],

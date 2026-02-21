@@ -1,12 +1,6 @@
 import z from 'zod';
 
-// TODO: move to common parsing library
-export const preprocessBoolean = (value: unknown) => {
-  if (typeof value === 'string') {
-    return value.toLowerCase() === 'true';
-  }
-  return Boolean(value);
-};
+import { preprocessBoolean } from '@wuguishifu/utils-parse';
 
 export type EnvironmentSchema = z.infer<typeof environmentSchema>;
 export const environmentSchema = z

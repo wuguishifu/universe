@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
+import { BINARY_PARTITION, EMPTY_COLLECTION_ID, USDC_ADDRESS } from '@wuguishifu/utils-polymarket';
 
-import { BINARY_PARTITION, EMPTY_COLLECTION_ID, USDC_ADDRESS } from '../../constants';
 import { EnvironmentService } from '../../environment/environment-service';
 import { DataService } from '../data/data.service';
 import { RelayerService } from '../relayer/relayer.service';

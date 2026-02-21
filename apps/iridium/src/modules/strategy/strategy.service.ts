@@ -2,8 +2,8 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { filter, map, Subscription } from 'rxjs';
 
 import { EnvironmentService } from '../../environment/environment-service';
-import { MarketWsService } from '../clob/ws/market-ws.service';
-import { UserWsService } from '../clob/ws/user-ws.service';
+import { MarketWsService } from '../clob-ws/market-ws.service';
+import { UserWsService } from '../clob-ws/user-ws.service';
 import { LedgerService } from '../ledger/ledger.service';
 import { MarketAdapterService } from '../market-adapter/market-adapter.service';
 import { PositionService } from '../position/position.service';

@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
+import { validateConditionId } from '@wuguishifu/utils-polymarket';
+
 import { Position } from '../../../types/position';
 import { exists } from '../../../utils/exists';
-import { validateConditionId } from '../../../utils/validation-condition-id';
 
 @Injectable()
 export class PositionMathService {

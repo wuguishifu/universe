@@ -1,7 +1,8 @@
 import { Logger } from '@nestjs/common';
 
+import { eventSchema } from '@wuguishifu/utils-polymarket';
+
 import { MarketAdapter } from './market-adapter';
-import { eventSchema } from '../../types/event';
 
 type Period = 'am' | 'pm';
 type HourWindow = { start: { month: string; day: number; hour12: number; period: Period }; timeSlug: string };

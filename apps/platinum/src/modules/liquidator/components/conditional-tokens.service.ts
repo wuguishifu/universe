@@ -1,33 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { encodeFunctionData, parseUnits } from 'viem';
 
-const CONDITIONAL_TOKENS_ABI = [
-  {
-    inputs: [
-      { internalType: 'address', name: 'collateralToken', type: 'address' },
-      { internalType: 'bytes32', name: 'parentCollectionId', type: 'bytes32' },
-      { internalType: 'bytes32', name: 'conditionId', type: 'bytes32' },
-      { internalType: 'uint256[]', name: 'partition', type: 'uint256[]' },
-      { internalType: 'uint256', name: 'amount', type: 'uint256' },
-    ],
-    name: 'mergePositions',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { internalType: 'address', name: 'collateralToken', type: 'address' },
-      { internalType: 'bytes32', name: 'parentCollectionId', type: 'bytes32' },
-      { internalType: 'bytes32', name: 'conditionId', type: 'bytes32' },
-      { internalType: 'uint256[]', name: 'indexSets', type: 'uint256[]' },
-    ],
-    name: 'redeemPositions',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-] as const;
+import { CONDITIONAL_TOKENS_ABI } from '@wuguishifu/utils-polymarket';
 
 @Injectable()
 export class ConditionalTokensService {

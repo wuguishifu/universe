@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 
 import { HttpService, OsmiumService } from '@wuguishifu/nest-common';
+import { DATA_API_BASE } from '@wuguishifu/utils-polymarket';
 
-import { DATA_API_BASE } from '../../constants';
 import { EnvironmentService } from '../../environment/environment-service';
 import { Position, positionSchema } from '../../types/position';
 

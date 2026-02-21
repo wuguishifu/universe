@@ -4,9 +4,9 @@ import { take } from 'rxjs';
 import { formatUnits } from 'viem';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
+import { ClobClientService } from '@wuguishifu/nest-polymarket';
 
 import { EnvironmentService } from '../../environment/environment-service';
-import { ClobClientService } from '../clob/client/clob-client.service';
 
 @Injectable()
 export class LedgerService implements OnModuleInit, OnModuleDestroy {

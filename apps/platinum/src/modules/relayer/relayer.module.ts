@@ -4,8 +4,10 @@ import { Module } from '@nestjs/common';
 import { RelayClient, RelayerTxType } from '@polymarket/builder-relayer-client';
 import { BuilderConfig } from '@polymarket/builder-signing-sdk';
 
+import { POLYGON_CHAIN_ID, RELAYER_API_BASE } from '@wuguishifu/utils-polymarket';
+
 import { RelayerService } from './relayer.service';
-import { POLYGON_CHAIN_ID, POLYMARKET_RELAY_CLIENT, RELAYER_API_BASE } from '../../constants';
+import { POLYMARKET_RELAY_CLIENT } from '../../constants';
 import { EnvironmentService } from '../../environment/environment-service';
 
 @Module({

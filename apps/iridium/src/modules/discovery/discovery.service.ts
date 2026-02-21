@@ -1,11 +1,11 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
+import { getTimeRemainingMs } from '@wuguishifu/utils-polymarket';
 
 import { EnvironmentService } from '../../environment/environment-service';
-import { getTimeRemainingMs } from '../../utils/market.utils';
 import { CacheService } from '../cache/cache.service';
-import { MarketWsService } from '../clob/ws/market-ws.service';
+import { MarketWsService } from '../clob-ws/market-ws.service';
 import { MarketAdapterService } from '../market-adapter/market-adapter.service';
 import { PositionService } from '../position/position.service';
 

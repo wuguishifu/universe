@@ -2,11 +2,11 @@ import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { TickSize } from '@polymarket/clob-client';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
+import { getOrCreateList } from '@wuguishifu/utils-polymarket';
 
 import { EnvironmentService } from '../../../environment/environment-service';
-import { getOrCreateList } from '../../../utils/map.utils';
 import { BinancePriceService } from '../../binance/binance-price.service';
-import { MarketTick, TradeEvent } from '../../clob/ws/market-ws.service';
+import { MarketTick, TradeEvent } from '../../clob-ws/market-ws.service';
 import { MarketAdapterService } from '../../market-adapter/market-adapter.service';
 
 type PriceHistoryEntry = {

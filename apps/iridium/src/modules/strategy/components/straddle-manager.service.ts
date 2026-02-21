@@ -3,12 +3,12 @@ import { OpenOrder } from '@polymarket/clob-client';
 import { filter, Subject, Subscription } from 'rxjs';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
+import { OrderMessage } from '@wuguishifu/utils-polymarket';
 
 import { AlphaService, EntryPlan } from './alpha.service';
 import { EnvironmentService } from '../../../environment/environment-service';
-import { OrderMessage } from '../../../types/clob/orderMessage';
 import { BinancePriceService } from '../../binance/binance-price.service';
-import { MarketWsService } from '../../clob/ws/market-ws.service';
+import { MarketWsService } from '../../clob-ws/market-ws.service';
 import { ExecutionService } from '../../execution/execution.service';
 import { LedgerService } from '../../ledger/ledger.service';
 import { ActiveStraddle, PositionService } from '../../position/position.service';
