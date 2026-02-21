@@ -135,9 +135,6 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
       confirmationFastVelocityThreshold:
         this.environmentService.environment.stopLossConfirmationFastVelocityThreshold ??
         this.marketAdapterService.adapter.stopLossConfirmationFastVelocityThreshold,
-      btcDeltaMinDollars:
-        this.environmentService.environment.stopLossBtcDeltaMinDollars ??
-        this.marketAdapterService.adapter.stopLossBtcDeltaMinDollars,
     };
 
     this.positionService.setMarketInProgress(plan.conditionId, true);

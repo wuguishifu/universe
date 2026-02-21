@@ -16,8 +16,6 @@ export const environmentSchema = z
     straddleCooldownMsOverride: z.coerce.number().min(0).optional(),
     tradingStartHourUtcOverride: z.coerce.number().min(0).max(23).optional(),
     tradingEndHourUtcOverride: z.coerce.number().min(0).max(23).optional(),
-    tradingExcludeHoursUtcStart: z.coerce.number().min(0).max(23).optional(),
-    tradingExcludeHoursUtcEnd: z.coerce.number().min(0).max(23).optional(),
 
     // strategy config
     targetEntry: z.coerce.number().min(0).max(1).default(0.95),
@@ -35,7 +33,6 @@ export const environmentSchema = z
     stopLossMinTimeRemainingMs: z.coerce.number().min(0).optional(),
     stopLossConfirmationDelayMs: z.coerce.number().min(0).optional(),
     stopLossConfirmationFastVelocityThreshold: z.coerce.number().min(0).optional(),
-    stopLossBtcDeltaMinDollars: z.coerce.number().min(0).optional(),
 
     // skew config
     enableSkewCheck: z.preprocess(preprocessBoolean, z.boolean()).default(true),

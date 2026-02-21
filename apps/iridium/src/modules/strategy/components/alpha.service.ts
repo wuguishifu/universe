@@ -153,14 +153,8 @@ export class AlphaService implements OnModuleDestroy {
     const endHour =
       this.environmentService.environment.tradingEndHourUtcOverride ??
       this.marketAdapterService.adapter.tradingEndHourUtc;
-    const excludeStart =
-      this.environmentService.environment.tradingExcludeHoursUtcStart ??
-      this.marketAdapterService.adapter.tradingExcludeHoursUtcStart;
-    const excludeEnd =
-      this.environmentService.environment.tradingExcludeHoursUtcEnd ??
-      this.marketAdapterService.adapter.tradingExcludeHoursUtcEnd;
 
-    if (startHour == null && endHour == null && excludeStart == null) {
+    if (startHour == null && endHour == null) {
       return true;
     }
 
@@ -168,37 +162,21 @@ export class AlphaService implements OnModuleDestroy {
 
     if (startHour != null && endHour != null) {
       if (startHour <= endHour) {
-        if (!(currentHour >= startHour && currentHour < endHour)) {
-          return false;
-        }
-      } else {
-        // Wrap-around (e.g., start=22, end=6 means 22:00-06:00 UTC)
-        if (!(currentHour >= startHour || currentHour < endHour)) {
-          return false;
-        }
+        return currentHour >= startHour && currentHour < endHour;
       }
-    } else if (startHour != null) {
-      if (currentHour < startHour) {
-        return false;
-      }
-    } else if (endHour != null) {
-      if (currentHour >= endHour) {
-        return false;
-      }
+      // Wrap-around (e.g., start=22, end=6 means 22:00-06:00 UTC)
+      return currentHour >= startHour || currentHour < endHour;
     }
 
-    // Exclusion window: block a specific range within the trading day
-    if (excludeStart != null && excludeEnd != null) {
-      const inExclusionWindow =
-        excludeStart <= excludeEnd
-          ? currentHour >= excludeStart && currentHour < excludeEnd
-          : currentHour >= excludeStart || currentHour < excludeEnd;
-      if (inExclusionWindow) {
-        return false;
-      }
+    if (startHour != null) {
+      return currentHour >= startHour;
     }
 
-    return true;
+    if (endHour != null) {
+      return currentHour < endHour;
+    }
+
+    return false;
   }
 
   private filterForBookDepth(tick: MarketTick): boolean {

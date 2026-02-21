@@ -18,12 +18,9 @@ export abstract class MarketAdapter {
   public abstract stopLossMinTimeRemainingMs: number | null;
   public abstract stopLossConfirmationDelayMs: number | null;
   public abstract stopLossConfirmationFastVelocityThreshold: number | null;
-  public abstract stopLossBtcDeltaMinDollars: number | null;
   public straddleCooldownMs = 300_000; // 5 minutes
   public tradingStartHourUtc: number | null = null; // null = no restriction
   public tradingEndHourUtc: number | null = null; // null = no restriction
-  public tradingExcludeHoursUtcStart: number | null = null; // null = no exclusion window
-  public tradingExcludeHoursUtcEnd: number | null = null;
 
   abstract fetchMarkets(): Promise<Market[]>;
 }
