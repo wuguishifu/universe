@@ -6,10 +6,15 @@ import { z } from 'zod';
 
 import { AuthService } from '../auth';
 
-export const clobClientEnvironmentSchema = z.object({
-  SIGNATURE_TYPE: z.coerce.number().min(0).max(2).default(1),
-  FUNDER_ADDRESS: z.string().optional(),
-});
+export const clobClientEnvironmentSchema = z
+  .object({
+    SIGNATURE_TYPE: z.coerce.number().min(0).max(2).default(1),
+    FUNDER_ADDRESS: z.string().optional(),
+  })
+  .refine((data) => data.SIGNATURE_TYPE !== 1 || !!data.FUNDER_ADDRESS, {
+    message: 'FUNDER_ADDRESS is required when SIGNATURE_TYPE is 1',
+    path: ['FUNDER_ADDRESS'],
+  });
 
 @Injectable()
 export class ClobClientService implements OnModuleInit {
