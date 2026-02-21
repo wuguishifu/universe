@@ -3,14 +3,12 @@ import { Subject } from 'rxjs';
 import WebSocket from 'ws';
 
 import { OsmiumService, WebSocketService } from '@wuguishifu/nest-common';
-import { BINANCE_BTC_WS_URL } from '@wuguishifu/utils-polymarket';
+import { BINANCE_COMBINED_WS_URL } from '@wuguishifu/utils-polymarket';
 
 export type BinanceBookTick = {
   symbol: string;
   bestBid: number;
-  bestBidQty: number;
   bestAsk: number;
-  bestAskQty: number;
   mid: number;
   timestamp: number;
 };
@@ -25,7 +23,7 @@ export class BinanceWsService extends WebSocketService implements OnModuleDestro
   private watchdogTimer: NodeJS.Timeout | null = null;
 
   constructor(private readonly osmiumService: OsmiumService) {
-    super(BINANCE_BTC_WS_URL);
+    super(BINANCE_COMBINED_WS_URL);
   }
 
   onModuleDestroy() {
@@ -50,15 +48,18 @@ export class BinanceWsService extends WebSocketService implements OnModuleDestro
   protected handleMessage(data: WebSocket.Data): void {
     try {
       const raw = JSON.parse(data.toString());
-      const bestBid = parseFloat(raw.b);
-      const bestAsk = parseFloat(raw.a);
+      // Combined stream format: { stream: "btcusdt@bookTicker", data: { ... } }
+      const payload = raw.data ?? raw;
+      const streamName: string = raw.stream ?? '';
+      const symbol = streamName.split('@')[0].replace(/usdt$/i, '').toUpperCase();
+
+      const bestBid = parseFloat(payload.b);
+      const bestAsk = parseFloat(payload.a);
 
       this.tickSubject.next({
-        symbol: raw.s,
+        symbol: symbol || payload.s,
         bestBid,
-        bestBidQty: parseFloat(raw.B),
         bestAsk,
-        bestAskQty: parseFloat(raw.A),
         mid: (bestBid + bestAsk) / 2,
         timestamp: Date.now(),
       });

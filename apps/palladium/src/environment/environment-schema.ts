@@ -16,4 +16,13 @@ export const environmentSchema = z.object({
 
   // alpha configuration
   maxHistoryRetentionMs: z.number().min(0).default(30_000),
+
+  // latency arb config
+  targetPositionSize: z.number().min(1).default(10),
+  minPriceDistancePercent: z.number().min(0).default(0.003),
+  maxEntryPrice: z.number().min(0).max(1).default(0.85),
+  minTimeRemainingMs: z.number().min(0).default(30_000),
+  maxTimeRemainingMs: z.number().min(0).default(270_000),
+  targetReturnMultiplier: z.number().min(1).default(1.15),
+  exitTimeoutMs: z.number().min(0).default(120_000),
 });

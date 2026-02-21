@@ -138,8 +138,9 @@ export class ExecutionService implements OnModuleInit {
     side: 'yes' | 'no';
     price: number;
     quantity: number;
+    orderType?: OrderType;
   }): Promise<string> {
-    const { conditionId, side, price, quantity } = props;
+    const { conditionId, side, price, quantity, orderType = OrderType.GTC } = props;
 
     if (!this.isConfigured || !this.clobClient) {
       throw new Error('CLOB client is not configured');
@@ -149,7 +150,7 @@ export class ExecutionService implements OnModuleInit {
     const tokenId = side === 'yes' ? yesTokenId : noTokenId;
 
     this.logger.log(
-      `Placing single ${side.toUpperCase()} order on condition ${conditionId}: @ ${price} for quantity ${quantity}`,
+      `Placing single ${side.toUpperCase()} order on condition ${conditionId}: @ ${price} for quantity ${quantity} [${orderType}]`,
     );
 
     if (this.environmentService.environment.dryRun) {
@@ -158,11 +159,19 @@ export class ExecutionService implements OnModuleInit {
       return `dry-run-${side}-order-id`;
     }
 
-    const response = await this.clobClient.createAndPostOrder(
-      { tokenID: tokenId, price, side: Side.BUY, size: quantity },
-      { tickSize: minimumTickSize },
-      OrderType.GTC,
-    );
+    // FAK/FOK use createAndPostMarketOrder; GTC/GTD use createAndPostOrder
+    const isFillImmediate = orderType === OrderType.FAK || orderType === OrderType.FOK;
+    const response = isFillImmediate
+      ? await this.clobClient.createAndPostMarketOrder(
+          { tokenID: tokenId, price, amount: price * quantity, side: Side.BUY },
+          { tickSize: minimumTickSize },
+          orderType as OrderType.FAK | OrderType.FOK,
+        )
+      : await this.clobClient.createAndPostOrder(
+          { tokenID: tokenId, price, side: Side.BUY, size: quantity },
+          { tickSize: minimumTickSize },
+          orderType as OrderType.GTC | OrderType.GTD,
+        );
 
     const orderId = response.orderID || response.orderId;
     if (!response.success || !orderId) {
