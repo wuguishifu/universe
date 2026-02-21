@@ -45,13 +45,8 @@ export class AlphaService implements OnModuleDestroy {
   }
 
   public analyzeTick(tick: MarketTick): EntryPlan | null {
-    const env = this.environmentService.environment;
-
     const filters: { name: string; fn: () => boolean }[] = [
-      {
-        name: 'time-remaining',
-        fn: () => tick.timeRemaining >= env.minTimeRemainingMs && tick.timeRemaining <= env.maxTimeRemainingMs,
-      },
+      { name: 'time-remaining', fn: () => this.filterForTimeRemaining(tick) },
       { name: 'throttling', fn: () => this.filterForThrottling(tick) },
     ];
 
@@ -77,6 +72,11 @@ export class AlphaService implements OnModuleDestroy {
   }
 
   // #region filters
+  private filterForTimeRemaining(tick: MarketTick): boolean {
+    const environment = this.environmentService.environment;
+    return tick.timeRemaining >= environment.minTimeRemainingMs && tick.timeRemaining <= environment.maxTimeRemainingMs;
+  }
+
   private filterForThrottling(tick: MarketTick): boolean {
     const now = Date.now();
     const lastTime = this.lastEvaluationTimestamp.get(tick.conditionId) ?? 0;

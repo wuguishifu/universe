@@ -20,10 +20,6 @@ export class UserWsService extends WebSocketService implements OnModuleInit, OnM
   private readonly orderUpdateSubject = new Subject<OrderMessage>();
   public readonly orderUpdates$ = this.orderUpdateSubject.asObservable();
 
-  private readonly reconnectedSubject = new Subject<void>();
-  /** Emits after the user WebSocket reconnects and re-authenticates. */
-  public readonly reconnected$ = this.reconnectedSubject.asObservable();
-
   constructor(
     private readonly authService: AuthService,
     private readonly osmiumService: OsmiumService,
@@ -34,7 +30,6 @@ export class UserWsService extends WebSocketService implements OnModuleInit, OnM
   public onModuleDestroy() {
     this.logger.debug('Shutting down User WebSocket...');
     this.orderUpdateSubject.complete();
-    this.reconnectedSubject.complete();
     this.close();
   }
 
@@ -66,7 +61,6 @@ export class UserWsService extends WebSocketService implements OnModuleInit, OnM
     if (this.userCredentials) {
       this.logger.debug('User WebSocket reconnected, re-authenticating...');
       this.send({ type: 'user', auth: this.userCredentials });
-      this.reconnectedSubject.next();
     }
   }
 

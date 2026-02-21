@@ -37,8 +37,8 @@ export class StrategyService implements OnModuleInit, OnModuleDestroy {
     this.subscriptions.push(marketTickSub);
 
     // Exit pipe
-    const exitSub = this.positionManagerService.exitSignal$.subscribe((signal) => this.handleExit(signal));
-    this.subscriptions.push(exitSub);
+    const exitSubscription = this.positionManagerService.exitSignal$.subscribe((signal) => this.handleExit(signal));
+    this.subscriptions.push(exitSubscription);
   }
 
   onModuleDestroy() {

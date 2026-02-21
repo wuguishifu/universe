@@ -37,7 +37,7 @@ export class LedgerService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.logger.log(`Ledger sync interval: ${ledgerSyncIntervalMs}ms`);
-    this.syncInterval = setInterval(() => this.syncWithReality(), ledgerSyncIntervalMs);
+    this.syncInterval = setInterval(() => this.syncLedger(), ledgerSyncIntervalMs);
   }
 
   onModuleDestroy() {
@@ -47,7 +47,7 @@ export class LedgerService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  public async getUserBalance(): Promise<number> {
+  private async getUserBalance(): Promise<number> {
     if (!this.clobClient) {
       throw new Error('LedgerService is not configured yet.');
     }
@@ -88,7 +88,7 @@ export class LedgerService implements OnModuleInit, OnModuleDestroy {
     return this.availableBalance;
   }
 
-  private async syncWithReality(): Promise<void> {
+  private async syncLedger(): Promise<void> {
     if (!this.clobClient) {
       return;
     }

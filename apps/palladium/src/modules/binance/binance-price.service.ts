@@ -3,7 +3,7 @@ import { Subscription } from 'rxjs';
 
 import { BinanceBookTick, BinanceWsService } from './binance-ws.service';
 
-export type PriceSnapshot = {
+type PriceSnapshot = {
   currentPrice: number | null;
   msSinceLastTick: number | null;
 };

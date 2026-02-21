@@ -34,7 +34,7 @@ export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  public async refreshMarkets() {
+  private async refreshMarkets() {
     const markets = await this.marketAdapterService.adapter.fetchMarkets();
 
     markets.forEach((market) => this.cacheService.markets.set(market.conditionId, market));

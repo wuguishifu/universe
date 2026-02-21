@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ClobClient, OpenOrder, OrderType, Side, TickSize } from '@polymarket/clob-client';
+import { ClobClient, OrderType, Side, TickSize } from '@polymarket/clob-client';
 import { take } from 'rxjs';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
@@ -30,106 +30,6 @@ export class ExecutionService implements OnModuleInit {
       this.clobClient = client;
       this.isConfigured = true;
     });
-  }
-
-  // MARK: place limit order
-  public async placeLimitOrder(props: {
-    conditionId: string;
-    targetYes: number;
-    targetNo: number;
-    quantity: number;
-  }): Promise<{
-    yesOrderId: string;
-    noOrderId: string;
-  }> {
-    const { conditionId, targetYes, targetNo, quantity } = props;
-
-    if (!this.isConfigured || !this.clobClient) {
-      throw new Error('CLOB client is not configured');
-    }
-
-    const { yesTokenId, noTokenId, minimumTickSize } = this.getMarketMetadata(conditionId);
-    const commonTrackingProps = {
-      ...props,
-      dryRun: this.environmentService.environment.dryRun,
-      yesTokenId,
-      noTokenId,
-      minimumTickSize,
-    };
-
-    this.osmiumService.trackEvent({
-      name: 'execution_service-limit_order-place-started',
-      metadata: commonTrackingProps,
-    });
-    this.logger.log(
-      `Placing limit orders on condition ${conditionId}: Yes Token @ ${targetYes}, No Token @ ${targetNo} for quantity ${quantity}`,
-    );
-
-    if (this.environmentService.environment.dryRun) {
-      this.logger.debug('Dry run mode enabled - skipping order placement');
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      this.osmiumService.trackEvent({
-        name: 'execution_service-limit_order-place-finished',
-        metadata: commonTrackingProps,
-      });
-      return { noOrderId: 'dry-run-no-order-id', yesOrderId: 'dry-run-yes-order-id' };
-    }
-
-    // MARK: place orders sequentially
-    // 1. Place YES order first
-    const yesOrderResponse = await this.clobClient.createAndPostOrder(
-      { tokenID: yesTokenId, price: targetYes, side: Side.BUY, size: quantity },
-      { tickSize: minimumTickSize },
-      OrderType.GTC,
-    );
-
-    const yesOrderId = yesOrderResponse.orderID || yesOrderResponse.orderId;
-    if (!yesOrderResponse.success || !yesOrderId) {
-      this.osmiumService.trackEvent({
-        name: 'execution_service-limit_order-place-failed',
-        metadata: {
-          ...commonTrackingProps,
-          failedSide: 'YES',
-          reason: yesOrderResponse.errorMsg,
-        },
-      });
-      throw new Error(`Failed to place YES order: ${yesOrderResponse.errorMsg ?? 'Unknown error'}`);
-    }
-
-    // 2. Place NO order only after YES succeeds
-    const noOrderResponse = await this.clobClient.createAndPostOrder(
-      { tokenID: noTokenId, price: targetNo, side: Side.BUY, size: quantity },
-      { tickSize: minimumTickSize },
-      OrderType.GTC,
-    );
-
-    const noOrderId = noOrderResponse.orderID || noOrderResponse.orderId;
-    if (!noOrderResponse.success || !noOrderId) {
-      this.osmiumService.trackEvent({
-        name: 'execution_service-limit_order-place-failed',
-        metadata: {
-          ...commonTrackingProps,
-          failedSide: 'NO',
-          reason: noOrderResponse.errorMsg,
-        },
-      });
-      // Cancel YES order - any fills that occurred will be tracked via WebSocket updates
-      this.logger.warn(`NO order failed, cancelling YES order ${yesOrderId}`);
-      await this.clobClient.cancelOrder({ orderID: yesOrderId }).catch((err) => {
-        this.logger.error(`Failed to cancel YES order ${yesOrderId} during rollback: ${err.message}`);
-      });
-      throw new Error(`Failed to place NO order: ${noOrderResponse.errorMsg ?? 'Unknown error'}`);
-    }
-
-    this.logger.log(`Successfully placed orders: YES=${yesOrderId}, NO=${noOrderId}`);
-    this.osmiumService.trackEvent({
-      name: 'execution_service-limit_order-place-finished',
-      metadata: commonTrackingProps,
-    });
-    return {
-      yesOrderId,
-      noOrderId,
-    };
   }
 
   // MARK: place single order
@@ -180,27 +80,6 @@ export class ExecutionService implements OnModuleInit {
 
     this.logger.log(`Successfully placed single ${side.toUpperCase()} order: ${orderId}`);
     return orderId;
-  }
-
-  // MARK: cancel order
-  public async cancelOrder(orderId: string, conditionId?: string) {
-    if (!this.clobClient || !this.isConfigured) {
-      throw new Error('CLOB client is not configured');
-    }
-
-    const trackingProps = { orderId, conditionId, dryRun: this.environmentService.environment.dryRun };
-
-    this.osmiumService.trackEvent({ name: 'execution_service-order-cancel-started', metadata: trackingProps });
-    if (this.environmentService.environment.dryRun) {
-      this.logger.debug(`Dry run mode enabled - skipping cancellation of order ${orderId}`);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      this.osmiumService.trackEvent({ name: 'execution_service-order-cancel-finished', metadata: trackingProps });
-      return;
-    }
-
-    await this.clobClient.cancelOrder({ orderID: orderId });
-    this.osmiumService.trackEvent({ name: 'execution_service-order-cancel-finished', metadata: trackingProps });
-    this.logger.log(`Cancelled order ${orderId}`);
   }
 
   // MARK: sell market position
@@ -281,20 +160,6 @@ export class ExecutionService implements OnModuleInit {
 
     await Promise.all(promises);
     this.osmiumService.trackEvent({ name: 'execution_service-panic_sell-finished', metadata: trackingProps });
-  }
-
-  // MARK: get order
-  public getOrder(orderId: string): Promise<OpenOrder | null> {
-    if (!this.clobClient || !this.isConfigured) {
-      throw new Error('CLOB client is not configured');
-    }
-
-    if (this.environmentService.environment.dryRun) {
-      this.logger.debug(`Dry run mode enabled - skipping retrieval of order ${orderId}`);
-      return Promise.resolve(null);
-    }
-
-    return this.clobClient.getOrder(orderId);
   }
 
   // #region helper methods

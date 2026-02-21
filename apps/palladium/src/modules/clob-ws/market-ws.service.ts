@@ -36,15 +36,6 @@ export type MarketTick = {
   noNearAskDepth: number;
 };
 
-export type TradeEvent = {
-  conditionId: string;
-  assetId: string;
-  side: 'BUY' | 'SELL';
-  price: number;
-  size: number;
-  timestamp: number;
-};
-
 type OrderBookSide = Map<string, number>; // price string → size
 
 type AssetOrderBook = {
