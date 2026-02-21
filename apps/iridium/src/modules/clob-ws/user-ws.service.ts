@@ -2,11 +2,9 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { Subject, take } from 'rxjs';
 import { Data } from 'ws';
 
-import { OsmiumService } from '@wuguishifu/nest-common';
+import { OsmiumService, WebSocketService } from '@wuguishifu/nest-common';
 import { AuthService } from '@wuguishifu/nest-polymarket';
 import { CLOB_USER_WS_URL, Message, OrderMessage } from '@wuguishifu/utils-polymarket';
-
-import { WebSocketService } from '../../common/ws-service';
 
 type UserCredentials = {
   apiKey: string;

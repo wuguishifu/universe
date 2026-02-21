@@ -2,10 +2,8 @@ import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Subject } from 'rxjs';
 import WebSocket from 'ws';
 
-import { OsmiumService } from '@wuguishifu/nest-common';
+import { OsmiumService, WebSocketService } from '@wuguishifu/nest-common';
 import { BINANCE_BTC_WS_URL } from '@wuguishifu/utils-polymarket';
-
-import { WebSocketService } from '../../common/ws-service';
 
 export type BinanceBookTick = {
   symbol: string;

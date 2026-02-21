@@ -3,7 +3,7 @@ import { TickSize } from '@polymarket/clob-client';
 import { Subject } from 'rxjs';
 import WebSocket from 'ws';
 
-import { OsmiumService } from '@wuguishifu/nest-common';
+import { OsmiumService, WebSocketService } from '@wuguishifu/nest-common';
 import {
   BookMessage,
   CLOB_MARKET_WS_URL,
@@ -15,7 +15,6 @@ import {
   TickSizeChangeMessage,
 } from '@wuguishifu/utils-polymarket';
 
-import { WebSocketService } from '../../common/ws-service';
 import { EnvironmentService } from '../../environment/environment-service';
 import { CacheService } from '../cache/cache.service';
 
