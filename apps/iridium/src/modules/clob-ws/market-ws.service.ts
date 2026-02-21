@@ -15,9 +15,9 @@ import {
   TickSizeChangeMessage,
 } from '@wuguishifu/utils-polymarket';
 
-import { WebSocketService } from '../../../common/ws-service';
-import { EnvironmentService } from '../../../environment/environment-service';
-import { CacheService } from '../../cache/cache.service';
+import { WebSocketService } from '../../common/ws-service';
+import { EnvironmentService } from '../../environment/environment-service';
+import { CacheService } from '../cache/cache.service';
 
 export type MarketTick = {
   conditionId: string;

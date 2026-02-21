@@ -3,10 +3,10 @@ import { Subject, take } from 'rxjs';
 import { Data } from 'ws';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
+import { AuthService } from '@wuguishifu/nest-polymarket';
 import { CLOB_USER_WS_URL, Message, OrderMessage } from '@wuguishifu/utils-polymarket';
 
-import { WebSocketService } from '../../../common/ws-service';
-import { AuthService } from '../../auth/auth.service';
+import { WebSocketService } from '../../common/ws-service';
 
 type UserCredentials = {
   apiKey: string;

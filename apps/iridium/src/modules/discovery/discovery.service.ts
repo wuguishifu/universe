@@ -5,7 +5,7 @@ import { getTimeRemainingMs } from '@wuguishifu/utils-polymarket';
 
 import { EnvironmentService } from '../../environment/environment-service';
 import { CacheService } from '../cache/cache.service';
-import { MarketWsService } from '../clob/ws/market-ws.service';
+import { MarketWsService } from '../clob-ws/market-ws.service';
 import { MarketAdapterService } from '../market-adapter/market-adapter.service';
 import { PositionService } from '../position/position.service';
 

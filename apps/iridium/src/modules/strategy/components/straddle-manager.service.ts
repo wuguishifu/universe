@@ -8,7 +8,7 @@ import { OrderMessage } from '@wuguishifu/utils-polymarket';
 import { AlphaService, EntryPlan } from './alpha.service';
 import { EnvironmentService } from '../../../environment/environment-service';
 import { BinancePriceService } from '../../binance/binance-price.service';
-import { MarketWsService } from '../../clob/ws/market-ws.service';
+import { MarketWsService } from '../../clob-ws/market-ws.service';
 import { ExecutionService } from '../../execution/execution.service';
 import { LedgerService } from '../../ledger/ledger.service';
 import { ActiveStraddle, PositionService } from '../../position/position.service';

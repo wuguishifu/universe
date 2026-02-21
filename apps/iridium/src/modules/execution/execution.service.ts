@@ -3,10 +3,10 @@ import { ClobClient, OpenOrder, OrderType, Side, TickSize } from '@polymarket/cl
 import { take } from 'rxjs';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
+import { ClobClientService } from '@wuguishifu/nest-polymarket';
 
 import { EnvironmentService } from '../../environment/environment-service';
 import { CacheService } from '../cache/cache.service';
-import { ClobClientService } from '../clob/client/clob-client.service';
 
 @Injectable()
 export class ExecutionService implements OnModuleInit {

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
+import { AuthModule } from '../auth';
 import { ClobClientService } from './clob-client.service';
-import { AuthModule } from '../../auth/auth.module';
 
 @Module({
   imports: [AuthModule],
