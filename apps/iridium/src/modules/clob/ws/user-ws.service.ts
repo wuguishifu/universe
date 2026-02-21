@@ -3,10 +3,9 @@ import { Subject, take } from 'rxjs';
 import { Data } from 'ws';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
-import { Message, OrderMessage } from '@wuguishifu/utils-polymarket';
+import { CLOB_USER_WS_URL, Message, OrderMessage } from '@wuguishifu/utils-polymarket';
 
 import { WebSocketService } from '../../../common/ws-service';
-import { CLOB_USER_WS_URL } from '../../../constants/constants';
 import { AuthService } from '../../auth/auth.service';
 
 type UserCredentials = {

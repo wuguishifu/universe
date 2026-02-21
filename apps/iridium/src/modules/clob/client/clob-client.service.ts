@@ -2,7 +2,8 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ClobClient } from '@polymarket/clob-client';
 import { ReplaySubject } from 'rxjs';
 
-import { CLOB_API_BASE, POLYGON_CHAIN_ID } from '../../../constants/constants';
+import { CLOB_API_BASE, POLYGON_CHAIN_ID } from '@wuguishifu/utils-polymarket';
+
 import { EnvironmentService } from '../../../environment/environment-service';
 import { AuthService } from '../../auth/auth.service';
 

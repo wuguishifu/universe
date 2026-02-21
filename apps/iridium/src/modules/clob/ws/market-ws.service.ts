@@ -6,6 +6,7 @@ import WebSocket from 'ws';
 import { OsmiumService } from '@wuguishifu/nest-common';
 import {
   BookMessage,
+  CLOB_MARKET_WS_URL,
   isExpired,
   LastTradePriceMessage,
   Market,
@@ -15,7 +16,6 @@ import {
 } from '@wuguishifu/utils-polymarket';
 
 import { WebSocketService } from '../../../common/ws-service';
-import { CLOB_MARKET_WS_URL } from '../../../constants/constants';
 import { EnvironmentService } from '../../../environment/environment-service';
 import { CacheService } from '../../cache/cache.service';
 

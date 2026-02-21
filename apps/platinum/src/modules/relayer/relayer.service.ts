@@ -2,8 +2,9 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { RelayClient, RelayerTransaction } from '@polymarket/builder-relayer-client';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
+import { CONDITIONAL_TOKENS_ADDRESS } from '@wuguishifu/utils-polymarket';
 
-import { CONDITIONAL_TOKENS_ADDRESS, POLYMARKET_RELAY_CLIENT } from '../../constants';
+import { POLYMARKET_RELAY_CLIENT } from '../../constants';
 import { EnvironmentService } from '../../environment/environment-service';
 
 const dummyRelayerTransaction: RelayerTransaction = {
