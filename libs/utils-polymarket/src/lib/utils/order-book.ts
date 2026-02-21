@@ -1,4 +1,4 @@
-import { OrderBook } from '../types/order-book';
+import { OrderBook } from '../types';
 
 export function getBestPrice(orderBook: OrderBook | undefined): number | undefined {
   return orderBook?.asks[0]?.[0];

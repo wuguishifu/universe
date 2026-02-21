@@ -1,6 +1,7 @@
+import { preprocessDate, preprocessJsonArray } from '@wuguishifu/utils-parse';
 import z from 'zod';
 
-import { preprocessDate, preprocessJsonArray, preprocessTickSize } from '../utils/preprocessors';
+import { preprocessTickSize } from '../utils';
 
 export type Market = z.infer<typeof marketSchema>;
 export const marketSchema = z

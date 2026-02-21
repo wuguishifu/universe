@@ -4,17 +4,19 @@ import { Subject } from 'rxjs';
 import WebSocket from 'ws';
 
 import { OsmiumService } from '@wuguishifu/nest-common';
+import {
+  BookMessage,
+  isExpired,
+  LastTradePriceMessage,
+  Market,
+  Message,
+  PriceChangeMessage,
+  TickSizeChangeMessage,
+} from '@wuguishifu/utils-polymarket';
 
 import { WebSocketService } from '../../../common/ws-service';
 import { CLOB_MARKET_WS_URL } from '../../../constants/constants';
 import { EnvironmentService } from '../../../environment/environment-service';
-import { BookMessage } from '../../../types/clob/bookMessage';
-import { LastTradePriceMessage } from '../../../types/clob/lastTradePriceMessage';
-import { Message } from '../../../types/clob/message';
-import { PriceChangeMessage } from '../../../types/clob/priceChangeMessage';
-import { TickSizeChangeMessage } from '../../../types/clob/tickSizeChangeMessage';
-import { Market } from '../../../types/market';
-import { isExpired } from '../../../utils/market.utils';
 import { CacheService } from '../../cache/cache.service';
 
 export type MarketTick = {

@@ -1,5 +1,4 @@
-import { OrderSummary } from '../types/clob/bookMessage';
-import { Market } from '../types/market';
+import { Market, OrderSummary } from '../types';
 
 export function getTimeRemainingMs(market: Market, now: number = Date.now()) {
   return market.endDate.getTime() - now;

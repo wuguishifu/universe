@@ -1,6 +1,6 @@
 import z from 'zod';
 
-import { preprocessBoolean } from '../utils/preprocessors';
+import { preprocessBoolean } from '@wuguishifu/utils-parse';
 
 export type EnvironmentSchema = z.infer<typeof environmentSchema>;
 export const environmentSchema = z

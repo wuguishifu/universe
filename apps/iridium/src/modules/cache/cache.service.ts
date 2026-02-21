@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { Market } from '../../types/market';
+import { Market } from '@wuguishifu/utils-polymarket';
 
 @Injectable()
 export class CacheService {
