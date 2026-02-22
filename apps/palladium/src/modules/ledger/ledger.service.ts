@@ -27,13 +27,13 @@ export class LedgerService implements OnModuleInit, OnModuleDestroy {
 
     this.clobClientService.clobClient$.pipe(take(1)).subscribe((client) => {
       this.clobClient = client;
-    });
 
-    this.getUserBalance().then((balance) => {
-      this.availableBalance = balance * maxAllocationRatio;
-      this.logger.log(
-        `User USDC Balance: ${balance}, Allocation Ratio: ${maxAllocationRatio}, Available: ${this.availableBalance.toFixed(4)}`,
-      );
+      this.getUserBalance().then((balance) => {
+        this.availableBalance = balance * maxAllocationRatio;
+        this.logger.log(
+          `User USDC Balance: ${balance}, Allocation Ratio: ${maxAllocationRatio}, Available: ${this.availableBalance.toFixed(4)}`,
+        );
+      });
     });
 
     this.logger.log(`Ledger sync interval: ${ledgerSyncIntervalMs}ms`);
