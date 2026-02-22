@@ -14,21 +14,7 @@ export class StartupService implements OnModuleInit {
   onModuleInit() {
     this.osmiumService.trackEvent({
       name: 'iridium-started',
-      metadata: { configuration: this.sanitizedEnvironment },
+      metadata: { configuration: this.environmentService.environment },
     });
-  }
-
-  private get sanitizedEnvironment() {
-    const {
-      privateKey,
-      signatureType,
-      funderAddress,
-      polyApiKey,
-      polyApiSecret,
-      polyApiPassphrase,
-      ...sanitizedEnvironment
-    } = this.environmentService.environment;
-
-    return sanitizedEnvironment;
   }
 }

@@ -8,6 +8,10 @@
       "registryPath": "wuguishifu/universe/osmium",
       "imageArch": "amd64"
     },
+    "palladium": {
+      "registryPath": "wuguishifu/universe/palladium",
+      "imageArch": "amd64"
+    },
     "platinum": {
       "registryPath": "wuguishifu/universe/platinum",
       "imageArch": "amd64"
