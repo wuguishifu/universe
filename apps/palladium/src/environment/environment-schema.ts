@@ -11,12 +11,12 @@ export const environmentSchema = z.object({
   adapter: z.enum(ADAPTERS).default('crypto-5m'),
 
   // ledge configuration
-  maxAllocationRatio: z.number().min(0).max(1).default(0.8),
-  ledgerSyncIntervalMs: z.number().min(5_000).default(60_000),
+  maxAllocationRatio: z.coerce.number().min(0).max(1).default(0.8),
+  ledgerSyncIntervalMs: z.coerce.number().min(5_000).default(60_000),
 
   // strategy config
-  targetPositionSize: z.number().min(1).default(10),
-  minPriceDistancePercent: z.number().min(0).default(0.003),
-  minTimeRemainingMs: z.number().min(0).default(0),
-  maxTimeRemainingMs: z.number().min(0).default(10_000),
+  targetPositionSize: z.coerce.number().min(1).default(10),
+  minPriceDistancePercent: z.coerce.number().min(0).default(0.003),
+  minTimeRemainingMs: z.coerce.number().min(0).default(0),
+  maxTimeRemainingMs: z.coerce.number().min(0).default(10_000),
 });
