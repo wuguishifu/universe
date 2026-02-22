@@ -13,12 +13,22 @@ export type BinanceBookTick = {
   timestamp: number;
 };
 
+export type BinanceKlineEvent = {
+  symbol: string;
+  openTime: number;   // candle open timestamp in ms (UTC)
+  openPrice: number;  // price at the start of this candle
+  isClosed: boolean;  // true once the candle is finalised
+};
+
 @Injectable()
 export class BinanceWsService extends WebSocketService implements OnModuleDestroy {
   protected readonly logger = new Logger(BinanceWsService.name);
 
   private readonly tickSubject = new Subject<BinanceBookTick>();
   public readonly ticks$ = this.tickSubject.asObservable();
+
+  private readonly klineSubject = new Subject<BinanceKlineEvent>();
+  public readonly klines$ = this.klineSubject.asObservable();
 
   private watchdogTimer: NodeJS.Timeout | null = null;
 
@@ -29,6 +39,7 @@ export class BinanceWsService extends WebSocketService implements OnModuleDestro
   onModuleDestroy() {
     this.logger.debug('Shutting down Binance WebSocket...');
     this.tickSubject.complete();
+    this.klineSubject.complete();
     this.close();
 
     if (this.watchdogTimer) {
@@ -48,21 +59,29 @@ export class BinanceWsService extends WebSocketService implements OnModuleDestro
   protected handleMessage(data: WebSocket.Data): void {
     try {
       const raw = JSON.parse(data.toString());
-      // Combined stream format: { stream: "btcusdt@bookTicker", data: { ... } }
-      const payload = raw.data ?? raw;
       const streamName: string = raw.stream ?? '';
+      const payload = raw.data ?? raw;
       const symbol = streamName.split('@')[0].replace(/usdt$/i, '').toUpperCase();
 
-      const bestBid = parseFloat(payload.b);
-      const bestAsk = parseFloat(payload.a);
-
-      this.tickSubject.next({
-        symbol: symbol || payload.s,
-        bestBid,
-        bestAsk,
-        mid: (bestBid + bestAsk) / 2,
-        timestamp: Date.now(),
-      });
+      if (streamName.includes('@kline')) {
+        const k = payload.k;
+        this.klineSubject.next({
+          symbol,
+          openTime: k.t,
+          openPrice: parseFloat(k.o),
+          isClosed: k.x,
+        });
+      } else {
+        const bestBid = parseFloat(payload.b);
+        const bestAsk = parseFloat(payload.a);
+        this.tickSubject.next({
+          symbol: symbol || payload.s,
+          bestBid,
+          bestAsk,
+          mid: (bestBid + bestAsk) / 2,
+          timestamp: Date.now(),
+        });
+      }
     } catch (error) {
       this.logger.error(`Failed to parse Binance WS message: ${error}`);
     }

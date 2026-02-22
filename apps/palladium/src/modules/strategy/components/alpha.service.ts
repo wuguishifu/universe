@@ -123,40 +123,55 @@ export class AlphaService implements OnModuleDestroy {
       return null;
     }
 
-    const binancePrice = snapshot.currentPrice;
+    const currentPrice = snapshot.currentPrice;
 
-    // 4. Parse strike + direction from question
-    const parsed = this.parseStrikeAndDirection(market.question);
-    if (!parsed) {
+    // 4. Get the open price of the current 5m candle.
+    //    The candle openTime should align with the market's eventStartTime.
+    const candle = this.binancePriceService.getCandleOpen(symbol);
+    if (!candle) {
       this.osmiumService.trackDebug({
-        name: 'alpha-strike-parse-failed',
-        metadata: { conditionId: tick.conditionId, question: market.question },
+        name: 'alpha-filter-reject',
+        metadata: { filter: 'no-candle-data', conditionId: tick.conditionId, symbol },
       });
       return null;
     }
 
-    const { strikePrice, direction } = parsed;
-
-    // 5. Compute distance percent
-    const distancePercent = Math.abs(binancePrice - strikePrice) / strikePrice;
-
-    // 6. Determine side
-    let side: 'YES' | 'NO';
-    if (direction === 'above') {
-      side = binancePrice > strikePrice ? 'YES' : 'NO';
-    } else {
-      side = binancePrice < strikePrice ? 'YES' : 'NO';
+    // Verify the candle aligns with this market's window (within 60s tolerance)
+    const windowStartTs = market.eventStartTime.getTime();
+    if (Math.abs(candle.openTime - windowStartTs) > 60_000) {
+      this.osmiumService.trackDebug({
+        name: 'alpha-filter-reject',
+        metadata: {
+          filter: 'candle-mismatch',
+          conditionId: tick.conditionId,
+          symbol,
+          candleOpenTime: candle.openTime,
+          windowStartTs,
+          diffMs: candle.openTime - windowStartTs,
+        },
+      });
+      return null;
     }
 
-    // Track evaluated tick (every tick that passes throttling and has valid Binance/strike data)
+    const startPrice = candle.openPrice;
+
+    // 5. Compute how far the price has moved since the window opened
+    const distancePercent = Math.abs(currentPrice - startPrice) / startPrice;
+
+    // 6. Determine direction: YES = "Up" (price rose), NO = "Down" (price fell)
+    const isUp = currentPrice >= startPrice;
+    const side: 'YES' | 'NO' = isUp ? 'YES' : 'NO';
+
+    // Track evaluated tick
     this.osmiumService.trackDebug({
       name: 'alpha-tick-evaluated',
       metadata: {
         conditionId: tick.conditionId,
         asset: market.asset,
-        binancePrice,
-        strikePrice,
+        currentPrice,
+        startPrice,
         distancePercent,
+        direction: isUp ? 'up' : 'down',
         side,
         bestAskYes: tick.bestAskYes,
         bestAskNo: tick.bestAskNo,
@@ -164,7 +179,7 @@ export class AlphaService implements OnModuleDestroy {
       },
     });
 
-    // 7. Distance check
+    // 7. Distance check — require a clear directional signal
     if (distancePercent < env.minPriceDistancePercent) {
       this.osmiumService.trackDebug({
         name: 'alpha-filter-reject',
@@ -178,12 +193,12 @@ export class AlphaService implements OnModuleDestroy {
       return null;
     }
 
-    // 8. Get ask for the favorable side
+    // 8. Get ask for the winning side
     const ask = side === 'YES' ? tick.bestAskYes : tick.bestAskNo;
 
-    // 9. Compute limit bid price: one tick below the best ask (top of bid book, qualifies for maker rebate)
+    // 9. Limit bid one tick below the best ask: top of book, qualifies for maker rebate
     const tickSize = parseFloat(tick.minTickSize);
-    const limitPrice = Math.round((ask - tickSize) * 1e8) / 1e8; // avoid float drift
+    const limitPrice = Math.round((ask - tickSize) * 1e8) / 1e8;
 
     if (ask <= 0 || limitPrice <= 0) {
       this.osmiumService.trackDebug({
@@ -198,15 +213,15 @@ export class AlphaService implements OnModuleDestroy {
       quantity: env.targetPositionSize,
       side,
       price: limitPrice,
-      reason: `expiry-maker: binance=${binancePrice}, strike=${strikePrice}, distance=${(distancePercent * 100).toFixed(2)}%, ask=${ask}, bid=${limitPrice}`,
+      reason: `expiry-maker: current=${currentPrice}, start=${startPrice}, distance=${(distancePercent * 100).toFixed(3)}%, direction=${isUp ? 'up' : 'down'}, ask=${ask}, bid=${limitPrice}`,
     };
 
     this.osmiumService.trackEvent({
       name: 'alpha-entry-plan-generated',
       metadata: {
         ...plan,
-        binancePrice,
-        strikePrice,
+        currentPrice,
+        startPrice,
         distancePercent,
         ask,
         tickSize,
@@ -216,20 +231,6 @@ export class AlphaService implements OnModuleDestroy {
 
     this.logger.debug(`Generated entry plan for ${tick.conditionId}: ${JSON.stringify(plan)}`);
     return plan;
-  }
-
-  private parseStrikeAndDirection(question: string): { strikePrice: number; direction: 'above' | 'below' } | null {
-    const match = /\$([0-9,]+(?:\.[0-9]+)?)/.exec(question);
-    if (!match) {
-      return null;
-    }
-    const strikePrice = parseFloat(match[1].replace(/,/g, ''));
-    const isAbove = /above/i.test(question);
-    const isBelow = /below/i.test(question);
-    if (!isAbove && !isBelow) {
-      return null;
-    }
-    return { strikePrice, direction: isAbove ? 'above' : 'below' };
   }
   // #endregion
 }

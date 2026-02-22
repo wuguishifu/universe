@@ -9,7 +9,9 @@ export const RELAYER_API_BASE = 'https://relayer-v2.polymarket.com';
 // binance endpoints
 export const BINANCE_BTC_WS_URL = 'wss://stream.binance.com:9443/ws/btcusdt@bookTicker';
 export const BINANCE_COMBINED_WS_URL =
-  'wss://stream.binance.com:9443/stream?streams=btcusdt@bookTicker/ethusdt@bookTicker/solusdt@bookTicker/xrpusdt@bookTicker';
+  'wss://stream.binance.com:9443/stream?streams=' +
+  'btcusdt@bookTicker/ethusdt@bookTicker/solusdt@bookTicker/xrpusdt@bookTicker/' +
+  'btcusdt@kline_5m/ethusdt@kline_5m/solusdt@kline_5m/xrpusdt@kline_5m';
 
 // polygon chain info
 export const POLYGON_CHAIN_ID = 137;
