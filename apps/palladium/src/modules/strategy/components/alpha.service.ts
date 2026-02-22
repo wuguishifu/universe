@@ -181,17 +181,14 @@ export class AlphaService implements OnModuleDestroy {
     // 8. Get ask for the favorable side
     const ask = side === 'YES' ? tick.bestAskYes : tick.bestAskNo;
 
-    // 9. Skip if no liquidity or already repriced
-    if (ask <= 0 || ask >= env.maxEntryPrice) {
+    // 9. Compute limit bid price: one tick below the best ask (top of bid book, qualifies for maker rebate)
+    const tickSize = parseFloat(tick.minTickSize);
+    const limitPrice = Math.round((ask - tickSize) * 1e8) / 1e8; // avoid float drift
+
+    if (ask <= 0 || limitPrice <= 0) {
       this.osmiumService.trackDebug({
         name: 'alpha-filter-reject',
-        metadata: {
-          filter: 'ask-check',
-          conditionId: tick.conditionId,
-          side,
-          ask,
-          maxEntryPrice: env.maxEntryPrice,
-        },
+        metadata: { filter: 'no-liquidity', conditionId: tick.conditionId, side, ask },
       });
       return null;
     }
@@ -200,8 +197,8 @@ export class AlphaService implements OnModuleDestroy {
       conditionId: tick.conditionId,
       quantity: env.targetPositionSize,
       side,
-      price: ask,
-      reason: `latency-arb: binance=${binancePrice}, strike=${strikePrice}, distance=${(distancePercent * 100).toFixed(2)}%`,
+      price: limitPrice,
+      reason: `expiry-maker: binance=${binancePrice}, strike=${strikePrice}, distance=${(distancePercent * 100).toFixed(2)}%, ask=${ask}, bid=${limitPrice}`,
     };
 
     this.osmiumService.trackEvent({
@@ -211,6 +208,8 @@ export class AlphaService implements OnModuleDestroy {
         binancePrice,
         strikePrice,
         distancePercent,
+        ask,
+        tickSize,
         timeRemaining: tick.timeRemaining,
       },
     });

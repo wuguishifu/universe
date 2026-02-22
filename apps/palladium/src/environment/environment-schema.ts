@@ -14,15 +14,9 @@ export const environmentSchema = z.object({
   maxAllocationRatio: z.number().min(0).max(1).default(0.8),
   ledgerSyncIntervalMs: z.number().min(5_000).default(60_000),
 
-  // alpha configuration
-  maxHistoryRetentionMs: z.number().min(0).default(30_000),
-
-  // latency arb config
+  // strategy config
   targetPositionSize: z.number().min(1).default(10),
   minPriceDistancePercent: z.number().min(0).default(0.003),
-  maxEntryPrice: z.number().min(0).max(1).default(0.85),
-  minTimeRemainingMs: z.number().min(0).default(30_000),
-  maxTimeRemainingMs: z.number().min(0).default(270_000),
-  targetReturnMultiplier: z.number().min(1).default(1.15),
-  exitTimeoutMs: z.number().min(0).default(120_000),
+  minTimeRemainingMs: z.number().min(0).default(0),
+  maxTimeRemainingMs: z.number().min(0).default(10_000),
 });

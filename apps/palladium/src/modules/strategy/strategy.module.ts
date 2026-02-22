@@ -7,11 +7,10 @@ import { ExecutionModule } from '../execution/execution.module';
 import { LedgerModule } from '../ledger/ledger.module';
 import { MarketAdapterModule } from '../market-adapter/market-adapter.module';
 import { AlphaService } from './components/alpha.service';
-import { PositionManagerService } from './components/position-manager.service';
 import { StrategyService } from './strategy.service';
 
 @Module({
   imports: [BinanceModule, CacheModule, ClobWsModule, ExecutionModule, LedgerModule, MarketAdapterModule],
-  providers: [StrategyService, AlphaService, PositionManagerService],
+  providers: [StrategyService, AlphaService],
 })
 export class StrategyModule {}
