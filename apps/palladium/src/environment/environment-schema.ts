@@ -10,7 +10,7 @@ export const environmentSchema = z.object({
   enableVerboseEvents: z.preprocess(preprocessBoolean, z.boolean()).default(false),
   adapter: z.enum(ADAPTERS).default('crypto-5m'),
 
-  // ledge configuration
+  // ledger configuration
   maxAllocationRatio: z.coerce.number().min(0).max(1).default(0.8),
   ledgerSyncIntervalMs: z.coerce.number().min(5_000).default(60_000),
 
