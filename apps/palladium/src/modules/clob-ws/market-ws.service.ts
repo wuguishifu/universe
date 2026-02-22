@@ -76,7 +76,7 @@ export class MarketWsService extends WebSocketService implements OnModuleDestroy
   protected onOpen(): void {
     if (this.subscribedTokenIds.size > 0) {
       this.logger.debug(`Market WebSocket reconnected, re-subscribing to ${this.subscribedTokenIds.size} tokens...`);
-      this.send({ type: 'subscribe', channel: 'market', assets_ids: Array.from(this.subscribedTokenIds) });
+      this.send({ operation: 'subscribe', channel: 'market', assets_ids: Array.from(this.subscribedTokenIds) });
     }
   }
 
