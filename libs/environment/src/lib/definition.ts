@@ -6,16 +6,5 @@ export const config = z
     quartz: z.object({
       PRISMIC_REVALIDATE_SECRET: z.string(),
     }),
-    osmium: z.object({
-      apiAccessKey: z.string(),
-      baseUrl: z.string(),
-    }),
-    hydrogen: z.object({
-      host: z.string(),
-      port: z.number(),
-      user: z.string(),
-      password: z.string(),
-      database: z.string(),
-    }),
   })
   .strict();

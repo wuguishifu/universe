@@ -31,18 +31,6 @@ const appRootMap: Record<string, AppConfig> = {
     appType: 'next',
     dir: appPath('quartz'),
   },
-  iridium: {
-    appType: 'other',
-    dir: appPath('iridium'),
-  },
-  osmium: {
-    appType: 'other',
-    dir: appPath('osmium'),
-  },
-  platinum: {
-    appType: 'other',
-    dir: appPath('platinum'),
-  },
 };
 
 console.log('Updating .env files...');
