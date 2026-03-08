@@ -1,1 +1,0 @@
-CREATE INDEX "osmium_events_condition_id_idx" ON "osmium"."events" USING btree (("metadata"->>'conditionId'));

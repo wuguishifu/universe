@@ -4,13 +4,7 @@
     "source.fixAll.eslint": "always"
   },
   "typescript.tsdk": "node_modules/typescript/lib",
-  "micropico.syncFolder": "proto/pico-prototype",
   "editor.formatOnSave": false,
-  "cSpell.words": [
-    "Clob",
-    "funder",
-    "Polymarket"
-  ],
   "javascript.preferences.importModuleSpecifier": "project-relative",
   "typescript.preferences.importModuleSpecifier": "project-relative",
   "vim.handleKeys": {

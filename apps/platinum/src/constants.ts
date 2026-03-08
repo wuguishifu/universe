@@ -1,3 +1,0 @@
-// Injectables
-export const OSMIUM_SERVICE = 'OSMIUM_SERVICE';
-export const POLYMARKET_RELAY_CLIENT = 'POLYMARKET_RELAY_CLIENT';

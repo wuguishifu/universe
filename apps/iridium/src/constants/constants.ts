@@ -1,1 +1,0 @@
-export const OSMIUM_SERVICE = 'OSMIUM_SERVICE';
