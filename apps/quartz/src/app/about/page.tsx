@@ -27,9 +27,10 @@ export default function About() {
         </h1>
         <p className="text-[1.2em] text-grey animate-fade-in fill-mode-both delay-200">
           Hi! My name is <span className="text-blue">Bo Bramer</span>, and I&apos;m a full-stack engineer with a degree
-          in chemical engineering from the University of California, Irvine. Currently, I&apos;m a software engineer for{' '}
+          in chemical engineering from the University of California, Irvine. Currently, I&apos;m a senior software
+          engineer II for{' '}
           <Link href="https://inkitt.com" className="underline underline-offset-4 text-blue" target="_blank">
-            Inkitt
+            Inkitt, Inc.
           </Link>{' '}
           where I work on mobile apps using React Native with Typescript, Kotlin, and Swift. Here&apos;s the full tech
           stack I&apos;m using at work:
