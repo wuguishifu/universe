@@ -1,4 +1,8 @@
 {
   "name": "quartz",
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "dependencies": {
+    "@wuguishifu/ui-web": "workspace:*",
+    "@wuguishifu/utils-web": "workspace:*"
+  }
 }

@@ -6,6 +6,7 @@ const typescriptEslint = require('@typescript-eslint/eslint-plugin');
 const tsParser = require('@typescript-eslint/parser');
 const { defineConfig, globalIgnores } = require('eslint/config');
 const _import = require('eslint-plugin-import');
+const prettier = require('eslint-plugin-prettier');
 const react = require('eslint-plugin-react');
 const reactHooks = require('eslint-plugin-react-hooks');
 const strictNullChecks = require('eslint-plugin-strict-null-checks');

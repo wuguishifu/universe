@@ -8,39 +8,39 @@ type Props = Readonly<{
   text?: string;
 }>;
 
-export function Heading1({ children }: Props) {
+function Heading1({ children }: Props) {
   return <h1>{children}</h1>;
 }
 
-export function Heading2({ children }: Props) {
+function Heading2({ children }: Props) {
   return <h2>{children}</h2>;
 }
 
-export function Heading3({ children }: Props) {
+function Heading3({ children }: Props) {
   return <h3>{children}</h3>;
 }
 
-export function Heading4({ children }: Props) {
+function Heading4({ children }: Props) {
   return <h4>{children}</h4>;
 }
 
-export function Heading5({ children }: Props) {
+function Heading5({ children }: Props) {
   return <h5>{children}</h5>;
 }
 
-export function Heading6({ children }: Props) {
+function Heading6({ children }: Props) {
   return <h6>{children}</h6>;
 }
 
-export function Paragraph({ children }: Props) {
+function Paragraph({ children }: Props) {
   return <p>{children}</p>;
 }
 
-export function Strong({ children }: Props) {
+function Strong({ children }: Props) {
   return <strong className="font-semibold">{children}</strong>;
 }
 
-export const richTextComponentMap: JSXMapSerializer = {
+const richTextComponentMap: JSXMapSerializer = {
   heading1: Heading1,
   heading2: Heading2,
   heading3: Heading3,
