@@ -6,3 +6,6 @@ library-change:
 
 quartz:
   - apps/quartz/**
+
+sapphire:
+  - apps/sapphire/**
