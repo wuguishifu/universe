@@ -1,7 +1,7 @@
 import './globals.css';
 
 import { cn } from '@universe/ui-web';
-import { Jersey_15 } from 'next/font/google';
+import { Jersey_15, Smooch_Sans } from 'next/font/google';
 
 import { ParallaxBackground } from './components/parallax-background';
 
@@ -12,8 +12,15 @@ const jersey = Jersey_15({
   weight: '400',
 });
 
+const smooch = Smooch_Sans({
+  subsets: ['latin'],
+  variable: '--font-smooch',
+  style: 'normal',
+  weight: '400',
+});
+
 export const metadata = {
-  title: 'son of bo',
+  title: 'wuguishifu',
   description: 'i hope you enjoy your stay',
 };
 
@@ -24,7 +31,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={cn(jersey.variable)}>
+      <body className={cn(jersey.variable, smooch.variable, 'text-white')}>
         <ParallaxBackground />
         <div className="crt-container" />
         {children}

@@ -9,7 +9,7 @@ export function Section({ children, className }: SectionProps) {
   return (
     <div
       className={cn(
-        'border-[1.5px] border-gray-400/20 rounded-sm py-2 px-4',
+        'section border-[1.5px] border-gray-400/20 rounded-sm py-2 px-4 blur-[0.3px]',
         className,
       )}
     >

@@ -14,7 +14,7 @@ export function MainColumn() {
             alt="Yawning cat"
             unoptimized
           />
-          <h1 className="font-jersey text-4xl text-highlight pulse">
+          <h1>
             welcome to wuguishifu.dev<i className="text-sm">★</i>
           </h1>
         </div>
