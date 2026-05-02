@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/utils-web/src",
   "projectType": "library",
-  "tags": ["scope:hybrid"],
+  "tags": ["scope:shared"],
   "targets": {
     "circular-deps": {
       "executor": "nx:run-commands",

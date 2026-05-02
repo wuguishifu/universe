@@ -2,8 +2,8 @@
 
 import { Masonry } from 'react-plock';
 
-import { ProjectItem } from './project-item';
 import { ProjectDocument } from '../../../prismicio-types';
+import { ProjectItem } from './project-item';
 
 function renderItem(project: ProjectDocument, rowIndex: number) {
   return <ProjectItem key={project.id} project={project} rowIndex={rowIndex} />;
