@@ -1,6 +1,6 @@
 import './globals.css';
 
-import { cn } from '@wuguishifu/ui-web';
+import { cn } from '@universe/ui-web';
 import { Jersey_15 } from 'next/font/google';
 
 import { ParallaxBackground } from './components/ParallaxBackground';
@@ -17,7 +17,11 @@ export const metadata = {
   description: 'i hope you enjoy your stay',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body className={cn(jersey.variable)}>
