@@ -32,12 +32,6 @@
         "command": "nx setup environment"
       }
     },
-    "setup:post": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "nx setup:post environment"
-      }
-    },
     "dev": {
       "executor": "nx:run-commands",
       "options": {
