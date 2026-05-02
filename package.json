@@ -39,6 +39,7 @@
     "eslint-plugin-strict-null-checks": "^0.1.3",
     "husky": "^9.1.7",
     "knip": "^5.86.0",
+    "madge": "^8.0.0",
     "nx": "22.0.3",
     "postcss": "8.4.38",
     "slice-machine-ui": "^2.17.1",

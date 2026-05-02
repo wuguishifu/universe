@@ -1,6 +1,10 @@
 {
   "extends": "./tsconfig.base.json",
-  "exclude": [
-    "node_modules"
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    { "path": "./apps/quartz" },
+    { "path": "./libs/ui-web" },
+    { "path": "./libs/utils-web" }
   ]
 }

@@ -6,10 +6,17 @@
   "tags": ["scope:hybrid"],
   "// targets": "to see all targets run: nx show project ui-web --web",
   "targets": {
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning",
+        "cwd": "libs/ui-web"
+      }
+    },
     "tsc": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsc -p tsconfig.json",
+        "command": "tsc --build tsconfig.json",
         "cwd": "libs/ui-web"
       }
     },
@@ -21,9 +28,7 @@
     },
     "lint:fix": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
+      "outputs": ["{options.outputFile}"],
       "options": {
         "maxWarnings": 0,
         "fix": true
