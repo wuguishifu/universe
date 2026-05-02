@@ -31,7 +31,7 @@ export function Maintenance() {
           <div key={link.href}>
             <Link href={link.href} target={link.target}>
               <span className="cursor-pointer hover:underline">
-                {link.label}
+                → {link.label}
               </span>
             </Link>
           </div>
