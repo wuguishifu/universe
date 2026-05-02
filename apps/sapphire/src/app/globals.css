@@ -2,6 +2,8 @@
 @source "../../../../libs/ui-web/";
 @custom-variant dark (&:where(.dark, .dark *));
 
+@import './glow.css';
+
 @theme {
   --font-jersey: var(--font-jersey);
   --font-smooch: var(--font-smooch);
@@ -52,7 +54,7 @@ h1 {
   font-size: var(--text-4xl);
   line-height: var(--tw-leading, var(--text-4xl--line-height));
   color: var(--color-highlight);
-  animation: pulse-glow 2s infinite alternate ease-in-out;
+  animation: var(--animate-pulse-green);
 }
 
 h2 {
@@ -60,11 +62,7 @@ h2 {
   font-size: var(--text-3xl);
   line-height: var(--tw-leading, var(--text-3xl--line-height));
   color: var(--color-highlight);
-  animation: pulse-glow 2s infinite alternate ease-in-out;
-}
-
-.pulse {
-  animation: pulse-glow 2s infinite alternate ease-in-out;
+  animation: var(--animate-pulse-green);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -82,21 +80,6 @@ h2 {
 
 .reduce-effects .pulse {
   animation: none;
-}
-
-@keyframes pulse-glow {
-  from {
-    text-shadow:
-      0 0 2px #4fa78140,
-      0 0 4px #4fa78140,
-      0 0 6px #4fa78140;
-  }
-  to {
-    text-shadow:
-      0 0 8px #4fa78140,
-      0 0 10px #4fa78140,
-      0 0 16px #4fa78140;
-  }
 }
 
 img,
