@@ -1,0 +1,182 @@
+@import "tailwindcss";
+@source "../../../../libs/ui-web/";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-jersey: var(--font-jersey);
+  --color-highlight: #5df3b2;
+}
+
+.crt-container {
+  position: fixed;
+  inset: 0;
+  padding: 20px;
+}
+
+.crt-container::before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(18, 16, 16, 0) 10%,
+    rgba(0, 0, 0, 0.25) 10%
+  );
+  background-size: 100% 4px;
+  animation: crt-scan 1s linear infinite;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+@keyframes crt-scan {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 4px;
+  }
+}
+
+.pulse {
+  animation: pulse-glow 2s infinite alternate ease-in-out; 
+}
+
+@keyframes pulse-glow {
+  from {
+    text-shadow: 
+      0 0 2px #4fa78140,
+      0 0 4px #4fa78140,
+      0 0 6px #4fa78140;
+  }
+  to {
+    text-shadow: 
+      0 0 8px #4fa78140, 
+      0 0 10px #4fa78140, 
+      0 0 16px #4fa78140;
+  }
+}
+
+img, html { 
+  image-rendering: optimizeSpeed;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -o-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: pixelated;
+  image-rendering: optimize-contrast;
+  -ms-interpolation-mode: nearest-neighbor;
+}
+
+html {
+  overflow-x: hidden;
+  overflow-y: auto;
+  background-color: #0b121b;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Custom scrollbar styling */
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(11, 18, 27, 0.8);
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.4);
+  border-radius: 6px;
+  border: 2px solid rgba(11, 18, 27, 0.8);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgba(100, 116, 139, 0.8);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.4) rgba(11, 18, 27, 0.8);
+}
+
+@layer base {
+  :root {
+    --parallax-1: 0px;
+    --parallax-2: 0px;
+    --parallax-3: 0px;
+    --parallax-4: 0px;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 203.41 100% 32.16%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 205 86% 65%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
+}

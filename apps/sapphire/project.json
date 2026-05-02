@@ -1,0 +1,75 @@
+{
+  "name": "sapphire",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/sapphire",
+  "projectType": "application",
+  "tags": ["scope:hybrid"],
+  "// targets": "to see all targets run: nx show project sapphire --web",
+  "targets": {
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf apps/sapphire/.next"
+      }
+    },
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "dependsOn": ["clean"],
+      "options": {
+        "outputPath": "apps/sapphire"
+      },
+      "configurations": {
+        "development": {},
+        "staging": {},
+        "production": {}
+      }
+    },
+    "setup": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx setup environment"
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "sapphire:build",
+        "dev": true,
+        "port": 3000
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "sapphire:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "sapphire:build:production",
+          "dev": false
+        }
+      }
+    },
+    "tsc": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --build tsconfig.json",
+        "cwd": "apps/sapphire"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "maxWarnings": 0
+      }
+    },
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning",
+        "cwd": "apps/quartz"
+      }
+    }
+  }
+}

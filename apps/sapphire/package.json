@@ -1,0 +1,12 @@
+{
+  "name": "sapphire",
+  "version": "0.0.1",
+  "packageManager": "pnpm@10.2.0",
+  "scripts": {
+    "start": "next start"
+  },
+  "dependencies": {
+    "@universe/ui-web": "workspace:*",
+    "@universe/utils-web": "workspace:*"
+  }
+}
