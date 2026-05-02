@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "prepush": "nx affected -t lint,tsc,circular-deps --base=develop --head=HEAD --output-style=stream --nxBail=true",
+    "prepush": "nx affected -t lint,tsc,circular-deps --base=main --head=HEAD --output-style=stream --nxBail=true",
     "prepare": "husky",
     "postinstall": "nx run-many --target=build --projects=tag:build-on-install",
     "knip": "knip",
