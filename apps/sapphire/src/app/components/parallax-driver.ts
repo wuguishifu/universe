@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 export function ParallaxDriver() {
   useEffect(() => {
     const handleScroll = () => {
+      if (document.documentElement.classList.contains('reduce-effects')) return;
       const scrollY = window.scrollY;
       const root = document.documentElement;
       const viewportHeight = window.innerHeight;

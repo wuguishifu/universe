@@ -3,7 +3,7 @@ import './globals.css';
 import { cn } from '@universe/ui-web';
 import { Jersey_15 } from 'next/font/google';
 
-import { ParallaxBackground } from './components/ParallaxBackground';
+import { ParallaxBackground } from './components/parallax-background';
 
 const jersey = Jersey_15({
   subsets: ['latin'],

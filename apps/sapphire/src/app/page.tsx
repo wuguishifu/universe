@@ -1,5 +1,5 @@
-import { MainColumn } from './components/MainColumn';
-import { SideColumn } from './components/SideColumn';
+import { MainColumn } from './components/main-column';
+import { SideColumn } from './components/side-column';
 
 export default function Index() {
   return (
