@@ -1,9 +1,9 @@
 import {
+  SiConvex,
   SiExpo,
   SiKotlin,
   SiNestjs,
   SiNx,
-  SiPostgresql,
   SiReact,
   SiSwift,
   SiTypescript,
@@ -26,16 +26,23 @@ export default function About() {
           What&apos;s Poppin!
         </h1>
         <p className="text-[1.2em] text-grey animate-fade-in fill-mode-both delay-200">
-          Hi! My name is <span className="text-blue">Bo Bramer</span>, and
-          I&apos;m a full-stack engineer with a degree in chemical engineering
-          from the University of California, Irvine. Currently, I&apos;m a
-          senior software engineer II for{' '}
+          Hi! My name is{' '}
           <Link
-            href="https://inkitt.com"
+            href="https://linkedin.com/in/bo-bramer"
+            target="_blank"
+            className="underline underline-offset-4 text-blue"
+          >
+            Bo Bramer
+          </Link>{' '}
+          and I&apos;m a full-stack engineer with a degree in chemical
+          engineering from the University of California, Irvine. Currently,
+          I&apos;m a senior software engineer at{' '}
+          <Link
+            href="https://solidstarts.com"
             className="underline underline-offset-4 text-blue"
             target="_blank"
           >
-            Inkitt, Inc.
+            Solid Starts
           </Link>{' '}
           where I work on mobile apps using React Native with Typescript,
           Kotlin, and Swift. Here&apos;s the full tech stack I&apos;m using at
@@ -115,8 +122,8 @@ export default function About() {
             tabIndex={-1}
           >
             <div className="flex flex-col items-center w-20">
-              <SiPostgresql className="size-16 text-[#232F3E] dark:text-white" />
-              <p className="text-sm select-none">PostgreSQL</p>
+              <SiConvex className="size-16 text-[#232F3E] dark:text-white" />
+              <p className="text-sm select-none">Convex</p>
             </div>
           </a>
           <a
@@ -142,16 +149,19 @@ export default function About() {
         <p className="text-[1.2em] text-grey animate-fade-in fill-mode-both delay-600">
           The most recent side project I&apos;ve been working on is{' '}
           <Link
-            href="/projects/tungsten"
+            href="/projects/topaz"
             className="underline underline-offset-4 text-blue"
             target="_blank"
           >
-            Tungsten
+            Topaz
           </Link>
-          , a self-hostable note-taking app that supports markdown formatting,
-          LaTeX, and vim input. It saves files to the native file system, so you
-          don&apos;t need to worry about any lock-in when transfering notes in
-          or out.
+          , a self-hostable thermostat automation app that allows you to set up
+          custom automations for your smart thermostat using a simple and
+          intuitive UI. It also records data from your thermostat so you can see
+          how your house heats and cools over time. Right now, I'm working on a
+          feature that will give you insights on how you can optimize your
+          thermostat settings to save energy and money using historical data and
+          machine learning.
         </p>
         <p className="text-[1.2em] text-grey animate-fade-in fill-mode-both delay-800">
           You can learn more about me below!
