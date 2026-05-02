@@ -10,6 +10,10 @@ export async function ShowMeButton() {
   const randomProject =
     allProjects[Math.floor(Math.random() * allProjects.length)];
 
+  if (!randomProject) {
+    return null;
+  }
+
   return (
     <Link
       href={`/projects/${randomProject.uid}`}
