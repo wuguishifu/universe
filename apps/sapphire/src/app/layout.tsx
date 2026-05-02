@@ -3,6 +3,7 @@ import './globals.css';
 import { cn } from '@universe/ui-web';
 import { Jersey_15, Smooch_Sans } from 'next/font/google';
 
+import { RainCanvas } from '../modules/rain/rain-canvas';
 import { ParallaxBackground } from './components/parallax-background';
 
 const jersey = Jersey_15({
@@ -33,6 +34,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={cn(jersey.variable, smooch.variable, 'text-white')}>
         <ParallaxBackground />
+        <RainCanvas />
         <div className="crt-container" />
         {children}
       </body>
