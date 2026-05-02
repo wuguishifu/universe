@@ -11,7 +11,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
   LinkedIn,
-} from '@wuguishifu/ui-web';
+} from '@universe/ui-web';
 import { Menu, Moon, Sun, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';

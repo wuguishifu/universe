@@ -7,7 +7,7 @@ import {
   CarouselNext,
   CarouselPrevious,
   cn,
-} from '@wuguishifu/ui-web';
+} from '@universe/ui-web';
 import Image from 'next/image';
 import { FC } from 'react';
 
@@ -15,7 +15,8 @@ import { animation } from '../animation';
 import { backgroundClass } from '../background';
 import { SliceComponentPropsWithContext } from '../context';
 
-export type CarouselProps = SliceComponentPropsWithContext<Content.CarouselSlice>;
+export type CarouselProps =
+  SliceComponentPropsWithContext<Content.CarouselSlice>;
 
 const Carousel: FC<CarouselProps> = ({ slice, context }) => {
   const sliceIndex = context.sliceIds.indexOf(slice.id);

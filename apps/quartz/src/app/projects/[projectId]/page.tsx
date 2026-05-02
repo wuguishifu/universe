@@ -1,5 +1,5 @@
 import { asImageSrc, isFilled } from '@prismicio/client';
-import { PageProps } from '@wuguishifu/utils-web';
+import { PageProps } from '@universe/utils-web';
 import { notFound } from 'next/navigation';
 
 import { AllDocumentTypes, ProjectDocument } from '../../../../prismicio-types';
@@ -11,10 +11,14 @@ function verifyParams(page: AllDocumentTypes): page is ProjectDocument {
   return page.type === 'project';
 }
 
-export default async function ProjectPage({ params }: PageProps<never, { projectId: string }>) {
+export default async function ProjectPage({
+  params,
+}: PageProps<never, { projectId: string }>) {
   const { projectId } = await params;
   const client = createClient();
-  const page = await client.getByUID('project', projectId).catch(() => notFound());
+  const page = await client
+    .getByUID('project', projectId)
+    .catch(() => notFound());
 
   if (page.uid && !verifyParams(page)) {
     notFound();
@@ -27,19 +31,35 @@ export default async function ProjectPage({ params }: PageProps<never, { project
 
   return (
     <div className="w-full flex-1">
-      <SliceZoneWithContext slices={page.data.slices} components={components} context={context} />
+      <SliceZoneWithContext
+        slices={page.data.slices}
+        components={components}
+        context={context}
+      />
     </div>
   );
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ projectId: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ projectId: string }>;
+}) {
   const { projectId } = await params;
   const client = createClient();
-  const page = await client.getByUID('project', projectId).catch(() => notFound());
+  const page = await client
+    .getByUID('project', projectId)
+    .catch(() => notFound());
 
-  const title = isFilled.keyText(page.data.meta_title) ? page.data.meta_title : undefined;
-  const description = isFilled.keyText(page.data.meta_description) ? page.data.meta_description : undefined;
-  const metaImage = isFilled.image(page.data.meta_image) ? page.data.meta_image : undefined;
+  const title = isFilled.keyText(page.data.meta_title)
+    ? page.data.meta_title
+    : undefined;
+  const description = isFilled.keyText(page.data.meta_description)
+    ? page.data.meta_description
+    : undefined;
+  const metaImage = isFilled.image(page.data.meta_image)
+    ? page.data.meta_image
+    : undefined;
 
   return {
     title,

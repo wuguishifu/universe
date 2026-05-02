@@ -55,11 +55,9 @@ npm-debug.*
 *.key
 *.mobileprovision
 *.orig.*
-web-build/
-cache/
-test-output
 
 .env
+.env.local
 
 # React Native
 

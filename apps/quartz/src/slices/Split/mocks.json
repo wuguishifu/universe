@@ -1,74 +1,74 @@
 [
-	{
-		"__TYPE__": "SharedSliceContent",
-		"variation": "default",
-		"primary": {
-			"sections": {
-				"__TYPE__": "GroupContentType",
-				"value": [
-					{
-						"__TYPE__": "GroupItemContent",
-						"value": [
-							[
-								"content",
-								{
-									"__TYPE__": "StructuredTextContent",
-									"value": [
-										{
-											"type": "paragraph",
-											"content": {
-												"text": "The first step of the algorithm is to define a 3d grid of cubes. Here I have defined a grid of cubes. The number of cubes in the grid is determined by the resolution of the grid, which is the number of cubes along each axis. The resolution of the grid is determined by the number of vertices along each axis of the scalar field. For example, if the scalar field has a resolution of 10x10x10, then the marching cubes grid will have a resolution of 9x9x9, and will contain 8x8x8 cubes.",
-												"spans": []
-											},
-											"direction": "ltr"
-										}
-									]
-								}
-							]
-						]
-					},
-					{
-						"__TYPE__": "GroupItemContent",
-						"value": [
-							[
-								"image",
-								{
-									"origin": {
-										"id": "main",
-										"url": "http://localhost:3000/slice-simulator/grid.png",
-										"width": 3199,
-										"height": 3199
-									},
-									"url": "http://localhost:3000/slice-simulator/grid.png",
-									"width": 3199,
-									"height": 3199,
-									"edit": {
-										"zoom": 1,
-										"crop": {
-											"x": 0,
-											"y": 0
-										},
-										"background": "transparent"
-									},
-									"alt": "naturally",
-									"credits": null,
-									"__TYPE__": "ImageContent",
-									"thumbnails": {}
-								}
-							]
-						]
-					}
-				]
-			},
-			"background": {
-				"__TYPE__": "BooleanContent",
-				"value": true
-			},
-			"animate": {
-				"__TYPE__": "BooleanContent",
-				"value": false
-			}
-		},
-		"items": []
-	}
+  {
+    "__TYPE__": "SharedSliceContent",
+    "variation": "default",
+    "primary": {
+      "sections": {
+        "__TYPE__": "GroupContentType",
+        "value": [
+          {
+            "__TYPE__": "GroupItemContent",
+            "value": [
+              [
+                "content",
+                {
+                  "__TYPE__": "StructuredTextContent",
+                  "value": [
+                    {
+                      "type": "paragraph",
+                      "content": {
+                        "text": "The first step of the algorithm is to define a 3d grid of cubes. Here I have defined a grid of cubes. The number of cubes in the grid is determined by the resolution of the grid, which is the number of cubes along each axis. The resolution of the grid is determined by the number of vertices along each axis of the scalar field. For example, if the scalar field has a resolution of 10x10x10, then the marching cubes grid will have a resolution of 9x9x9, and will contain 8x8x8 cubes.",
+                        "spans": []
+                      },
+                      "direction": "ltr"
+                    }
+                  ]
+                }
+              ]
+            ]
+          },
+          {
+            "__TYPE__": "GroupItemContent",
+            "value": [
+              [
+                "image",
+                {
+                  "origin": {
+                    "id": "main",
+                    "url": "http://localhost:3000/slice-simulator/grid.png",
+                    "width": 3199,
+                    "height": 3199
+                  },
+                  "url": "http://localhost:3000/slice-simulator/grid.png",
+                  "width": 3199,
+                  "height": 3199,
+                  "edit": {
+                    "zoom": 1,
+                    "crop": {
+                      "x": 0,
+                      "y": 0
+                    },
+                    "background": "transparent"
+                  },
+                  "alt": "naturally",
+                  "credits": null,
+                  "__TYPE__": "ImageContent",
+                  "thumbnails": {}
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      "background": {
+        "__TYPE__": "BooleanContent",
+        "value": true
+      },
+      "animate": {
+        "__TYPE__": "BooleanContent",
+        "value": false
+      }
+    },
+    "items": []
+  }
 ]

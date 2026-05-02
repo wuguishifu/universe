@@ -1,10 +1,13 @@
-import { createClient as baseCreateClient, type ClientConfig } from '@prismicio/client';
+import {
+  createClient as baseCreateClient,
+  type ClientConfig,
+} from '@prismicio/client';
 import { enableAutoPreviews } from '@prismicio/next';
 
 import sm from '../slicemachine.config.json';
 import { routes } from './routes';
 
-export const repositoryName = sm.repositoryName;
+const repositoryName = sm.repositoryName;
 
 export const PRISMIC_SECRET_HEADER = 'x-prismic-secret';
 

@@ -3,100 +3,19 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/environment/src",
   "projectType": "library",
-  "tags": [
-    "scope:server",
-    "environment"
-  ],
+  "tags": ["scope:shared"],
   "// targets": "to see all targets run: nx show project environment --web",
   "targets": {
+    "auth": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "infisical login --domain https://infisical.wuguishifu.dev"
+      }
+    },
     "setup": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "libs/environment",
-        "parallel": false,
-        "commands": [
-          "ts-node ./src/lib/utils/decrypt.ts",
-          "pnpm nx setup:post environment"
-        ]
-      }
-    },
-    "update": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "libs/environment",
-        "parallel": false,
-        "commands": [
-          "ts-node ./src/lib/utils/encrypt.ts",
-          "pnpm nx setup:post environment"
-        ]
-      }
-    },
-    "fix": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "libs/environment",
-        "parallel": false,
-        "commands": [
-          "ts-node ./src/lib/utils/fix.ts",
-          "pnpm nx setup:post environment"
-        ]
-      }
-    },
-    "setup:post": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "libs/environment",
-        "command": "ts-node -r tsconfig-paths/register ./src/lib/utils/postSetup.ts"
-      }
-    },
-    "verify": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "libs/environment",
-        "parallel": false,
-        "commands": [
-          "ts-node ./src/lib/environment.ts"
-        ]
-      }
-    },
-    "tsc": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "tsc -p tsconfig.json",
-        "cwd": "libs/environment"
-      }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
-      "options": {
-        "maxWarnings": 0
-      }
-    },
-    "lint:fix": {
-      "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
-      "options": {
-        "maxWarnings": 0,
-        "fix": true
-      }
-    },
-    "ci:checks": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["tsc", "lint"],
-      "options": {
-        "command": "echo CI checks done!"
-      }
-    },
-    "prepush": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["ci:checks"],
-      "options": {
-        "command": "echo Prepush done!"
+        "command": "/bin/sh ./libs/environment/setup.sh"
       }
     }
   }

@@ -10,7 +10,7 @@ import {
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-} from '@wuguishifu/ui-web';
+} from '@universe/ui-web';
 import { Moon, Sun } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -71,7 +71,10 @@ export function NavbarDesktop() {
             </NavigationMenuLink>
           </NavigationMenuItem> */}
           <NavigationMenuItem>
-            <Link href="mailto:bramer.bo@gmail.com" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+            <Link
+              href="mailto:bramer.bo@gmail.com"
+              className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+            >
               <SiMaildotru className="opacity-80" title="" size={20} />
             </Link>
           </NavigationMenuItem>

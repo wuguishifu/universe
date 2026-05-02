@@ -12,6 +12,6 @@
   },
   "aliases": {
     "components": "libs/ui-web/src/lib",
-    "utils": "@wuguishifu/ui-web"
+    "utils": "libs/ui-web/src/lib"
   }
 }

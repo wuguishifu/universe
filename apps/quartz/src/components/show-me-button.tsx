@@ -1,4 +1,4 @@
-import { buttonVariants, cn } from '@wuguishifu/ui-web';
+import { buttonVariants, cn } from '@universe/ui-web';
 import Link from 'next/link';
 
 import { createClient } from '../prismicio';
@@ -7,7 +7,12 @@ export async function ShowMeButton() {
   const client = createClient();
 
   const allProjects = await client.getAllByType('project');
-  const randomProject = allProjects[Math.floor(Math.random() * allProjects.length)];
+  const randomProject =
+    allProjects[Math.floor(Math.random() * allProjects.length)];
+
+  if (!randomProject) {
+    return null;
+  }
 
   return (
     <Link
