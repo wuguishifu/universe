@@ -1,4 +1,7 @@
-import { createClient as baseCreateClient, type ClientConfig } from '@prismicio/client';
+import {
+  createClient as baseCreateClient,
+  type ClientConfig,
+} from '@prismicio/client';
 import { enableAutoPreviews } from '@prismicio/next';
 
 import sm from '../slicemachine.config.json';

@@ -1,5 +1,5 @@
 import { Content, isFilled } from '@prismicio/client';
-import { cn } from '@wuguishifu/ui-web';
+import { cn } from '@universe/ui-web';
 import Image from 'next/image';
 import { FC } from 'react';
 
@@ -13,16 +13,23 @@ export type TitleProps = SliceComponentPropsWithContext<Content.TitleSlice>;
 const Title: FC<TitleProps> = ({ slice, context }) => {
   const sliceIndex = context.sliceIds.indexOf(slice.id);
 
-  const title = isFilled.keyText(slice.primary.title) ? slice.primary.title : null;
-  const description = isFilled.richText(slice.primary.description) ? slice.primary.description : null;
-  const image = isFilled.image(slice.primary.image) ? slice.primary.image : null;
+  const title = isFilled.keyText(slice.primary.title)
+    ? slice.primary.title
+    : null;
+  const description = isFilled.richText(slice.primary.description)
+    ? slice.primary.description
+    : null;
+  const image = isFilled.image(slice.primary.image)
+    ? slice.primary.image
+    : null;
 
   return (
     <section
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
       className={cn('w-full', {
-        [backgroundClass(context.colorScheme, { useDarkClass: true })]: slice.primary.background,
+        [backgroundClass(context.colorScheme, { useDarkClass: true })]:
+          slice.primary.background,
         [animation(sliceIndex)]: slice.primary.animate,
       })}
     >
@@ -39,7 +46,9 @@ const Title: FC<TitleProps> = ({ slice, context }) => {
         </div>
         <div className="flex-1 flex flex-col justify-center text-foreground">
           {title && <h2 className="text-3xl font-bold">{title}</h2>}
-          <div className="text-lg">{description && <RichText content={description} />}</div>
+          <div className="text-lg">
+            {description && <RichText content={description} />}
+          </div>
         </div>
       </div>
     </section>

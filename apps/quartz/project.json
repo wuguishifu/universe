@@ -73,7 +73,7 @@
     "tsc": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsc -p tsconfig.json",
+        "command": "tsc --build tsconfig.json",
         "cwd": "apps/quartz"
       }
     },
@@ -85,9 +85,7 @@
     },
     "lint:fix": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
+      "outputs": ["{options.outputFile}"],
       "options": {
         "maxWarnings": 0,
         "fix": true

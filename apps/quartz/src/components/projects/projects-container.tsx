@@ -9,7 +9,11 @@ function renderItem(project: ProjectDocument, rowIndex: number) {
   return <ProjectItem key={project.id} project={project} rowIndex={rowIndex} />;
 }
 
-export function ProjectsContainer({ projects }: { projects: ProjectDocument[] }) {
+export function ProjectsContainer({
+  projects,
+}: {
+  projects: ProjectDocument[];
+}) {
   return (
     <Masonry
       items={projects}

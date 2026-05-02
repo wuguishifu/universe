@@ -1,9 +1,15 @@
-import { getSlices, SliceSimulator, SliceSimulatorParams } from '@slicemachine/adapter-next/simulator';
+import {
+  getSlices,
+  SliceSimulator,
+  SliceSimulatorParams,
+} from '@slicemachine/adapter-next/simulator';
 
 import { components } from '../../slices';
 import { PageContext, SliceZoneWithContext } from '../../slices/context';
 
-export default async function SliceSimulatorPage({ searchParams }: SliceSimulatorParams) {
+export default async function SliceSimulatorPage({
+  searchParams,
+}: SliceSimulatorParams) {
   const { state } = await searchParams;
   const slices = getSlices(state);
 
@@ -14,7 +20,11 @@ export default async function SliceSimulatorPage({ searchParams }: SliceSimulato
 
   return (
     <SliceSimulator>
-      <SliceZoneWithContext slices={slices} components={components} context={context} />
+      <SliceZoneWithContext
+        slices={slices}
+        components={components}
+        context={context}
+      />
     </SliceSimulator>
   );
 }

@@ -86,7 +86,11 @@ module.exports = defineConfig([
         'warn',
         {
           'newlines-between': 'always',
-          groups: [['external', 'builtin'], ['internal'], ['parent', 'sibling', 'index']],
+          groups: [
+            ['external', 'builtin'],
+            ['internal'],
+            ['parent', 'sibling', 'index'],
+          ],
           pathGroupsExcludedImportTypes: ['react', 'internal'],
 
           alphabetize: {
@@ -114,7 +118,12 @@ module.exports = defineConfig([
             },
             {
               sourceTag: 'scope:hybrid',
-              onlyDependOnLibsWithTags: ['scope:hybrid', 'scope:shared', 'scope:client', 'scope:server'],
+              onlyDependOnLibsWithTags: [
+                'scope:hybrid',
+                'scope:shared',
+                'scope:client',
+                'scope:server',
+              ],
             },
             {
               sourceTag: 'scope:hybrid',
