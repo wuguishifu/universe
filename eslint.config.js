@@ -18,7 +18,7 @@ const compat = new FlatCompat({
 });
 
 module.exports = defineConfig([
-  globalIgnores(['types/*', 'dist/*', 'src-tauri/*']),
+  globalIgnores(['**/types/*', '**/dist/*']),
   {
     extends: compat.extends(
       'plugin:@typescript-eslint/strict',

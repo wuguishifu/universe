@@ -83,26 +83,11 @@
         "maxWarnings": 0
       }
     },
-    "lint:fix": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "maxWarnings": 0,
-        "fix": true
-      }
-    },
-    "ci:checks": {
+    "circular-deps": {
       "executor": "nx:run-commands",
-      "dependsOn": ["tsc", "lint"],
       "options": {
-        "command": "echo CI checks done!"
-      }
-    },
-    "prepush": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["ci:checks"],
-      "options": {
-        "command": "echo Prepush done!"
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning",
+        "cwd": "apps/quartz"
       }
     }
   }

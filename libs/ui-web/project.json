@@ -26,14 +26,6 @@
         "maxWarnings": 0
       }
     },
-    "lint:fix": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "maxWarnings": 0,
-        "fix": true
-      }
-    },
     "ci:checks": {
       "executor": "nx:run-commands",
       "dependsOn": ["tsc", "lint"],

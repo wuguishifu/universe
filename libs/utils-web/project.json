@@ -9,7 +9,7 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm madge . --circular --extensions js,ts,tsx --warning",
-        "cwd": "libs/ui-web"
+        "cwd": "libs/utils-web"
       }
     },
     "tsc": {
@@ -24,14 +24,6 @@
       "outputs": ["{options.outputFile}"],
       "options": {
         "maxWarnings": 0
-      }
-    },
-    "lint:fix": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "maxWarnings": 0,
-        "fix": true
       }
     },
     "ci:checks": {
