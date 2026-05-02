@@ -7,10 +7,17 @@ export function POST(req: NextRequest): Promise<NextResponse> {
   const headers = req.headers;
   const secret = headers.get(PRISMIC_SECRET_HEADER);
   if (secret !== process.env.PRISMIC_REVALIDATE_SECRET) {
-    return Promise.resolve(NextResponse.json({ revalidated: false, message: 'Forbidden' }, { status: 403 }));
+    return Promise.resolve(
+      NextResponse.json(
+        { revalidated: false, message: 'Forbidden' },
+        { status: 403 },
+      ),
+    );
   }
 
   revalidateTag('prismic');
 
-  return Promise.resolve(NextResponse.json({ revalidated: true, now: Date.now() }, { status: 200 }));
+  return Promise.resolve(
+    NextResponse.json({ revalidated: true, now: Date.now() }, { status: 200 }),
+  );
 }

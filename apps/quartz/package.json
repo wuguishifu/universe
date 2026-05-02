@@ -2,7 +2,7 @@
   "name": "quartz",
   "version": "0.0.1",
   "dependencies": {
-    "@wuguishifu/ui-web": "workspace:*",
-    "@wuguishifu/utils-web": "workspace:*"
+    "@universe/ui-web": "workspace:*",
+    "@universe/utils-web": "workspace:*"
   }
 }

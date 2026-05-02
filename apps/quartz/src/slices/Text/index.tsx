@@ -1,5 +1,5 @@
 import { Content, isFilled } from '@prismicio/client';
-import { cn } from '@wuguishifu/ui-web';
+import { cn } from '@universe/ui-web';
 import { FC } from 'react';
 
 import { RichText } from '../../components/text/text';
@@ -11,18 +11,21 @@ export type TextProps = SliceComponentPropsWithContext<Content.TextSlice>;
 
 const Text: FC<TextProps> = ({ slice, context }) => {
   const sliceIndex = context.sliceIds.indexOf(slice.id);
-  const content = isFilled.richText(slice.primary.content) ? slice.primary.content : null;
+  const content = isFilled.richText(slice.primary.content)
+    ? slice.primary.content
+    : null;
 
   return (
     <section
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
       className={cn('flex flex-col items-center w-full px-8', {
-        [backgroundClass(context.colorScheme, { useDarkClass: true })]: slice.primary.background,
+        [backgroundClass(context.colorScheme, { useDarkClass: true })]:
+          slice.primary.background,
         [animation(sliceIndex)]: slice.primary.animate,
       })}
     >
-      <div className="max-w-screen-lg text-foreground text-lg py-2 text-left">
+      <div className="max-w-5xl text-foreground text-lg py-2 text-left">
         {content && <RichText content={content} />}
       </div>
     </section>

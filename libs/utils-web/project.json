@@ -3,32 +3,27 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/utils-web/src",
   "projectType": "library",
-  "tags": ["scope:hybrid"],
+  "tags": ["scope:shared"],
   "targets": {
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning",
+        "cwd": "libs/utils-web"
+      }
+    },
     "tsc": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsc -p tsconfig.json",
+        "command": "tsc --build tsconfig.json",
         "cwd": "libs/utils-web"
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
+      "outputs": ["{options.outputFile}"],
       "options": {
         "maxWarnings": 0
-      }
-    },
-    "lint:fix": {
-      "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
-      "options": {
-        "maxWarnings": 0,
-        "fix": true
       }
     },
     "ci:checks": {

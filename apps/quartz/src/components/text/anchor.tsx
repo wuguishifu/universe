@@ -18,7 +18,11 @@ export function Anchor(props: AnchorProps) {
   const href = props.node.data.url ?? '#';
 
   return (
-    <Link className="cursor-pointer text-blue underline-offset-4 hover:underline" href={href} target={target}>
+    <Link
+      className="cursor-pointer text-blue underline-offset-4 hover:underline"
+      href={href}
+      target={target}
+    >
       {props.children}
     </Link>
   );

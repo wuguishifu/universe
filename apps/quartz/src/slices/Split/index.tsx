@@ -1,10 +1,12 @@
 import { Content, isFilled } from '@prismicio/client';
-import { cn } from '@wuguishifu/ui-web';
+import { cn } from '@universe/ui-web';
 import Image from 'next/image';
-import { Simplify } from 'node_modules/@prismicio/client/dist/types/value/types';
 import { FC } from 'react';
 
-import { SplitSliceDefaultPrimarySectionsItem } from '../../../prismicio-types';
+import {
+  Simplify,
+  SplitSliceDefaultPrimarySectionsItem,
+} from '../../../prismicio-types';
 import { RichText } from '../../components/text/text';
 import { animation } from '../animation';
 import { backgroundClass } from '../background';
@@ -20,7 +22,8 @@ const Split: FC<SplitProps> = ({ slice, context }) => {
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
       className={cn('w-full', {
-        [backgroundClass(context.colorScheme, { useDarkClass: true })]: slice.primary.background,
+        [backgroundClass(context.colorScheme, { useDarkClass: true })]:
+          slice.primary.background,
         [animation(sliceIndex)]: slice.primary.animate,
       })}
     >
@@ -33,7 +36,11 @@ const Split: FC<SplitProps> = ({ slice, context }) => {
   );
 };
 
-function Section({ section }: { section: Simplify<SplitSliceDefaultPrimarySectionsItem> }) {
+function Section({
+  section,
+}: {
+  section: Simplify<SplitSliceDefaultPrimarySectionsItem>;
+}) {
   const image = isFilled.image(section.image) ? section.image : null;
   const content = isFilled.richText(section.content) ? section.content : null;
 
@@ -41,7 +48,12 @@ function Section({ section }: { section: Simplify<SplitSliceDefaultPrimarySectio
   if (image) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center">
-        <Image src={image.url} width={image.dimensions.width} height={image.dimensions.height} alt={image.alt ?? ''} />
+        <Image
+          src={image.url}
+          width={image.dimensions.width}
+          height={image.dimensions.height}
+          alt={image.alt ?? ''}
+        />
       </div>
     );
   }

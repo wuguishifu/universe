@@ -12,7 +12,10 @@ type PickContentRelationshipFieldData<
     | prismic.CustomTypeModelFetchGroupLevel2,
   TData extends Record<
     string,
-    prismic.AnyRegularField | prismic.GroupField | prismic.NestedGroupField | prismic.SliceZone
+    | prismic.AnyRegularField
+    | prismic.GroupField
+    | prismic.NestedGroupField
+    | prismic.SliceZone
   >,
   TLang extends string,
 > =
@@ -21,20 +24,27 @@ type PickContentRelationshipFieldData<
     [TSubRelationship in Extract<
       TRelationship['fields'][number],
       prismic.CustomTypeModelFetchContentRelationshipLevel1
-    > as TSubRelationship['id']]: ContentRelationshipFieldWithData<TSubRelationship['customtypes'], TLang>;
-  } & // Group
-  {
+    > as TSubRelationship['id']]: ContentRelationshipFieldWithData<
+      TSubRelationship['customtypes'],
+      TLang
+    >;
+  } & { // Group
     [TGroup in Extract<
       TRelationship['fields'][number],
-      prismic.CustomTypeModelFetchGroupLevel1 | prismic.CustomTypeModelFetchGroupLevel2
-    > as TGroup['id']]: TData[TGroup['id']] extends prismic.GroupField<infer TGroupData>
-      ? prismic.GroupField<PickContentRelationshipFieldData<TGroup, TGroupData, TLang>>
+      | prismic.CustomTypeModelFetchGroupLevel1
+      | prismic.CustomTypeModelFetchGroupLevel2
+    > as TGroup['id']]: TData[TGroup['id']] extends prismic.GroupField<
+      infer TGroupData
+    >
+      ? prismic.GroupField<
+          PickContentRelationshipFieldData<TGroup, TGroupData, TLang>
+        >
       : never;
-  } & // Other fields
-  {
-    [TFieldKey in Extract<TRelationship['fields'][number], string>]: TFieldKey extends keyof TData
-      ? TData[TFieldKey]
-      : never;
+  } & { // Other fields
+    [TFieldKey in Extract<
+      TRelationship['fields'][number],
+      string
+    >]: TFieldKey extends keyof TData ? TData[TFieldKey] : never;
   };
 
 type ContentRelationshipFieldWithData<
@@ -43,7 +53,10 @@ type ContentRelationshipFieldWithData<
     | readonly (prismic.CustomTypeModelFetchCustomTypeLevel2 | string)[],
   TLang extends string = string,
 > = {
-  [ID in Exclude<TCustomType[number], string>['id']]: prismic.ContentRelationshipField<
+  [ID in Exclude<
+    TCustomType[number],
+    string
+  >['id']]: prismic.ContentRelationshipField<
     ID,
     TLang,
     PickContentRelationshipFieldData<
@@ -54,7 +67,12 @@ type ContentRelationshipFieldWithData<
   >;
 }[Exclude<TCustomType[number], string>['id']];
 
-type ProjectDocumentDataSlicesSlice = CarouselSlice | TextSlice | FooterSlice | TitleSlice | SplitSlice;
+type ProjectDocumentDataSlicesSlice =
+  | CarouselSlice
+  | TextSlice
+  | FooterSlice
+  | TitleSlice
+  | SplitSlice;
 
 /**
  * Content for Project documents
@@ -70,7 +88,10 @@ interface ProjectDocumentData {
    * - **Tab**: Main
    * - **Documentation**: https://prismic.io/docs/fields/select
    */
-  color_scheme: prismic.SelectField<'Blue' | 'Red' | 'Blurple' | 'Green' | 'Peach', 'filled'>;
+  color_scheme: prismic.SelectField<
+    'Blue' | 'Red' | 'Blurple' | 'Green' | 'Peach',
+    'filled'
+  >;
 
   /**
    * Title field in *Project*
@@ -157,11 +178,12 @@ interface ProjectDocumentData {
  *
  * @typeParam Lang - Language API ID of the document.
  */
-export type ProjectDocument<Lang extends string = string> = prismic.PrismicDocumentWithUID<
-  Simplify<ProjectDocumentData>,
-  'project',
-  Lang
->;
+export type ProjectDocument<Lang extends string = string> =
+  prismic.PrismicDocumentWithUID<
+    Simplify<ProjectDocumentData>,
+    'project',
+    Lang
+  >;
 
 export type AllDocumentTypes = ProjectDocument;
 
@@ -192,7 +214,9 @@ export interface CarouselSliceDefaultPrimary {
    * - **API ID Path**: carousel.default.primary.contents[]
    * - **Documentation**: https://prismic.io/docs/fields/repeatable-group
    */
-  contents: prismic.GroupField<Simplify<CarouselSliceDefaultPrimaryContentsItem>>;
+  contents: prismic.GroupField<
+    Simplify<CarouselSliceDefaultPrimaryContentsItem>
+  >;
 
   /**
    * Background field in *Carousel → Default → Primary*
@@ -242,7 +266,10 @@ type CarouselSliceVariation = CarouselSliceDefault;
  * - **Description**: Carousel
  * - **Documentation**: https://prismic.io/docs/slices
  */
-export type CarouselSlice = prismic.SharedSlice<'carousel', CarouselSliceVariation>;
+export type CarouselSlice = prismic.SharedSlice<
+  'carousel',
+  CarouselSliceVariation
+>;
 
 /**
  * Primary content in *Footer → Default → Primary*
@@ -276,7 +303,13 @@ export interface FooterSliceDefaultPrimary {
    * - **API ID Path**: footer.default.primary.button_link
    * - **Documentation**: https://prismic.io/docs/fields/link
    */
-  button_link: prismic.LinkField<string, string, unknown, prismic.FieldState, never>;
+  button_link: prismic.LinkField<
+    string,
+    string,
+    unknown,
+    prismic.FieldState,
+    never
+  >;
 
   /**
    * Background field in *Footer → Default → Primary*
@@ -319,7 +352,11 @@ export interface FooterSliceDefaultPrimary {
  * - **Description**: Default
  * - **Documentation**: https://prismic.io/docs/slices
  */
-export type FooterSliceDefault = prismic.SharedSliceVariation<'default', Simplify<FooterSliceDefaultPrimary>, never>;
+export type FooterSliceDefault = prismic.SharedSliceVariation<
+  'default',
+  Simplify<FooterSliceDefaultPrimary>,
+  never
+>;
 
 /**
  * Slice variation for *Footer*
@@ -404,7 +441,11 @@ export interface SplitSliceDefaultPrimary {
  * - **Description**: Default
  * - **Documentation**: https://prismic.io/docs/slices
  */
-export type SplitSliceDefault = prismic.SharedSliceVariation<'default', Simplify<SplitSliceDefaultPrimary>, never>;
+export type SplitSliceDefault = prismic.SharedSliceVariation<
+  'default',
+  Simplify<SplitSliceDefaultPrimary>,
+  never
+>;
 
 /**
  * Slice variation for *Split*
@@ -464,7 +505,11 @@ export interface TextSliceDefaultPrimary {
  * - **Description**: Default
  * - **Documentation**: https://prismic.io/docs/slices
  */
-export type TextSliceDefault = prismic.SharedSliceVariation<'default', Simplify<TextSliceDefaultPrimary>, never>;
+export type TextSliceDefault = prismic.SharedSliceVariation<
+  'default',
+  Simplify<TextSliceDefaultPrimary>,
+  never
+>;
 
 /**
  * Slice variation for *Text*
@@ -544,7 +589,11 @@ export interface TitleSliceDefaultPrimary {
  * - **Description**: Default
  * - **Documentation**: https://prismic.io/docs/slices
  */
-export type TitleSliceDefault = prismic.SharedSliceVariation<'default', Simplify<TitleSliceDefaultPrimary>, never>;
+export type TitleSliceDefault = prismic.SharedSliceVariation<
+  'default',
+  Simplify<TitleSliceDefaultPrimary>,
+  never
+>;
 
 /**
  * Slice variation for *Title*
@@ -562,11 +611,17 @@ export type TitleSlice = prismic.SharedSlice<'title', TitleSliceVariation>;
 
 declare module '@prismicio/client' {
   interface CreateClient {
-    (repositoryNameOrEndpoint: string, options?: prismic.ClientConfig): prismic.Client<AllDocumentTypes>;
+    (
+      repositoryNameOrEndpoint: string,
+      options?: prismic.ClientConfig,
+    ): prismic.Client<AllDocumentTypes>;
   }
 
   interface CreateWriteClient {
-    (repositoryNameOrEndpoint: string, options: prismic.WriteClientConfig): prismic.WriteClient<AllDocumentTypes>;
+    (
+      repositoryNameOrEndpoint: string,
+      options: prismic.WriteClientConfig,
+    ): prismic.WriteClient<AllDocumentTypes>;
   }
 
   interface CreateMigration {
