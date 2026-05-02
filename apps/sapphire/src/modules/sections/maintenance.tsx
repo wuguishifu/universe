@@ -22,10 +22,10 @@ const labLinks = [
   { href: 'https://vault.wuguishifu.dev', label: 'vault', target: '_blank' },
 ] as const;
 
-export function Lab() {
+export function Maintenance() {
   return (
     <Section>
-      <h2>/lab</h2>
+      <h2>maintenance</h2>
       <div className="text-lg flex flex-col leading-6 mt-4 font-smooch">
         {labLinks.map((link) => (
           <div key={link.href}>
