@@ -158,8 +158,8 @@ body {
 }
 
 .status-degraded {
-  color: #f3bc5d;
-  text-shadow: 0 0 20px #f3bc5d;
+  color: #f38f5d;
+  text-shadow: 0 0 20px #f38f5d;
 }
 
 .status-down {

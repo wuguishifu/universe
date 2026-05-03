@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { api } from '@universe/hydrogen-kore';
 import { cn, Spinner } from '@universe/ui-web';
 import { useQuery } from '../../convex/use-query';
@@ -25,27 +26,48 @@ export function Statuses() {
       </div>
       {isPending ? null : (
         <div className="grid grid-cols-2">
-          {data?.statuses.map((service) => (
-            <div key={service._id}>
-              <span>
-                [{' '}
+          {data?.statuses.map((service) => {
+            const content = (
+              <>
+                <span>
+                  [{' '}
+                  <span
+                    className={cn({
+                      'status-ok': service.status === 'ok',
+                      'status-down': service.status === 'down',
+                    })}
+                  >
+                    {service.status.toUpperCase()}
+                  </span>{' '}
+                  ]
+                </span>
                 <span
-                  className={cn({
-                    'status-ok': service.status === 'ok',
-                    'status-down': service.status === 'down',
-                  })}
+                  style={{
+                    marginLeft: service.status === 'ok' ? '3ch' : '1ch',
+                  }}
+                  className="group-hover:underline underline-offset-4"
                 >
-                  {service.status.toUpperCase()}
-                </span>{' '}
-                ]
-              </span>
-              <span
-                style={{ marginLeft: service.status === 'ok' ? '3ch' : '1ch' }}
-              >
-                {service.serviceName}
-              </span>
-            </div>
-          ))}
+                  {service.serviceName}
+                  {service.link && '↗'}
+                </span>
+              </>
+            );
+
+            if (service.link) {
+              return (
+                <Link
+                  key={service._id}
+                  href={service.link}
+                  target="_blank"
+                  className="group"
+                >
+                  {content}
+                </Link>
+              );
+            }
+
+            return <div key={service._id}>{content}</div>;
+          })}
         </div>
       )}
     </Section>

@@ -12,5 +12,6 @@ export default defineSchema({
   systemStatuses: defineTable({
     status: systemStatus,
     serviceName: v.string(),
+    link: v.optional(v.string()),
   }).index('serviceName', ['serviceName']),
 });
