@@ -16,7 +16,7 @@
       "executor": "@nx/next:build",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
-      "dependsOn": ["clean"],
+      "dependsOn": ["clean", "^build"],
       "options": {
         "outputPath": "apps/sapphire"
       },
