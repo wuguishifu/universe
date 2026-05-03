@@ -13,11 +13,12 @@ export const addItem = internalMutation({
     name: v.string(),
     notes: v.optional(v.string()),
     recommendedBy: v.optional(v.string()),
+    createdAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert('readingList', {
-      ...args,
       createdAt: Date.now(),
+      ...args,
     });
   },
 });

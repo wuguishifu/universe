@@ -23,15 +23,20 @@ export function ReadingList() {
             key={item._id}
             className="py-3 first:pt-0 last:pb-0 flex flex-col gap-0.5"
           >
-            <span className="font-jersey text-highlight text-lg leading-snug">
+            <span className="font-jersey text-lg leading-snug">
               {item.name}
             </span>
-            <p className="text-white/70 text-sm leading-relaxed">
-              {item.notes}
-            </p>
-            <p className="text-white/70 text-sm leading-relaxed">
-              recommended by: {item.recommendedBy}
-            </p>
+            {item.notes && (
+              <p className="text-white/70 text-sm leading-relaxed">
+                {item.notes}
+              </p>
+            )}
+            {item.recommendedBy && (
+              <p className="text-white/70 text-sm leading-relaxed">
+                recommended by:{' '}
+                <span className="underline">{item.recommendedBy}</span>
+              </p>
+            )}
             <span className="text-white/30 text-xs">
               {new Date(item.createdAt).toLocaleDateString('en-US', {
                 month: 'long',
