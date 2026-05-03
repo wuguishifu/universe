@@ -6,8 +6,8 @@
     "start": "next start"
   },
   "dependencies": {
+    "@universe/hydrogen-kore": "workspace:*",
     "@universe/ui-web": "workspace:*",
-    "@universe/utils-web": "workspace:*",
-    "@universe/hydrogen-kore": "workspace:*"
+    "@universe/utils-web": "workspace:*"
   }
 }
