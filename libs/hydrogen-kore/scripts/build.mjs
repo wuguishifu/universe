@@ -34,8 +34,8 @@ const buildDataModelJs = `export {};
 `;
 
 execFileSync(
-  'bun',
-  ['exec', 'tsc', '--build', path.join(hydrogenRoot, 'tsconfig.lib.json')],
+  path.join(workspaceRoot, 'node_modules/.bin/tsc'),
+  ['--build', path.join(hydrogenRoot, 'tsconfig.lib.json')],
   {
     cwd: workspaceRoot,
     stdio: 'inherit',
