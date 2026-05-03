@@ -1,6 +1,11 @@
 'use client';
 
 import { SiGithub, SiMaildotru } from '@icons-pack/react-simple-icons';
+import { Menu, Moon, Sun, X } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useTheme } from 'next-themes';
+import { useState } from 'react';
 import {
   Button,
   cn,
@@ -12,11 +17,6 @@ import {
   DrawerTrigger,
   LinkedIn,
 } from '@universe/ui-web';
-import { Menu, Moon, Sun, X } from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useTheme } from 'next-themes';
-import { useState } from 'react';
 
 export function NavbarMobile() {
   const pathname = usePathname();

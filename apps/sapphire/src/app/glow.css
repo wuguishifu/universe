@@ -1,0 +1,20 @@
+@layer base {
+  :root {
+    --animate-pulse-green: pulse-green 2s infinite alternate ease-in-out;
+  }
+}
+
+@keyframes pulse-green {
+  from {
+    text-shadow:
+      0 0 2px #4fa78140,
+      0 0 4px #4fa78140,
+      0 0 6px #4fa78140;
+  }
+  to {
+    text-shadow:
+      0 0 8px #4fa78140,
+      0 0 10px #4fa78140,
+      0 0 16px #4fa78140;
+  }
+}

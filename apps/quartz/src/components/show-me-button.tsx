@@ -1,5 +1,5 @@
-import { buttonVariants, cn } from '@universe/ui-web';
 import Link from 'next/link';
+import { buttonVariants, cn } from '@universe/ui-web';
 
 import { createClient } from '../prismicio';
 

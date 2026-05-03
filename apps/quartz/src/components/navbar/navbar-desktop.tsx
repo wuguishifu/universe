@@ -1,6 +1,10 @@
 'use client';
 
 import { SiGithub, SiMaildotru } from '@icons-pack/react-simple-icons';
+import { Moon, Sun } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import {
   Button,
   buttonVariants,
@@ -11,10 +15,6 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from '@universe/ui-web';
-import { Moon, Sun } from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useTheme } from 'next-themes';
 
 export function NavbarDesktop() {
   const pathname = usePathname();

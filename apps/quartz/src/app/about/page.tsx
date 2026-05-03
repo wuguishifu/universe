@@ -8,9 +8,9 @@ import {
   SiSwift,
   SiTypescript,
 } from '@icons-pack/react-simple-icons';
-import { buttonVariants, cn } from '@universe/ui-web';
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { buttonVariants, cn } from '@universe/ui-web';
 
 import 'remixicon/fonts/remixicon.css';
 

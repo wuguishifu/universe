@@ -80,7 +80,7 @@
     "circular-deps": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning",
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude '(^|/)convex/_generated(/|$)'",
         "cwd": "apps/quartz"
       }
     }

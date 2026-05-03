@@ -1,17 +1,25 @@
-import { MainColumn } from './components/MainColumn';
-import { SideColumn } from './components/SideColumn';
+import Image from 'next/image';
+import { Section } from '../modules/layout/section';
+import { Statuses } from '../modules/statuses/components/statuses';
 
 export default function Index() {
   return (
-    <main className="h-[300vh]">
-      <div className="flex max-w-4xl mx-auto h-full mt-20 gap-4">
-        <div className="flex-3">
-          <MainColumn />
+    <main className="w-full flex flex-col gap-2">
+      <Section>
+        <div className="flex items-center gap-2">
+          <Image
+            src="/cats/yawn.gif"
+            width={32}
+            height={32}
+            alt="Yawning cat"
+            unoptimized
+          />
+          <h2>
+            welcome to wuguishifu.dev<i className="text-sm">★</i>
+          </h2>
         </div>
-        <div className="flex-1">
-          <SideColumn />
-        </div>
-      </div>
+      </Section>
+      <Statuses />
     </main>
   );
 }

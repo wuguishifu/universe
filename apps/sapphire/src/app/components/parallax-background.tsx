@@ -1,4 +1,4 @@
-import { ParallaxDriver } from './ParallaxDriver';
+import { ParallaxDriver } from './parallax-driver';
 
 export function ParallaxBackground() {
   return (
