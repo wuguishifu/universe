@@ -234,6 +234,9 @@ importers:
 
   apps/sapphire:
     dependencies:
+      '@universe/hydrogen-kore':
+        specifier: workspace:*
+        version: link:../../libs/hydrogen-kore
       '@universe/ui-web':
         specifier: workspace:*
         version: link:../../libs/ui-web

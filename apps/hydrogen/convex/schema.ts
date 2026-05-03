@@ -5,6 +5,7 @@ export default defineSchema({
   readingList: defineTable({
     name: v.string(),
     createdAt: v.number(),
-    notes: v.string(),
+    notes: v.optional(v.string()),
+    recommendedBy: v.optional(v.string()),
   }),
 });

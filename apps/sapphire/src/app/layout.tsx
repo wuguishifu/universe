@@ -4,6 +4,7 @@ import { Jersey_15, Smooch_Sans } from 'next/font/google';
 import { cn } from '@universe/ui-web';
 
 import { RainCanvas } from '../modules/rain/rain-canvas';
+import { ConvexClientProvider } from './components/convex-client-provider';
 import { ParallaxBackground } from './components/parallax-background';
 import { SideColumn } from './components/side-column';
 
@@ -34,15 +35,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={cn(jersey.variable, smooch.variable, 'text-white')}>
-        <ParallaxBackground />
-        <RainCanvas />
-        <div className="crt-container" />
-        <div className="flex max-w-4xl mx-auto h-full mt-20 gap-2">
-          <div className="flex-3 space-y-2">{children}</div>
-          <div className="flex-1 space-y-2">
-            <SideColumn />
+        <ConvexClientProvider>
+          <ParallaxBackground />
+          <RainCanvas />
+          <div className="crt-container" />
+          <div className="flex max-w-4xl mx-auto h-full mt-20 gap-2">
+            <div className="flex-3 space-y-2">{children}</div>
+            <div className="flex-1 space-y-2">
+              <SideColumn />
+            </div>
           </div>
-        </div>
+        </ConvexClientProvider>
       </body>
     </html>
   );

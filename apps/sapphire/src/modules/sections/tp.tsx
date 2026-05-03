@@ -14,7 +14,7 @@ const navLinks: LinkItem[] = [
 
 export function Tp() {
   return (
-    <LinksSection title="tp" links={navLinks}>
+    <LinksSection title="/tp" links={navLinks}>
       <Image
         src="/mushrooms/green/17.png"
         width={64}

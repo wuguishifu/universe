@@ -8,13 +8,17 @@
  * @module
  */
 
+import type * as sapphire_v1_readingList from "../sapphire/v1/readingList.js";
+
 import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
 } from "convex/server";
 
-declare const fullApi: ApiFromModules<{}>;
+declare const fullApi: ApiFromModules<{
+  "sapphire/v1/readingList": typeof sapphire_v1_readingList;
+}>;
 
 /**
  * A utility for referencing Convex functions in your app's public API.
