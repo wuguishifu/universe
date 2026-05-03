@@ -1,6 +1,6 @@
 import './globals.css';
 
-import { Jersey_15, Smooch_Sans } from 'next/font/google';
+import { Jersey_15 } from 'next/font/google';
 import localFont from 'next/font/local';
 import { cn } from '@universe/ui-web';
 
@@ -26,13 +26,6 @@ const jersey = Jersey_15({
   weight: '400',
 });
 
-const smooch = Smooch_Sans({
-  subsets: ['latin'],
-  variable: '--font-smooch',
-  style: 'normal',
-  weight: '400',
-});
-
 export const metadata = {
   title: 'wuguishifu',
   description: 'i hope you enjoy your stay',
@@ -45,14 +38,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body
-        className={cn(
-          jersey.variable,
-          smooch.variable,
-          vga.variable,
-          'text-white',
-        )}
-      >
+      <body className={cn(jersey.variable, vga.variable, 'text-white')}>
         <ConvexClientProvider>
           <ParallaxBackground />
           <RainCanvas />

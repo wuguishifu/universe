@@ -22,7 +22,7 @@ export function LinksSection({
   return (
     <Section>
       <h3>{title}</h3>
-      <div className="text-lg flex flex-col leading-6 mt-4 font-smooch">
+      <div className="flex flex-col leading-6 mt-4 font-vga">
         {links.map((link) => (
           <div key={link.href}>
             <Link href={link.href} target={link.target}>

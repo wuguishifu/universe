@@ -19,14 +19,14 @@ export function ReadingList() {
   if (!items?.length) {
     return (
       <Section>
-        <p className="font-smooch text-white/40 text-sm">nothing here yet...</p>
+        <p className="font-vga text-white/40 text-sm">nothing here yet...</p>
       </Section>
     );
   }
 
   return (
     <Section>
-      <div className="font-smooch divide-y divide-white/5">
+      <div className="font-vga divide-y divide-white/5">
         {items.map((item) => (
           <div
             key={item._id}
@@ -47,7 +47,7 @@ export function ReadingList() {
               </p>
             )}
             <span className="text-white/30 text-xs">
-              {new Date(item.createdAt).toLocaleDateString('en-US', {
+              {new Date(item._creationTime).toLocaleDateString('en-US', {
                 month: 'long',
                 day: 'numeric',
                 year: 'numeric',

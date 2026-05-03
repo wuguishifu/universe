@@ -9,6 +9,7 @@
  */
 
 import type * as sapphire_v1_readingList from "../sapphire/v1/readingList.js";
+import type * as sapphire_v1_systemStatuses from "../sapphire/v1/systemStatuses.js";
 
 import type {
   ApiFromModules,
@@ -18,6 +19,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "sapphire/v1/readingList": typeof sapphire_v1_readingList;
+  "sapphire/v1/systemStatuses": typeof sapphire_v1_systemStatuses;
 }>;
 
 /**
