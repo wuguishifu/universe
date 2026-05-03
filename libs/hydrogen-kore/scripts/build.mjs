@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process';
 import { copyFile, cp, mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,15 +31,6 @@ export type * from './convex/_generated/dataModel.js';
 
 const buildDataModelJs = `export {};
 `;
-
-execFileSync(
-  path.join(workspaceRoot, 'node_modules/.bin/tsc'),
-  ['--build', path.join(hydrogenRoot, 'tsconfig.lib.json')],
-  {
-    cwd: workspaceRoot,
-    stdio: 'inherit',
-  },
-);
 
 await rm(outputRoot, { recursive: true, force: true });
 await mkdir(outputGeneratedRoot, { recursive: true });
