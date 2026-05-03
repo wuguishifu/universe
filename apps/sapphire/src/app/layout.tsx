@@ -5,6 +5,7 @@ import { Jersey_15, Smooch_Sans } from 'next/font/google';
 
 import { RainCanvas } from '../modules/rain/rain-canvas';
 import { ParallaxBackground } from './components/parallax-background';
+import { SideColumn } from './components/side-column';
 
 const jersey = Jersey_15({
   subsets: ['latin'],
@@ -36,7 +37,12 @@ export default function RootLayout({
         <ParallaxBackground />
         <RainCanvas />
         <div className="crt-container" />
-        {children}
+        <div className="flex max-w-4xl mx-auto h-full mt-20 gap-2">
+          <div className="flex-3 space-y-2">{children}</div>
+          <div className="flex-1 space-y-2">
+            <SideColumn />
+          </div>
+        </div>
       </body>
     </html>
   );

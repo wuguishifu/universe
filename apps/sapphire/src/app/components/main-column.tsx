@@ -14,9 +14,9 @@ export function MainColumn() {
             alt="Yawning cat"
             unoptimized
           />
-          <h1>
+          <h2>
             welcome to wuguishifu.dev<i className="text-sm">★</i>
-          </h1>
+          </h2>
         </div>
       </Section>
     </>

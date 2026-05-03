@@ -1,7 +1,6 @@
-import Link from 'next/link';
-import { Section } from '../layout/section';
+import { LinkItem, LinksSection } from './links/links-section';
 
-const labLinks = [
+const maintenanceLinks: LinkItem[] = [
   { href: 'https://argocd.wuguishifu.dev', label: 'argocd', target: '_blank' },
   {
     href: 'https://infisical.wuguishifu.dev',
@@ -23,20 +22,5 @@ const labLinks = [
 ] as const;
 
 export function Maintenance() {
-  return (
-    <Section>
-      <h2>maintenance</h2>
-      <div className="text-lg flex flex-col leading-6 mt-4 font-smooch">
-        {labLinks.map((link) => (
-          <div key={link.href}>
-            <Link href={link.href} target={link.target}>
-              <span className="cursor-pointer hover:underline">
-                → {link.label}
-              </span>
-            </Link>
-          </div>
-        ))}
-      </div>
-    </Section>
-  );
+  return <LinksSection title="maintenance" links={maintenanceLinks} />;
 }

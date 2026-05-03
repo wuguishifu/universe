@@ -1,35 +1,28 @@
 import Image from 'next/image';
-import Link from 'next/link';
-import { Section } from '../layout/section';
+import { LinkItem, LinksSection } from './links/links-section';
 
-const navLinks = [
-  { href: '/', label: 'home', target: '_blank' },
+const navLinks: LinkItem[] = [
+  { href: '/', label: 'home' },
+  { href: '/the-list', label: 'the list' },
   { href: 'https://github.com/wuguishifu', label: 'github', target: '_blank' },
+  {
+    href: 'https://linkedin.com/in/bo-bramer',
+    label: 'linkedin',
+    target: '_blank',
+  },
 ] as const;
 
 export function Tp() {
   return (
-    <Section>
-      <h2>/tp</h2>
-      <div className="text-lg flex flex-col leading-6 mt-4 font-smooch">
-        {navLinks.map((link) => (
-          <div key={link.href}>
-            <Link href={link.href} target={link.target}>
-              <span className="cursor-pointer hover:underline">
-                → {link.label}
-              </span>
-            </Link>
-          </div>
-        ))}
-      </div>
+    <LinksSection title="tp" links={navLinks}>
       <Image
         src="/mushrooms/green/17.png"
         width={64}
         height={64}
         alt="green mushrooms"
         unoptimized
-        className="absolute -right-4 -bottom-2"
+        className="absolute -right-4 -bottom-1"
       />
-    </Section>
+    </LinksSection>
   );
 }
