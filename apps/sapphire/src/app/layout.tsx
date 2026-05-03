@@ -1,7 +1,7 @@
 import './globals.css';
 
-import { cn } from '@universe/ui-web';
 import { Jersey_15, Smooch_Sans } from 'next/font/google';
+import { cn } from '@universe/ui-web';
 
 import { RainCanvas } from '../modules/rain/rain-canvas';
 import { ParallaxBackground } from './components/parallax-background';

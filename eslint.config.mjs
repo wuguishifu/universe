@@ -37,7 +37,7 @@ export default [
           ],
           pathGroups: [
             {
-              pattern: '@gaia/**',
+              pattern: '@universe/**',
               group: 'internal',
             },
             {

@@ -1,4 +1,6 @@
 import { Content, isFilled } from '@prismicio/client';
+import Image from 'next/image';
+import { FC } from 'react';
 import {
   CarouselContainer,
   CarouselContent,
@@ -8,8 +10,6 @@ import {
   CarouselPrevious,
   cn,
 } from '@universe/ui-web';
-import Image from 'next/image';
-import { FC } from 'react';
 
 import { animation } from '../animation';
 import { backgroundClass } from '../background';

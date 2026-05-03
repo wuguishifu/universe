@@ -1,9 +1,9 @@
-import { cn } from '@universe/ui-web';
 import type { Metadata } from 'next';
 import { Nunito } from 'next/font/google';
 import Script from 'next/script';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
+import { cn } from '@universe/ui-web';
 
 import { Navbar } from '../components/navbar/navbar';
 import './globals.css';
