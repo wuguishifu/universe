@@ -1,11 +1,20 @@
 'use client';
 
-import { useQuery } from 'convex/react';
 import { api } from '@universe/hydrogen-kore';
+import { Spinner } from '@universe/ui-web';
+import { useQuery } from '../../../modules/convex/use-query';
 import { Section } from '../../../modules/layout/section';
 
 export function ReadingList() {
-  const items = useQuery(api.sapphire.v1.readingList.list);
+  const { data: items, isPending } = useQuery(api.sapphire.v1.readingList.list);
+
+  if (isPending) {
+    return (
+      <Section className="flex items-center justify-center">
+        <Spinner className="animate-spin duration-4s" color="#ffffff80" />
+      </Section>
+    );
+  }
 
   if (!items?.length) {
     return (

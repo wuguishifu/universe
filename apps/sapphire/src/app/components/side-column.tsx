@@ -1,6 +1,6 @@
-import { LinksHighlighter } from '../../modules/sections/links/links-highlighter';
-import { Maintenance } from '../../modules/sections/maintenance';
-import { Tp } from '../../modules/sections/tp';
+import { LinksHighlighter } from '../../modules/links/links-highlighter';
+import { Maintenance } from '../../modules/links/maintenance';
+import { Tp } from '../../modules/links/tp';
 
 export function SideColumn() {
   return (

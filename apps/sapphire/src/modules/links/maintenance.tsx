@@ -1,4 +1,4 @@
-import { LinkItem, LinksSection } from './links/links-section';
+import { LinkItem, LinksSection } from './links-section';
 
 const maintenanceLinks: LinkItem[] = [
   { href: 'https://argocd.wuguishifu.dev', label: 'argocd', target: '_blank' },

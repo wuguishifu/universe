@@ -7,6 +7,7 @@
 @theme {
   --font-jersey: var(--font-jersey);
   --font-smooch: var(--font-smooch);
+  --font-vga: var(--font-vga);
   --color-highlight: #5df3b2;
 }
 
@@ -150,4 +151,14 @@ body {
 
 .links-section-highlight {
   color: var(--color-highlight);
+}
+
+.status-ok {
+  color: #36fda0;
+  text-shadow: 0 0 20px #36fda0;
+}
+
+.status-fail {
+  color: #ff5858;
+  text-shadow: 0 0 20px #ff5858;
 }

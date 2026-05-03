@@ -1,15 +1,9 @@
 import Image from 'next/image';
-import { LinkItem, LinksSection } from './links/links-section';
+import { LinkItem, LinksSection } from './links-section';
 
 const navLinks: LinkItem[] = [
   { href: '/', label: 'home' },
   { href: '/the-list', label: 'the list' },
-  { href: 'https://github.com/wuguishifu', label: 'github', target: '_blank' },
-  {
-    href: 'https://linkedin.com/in/bo-bramer',
-    label: 'linkedin',
-    target: '_blank',
-  },
 ] as const;
 
 export function Tp() {

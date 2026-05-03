@@ -1,12 +1,23 @@
 import './globals.css';
 
 import { Jersey_15, Smooch_Sans } from 'next/font/google';
+import localFont from 'next/font/local';
 import { cn } from '@universe/ui-web';
 
+import { ConvexClientProvider } from '../modules/convex/components/convex-client-provider';
 import { RainCanvas } from '../modules/rain/rain-canvas';
-import { ConvexClientProvider } from './components/convex-client-provider';
 import { ParallaxBackground } from './components/parallax-background';
 import { SideColumn } from './components/side-column';
+
+const vga = localFont({
+  src: [
+    {
+      path: '../../public/fonts/perfect_dos_vga_437/Perfect-DOS-VGA-437.ttf',
+      weight: '400',
+    },
+  ],
+  variable: '--font-vga',
+});
 
 const jersey = Jersey_15({
   subsets: ['latin'],
@@ -34,7 +45,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={cn(jersey.variable, smooch.variable, 'text-white')}>
+      <body
+        className={cn(
+          jersey.variable,
+          smooch.variable,
+          vga.variable,
+          'text-white',
+        )}
+      >
         <ConvexClientProvider>
           <ParallaxBackground />
           <RainCanvas />
