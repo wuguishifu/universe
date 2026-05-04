@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if [ "$CI" = true ]; then
+  exit 0
+fi
+
 # source the root env for environment
 source .env
 
