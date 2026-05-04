@@ -4,6 +4,7 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10.2.0 --activate
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+RUN echo "inject-workspace-packages=true" >> .npmrc
 COPY apps/topaz/package.json apps/topaz/
 COPY libs/nest-common/package.json libs/nest-common/
 COPY libs/hydrogen-kore/package.json libs/hydrogen-kore/
