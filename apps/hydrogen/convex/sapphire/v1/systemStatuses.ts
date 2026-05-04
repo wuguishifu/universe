@@ -1,5 +1,8 @@
 import { v } from 'convex/values';
+import { z } from 'zod';
+import { internal } from '../../_generated/api';
 import { internalMutation, query } from '../../_generated/server';
+import { httpPostAction } from '../../common/functions/customFunctions';
 import { systemStatus } from '../../schema';
 
 export const list = query({
@@ -39,5 +42,21 @@ export const updateStatus = internalMutation({
     } else {
       await ctx.db.insert('systemStatuses', args);
     }
+  },
+});
+
+const statusReportBody = z.object({
+  serviceName: z.string(),
+  status: z.enum(['ok', 'down']),
+});
+
+export const reportStatusesHandler = httpPostAction({
+  bodySchema: statusReportBody,
+  handler: async ({ ctx, body }) => {
+    await ctx.runMutation(internal.sapphire.v1.systemStatuses.updateStatus, {
+      serviceName: body.serviceName,
+      status: body.status,
+    });
+    return new Response(null, { status: 204 });
   },
 });

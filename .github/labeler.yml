@@ -9,3 +9,6 @@ quartz:
 
 sapphire:
   - apps/sapphire/**
+
+topaz:
+  - apps/topaz/**

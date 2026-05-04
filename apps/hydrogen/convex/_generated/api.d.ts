@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as common_functions_customFunctions from "../common/functions/customFunctions.js";
+import type * as http from "../http.js";
 import type * as sapphire_v1_readingList from "../sapphire/v1/readingList.js";
 import type * as sapphire_v1_systemStatuses from "../sapphire/v1/systemStatuses.js";
 
@@ -18,6 +20,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "common/functions/customFunctions": typeof common_functions_customFunctions;
+  http: typeof http;
   "sapphire/v1/readingList": typeof sapphire_v1_readingList;
   "sapphire/v1/systemStatuses": typeof sapphire_v1_systemStatuses;
 }>;

@@ -1,0 +1,18 @@
+services:
+  - name: infisical
+    url: https://infisical.wuguishifu.dev
+
+  - name: vault
+    url: https://vault.wuguishifu.dev
+
+  - name: argocd
+    url: https://argocd.wuguishifu.dev
+
+  - name: backups
+    url: https://backups.wuguishifu.dev
+
+  - name: thermo
+    url: https://thermo.wuguishifu.dev
+
+  - name: pgadmin
+    url: https://pgadmin.wuguishifu.dev

@@ -46,10 +46,7 @@
       "options": {
         "cwd": "apps/hydrogen",
         "parallel": false,
-        "commands": [
-          "convex dev --once",
-          "ts-node ../../scripts/convex/copy-local-env.mts"
-        ]
+        "commands": ["convex dev --once", "nx setup environment"]
       }
     },
     "serve": {

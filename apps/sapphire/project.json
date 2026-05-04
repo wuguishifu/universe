@@ -38,7 +38,7 @@
       "options": {
         "buildTarget": "sapphire:build",
         "dev": true,
-        "port": 3000
+        "port": 4201
       },
       "configurations": {
         "development": {

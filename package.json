@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "prepush": "nx affected -t lint,tsc,circular-deps --base=main --head=HEAD --output-style=stream --nxBail=true",
+    "prepush": "nx affected -t lint,tsc,circular-deps --base=main --head=HEAD --output-style=static --nxBail=true",
     "prepare": "husky",
     "knip": "knip",
     "format": "pnpm prettier --write ."
@@ -58,6 +58,9 @@
   "dependencies": {
     "@convex-dev/resend": "^0.2.3",
     "@icons-pack/react-simple-icons": "^13.13.0",
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/core": "^11.1.19",
+    "@nestjs/platform-fastify": "^11.1.19",
     "@radix-ui/react-dropdown-menu": "^2.1.15",
     "@radix-ui/react-hover-card": "^1.1.14",
     "@radix-ui/react-label": "^2.1.7",
@@ -65,6 +68,8 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tooltip": "^1.2.7",
     "@tailwindcss/postcss": "^4.1.17",
+    "axios": "*",
+    "axios-retry": "*",
     "chalk": "^5.6.2",
     "class-variance-authority": "^0.7.1",
     "convex": "1.37.0",
