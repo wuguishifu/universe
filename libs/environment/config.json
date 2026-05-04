@@ -11,6 +11,10 @@
       "hasSecrets": false,
       "hasConvex": true,
       "publicPrefix": "NEXT_PUBLIC_"
+    },
+    "topaz": {
+      "hasSecrets": false,
+      "hasConvex": true
     }
   }
 }

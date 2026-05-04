@@ -1,0 +1,10 @@
+{
+  "name": "@universe/topaz",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@universe/hydrogen-kore": "workspace:*",
+    "@universe/nest-common": "workspace:*",
+    "@universe/utils-parse": "workspace:*"
+  }
+}

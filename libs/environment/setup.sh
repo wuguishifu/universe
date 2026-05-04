@@ -71,7 +71,7 @@ for APP in $APPS; do
   fi
 
   echo "Loading convex env variables for app: $APP"
-  PUBLIC_PREFIX=$(echo $CONFIG | jq -r ".apps.$APP.publicPrefix")
+  PUBLIC_PREFIX=$(echo $CONFIG | jq -r ".apps.$APP.publicPrefix // \"\"")
   echo "" >> apps/$APP/.env.local
   echo "# convex variables" >> apps/$APP/.env.local
   echo "${PUBLIC_PREFIX}CONVEX_URL=$CONVEX_URL" >> apps/$APP/.env.local

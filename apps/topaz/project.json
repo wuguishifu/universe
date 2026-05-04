@@ -1,0 +1,66 @@
+{
+  "name": "topaz",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/topaz/src",
+  "projectType": "application",
+  "tags": ["scope:server"],
+  "targets": {
+    "setup": {
+      "executor": "nx:run-commands",
+      "options": {
+        "parallel": false,
+        "commands": ["nx setup environment"]
+      }
+    },
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "dependsOn": ["setup"],
+      "options": {
+        "assets": [],
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/apps/topaz",
+        "main": "apps/topaz/src/main.ts",
+        "tsConfig": "apps/topaz/tsconfig.app.json",
+        "isolatedConfig": true,
+        "webpackConfig": "apps/topaz/webpack.config.js"
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "topaz:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "topaz:build:development"
+        },
+        "production": {
+          "buildTarget": "topaz:build:production"
+        }
+      }
+    },
+    "tsc": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/topaz",
+        "command": "tsc -p tsconfig.app.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/topaz/**/*.ts"],
+        "maxWarnings": 0
+      }
+    }
+  }
+}
