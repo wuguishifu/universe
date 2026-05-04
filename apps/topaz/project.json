@@ -17,8 +17,7 @@
         "main": "apps/topaz/src/main.ts",
         "tsConfig": "apps/topaz/tsconfig.app.json",
         "isolatedConfig": true,
-        "webpackConfig": "apps/topaz/webpack.config.js",
-        "externalDependencies": "none"
+        "webpackConfig": "apps/topaz/webpack.config.js"
       },
       "configurations": {
         "development": {},
