@@ -67,7 +67,10 @@ export class MonitorService implements OnModuleInit, OnModuleDestroy {
     try {
       const response = await fetch(`${convexSiteUrl}/topaz/report-status`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.environmentService.environment.convexAdminToken}`,
+        },
         body: JSON.stringify({ serviceName, status }),
       });
 

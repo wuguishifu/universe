@@ -40,7 +40,7 @@ for APP in $APPS; do
       --output dotenv
   )
 
-  echo $SECRETS >> apps/$APP/.env.local
+  echo "$SECRETS" >> apps/$APP/.env.local
 done
 
 # MARK: copy convex variables

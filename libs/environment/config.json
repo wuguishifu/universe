@@ -13,7 +13,7 @@
       "publicPrefix": "NEXT_PUBLIC_"
     },
     "topaz": {
-      "hasSecrets": false,
+      "hasSecrets": true,
       "hasConvex": true
     }
   }
