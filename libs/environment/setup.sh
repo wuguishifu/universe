@@ -5,7 +5,14 @@ if [ "$CI" = true ]; then
 fi
 
 # source the root env for environment
-source .env
+if [ -f ".env" ]; then
+  source .env
+fi
+
+if [ -z "$ENVIRONMENT" ]; then
+  echo "ENVIRONMENT env variable must be set in root \`.env\` file"
+  exit 1
+fi
 
 # load config
 CONFIG=$(cat libs/environment/config.json)

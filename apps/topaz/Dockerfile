@@ -13,7 +13,7 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-RUN NX_DAEMON=false pnpm nx build topaz --configuration=production
+RUN ENVIRONMENT=$BUILD_ENV NX_DAEMON=false pnpm nx build topaz --configuration=production
 
 RUN pnpm --filter @universe/topaz deploy --prod /deploy
 
