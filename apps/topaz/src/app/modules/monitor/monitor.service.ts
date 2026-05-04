@@ -12,6 +12,7 @@ import { WatchConfigService } from './watch-config.service';
 export class MonitorService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(MonitorService.name);
   private readonly timers: NodeJS.Timeout[] = [];
+  private readonly lastKnownStatus = new Map<string, 'ok' | 'down'>();
 
   constructor(
     private readonly environmentService: EnvironmentService,
@@ -37,7 +38,10 @@ export class MonitorService implements OnModuleInit, OnModuleDestroy {
 
   private async checkService(service: ServiceConfig): Promise<void> {
     const status = await this.probe(service);
-    this.logger.log(`${service.name}: ${status}`);
+    const previous = this.lastKnownStatus.get(service.name);
+    if (status === previous) return;
+    this.lastKnownStatus.set(service.name, status);
+    this.logger.log(`${service.name}: ${previous ?? 'unknown'} -> ${status}`);
     await this.reportStatus(service.name, status);
   }
 
