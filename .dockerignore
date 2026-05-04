@@ -1,0 +1,11 @@
+.git
+.nx
+node_modules
+dist
+**/.env*
+**/.env.local
+**/node_modules
+**/dist
+*.md
+.DS_Store
+.vscode
