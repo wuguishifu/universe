@@ -1,32 +1,40 @@
-FROM node:22-alpine AS builder
+FROM node:22-slim AS build_image
+
+LABEL maintainer="Bo Bramer <bramer.bo@gmail.com>"
+LABEL org.opencontainers.image.source=https://github.com/wuguishifu/universe
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+ENV COREPACK_INTEGRITY_KEYS="0"
+RUN corepack enable
+
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@10.2.0 --activate
+COPY . ./
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
-RUN echo "inject-workspace-packages=true" >> .npmrc
-COPY apps/topaz/package.json apps/topaz/
-COPY libs/nest-common/package.json libs/nest-common/
-COPY libs/hydrogen-kore/package.json libs/hydrogen-kore/
-COPY libs/utils-parse/package.json libs/utils-parse/
+ARG GPG_PASSPHRASE
+ARG BUILD_ENV
+ARG VERSION
+
+ENV VERSION=${VERSION}
 
 RUN pnpm install --frozen-lockfile
 
-COPY . .
+RUN NX_DAEMON=false ENVIRONMENT=$BUILD_ENV pnpm nx build topaz
 
-RUN NX_DAEMON=false pnpm nx build topaz --configuration=production
+# remove development dependencies
+RUN npm prune --production --legacy-peer-deps
 
-RUN pnpm --filter @universe/topaz deploy --prod /deploy
+FROM node:22-slim
 
+ARG VERSION
+ARG BUILD_ENV
+ENV VERSION=${VERSION}
+ENV ENVIRONMENT=${BUILD_ENV}
 
-FROM node:22-alpine
-WORKDIR /app
+COPY --from=build_image /app/dist/apps/topaz ./dist
+COPY --from=build_image /app/node_modules ./node_modules
 
-COPY --from=builder /app/dist/apps/topaz/main.js ./
-COPY --from=builder /deploy/node_modules ./node_modules
-
-ENV NODE_ENV=production
-ENV PORT=3000
 EXPOSE 3000
 
-CMD ["node", "main.js"]
+CMD ["node", "dist/main.js"]
