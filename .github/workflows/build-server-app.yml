@@ -81,8 +81,6 @@ jobs:
             -f ./${{ env.APP_PATH }}/Dockerfile \
             -t ${{ steps.docker_version.outputs.docker_image }} \
             -t ${{ steps.docker_version.outputs.docker_image_latest }} \
-            --build-arg VERSION=${{ steps.version.outputs.version }} \
-            --build-arg BUILD_ENV=${{ inputs.environment }} \
             .
           docker push ${{ steps.docker_version.outputs.docker_image }}
           docker push ${{ steps.docker_version.outputs.docker_image_latest }}

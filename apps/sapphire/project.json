@@ -26,12 +26,6 @@
         "production": {}
       }
     },
-    "setup": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "nx setup environment"
-      }
-    },
     "serve": {
       "executor": "@nx/next:server",
       "defaultConfiguration": "development",

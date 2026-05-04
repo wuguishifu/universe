@@ -5,18 +5,10 @@
   "projectType": "application",
   "tags": ["scope:server"],
   "targets": {
-    "setup": {
-      "executor": "nx:run-commands",
-      "options": {
-        "parallel": false,
-        "commands": ["nx setup environment"]
-      }
-    },
     "build": {
       "executor": "@nx/webpack:webpack",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
-      "dependsOn": ["setup"],
       "options": {
         "assets": [],
         "target": "node",
