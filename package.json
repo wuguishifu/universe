@@ -56,6 +56,7 @@
     "includedScripts": []
   },
   "dependencies": {
+    "reflect-metadata": "^0.2.2",
     "@convex-dev/resend": "^0.2.3",
     "@icons-pack/react-simple-icons": "^13.13.0",
     "@nestjs/common": "^11.1.19",

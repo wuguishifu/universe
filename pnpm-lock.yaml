@@ -89,6 +89,9 @@ importers:
       react-plock:
         specifier: ^3.5.1
         version: 3.5.1(react@19.0.0)
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
       remixicon:
         specifier: ^4.6.0
         version: 4.6.0
