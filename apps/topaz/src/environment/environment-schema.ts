@@ -7,4 +7,5 @@ export const environmentSchema = z.object({
   environment: z.enum(['development', 'production']),
   convexSiteUrl: z.string(),
   convexUrl: z.string(),
+  configPath: z.string().default('/config/services.yaml'),
 });
