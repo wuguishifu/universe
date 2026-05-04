@@ -1,5 +1,5 @@
 services:
-  - name: argocd
+  - name: infisical
     url: https://infisical.wuguishifu.dev
 
   - name: vault

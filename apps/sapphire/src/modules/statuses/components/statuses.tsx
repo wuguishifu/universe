@@ -21,11 +21,11 @@ export function Statuses() {
             'status-down': data?.status === 'down',
           })}
         >
-          {data?.status}
+          {data?.status.toUpperCase()}
         </span>
       </div>
       {isPending ? null : (
-        <div className="grid grid-cols-2">
+        <div className="grid grid-cols-2 mt-4">
           {data?.statuses.map((service) => {
             const content = (
               <>
@@ -43,7 +43,7 @@ export function Statuses() {
                 </span>
                 <span
                   style={{
-                    marginLeft: service.status === 'ok' ? '3ch' : '1ch',
+                    marginLeft: '1ch',
                   }}
                   className="group-hover:underline underline-offset-4"
                 >
