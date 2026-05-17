@@ -22,7 +22,10 @@
       "executor": "nx:run-commands",
       "options": {
         "parallel": false,
-        "commands": ["nx tsc hydrogen --skip-sync", "nx build hydrogen-kore"]
+        "commands": [
+          "nx typecheck hydrogen --skip-sync --skip-nx-cache",
+          "nx build hydrogen-kore --skip-nx-cache"
+        ]
       }
     },
     "build:kore": {
@@ -95,19 +98,6 @@
       "options": {
         "cwd": "apps/hydrogen",
         "command": "npx convex ai-files update"
-      }
-    },
-    "tsc": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "tsc --build tsconfig.json",
-        "cwd": "apps/hydrogen"
-      }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "maxWarnings": 0
       }
     },
     "circular-deps": {

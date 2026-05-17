@@ -5,3 +5,15 @@
 /.nx/cache
 /.nx/workspace-data
 .prettierrc
+
+.nx/self-healing
+
+pnpm-lock.yaml
+**/_generated/**
+prismicio-types.d.ts
+
+**/nodes_modules/**
+**/dist/**
+
+**/.next
+**/tsconfig.tsbuildinfo

@@ -21,7 +21,7 @@ export default function RootLayout({
   // Need to use `suppressHydrationWarning` to avoid hydration errors with the ThemeProvider
   // https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         <Script
           async

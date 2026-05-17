@@ -15,7 +15,7 @@ export function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  revalidateTag('prismic');
+  revalidateTag('prismic', 'max');
 
   return Promise.resolve(
     NextResponse.json({ revalidated: true, now: Date.now() }, { status: 200 }),

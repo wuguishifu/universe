@@ -39,21 +39,6 @@
         }
       }
     },
-    "tsc": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "apps/topaz",
-        "command": "tsc -p tsconfig.app.json"
-      }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["apps/topaz/**/*.ts"],
-        "maxWarnings": 0
-      }
-    },
     "circular-deps": {
       "executor": "nx:run-commands",
       "options": {

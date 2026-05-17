@@ -2,9 +2,17 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "plugins": [
     {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        }
+      }
+    },
+    {
       "plugin": "@nx/eslint/plugin",
       "options": {
-        "targetName": "eslint:lint"
+        "targetName": "lint"
       }
     },
     {
@@ -44,6 +52,11 @@
   },
   "packageManager": "pnpm",
   "targetDefaults": {
+    "lint": {
+      "options": {
+        "args": "--max-warnings 0"
+      }
+    },
     "test": {
       "dependsOn": ["^build"]
     },
@@ -73,5 +86,6 @@
         "unitTestRunner": "none"
       }
     }
-  }
+  },
+  "analytics": false
 }

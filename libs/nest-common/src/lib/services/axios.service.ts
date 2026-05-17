@@ -30,7 +30,7 @@ export class AxiosService {
   public post = <Response, Data = unknown>(
     url: string,
     data?: Data,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ) => {
     return this.instance.post<Response>(url, data, config);
   };
@@ -38,7 +38,7 @@ export class AxiosService {
   public patch = <Response, Data>(
     url: string,
     data?: Data,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ) => {
     return this.instance.patch<Response>(url, data, config);
   };

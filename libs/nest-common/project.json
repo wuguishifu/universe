@@ -12,20 +12,6 @@
         "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude '(^|/)convex/_generated(/|$)'",
         "cwd": "libs/nest-common"
       }
-    },
-    "tsc": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "tsc --build tsconfig.json",
-        "cwd": "libs/nest-common"
-      }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "maxWarnings": 0
-      }
     }
   }
 }
