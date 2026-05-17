@@ -13,6 +13,24 @@
           "placeholder": "What's Poppin!"
         }
       },
+      "paragraph_1": {
+        "type": "StructuredText",
+        "config": {
+          "label": "Paragraph 1",
+          "placeholder": "",
+          "allowTargetBlank": true,
+          "single": "paragraph,preformatted,heading1,heading2,heading3,heading4,heading5,heading6,strong,em,hyperlink,image,embed,list-item,o-list-item"
+        }
+      },
+      "paragraph_2": {
+        "type": "StructuredText",
+        "config": {
+          "label": "Paragraph 2",
+          "placeholder": "",
+          "allowTargetBlank": true,
+          "single": "paragraph,preformatted,heading1,heading2,heading3,heading4,heading5,heading6,strong,em,hyperlink,image,embed,list-item,o-list-item"
+        }
+      },
       "slices": {
         "type": "Slices",
         "fieldset": "Slice Zone",

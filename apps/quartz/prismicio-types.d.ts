@@ -87,6 +87,28 @@ interface AboutDocumentData {
   title: prismic.KeyTextField;
 
   /**
+   * Paragraph 1 field in *About*
+   *
+   * - **Field Type**: Rich Text
+   * - **Placeholder**: *None*
+   * - **API ID Path**: about.paragraph_1
+   * - **Tab**: Main
+   * - **Documentation**: https://prismic.io/docs/fields/rich-text
+   */
+  paragraph_1: prismic.RichTextField;
+
+  /**
+   * Paragraph 2 field in *About*
+   *
+   * - **Field Type**: Rich Text
+   * - **Placeholder**: *None*
+   * - **API ID Path**: about.paragraph_2
+   * - **Tab**: Main
+   * - **Documentation**: https://prismic.io/docs/fields/rich-text
+   */
+  paragraph_2: prismic.RichTextField;
+
+  /**
    * Slice Zone field in *About*
    *
    * - **Field Type**: Slice Zone
