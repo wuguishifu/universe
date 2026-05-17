@@ -14,3 +14,6 @@ prismicio-types.d.ts
 
 **/nodes_modules/**
 **/dist/**
+
+**/.next
+**/tsconfig.tsbuildinfo
