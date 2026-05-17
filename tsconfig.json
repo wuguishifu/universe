@@ -2,5 +2,33 @@
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
   "files": [],
-  "references": [{ "path": "./libs/ui-web" }, { "path": "./libs/utils-web" }]
+  "references": [
+    {
+      "path": "./libs/ui-web"
+    },
+    {
+      "path": "./libs/utils-web"
+    },
+    {
+      "path": "./libs/hydrogen-kore"
+    },
+    {
+      "path": "./libs/nest-common"
+    },
+    {
+      "path": "./libs/utils-parse"
+    },
+    {
+      "path": "./apps/hydrogen"
+    },
+    {
+      "path": "./apps/sapphire"
+    },
+    {
+      "path": "./apps/quartz"
+    },
+    {
+      "path": "./apps/topaz"
+    }
+  ]
 }
