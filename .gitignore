@@ -153,3 +153,5 @@ tsconfig.tsbuildinfo
 next-env.d.ts
 
 tsconfig.lib.tsbuildinfo
+
+.claude/settings.local.json

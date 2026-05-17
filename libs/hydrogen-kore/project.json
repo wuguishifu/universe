@@ -8,13 +8,13 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "dependsOn": [{ "projects": ["hydrogen"], "target": "tsc" }],
+      "dependsOn": [{ "projects": ["hydrogen"], "target": "typecheck" }],
       "options": {
         "cwd": "libs/hydrogen-kore",
         "command": "node ./scripts/build.mjs"
       }
     },
-    "tsc": {
+    "typecheck": {
       "dependsOn": ["build"]
     },
     "circular-deps": {

@@ -12,19 +12,6 @@
         "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude '(^|/)convex/_generated(/|$)'",
         "cwd": "libs/ui-web"
       }
-    },
-    "tsc": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "tsc --build tsconfig.json",
-        "cwd": "libs/ui-web"
-      }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "maxWarnings": 0
-      }
     }
   }
 }

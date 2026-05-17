@@ -58,17 +58,34 @@
         }
       }
     },
-    "tsc": {
+    "typecheck": {
       "executor": "nx:run-commands",
+      "dependsOn": ["^typecheck"],
+      "cache": true,
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/tsconfig.base.json",
+        {
+          "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+          "transitive": true
+        },
+        {
+          "fileset": "{projectRoot}/**/*.d.ts",
+          "dependencies": true
+        },
+        {
+          "externalDependencies": ["next", "typescript"]
+        }
+      ],
+      "outputs": [
+        "{projectRoot}/.next/types/**/*.ts",
+        "{projectRoot}/dist/tsconfig.tsbuildinfo"
+      ],
+      "syncGenerators": ["@nx/js:typescript-sync"],
       "options": {
-        "command": "tsc --build tsconfig.json",
-        "cwd": "apps/quartz"
-      }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "maxWarnings": 0
+        "cwd": "apps/quartz",
+        "command": "next typegen && tsc --project tsconfig.json --noEmit"
       }
     },
     "circular-deps": {
