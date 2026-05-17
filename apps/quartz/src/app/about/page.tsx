@@ -10,7 +10,9 @@ import {
 } from '@icons-pack/react-simple-icons';
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { buttonVariants, cn } from '@universe/ui-web';
+import { createClient } from '../../prismicio';
 
 import 'remixicon/fonts/remixicon.css';
 
@@ -18,12 +20,20 @@ export const metadata: Metadata = {
   title: 'Bo | About',
 };
 
-export default function About() {
+export default async function About() {
+  const client = createClient();
+  const query = await client.getByType('about').catch(() => notFound());
+  const page = query.results[0];
+
+  if (!page) {
+    return notFound();
+  }
+
   return (
     <div className="w-full flex-1">
       <div className="flex flex-col z-10 justify-center h-full max-w-5xl mx-auto px-8 xl:px-0">
         <h1 className="text-[4em] font-bold pb-2 animate-fade-in fill-mode-both m-0 text-center md:text-left">
-          What&apos;s Poppin!
+          {page.data.title}
         </h1>
         <p className="text-[1.2em] text-grey animate-fade-in fill-mode-both delay-200">
           Hi! My name is{' '}
