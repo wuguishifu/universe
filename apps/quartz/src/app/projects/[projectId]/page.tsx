@@ -1,15 +1,11 @@
 import { asImageSrc, isFilled } from '@prismicio/client';
+import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { PageProps } from '@universe/utils-web';
 
-import { AllDocumentTypes, ProjectDocument } from '../../../../prismicio-types';
 import { createClient } from '../../../prismicio';
 import { components } from '../../../slices';
 import { PageContext, SliceZoneWithContext } from '../../../slices/context';
-
-function verifyParams(page: AllDocumentTypes): page is ProjectDocument {
-  return page.type === 'project';
-}
 
 export default async function ProjectPage({
   params,
@@ -20,11 +16,11 @@ export default async function ProjectPage({
     .getByUID('project', projectId)
     .catch(() => notFound());
 
-  if (page.uid && !verifyParams(page)) {
+  if (page.uid) {
     notFound();
   }
 
-  const context: PageContext = {
+  const context: PageContext<'project'> = {
     colorScheme: page.data.color_scheme,
     sliceIds: page.data.slices.map((slice) => slice.id),
   };
@@ -44,7 +40,7 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<{ projectId: string }>;
-}) {
+}): Promise<Metadata> {
   const { projectId } = await params;
   const client = createClient();
   const page = await client

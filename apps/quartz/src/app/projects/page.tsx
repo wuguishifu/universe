@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import { ProjectDocument } from '../../../prismicio-types';
 import { ProjectsContainer } from '../../components/projects/projects-container';
 import { createClient } from '../../prismicio';
@@ -9,7 +10,7 @@ const requiredProps = [
   'project.display_image',
 ];
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Bo | Projects',
 };
 

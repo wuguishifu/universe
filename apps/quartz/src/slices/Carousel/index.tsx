@@ -15,8 +15,10 @@ import { animation } from '../animation';
 import { backgroundClass } from '../background';
 import { SliceComponentPropsWithContext } from '../context';
 
-export type CarouselProps =
-  SliceComponentPropsWithContext<Content.CarouselSlice>;
+export type CarouselProps = SliceComponentPropsWithContext<
+  'project',
+  Content.CarouselSlice
+>;
 
 const Carousel: FC<CarouselProps> = ({ slice, context }) => {
   const sliceIndex = context.sliceIds.indexOf(slice.id);

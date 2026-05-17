@@ -12,7 +12,10 @@ import { animation } from '../animation';
 import { backgroundClass } from '../background';
 import { SliceComponentPropsWithContext } from '../context';
 
-export type SplitProps = SliceComponentPropsWithContext<Content.SplitSlice>;
+export type SplitProps = SliceComponentPropsWithContext<
+  'project',
+  Content.SplitSlice
+>;
 
 const Split: FC<SplitProps> = ({ slice, context }) => {
   const sliceIndex = context.sliceIds.indexOf(slice.id);

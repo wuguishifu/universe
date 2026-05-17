@@ -9,7 +9,10 @@ import { animation } from '../animation';
 import { backgroundClass } from '../background';
 import { SliceComponentPropsWithContext } from '../context';
 
-export type FooterProps = SliceComponentPropsWithContext<Content.FooterSlice>;
+export type FooterProps = SliceComponentPropsWithContext<
+  'project',
+  Content.FooterSlice
+>;
 
 const Footer: FC<FooterProps> = ({ slice, context }) => {
   const sliceIndex = context.sliceIds.indexOf(slice.id);

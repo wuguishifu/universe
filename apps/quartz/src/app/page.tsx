@@ -21,7 +21,7 @@ export default function Home() {
         </div>
       </div>
       <div className="flex-0 md:flex-1 place-content-center select-none pointer-events-none">
-        <div className="fixed inset-x-0 flex justify-center md:left-[55%] md:justify-start h-4/5 md:bottom-0 -bottom-[410px] animate-[fade-in_1.5s] fill-mode-both delay-200">
+        <div className="fixed inset-x-0 flex justify-center md:left-[55%] md:justify-start h-4/5 md:bottom-0 -bottom-102.5 animate-[fade-in_1.5s] fill-mode-both delay-200">
           <Image
             src="/chibi-reflected.png"
             alt="chibi bo"
