@@ -13,7 +13,7 @@ export default async function SliceSimulatorPage({
   const { state } = await searchParams;
   const slices = getSlices(state);
 
-  const context: PageContext<'project'> = {
+  const context: PageContext = {
     colorScheme: 'Blue',
     sliceIds: slices.map((slice) => slice.id),
   };

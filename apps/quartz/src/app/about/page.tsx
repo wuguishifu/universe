@@ -10,44 +10,44 @@ import {
 } from '@icons-pack/react-simple-icons';
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import { buttonVariants, cn } from '@universe/ui-web';
-import { createClient } from '../../prismicio';
 
 import 'remixicon/fonts/remixicon.css';
-import { components } from '../../slices';
-import { PageContext, SliceZoneWithContext } from '../../slices/context';
 
 export const metadata: Metadata = {
   title: 'Bo | About',
 };
 
-export default async function About() {
-  const client = createClient();
-  const query = await client.getByType('about').catch(() => notFound());
-  const page = query.results[0];
-
-  if (!page) {
-    return notFound();
-  }
-
-  const context: PageContext<'about'> = {
-    sliceIds: page.data.slices.map((slice) => slice.id),
-  };
-
+export default function About() {
   return (
     <div className="w-full flex-1">
       <div className="flex flex-col z-10 justify-center h-full max-w-5xl mx-auto px-8 xl:px-0">
         <h1 className="text-[4em] font-bold pb-2 animate-fade-in fill-mode-both m-0 text-center md:text-left">
-          {page.data.title}
+          What&apos;s Poppin!
         </h1>
-        <div className="w-full flex-1">
-          <SliceZoneWithContext
-            slices={page.data.slices}
-            components={components}
-            context={context}
-          />
-        </div>
+        <p className="text-[1.2em] text-grey animate-fade-in fill-mode-both delay-200">
+          Hi! My name is{' '}
+          <Link
+            href="https://linkedin.com/in/bo-bramer"
+            target="_blank"
+            className="underline underline-offset-4 text-blue"
+          >
+            Bo Bramer
+          </Link>{' '}
+          and I&apos;m a full-stack engineer with a degree in chemical
+          engineering from the University of California, Irvine. Currently,
+          I&apos;m a senior software engineer at{' '}
+          <Link
+            href="https://solidstarts.com"
+            className="underline underline-offset-4 text-blue"
+            target="_blank"
+          >
+            Solid Starts
+          </Link>{' '}
+          where I work on mobile apps using React Native with Typescript,
+          Kotlin, and Swift. Here&apos;s the full tech stack I&apos;m using at
+          work:
+        </p>
         <div className="animate-fade-in fill-mode-both delay-400 flex flex-row items-center flex-wrap max-w-screen-sm w-full mx-auto gap-x-16 gap-y-4 mt-4 justify-between">
           <a
             className="cursor-pointer"

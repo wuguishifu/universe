@@ -3,7 +3,6 @@
 import dynamic from 'next/dynamic';
 
 export const components = {
-  about_text: dynamic(() => import('./AboutText')),
   carousel: dynamic(() => import('./Carousel')),
   footer: dynamic(() => import('./Footer')),
   split: dynamic(() => import('./Split')),

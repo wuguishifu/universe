@@ -7,10 +7,7 @@ import { animation } from '../animation';
 import { backgroundClass } from '../background';
 import { SliceComponentPropsWithContext } from '../context';
 
-export type TextProps = SliceComponentPropsWithContext<
-  'project',
-  Content.TextSlice
->;
+export type TextProps = SliceComponentPropsWithContext<Content.TextSlice>;
 
 const Text: FC<TextProps> = ({ slice, context }) => {
   const sliceIndex = context.sliceIds.indexOf(slice.id);

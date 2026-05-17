@@ -8,10 +8,7 @@ import { animation } from '../animation';
 import { backgroundClass } from '../background';
 import { SliceComponentPropsWithContext } from '../context';
 
-export type TitleProps = SliceComponentPropsWithContext<
-  'project',
-  Content.TitleSlice
->;
+export type TitleProps = SliceComponentPropsWithContext<Content.TitleSlice>;
 
 const Title: FC<TitleProps> = ({ slice, context }) => {
   const sliceIndex = context.sliceIds.indexOf(slice.id);
