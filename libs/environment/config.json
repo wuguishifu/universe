@@ -4,11 +4,9 @@
   "apps": {
     "quartz": {
       "hasSecrets": true,
-      "hasConvex": false,
       "publicPrefix": "NEXT_PUBLIC_"
     },
     "sapphire": {
-      "hasSecrets": false,
       "hasConvex": true,
       "publicPrefix": "NEXT_PUBLIC_"
     },
@@ -17,8 +15,12 @@
       "hasConvex": true
     },
     "emerald": {
-      "hasSecrets": true,
-      "hasConvex": false
+      "hasSecrets": true
+    }
+  },
+  "libs": {
+    "db-helium": {
+      "hasSecrets": true
     }
   }
 }
