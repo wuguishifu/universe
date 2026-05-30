@@ -273,6 +273,9 @@ importers:
       '@universe/nest-common':
         specifier: workspace:*
         version: link:../../libs/nest-common
+      '@universe/redis':
+        specifier: workspace:*
+        version: link:../../libs/redis
 
   apps/hydrogen:
     dependencies:
@@ -335,6 +338,8 @@ importers:
       axios-retry:
         specifier: '*'
         version: 4.5.0(axios@1.13.4)
+
+  libs/redis: {}
 
   libs/ui-web: {}
 

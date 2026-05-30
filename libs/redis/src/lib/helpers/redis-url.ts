@@ -6,12 +6,6 @@ export type ParsedRedisUrl = {
   family: 0;
 };
 
-type ResolveRedisConnectionOptions = {
-  nodeEnv: 'debug' | 'release';
-  publicUrl: string;
-  privateUrl: string;
-};
-
 const DEFAULT_REDIS_PORT = 6379;
 
 export function parseRedisUrl(url: string): ParsedRedisUrl {
@@ -35,12 +29,4 @@ export function parseRedisUrl(url: string): ParsedRedisUrl {
     password: parsedUrl.password || undefined,
     family: 0,
   };
-}
-
-export function resolveRedisConnection({
-  nodeEnv,
-  publicUrl,
-  privateUrl,
-}: ResolveRedisConnectionOptions): ParsedRedisUrl {
-  return parseRedisUrl(nodeEnv === 'release' ? privateUrl : publicUrl);
 }

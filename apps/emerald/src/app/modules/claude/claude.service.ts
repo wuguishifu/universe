@@ -10,7 +10,7 @@ type MessageProps = Pick<Anthropic.MessageCreateParams, 'model' | 'messages'>;
 export class ClaudeService {
   private readonly maxTokens = 2 ** 12;
   private readonly client: Anthropic = new Anthropic({
-    apiKey: this.environmentService.environment.claudeApiKey,
+    apiKey: this.environmentService.environment.claudeApiToken,
   });
 
   constructor(private readonly environmentService: EnvironmentService) {}

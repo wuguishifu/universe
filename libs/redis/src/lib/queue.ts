@@ -33,11 +33,11 @@ type QueueConfig = {
  * Bull allows you to footgun yourself, but BullMQ forces us to do it properly.
  */
 export const BULL_QUEUE_CONFIG = {
-  bustEntitlementsCache: {
-    queueName: 'entitlements-cache-buster-queue',
-    jobName: 'bust-cache',
+  trimClip: {
+    queueName: 'trim-clip-queue',
+    jobName: 'trim-clip',
     jobSchema: z.object({
-      userId: z.string(),
+      filePath: z.string(),
     }),
   },
 } satisfies Record<string, QueueConfig>;

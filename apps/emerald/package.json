@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@universe/nest-common": "workspace:*",
-    "@universe/contracts-emerald": "workspace:*"
+    "@universe/contracts-emerald": "workspace:*",
+    "@universe/redis": "workspace:*"
   }
 }
