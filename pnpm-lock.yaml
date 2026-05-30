@@ -8,9 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.100.1
+        version: 0.100.1(zod@4.4.3)
       '@convex-dev/resend':
         specifier: ^0.2.3
-        version: 0.2.3(convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@3.21.4))(convex@1.37.0(react@19.0.0))(react@19.0.0)
+        version: 0.2.3(convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@4.4.3))(convex@1.37.0(react@19.0.0))(react@19.0.0)
       '@icons-pack/react-simple-icons':
         specifier: ^13.13.0
         version: 13.13.0(react@19.0.0)
@@ -61,7 +64,7 @@ importers:
         version: 1.37.0(react@19.0.0)
       convex-helpers:
         specifier: ^0.1.115
-        version: 0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@3.21.4)
+        version: 0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@4.4.3)
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
@@ -114,8 +117,8 @@ importers:
         specifier: ^2.8.2
         version: 2.8.2
       zod:
-        specifier: ^3.21.4
-        version: 3.21.4
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@convex-dev/eslint-plugin':
         specifier: ^2.0.0
@@ -319,6 +322,15 @@ packages:
   '@antfu/ni@0.20.0':
     resolution: {integrity: sha512-mBgAuq2b0daSA/14LMyjEjaInD7/Zd7KVXZge7bQPKmtQJFqy9/pWBml6DMkMreeHQEomMtIbbeqReNJ/74kjA==}
     hasBin: true
+
+  '@anthropic-ai/sdk@0.100.1':
+    resolution: {integrity: sha512-RANcEe7LpiLczkKGOwoXOTuFdPhuubS0i4xaAKOMpcqc55YO0mukgxppV7eygx3DXNjxWT6RYOLPyOy0aIAmwg==}
+    hasBin: true
+    peerDependencies:
+      zod: ^3.25.0 || ^4.0.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
 
   '@auth/core@0.37.4':
     resolution: {integrity: sha512-HOXJwXWXQRhbBDHlMU0K/6FT1v+wjtzdKhsNg0ZN7/gne6XPsIrjZ4daMcFnbq0Z/vsAbYBinQhhua0d77v7qw==}
@@ -6327,6 +6339,10 @@ packages:
   json-schema-ref-resolver@3.0.0:
     resolution: {integrity: sha512-hOrZIVL5jyYFjzk7+y7n5JDzGlU8rfWDuYyHwGa2WA8/pcmMHezp2xsVwxrebD/Q9t8Nc5DboieySDpCp4WG4A==}
 
+  json-schema-to-ts@3.1.1:
+    resolution: {integrity: sha512-+DWg8jCJG2TEnpy7kOm/7/AxaYoaRbjVB4LFZLySZlWn8exGs3A4OLJR966cVvU26N7X9TWxl+Jsw7dzAqKT6g==}
+    engines: {node: '>=16'}
+
   json-schema-traverse@0.4.1:
     resolution: {integrity: sha512-xbbCH5dCYU5T8LcEhhuh7HJ88HXuW3qsI3Y0zOZFKfZEHcpWiHU/Jxzk629Brsab/mMiHQti9wMP+845RPe3Vg==}
 
@@ -8530,6 +8546,9 @@ packages:
     resolution: {integrity: sha512-kstfs+hgwmdsOadN3KgA+C68wPJwnZq4DN6WMDCvZapDWEF34W2TyPKN2v2+BJnZgIz5QOfxFeldLyYvdgRAwg==}
     engines: {node: '>=14.16'}
 
+  ts-algebra@2.0.0:
+    resolution: {integrity: sha512-FPAhNPFMrkwz76P7cdjdmiShwMynZYN6SgOujD1urY4oNm80Ou9oMdmbR45LotcKOXoy7wSmHkRFE6Mxbrhefw==}
+
   ts-api-utils@2.1.0:
     resolution: {integrity: sha512-CUgTZL1irw8u29bzrOD/nH85jqyc74D6SshFgujOIA7osm2Rz7dYH77agkx7H4FBNxDq7Cjf+IjaX/8zwFW+ZQ==}
     engines: {node: '>=18.12'}
@@ -9095,14 +9114,11 @@ packages:
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
-  zod@3.21.4:
-    resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
-
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.3.6:
-    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
+  zod@4.4.3:
+    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
 
 snapshots:
 
@@ -9117,6 +9133,13 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.29
 
   '@antfu/ni@0.20.0': {}
+
+  '@anthropic-ai/sdk@0.100.1(zod@4.4.3)':
+    dependencies:
+      json-schema-to-ts: 3.1.1
+      standardwebhooks: 1.0.0
+    optionalDependencies:
+      zod: 4.4.3
 
   '@auth/core@0.37.4':
     dependencies:
@@ -9923,12 +9946,12 @@ snapshots:
     optionalDependencies:
       react: 19.0.0
 
-  '@convex-dev/resend@0.2.3(convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@3.21.4))(convex@1.37.0(react@19.0.0))(react@19.0.0)':
+  '@convex-dev/resend@0.2.3(convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@4.4.3))(convex@1.37.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@convex-dev/rate-limiter': 0.3.2(convex@1.37.0(react@19.0.0))(react@19.0.0)
-      '@convex-dev/workpool': 0.3.2(convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@3.21.4))(convex@1.37.0(react@19.0.0))
+      '@convex-dev/workpool': 0.3.2(convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@4.4.3))(convex@1.37.0(react@19.0.0))
       convex: 1.37.0(react@19.0.0)
-      convex-helpers: 0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@3.21.4)
+      convex-helpers: 0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@4.4.3)
       remeda: 2.34.0
       resend: 6.12.2
       svix: 1.92.2
@@ -9936,10 +9959,10 @@ snapshots:
       - '@react-email/render'
       - react
 
-  '@convex-dev/workpool@0.3.2(convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@3.21.4))(convex@1.37.0(react@19.0.0))':
+  '@convex-dev/workpool@0.3.2(convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@4.4.3))(convex@1.37.0(react@19.0.0))':
     dependencies:
       convex: 1.37.0(react@19.0.0)
-      convex-helpers: 0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@3.21.4)
+      convex-helpers: 0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@4.4.3)
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -13885,14 +13908,14 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@3.21.4):
+  convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@4.4.3):
     dependencies:
       convex: 1.37.0(react@19.0.0)
     optionalDependencies:
       '@standard-schema/spec': 1.0.0
       react: 19.0.0
       typescript: 5.9.3
-      zod: 3.21.4
+      zod: 4.4.3
 
   convex@1.37.0(react@19.0.0):
     dependencies:
@@ -15858,6 +15881,11 @@ snapshots:
     dependencies:
       dequal: 2.0.3
 
+  json-schema-to-ts@3.1.1:
+    dependencies:
+      '@babel/runtime': 7.28.2
+      ts-algebra: 2.0.0
+
   json-schema-traverse@0.4.1: {}
 
   json-schema-traverse@1.0.0: {}
@@ -15924,7 +15952,7 @@ snapshots:
       typescript: 5.9.3
       unbash: 2.2.0
       yaml: 2.8.2
-      zod: 4.3.6
+      zod: 4.4.3
 
   koa-compose@4.1.0: {}
 
@@ -18289,6 +18317,8 @@ snapshots:
 
   trim-newlines@5.0.0: {}
 
+  ts-algebra@2.0.0: {}
+
   ts-api-utils@2.1.0(typescript@5.9.3):
     dependencies:
       typescript: 5.9.3
@@ -18886,8 +18916,6 @@ snapshots:
     dependencies:
       zod: 3.25.76
 
-  zod@3.21.4: {}
-
   zod@3.25.76: {}
 
-  zod@4.3.6: {}
+  zod@4.4.3: {}
