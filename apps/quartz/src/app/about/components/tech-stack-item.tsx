@@ -1,4 +1,5 @@
 import { IconType } from '@icons-pack/react-simple-icons';
+
 import { cn } from '@universe/ui-web';
 
 export type TechStackProps = {

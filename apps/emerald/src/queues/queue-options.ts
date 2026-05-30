@@ -3,7 +3,9 @@ import {
   SharedBullConfigurationFactory,
 } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
+
 import { BULL_QUEUE_PREFIX, parseRedisUrl } from '@universe/redis';
+
 import { EnvironmentService } from '../environment/environment-service';
 
 @Injectable()

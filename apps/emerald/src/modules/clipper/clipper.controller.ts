@@ -1,8 +1,12 @@
 import { Controller, UseGuards } from '@nestjs/common';
 import { tsRestHandler, TsRestHandler } from '@ts-rest/nest';
+
 import { emeraldRootRouter } from '@universe/contracts-emerald';
-import { TokenAuthGuard } from '../../../auth/guards/token-auth.guard';
+
+import { TokenAuthGuard } from '../../auth/guards/token-auth.guard';
+
 import { ClipperService } from './clipper.service';
+
 
 @UseGuards(TokenAuthGuard('emeraldAdminToken'))
 @Controller()

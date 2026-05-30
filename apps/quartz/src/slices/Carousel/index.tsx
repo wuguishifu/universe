@@ -1,6 +1,7 @@
 import { Content, isFilled } from '@prismicio/client';
 import Image from 'next/image';
 import { FC } from 'react';
+
 import {
   CarouselContainer,
   CarouselContent,

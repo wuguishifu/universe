@@ -1,4 +1,5 @@
 import { PropsWithChildren } from 'react';
+
 import { cn } from '@universe/ui-web';
 
 type SectionProps = PropsWithChildren<{

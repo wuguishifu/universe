@@ -1,4 +1,5 @@
 import Image from 'next/image';
+
 import { Section } from '../modules/layout/section';
 import { Statuses } from '../modules/statuses/components/statuses';
 

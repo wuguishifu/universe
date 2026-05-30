@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
+
 import { BULL_QUEUE_CONFIG, DEFAULT_QUEUE_CONFIG } from '@universe/redis';
-import type { EmeraldQueue } from '../../../queues/bull-queue.module';
+
+import type { EmeraldQueue } from '../../queues/bull-queue.module';
 
 @Injectable()
 export class ClipperService {

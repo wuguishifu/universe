@@ -27,6 +27,7 @@ export default [
       'import/order': [
         'warn',
         {
+          'newlines-between': 'always',
           groups: [
             'external',
             'builtin',

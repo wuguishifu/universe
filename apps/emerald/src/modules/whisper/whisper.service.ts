@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
+
 import { spawn } from 'child_process';
 import { once } from 'events';
 import path from 'path';
-import { binPath } from '../../constants';
+
+import { binPath } from '../../app/constants';
 
 const DEFAULT_WHISPER_TIMEOUT_MS = 5 * 60 * 1000;
 

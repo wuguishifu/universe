@@ -1,4 +1,5 @@
 import { initContract } from '@ts-rest/core';
+
 import { clipperRouter } from './routers/clipper.router';
 
 const c = initContract();

@@ -6,6 +6,7 @@ import {
   Type,
   UnauthorizedException,
 } from '@nestjs/common';
+
 import { EnvironmentSchema } from '../../environment/environment-schema';
 import { EnvironmentService } from '../../environment/environment-service';
 import { extractAuthTokenFromHeader } from '../helpers';

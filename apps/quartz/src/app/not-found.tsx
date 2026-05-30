@@ -1,4 +1,5 @@
 import Link from 'next/link';
+
 import { buttonVariants } from '@universe/ui-web';
 
 export default function NotFound() {

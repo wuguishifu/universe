@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+
 import { MonitorService } from './monitor.service';
 import { WatchConfigService } from './watch-config.service';
 

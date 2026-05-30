@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+
 import { api } from '@universe/hydrogen-kore';
 import { cn, Spinner } from '@universe/ui-web';
+
 import { useQuery } from '../../convex/use-query';
 import { Section } from '../../layout/section';
 

@@ -1,5 +1,6 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
+
 import { BULL_QUEUE_CONFIG, QueueJob } from '@universe/redis';
 
 @Processor(BULL_QUEUE_CONFIG.trimClip.queueName)

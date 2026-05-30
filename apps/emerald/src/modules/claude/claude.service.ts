@@ -1,7 +1,8 @@
 import { Anthropic } from '@anthropic-ai/sdk';
 import { Stream } from '@anthropic-ai/sdk/core/streaming';
 import { Injectable } from '@nestjs/common';
-import { EnvironmentService } from '../../../environment/environment-service';
+
+import { EnvironmentService } from '../../environment/environment-service';
 
 type WithRequestId<T> = T & { _requestId?: string | null | undefined };
 type MessageProps = Pick<Anthropic.MessageCreateParams, 'model' | 'messages'>;

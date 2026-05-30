@@ -1,4 +1,5 @@
 import Image from 'next/image';
+
 import { LinkItem, LinksSection } from './links-section';
 
 const navLinks: LinkItem[] = [

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+
 import { quickLinkClassName } from './links-section';
 
 const highlightClassName = 'links-section-highlight';

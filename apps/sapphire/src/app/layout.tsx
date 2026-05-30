@@ -2,12 +2,15 @@ import './globals.css';
 
 import { Jersey_15 } from 'next/font/google';
 import localFont from 'next/font/local';
+
 import { cn } from '@universe/ui-web';
 
 import { ConvexClientProvider } from '../modules/convex/components/convex-client-provider';
 import { RainCanvas } from '../modules/rain/rain-canvas';
+
 import { ParallaxBackground } from './components/parallax-background';
 import { SideColumn } from './components/side-column';
+
 
 const vga = localFont({
   src: [

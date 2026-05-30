@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+
 import { cn } from '@universe/ui-web';
 
 import { ProjectDocument } from '../../../prismicio-types';
