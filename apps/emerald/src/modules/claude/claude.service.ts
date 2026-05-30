@@ -5,11 +5,14 @@ import { Injectable } from '@nestjs/common';
 import { EnvironmentService } from '../../environment/environment-service';
 
 type WithRequestId<T> = T & { _requestId?: string | null | undefined };
-type MessageProps = Pick<Anthropic.MessageCreateParams, 'model' | 'messages'>;
+type MessageProps = Pick<
+  Anthropic.MessageCreateParams,
+  'model' | 'messages' | 'system'
+>;
 
 @Injectable()
 export class ClaudeService {
-  private readonly maxTokens = 2 ** 12;
+  private readonly maxTokens = 2 ** 14;
   private readonly client: Anthropic = new Anthropic({
     apiKey: this.environmentService.environment.claudeApiToken,
   });
