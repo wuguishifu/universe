@@ -1,11 +1,10 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
+import { testDir } from '../../constants';
 import { FFmpegService } from '../ffmpeg/ffmpeg.service';
 import { WhisperService } from '../whisper/whisper.service';
 import { TranscriptSegment, whisperOutputSchema } from './types';
-
-const testDir = path.join(__dirname, '..', '..', '..', 'test');
 
 function parseWhisperJson(raw: string, speaker: string): TranscriptSegment[] {
   const parsed = whisperOutputSchema.safeParse(JSON.parse(raw));
