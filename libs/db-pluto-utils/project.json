@@ -1,0 +1,54 @@
+{
+  "name": "db-pluto-utils",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/db-pluto-utils/src",
+  "projectType": "library",
+  "tags": ["scope:server"],
+  "targets": {
+    "migrate:generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/db-pluto-utils",
+        "command": "drizzle-kit generate --config=./drizzle.config.ts"
+      }
+    },
+    "migrate:run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/db-pluto-utils",
+        "command": "ts-node -r tsconfig-paths/register ./src/lib/migrate.ts"
+      }
+    },
+    "create:db": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/db-pluto-utils",
+        "command": "ts-node -r tsconfig-paths/register ./src/lib/db/setup.ts"
+      }
+    },
+    "init:db": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/db-pluto-utils",
+        "parallel": false,
+        "commands": [
+          "pnpm nx create:db db-pluto-utils",
+          "pnpm nx migrate:run db-pluto-utils"
+        ]
+      }
+    },
+    "docker": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "libs/db-pluto-utils",
+        "parallel": false,
+        "commands": [
+          "docker stop db-pluto-utils || true",
+          "docker compose -f docker-compose.dev.yml up --detach",
+          "pnpm nx init:db db-pluto-utils",
+          "docker ps"
+        ]
+      }
+    }
+  }
+}

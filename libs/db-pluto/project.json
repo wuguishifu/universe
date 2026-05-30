@@ -1,0 +1,8 @@
+{
+  "name": "db-pluto",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/db-pluto/src",
+  "projectType": "library",
+  "tags": ["scope:server"],
+  "targets": {}
+}

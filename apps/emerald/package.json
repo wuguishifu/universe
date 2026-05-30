@@ -5,6 +5,7 @@
   "dependencies": {
     "@universe/nest-common": "workspace:*",
     "@universe/contracts-emerald": "workspace:*",
-    "@universe/redis": "workspace:*"
+    "@universe/redis": "workspace:*",
+    "@universe/utils-parse": "workspace:*"
   }
 }

@@ -1,0 +1,9 @@
+services:
+  postgres:
+    image: postgres
+    container_name: pluto-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    ports:
+      - '${PLUTO_DB_PORT:-5432}:5432'

@@ -38,6 +38,18 @@
     },
     {
       "path": "./libs/redis"
+    },
+    {
+      "path": "./apps/osmium"
+    },
+    {
+      "path": "./libs/contracts-osmium"
+    },
+    {
+      "path": "./libs/db-pluto-utils"
+    },
+    {
+      "path": "./libs/db-pluto"
     }
   ]
 }

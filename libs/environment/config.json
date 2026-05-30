@@ -19,7 +19,7 @@
     }
   },
   "libs": {
-    "db-helium": {
+    "db-pluto": {
       "hasSecrets": true
     }
   }
