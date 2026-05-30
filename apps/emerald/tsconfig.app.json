@@ -25,6 +25,9 @@
       "path": "../../libs/utils-parse/tsconfig.lib.json"
     },
     {
+      "path": "../../libs/contracts-emerald/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/nest-common/tsconfig.lib.json"
     }
   ]

@@ -6,4 +6,5 @@ export const environmentSchema = z.object({
   debugLogging: z.preprocess(preprocessBoolean, z.boolean()).default(false),
   environment: z.enum(['development', 'production']),
   claudeApiKey: z.string(),
+  emeraldAdminToken: z.string(),
 });

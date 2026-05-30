@@ -1,8 +1,11 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
+import {
+  TranscriptSegment,
+  whisperOutputSchema,
+} from '@universe/contracts-emerald';
 import { testDir } from '../../constants';
-import { TranscriptSegment, whisperOutputSchema } from '../../types/whisper';
 import { FFmpegService } from '../ffmpeg/ffmpeg.service';
 import { WhisperService } from '../whisper/whisper.service';
 
