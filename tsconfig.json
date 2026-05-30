@@ -35,6 +35,9 @@
     },
     {
       "path": "./libs/contracts-emerald"
+    },
+    {
+      "path": "./libs/redis"
     }
   ]
 }

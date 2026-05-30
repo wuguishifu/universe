@@ -1,0 +1,46 @@
+export type ParsedRedisUrl = {
+  host: string;
+  port: number;
+  username?: string;
+  password?: string;
+  family: 0;
+};
+
+type ResolveRedisConnectionOptions = {
+  nodeEnv: 'debug' | 'release';
+  publicUrl: string;
+  privateUrl: string;
+};
+
+const DEFAULT_REDIS_PORT = 6379;
+
+export function parseRedisUrl(url: string): ParsedRedisUrl {
+  const parsedUrl = new URL(url);
+
+  if (parsedUrl.protocol !== 'redis:') {
+    throw new Error(`Invalid Redis URL protocol: ${parsedUrl.protocol}`);
+  }
+
+  const port =
+    parsedUrl.port.length > 0 ? Number(parsedUrl.port) : DEFAULT_REDIS_PORT;
+
+  if (!Number.isInteger(port) || port <= 0) {
+    throw new Error(`Invalid Redis URL port: ${parsedUrl.port}`);
+  }
+
+  return {
+    host: parsedUrl.hostname,
+    port,
+    username: parsedUrl.username || undefined,
+    password: parsedUrl.password || undefined,
+    family: 0,
+  };
+}
+
+export function resolveRedisConnection({
+  nodeEnv,
+  publicUrl,
+  privateUrl,
+}: ResolveRedisConnectionOptions): ParsedRedisUrl {
+  return parseRedisUrl(nodeEnv === 'release' ? privateUrl : publicUrl);
+}
