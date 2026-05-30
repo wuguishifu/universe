@@ -1,0 +1,50 @@
+{
+  "name": "emerald",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/emerald/src",
+  "projectType": "application",
+  "tags": ["scope:server"],
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "assets": [],
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/apps/emerald",
+        "main": "apps/emerald/src/main.ts",
+        "tsConfig": "apps/emerald/tsconfig.app.json",
+        "isolatedConfig": true,
+        "webpackConfig": "apps/emerald/webpack.config.js"
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "emerald:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "emerald:build:development"
+        },
+        "production": {
+          "buildTarget": "emerald:build:production"
+        }
+      }
+    },
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude '(^|/)convex/_generated(/|$)'",
+        "cwd": "apps/emerald"
+      }
+    }
+  }
+}

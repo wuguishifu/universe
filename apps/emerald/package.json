@@ -1,0 +1,8 @@
+{
+  "name": "@universe/emerald",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@universe/nest-common": "workspace:*"
+  }
+}
