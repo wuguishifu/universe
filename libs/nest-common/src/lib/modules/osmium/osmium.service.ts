@@ -32,7 +32,7 @@ export class OsmiumService implements OnModuleInit, OnModuleDestroy {
 
   constructor(@Inject(OSMIUM_CONFIG) private readonly config: OsmiumConfig) {
     this.httpService = new AxiosService({
-      baseURL: `${this.config.osmiumBaseUrl}/api/v1/tracking`,
+      baseURL: `${this.config.osmiumBaseUrl}/api/tracking`,
       headers: {
         Authorization: `Bearer ${this.config.osmiumApiAccessKey}`,
       },
