@@ -220,6 +220,8 @@ export class TrimClipQueueProcessor extends WorkerHost {
         metadata: {
           ...commonTrackingProperties,
           processingDurationMs: Date.now() - now,
+          result,
+          outputPath,
         },
       });
     } catch (error) {
