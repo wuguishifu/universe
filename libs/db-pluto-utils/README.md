@@ -1,6 +1,6 @@
 # db-pluto-utils
 
-A library used by developers to manage and interact with Helium DB.
+A library used by developers to manage and interact with Pluto DB.
 
 This is explicitly split out from the `db-pluto` lib because it requires the use of sensitive environment variables.
 

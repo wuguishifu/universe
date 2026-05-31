@@ -16,14 +16,14 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "libs/db-pluto-utils",
-        "command": "ts-node -r tsconfig-paths/register ./src/lib/migrate.ts"
+        "command": "tsx ./src/lib/migrate.ts"
       }
     },
     "create:db": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "libs/db-pluto-utils",
-        "command": "ts-node -r tsconfig-paths/register ./src/lib/db/setup.ts"
+        "command": "tsx ./src/lib/db/setup.ts"
       }
     },
     "init:db": {

@@ -12,7 +12,7 @@ const ENV = environment.toUpperCase();
 
 const processMigrations = () => {
   console.log(`📢 Running migrations on the ${ENV} pluto database`);
-  const migrationsFolder = `${dirname(require.main?.filename ?? '')}/migrations`;
+  const migrationsFolder = `${dirname(process.argv[1] ?? '.')}/migrations`;
 
   console.log('📁 Starting migration from directory:', migrationsFolder);
 

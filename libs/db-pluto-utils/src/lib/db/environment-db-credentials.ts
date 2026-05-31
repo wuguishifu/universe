@@ -5,11 +5,14 @@ import path from 'path';
 
 import { buildConnectionString } from './build-connection-string';
 
-const filename = require.main?.filename;
-if (!filename) {
-  throw new Error('Could not determine the main module filename.');
-}
-const rootDir = path.join(path.dirname(filename), '..', '..', '..', '..', '..');
+const rootDir = path.join(
+  path.dirname(process.argv[1] ?? '.'),
+  '..',
+  '..',
+  '..',
+  '..',
+  '..',
+);
 const rootEnvPath = path.join(rootDir, '.env');
 dotenv.config({ path: rootEnvPath });
 
