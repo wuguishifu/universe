@@ -2,6 +2,12 @@
   "apps": {
     "topaz": {
       "registryPath": "wuguishifu/universe/topaz"
+    },
+    "emerald": {
+      "registryPath": "wuguishifu/universe/emerald"
+    },
+    "osmium": {
+      "registryPath": "wuguishifu/universe/osmium"
     }
   }
 }
