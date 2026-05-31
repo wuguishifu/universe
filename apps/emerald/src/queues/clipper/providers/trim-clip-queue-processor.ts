@@ -60,7 +60,7 @@ function parseWhisperJson(raw: string, speaker: string): TranscriptSegment[] {
 }
 
 // TODO: cloud storage? or make this input from endpoint or smth
-const outputDir = path.join('Users', 'bo', 'Desktop', 'trimmed');
+const outputDir = path.join('/', 'Users', 'bo', 'Desktop', 'trimmed');
 
 @Processor(BULL_QUEUE_CONFIG.trimClip.queueName)
 export class TrimClipQueueProcessor extends WorkerHost {
@@ -210,8 +210,8 @@ export class TrimClipQueueProcessor extends WorkerHost {
       await this.trimClip({
         inputPath,
         outputPath,
-        startS: result.start_seconds,
-        endS: result.end_seconds,
+        startS: Math.max(0, result.start_seconds - 2),
+        endS: result.end_seconds + 2,
         commonTrackingProperties,
       });
 
