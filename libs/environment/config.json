@@ -16,11 +16,18 @@
     },
     "emerald": {
       "hasSecrets": true
+    },
+    "osmium": {
+      "hasSecrets": true,
+      "hasPluto": true
     }
   },
   "libs": {
     "db-pluto": {
-      "hasSecrets": true
+      "hasPluto": true
+    },
+    "db-pluto-utils": {
+      "hasPluto": true
     }
   }
 }

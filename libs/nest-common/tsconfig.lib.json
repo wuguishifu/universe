@@ -16,5 +16,9 @@
     "emitDecoratorMetadata": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "references": []
+  "references": [
+    {
+      "path": "../contracts-osmium/tsconfig.lib.json"
+    }
+  ]
 }
