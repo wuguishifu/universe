@@ -60,22 +60,10 @@ function parseWhisperJson(raw: string, speaker: string): TranscriptSegment[] {
 }
 
 // TODO: cloud storage? or make this input from endpoint or smth
-const outputDir = path.join(
-  '/',
-  'Users',
-  'bo',
-  'Documents',
-  'Clips',
-  'trimmed',
-);
-const successfulFilesDir = path.join(
-  '/',
-  'Users',
-  'bo',
-  'Documents',
-  'Clips',
-  'successful',
-);
+const clipsDir = path.join('/', 'Users', 'bo', 'Documents', 'Clips');
+const outputDir = path.join(clipsDir, 'trimmed');
+const successfulFilesDir = path.join(clipsDir, 'successful');
+const failedFilesDir = path.join(clipsDir, 'failed');
 
 @Processor(BULL_QUEUE_CONFIG.trimClip.queueName)
 export class TrimClipQueueProcessor extends WorkerHost {
@@ -255,6 +243,10 @@ export class TrimClipQueueProcessor extends WorkerHost {
           error: errorMessage,
         },
       });
+      renameSync(
+        inputPath,
+        path.join(failedFilesDir, path.basename(inputPath)),
+      );
     } finally {
       cleanup();
     }
