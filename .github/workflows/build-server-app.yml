@@ -11,6 +11,8 @@ on:
         type: choice
         options:
           - topaz
+          - emerald
+          - osmium
       environment:
         description: 'Environment'
         required: true
