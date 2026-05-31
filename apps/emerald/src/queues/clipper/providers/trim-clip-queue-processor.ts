@@ -3,7 +3,7 @@ import { Inject, Logger } from '@nestjs/common';
 import z from 'zod';
 
 import crypto from 'crypto';
-import { existsSync, mkdirSync, rmSync } from 'fs';
+import { existsSync, mkdirSync, renameSync, rmSync } from 'fs';
 import { readFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import path from 'path';
@@ -60,7 +60,22 @@ function parseWhisperJson(raw: string, speaker: string): TranscriptSegment[] {
 }
 
 // TODO: cloud storage? or make this input from endpoint or smth
-const outputDir = path.join('/', 'Users', 'bo', 'Desktop', 'trimmed');
+const outputDir = path.join(
+  '/',
+  'Users',
+  'bo',
+  'Documents',
+  'Clips',
+  'trimmed',
+);
+const successfulFilesDir = path.join(
+  '/',
+  'Users',
+  'bo',
+  'Documents',
+  'Clips',
+  'successful',
+);
 
 @Processor(BULL_QUEUE_CONFIG.trimClip.queueName)
 export class TrimClipQueueProcessor extends WorkerHost {
@@ -224,6 +239,11 @@ export class TrimClipQueueProcessor extends WorkerHost {
           outputPath,
         },
       });
+
+      renameSync(
+        inputPath,
+        path.join(successfulFilesDir, path.basename(inputPath)),
+      );
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.name : 'unknown error';
