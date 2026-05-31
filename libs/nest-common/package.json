@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "axios": "*",
-    "axios-retry": "*"
+    "axios-retry": "*",
+    "@universe/contracts-osmium": "workspace:*"
   }
 }

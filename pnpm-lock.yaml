@@ -381,6 +381,9 @@ importers:
 
   libs/nest-common:
     dependencies:
+      '@universe/contracts-osmium':
+        specifier: workspace:*
+        version: link:../contracts-osmium
       axios:
         specifier: '*'
         version: 1.13.4
