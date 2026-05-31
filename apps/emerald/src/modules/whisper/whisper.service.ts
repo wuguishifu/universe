@@ -1,10 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 
 import { spawn } from 'child_process';
 import { once } from 'events';
 import path from 'path';
 
-import { binPath } from '../../app/constants';
+import { OsmiumService } from '@universe/nest-common';
+
+import { binPath, OSMIUM_SERVICE } from '../../constants';
 
 const DEFAULT_WHISPER_TIMEOUT_MS = 5 * 60 * 1000;
 
@@ -15,6 +17,11 @@ type WhisperResult =
 @Injectable()
 export class WhisperService {
   private readonly logger = new Logger(WhisperService.name);
+
+  constructor(
+    @Inject(OSMIUM_SERVICE)
+    private readonly osmiumService: OsmiumService,
+  ) {}
 
   public async transcribeAudio({
     inputPath,
@@ -30,6 +37,7 @@ export class WhisperService {
       path.dirname(inputPath),
       path.parse(inputPath).name,
     );
+    const whisperCli = path.join(binPath, 'whisper-cli');
     const args = [
       '-m',
       path.join(binPath, 'ggml-base.en.bin'),
@@ -48,7 +56,20 @@ export class WhisperService {
     ];
     this.logger.debug(`Spawning Whisper with args: ${args.join(' ')}`);
 
-    const whisperCli = path.join(binPath, 'whisper-cli');
+    const commonTrackingProps = {
+      inputPath,
+      overrideTimeoutMs,
+    };
+
+    this.osmiumService.trackEvent({
+      name: 'whisper_service-transcribe_audio-started',
+      metadata: {
+        ...commonTrackingProps,
+        command: `${whisperCli} ${args.join(' ')}`,
+      },
+    });
+
+    const startTime = Date.now();
     const whisper = spawn(whisperCli, args);
 
     const timeoutMs = overrideTimeoutMs ?? DEFAULT_WHISPER_TIMEOUT_MS;
@@ -60,11 +81,27 @@ export class WhisperService {
     await once(whisper, 'close');
     clearTimeout(timeout);
     if (whisper.exitCode !== 0) {
+      this.osmiumService.trackEvent({
+        name: 'whisper_service-transcribe_audio-failed',
+        metadata: {
+          ...commonTrackingProps,
+          exitCode: whisper.exitCode,
+        },
+      });
+
       return {
         success: false,
         reason: `Whisper exited with code ${whisper.exitCode}`,
       };
     }
+
+    this.osmiumService.trackEvent({
+      name: 'whisper_service-transcribe_audio-succeeded',
+      metadata: {
+        ...commonTrackingProps,
+        processingDurationMs: Date.now() - startTime,
+      },
+    });
 
     return { success: true, outputPath: `${outputBase}.json` };
   }

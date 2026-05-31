@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 
 import { spawn } from 'child_process';
 import { once } from 'events';
@@ -10,6 +10,9 @@ import {
   DEFAULT_PRESET,
   FFmpegFlags,
 } from '@universe/contracts-emerald';
+import { OsmiumService } from '@universe/nest-common';
+
+import { OSMIUM_SERVICE } from '../../constants';
 
 const DEFAULT_FFMPEG_TIMEOUT_MS = 15 * 60 * 1000;
 const DEFAULT_COARSE_WINDOW_MS = 2000;
@@ -29,6 +32,11 @@ type ENCODER =
 export class FFmpegService {
   private readonly logger = new Logger(FFmpegService.name);
 
+  constructor(
+    @Inject(OSMIUM_SERVICE)
+    private readonly osmiumService: OsmiumService,
+  ) {}
+
   public async extractAudio({
     inputPath,
     outputPath,
@@ -40,6 +48,12 @@ export class FFmpegService {
     streamIndex?: number;
     overrideTimeoutMs?: number;
   }): Promise<FFmpegResult> {
+    const commonTrackingProperties = {
+      inputPath,
+      outputPath,
+      streamIndex,
+      overrideTimeoutMs,
+    };
     this.logger.debug(
       `Starting audio extraction for ${inputPath}${streamIndex !== undefined ? ` (stream ${streamIndex})` : ''}`,
     );
@@ -61,7 +75,15 @@ export class FFmpegService {
       outputPath,
     ];
     this.logger.debug(`Spawning FFmpeg with args: ${ffmpegArgs.join(' ')}`);
+    this.osmiumService.trackEvent({
+      name: 'ffmpeg_service-extract_audio-start',
+      metadata: {
+        ...commonTrackingProperties,
+        command: `ffmpeg ${ffmpegArgs.join(' ')}`,
+      },
+    });
 
+    const startTime = Date.now();
     const ffmpeg = spawn('ffmpeg', ffmpegArgs);
     const timeoutMs = overrideTimeoutMs ?? DEFAULT_FFMPEG_TIMEOUT_MS;
     const timeout = setTimeout(() => abortController.abort(), timeoutMs);
@@ -72,11 +94,26 @@ export class FFmpegService {
     await once(ffmpeg, 'close');
     clearTimeout(timeout);
     if (ffmpeg.exitCode !== 0) {
+      this.osmiumService.trackEvent({
+        name: 'ffmpeg_service-extract_audio-failed',
+        metadata: {
+          ...commonTrackingProperties,
+          exitCode: ffmpeg.exitCode,
+        },
+      });
       return {
         success: false,
         reason: `FFmpeg exited with code ${ffmpeg.exitCode}`,
       };
     }
+
+    this.osmiumService.trackEvent({
+      name: 'ffmpeg_service-extract_audio-succeeded',
+      metadata: {
+        ...commonTrackingProperties,
+        processingDurationMs: Date.now() - startTime,
+      },
+    });
 
     return { success: true };
   }
@@ -105,6 +142,17 @@ export class FFmpegService {
     this.logger.debug(
       `Starting ffmpeg process to split video from ${startTimestamp} to ${endTimestamp}`,
     );
+    const commonTrackingProperties = {
+      filePath,
+      startTimestamp,
+      endTimestamp,
+      outputFilePath,
+      timeoutMs,
+      ffmpegFlags,
+      codec,
+      resolution,
+      frameRate,
+    };
 
     const abortController = new AbortController();
 
@@ -163,6 +211,15 @@ export class FFmpegService {
       outputFilePath,
     ];
     this.logger.debug(`Spawning ffmpeg with args: ${ffmpegArgs.join(' ')}`);
+    this.osmiumService.trackEvent({
+      name: 'ffmpeg_service-split_video-start',
+      metadata: {
+        ...commonTrackingProperties,
+        command: `ffmpeg ${ffmpegArgs.join(' ')}`,
+      },
+    });
+
+    const startTime = Date.now();
     const ffmpeg = spawn('ffmpeg', ffmpegArgs);
 
     const timeout = setTimeout(() => abortController.abort(), timeoutMs);
@@ -178,11 +235,26 @@ export class FFmpegService {
     clearTimeout(timeout);
 
     if (ffmpeg.exitCode !== 0) {
+      this.osmiumService.trackEvent({
+        name: 'ffmpeg_service-split_video-failed',
+        metadata: {
+          ...commonTrackingProperties,
+          exitCode: ffmpeg.exitCode,
+        },
+      });
       return {
         success: false,
         reason: `FFmpeg exited with code ${ffmpeg.exitCode}`,
       };
     }
+
+    this.osmiumService.trackEvent({
+      name: 'ffmpeg_service-split_video-succeeded',
+      metadata: {
+        ...commonTrackingProperties,
+        processingDuration: Date.now() - startTime,
+      },
+    });
 
     return { success: true };
   }

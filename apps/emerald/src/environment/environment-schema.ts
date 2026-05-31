@@ -9,4 +9,6 @@ export const environmentSchema = z.object({
   claudeApiToken: z.string(),
   emeraldAdminToken: z.string(),
   redisUrl: z.string(),
+  osmiumBaseUrl: z.string(),
+  osmiumAdminToken: z.string(),
 });

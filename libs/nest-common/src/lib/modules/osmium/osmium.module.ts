@@ -7,7 +7,7 @@ import { OsmiumConfig, OsmiumService } from './osmium.service';
 
 const environmentSchema = z.object({
   OSMIUM_BASE_URL: z.string(),
-  OSMIUM_API_ACCESS_KEY: z.string(),
+  OSMIUM_ADMIN_TOKEN: z.string(),
 });
 
 @Global()
@@ -28,7 +28,7 @@ export class OsmiumModule {
           useValue: {
             ...config,
             osmiumBaseUrl: parsed.OSMIUM_BASE_URL,
-            osmiumApiAccessKey: parsed.OSMIUM_API_ACCESS_KEY,
+            osmiumApiAccessKey: parsed.OSMIUM_ADMIN_TOKEN,
           },
         },
         {

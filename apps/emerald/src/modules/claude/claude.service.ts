@@ -1,10 +1,11 @@
 import { Anthropic } from '@anthropic-ai/sdk';
-import { Stream } from '@anthropic-ai/sdk/core/streaming';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 
+import { OsmiumService } from '@universe/nest-common';
+
+import { OSMIUM_SERVICE } from '../../constants';
 import { EnvironmentService } from '../../environment/environment-service';
 
-type WithRequestId<T> = T & { _requestId?: string | null | undefined };
 type MessageProps = Pick<
   Anthropic.MessageCreateParams,
   'model' | 'messages' | 'system'
@@ -17,7 +18,11 @@ export class ClaudeService {
     apiKey: this.environmentService.environment.claudeApiToken,
   });
 
-  constructor(private readonly environmentService: EnvironmentService) {}
+  constructor(
+    private readonly environmentService: EnvironmentService,
+    @Inject(OSMIUM_SERVICE)
+    private readonly osmiumService: OsmiumService,
+  ) {}
 
   public async createMessage(
     params: MessageProps,
@@ -26,7 +31,7 @@ export class ClaudeService {
   > {
     try {
       const inputCheck = await this.checkInput(params);
-      if (!inputCheck.ok) return inputCheck;
+      if (!inputCheck.ok) throw new Error(inputCheck.reason);
 
       const message = await this.client.messages.create({
         ...params,
@@ -34,35 +39,28 @@ export class ClaudeService {
         stream: false,
       });
 
+      this.osmiumService.trackEvent({
+        name: 'claude_service-create_message-success',
+        metadata: {
+          usage: message.usage,
+          model: message.model,
+          stopDetails: message.stop_details,
+          stopReason: message.stop_reason,
+        },
+      });
+
       return { ok: true, response: message };
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      return { ok: false, reason };
-    }
-  }
-
-  public async createMessageStream(params: MessageProps): Promise<
-    | {
-        ok: true;
-        response: Stream<
-          WithRequestId<Anthropic.Messages.RawMessageStreamEvent>
-        >;
-      }
-    | { ok: false; reason: string }
-  > {
-    try {
-      const inputCheck = await this.checkInput(params);
-      if (!inputCheck.ok) return inputCheck;
-
-      const stream = await this.client.messages.create({
-        ...params,
-        max_tokens: this.maxTokens,
-        stream: true,
+      this.osmiumService.trackEvent({
+        name: 'claude_service-create_message-failed',
+        metadata: {
+          reason,
+          model: params.model,
+          messageCount: params.messages.length,
+          rawMessagesCharacterLength: JSON.stringify(params.messages).length,
+        },
       });
-
-      return { ok: true, response: stream };
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
       return { ok: false, reason };
     }
   }
