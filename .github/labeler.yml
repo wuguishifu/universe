@@ -12,3 +12,9 @@ sapphire:
 
 topaz:
   - apps/topaz/**
+
+osmium:
+  - apps/osmium/**
+
+emerald:
+  - apps/emerald/**
