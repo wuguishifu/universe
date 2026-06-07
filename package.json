@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "prepush": "nx affected -t lint,tsc,circular-deps --base=main --head=HEAD --output-style=static",
+    "prepush": "./tools/scripts/prepush.sh",
     "prepare": "husky",
     "knip": "knip",
     "format": "pnpm prettier --write ."
