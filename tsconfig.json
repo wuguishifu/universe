@@ -50,6 +50,9 @@
     },
     {
       "path": "./libs/db-pluto"
+    },
+    {
+      "path": "./libs/sandbox"
     }
   ]
 }
