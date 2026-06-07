@@ -291,6 +291,8 @@ importers:
         specifier: '*'
         version: 4.5.0(axios@1.13.4)
 
+  libs/sandbox: {}
+
   libs/ui-web: {}
 
   libs/utils-parse: {}
