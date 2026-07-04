@@ -15,7 +15,13 @@ export function TechStackItem({
   iconClassName,
 }: TechStackProps) {
   return (
-    <a className="cursor-pointer" href={href} target="_blank" tabIndex={-1}>
+    <a
+      className="cursor-pointer"
+      href={href}
+      target="_blank"
+      tabIndex={-1}
+      rel="noopener noreferrer"
+    >
       <div className="flex flex-col items-center w-20">
         <Icon className={cn('size-16', iconClassName)} />
         <p className="text-sm select-none">{label}</p>

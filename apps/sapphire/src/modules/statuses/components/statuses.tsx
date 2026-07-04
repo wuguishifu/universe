@@ -59,6 +59,7 @@ export function Statuses() {
                   key={service._id}
                   href={service.link}
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="group"
                 >
                   {content}

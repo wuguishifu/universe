@@ -12,6 +12,7 @@ export function SocialMediaButton({
     <Link
       href={href}
       target="_blank"
+      rel="noopener noreferrer"
       className={cn(
         buttonVariants({ variant: 'default', size: 'icon' }),
         'rounded-full',

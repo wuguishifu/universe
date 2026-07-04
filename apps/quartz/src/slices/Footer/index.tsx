@@ -56,6 +56,7 @@ const Footer: FC<FooterProps> = ({ slice, context }) => {
               <a
                 href={buttonLink.url}
                 target="_blank"
+                rel="noopener noreferrer"
                 className={cn(buttonVariants({ variant: 'default' }))}
               >
                 <span className="text-lg">{buttonLink.text}</span>

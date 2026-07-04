@@ -19,6 +19,7 @@ const maintenanceLinks: LinkItem[] = [
   },
   { href: 'https://thermo.wuguishifu.dev', label: 'thermo', target: '_blank' },
   { href: 'https://vault.wuguishifu.dev', label: 'vault', target: '_blank' },
+  { href: '/apps', label: 'apps' },
 ] as const;
 
 export function Maintenance() {

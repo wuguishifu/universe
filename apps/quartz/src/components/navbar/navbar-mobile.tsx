@@ -110,6 +110,7 @@ export function NavbarMobile() {
                 href="https://github.com/wuguishifu/"
                 onClick={closeDrawer}
                 target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-accent transition-colors"
               >
                 <SiGithub className="opacity-80" size={20} />
@@ -120,6 +121,7 @@ export function NavbarMobile() {
                 href="https://linkedin.com/in/bo-bramer"
                 onClick={closeDrawer}
                 target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-accent transition-colors"
               >
                 <LinkedIn />

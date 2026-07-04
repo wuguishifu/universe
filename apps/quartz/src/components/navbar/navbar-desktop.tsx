@@ -83,6 +83,7 @@ export function NavbarDesktop() {
               href="https://github.com/wuguishifu/"
               className={buttonVariants({ variant: 'ghost', size: 'sm' })}
               target="_blank"
+              rel="noopener noreferrer"
             >
               <SiGithub className="opacity-80" title="" size={20} />
             </Link>
@@ -92,6 +93,7 @@ export function NavbarDesktop() {
               href="https://linkedin.com/in/bo-bramer"
               className={buttonVariants({ variant: 'ghost', size: 'sm' })}
               target="_blank"
+              rel="noopener noreferrer"
             >
               <LinkedIn />
             </Link>
