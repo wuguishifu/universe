@@ -45,6 +45,15 @@
         "startTargetName": "start",
         "serveStaticTargetName": "serve-static"
       }
+    },
+    {
+      "plugin": "@nx/webpack/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "serveTargetName": "webpack-serve",
+        "previewTargetName": "preview",
+        "serveStaticTargetName": "serve-static"
+      }
     }
   ],
   "namedInputs": {

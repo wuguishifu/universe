@@ -5,25 +5,6 @@
   "projectType": "application",
   "tags": ["scope:server"],
   "targets": {
-    "build": {
-      "executor": "@nx/webpack:webpack",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "assets": [],
-        "target": "node",
-        "compiler": "tsc",
-        "outputPath": "dist/apps/topaz",
-        "main": "apps/topaz/src/main.ts",
-        "tsConfig": "apps/topaz/tsconfig.app.json",
-        "isolatedConfig": true,
-        "webpackConfig": "apps/topaz/webpack.config.js"
-      },
-      "configurations": {
-        "development": {},
-        "production": {}
-      }
-    },
     "serve": {
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
@@ -31,12 +12,8 @@
         "buildTarget": "topaz:build"
       },
       "configurations": {
-        "development": {
-          "buildTarget": "topaz:build:development"
-        },
-        "production": {
-          "buildTarget": "topaz:build:production"
-        }
+        "development": {},
+        "production": {}
       }
     },
     "circular-deps": {
