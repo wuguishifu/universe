@@ -15,6 +15,10 @@
     "topaz": {
       "hasSecrets": true,
       "hasConvex": true
+    },
+    "silver": {
+      "hasSecrets": true,
+      "hasConvex": false
     }
   }
 }

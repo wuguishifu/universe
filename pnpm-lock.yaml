@@ -44,6 +44,12 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4.1.17
         version: 4.1.17
+      '@ts-rest/core':
+        specifier: 3.53.0-rc.1
+        version: 3.53.0-rc.1(@types/node@24.1.0)
+      '@ts-rest/nest':
+        specifier: 3.53.0-rc.1
+        version: 3.53.0-rc.1(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))(@ts-rest/core@3.53.0-rc.1(@types/node@24.1.0))(rxjs@7.8.2)
       axios:
         specifier: '*'
         version: 1.13.4
@@ -279,12 +285,15 @@ importers:
 
   apps/silver:
     dependencies:
-      '@universe/hydrogen-kore':
+      '@universe/contracts-silver':
         specifier: workspace:*
-        version: link:../../libs/hydrogen-kore
+        version: link:../../libs/contracts-silver
       '@universe/nest-common':
         specifier: workspace:*
         version: link:../../libs/nest-common
+      '@universe/utils-crypto':
+        specifier: workspace:*
+        version: link:../../libs/utils-crypto
       '@universe/utils-parse':
         specifier: workspace:*
         version: link:../../libs/utils-parse
@@ -301,6 +310,8 @@ importers:
         specifier: workspace:*
         version: link:../../libs/utils-parse
 
+  libs/contracts-silver: {}
+
   libs/hydrogen-kore: {}
 
   libs/nest-common:
@@ -315,6 +326,8 @@ importers:
   libs/sandbox: {}
 
   libs/ui-web: {}
+
+  libs/utils-crypto: {}
 
   libs/utils-parse: {}
 
@@ -3756,6 +3769,22 @@ packages:
   '@ts-graphviz/core@2.0.7':
     resolution: {integrity: sha512-w071DSzP94YfN6XiWhOxnLpYT3uqtxJBDYdh6Jdjzt+Ce6DNspJsPQgpC7rbts/B8tEkq0LHoYuIF/O5Jh5rPg==}
     engines: {node: '>=18'}
+
+  '@ts-rest/core@3.53.0-rc.1':
+    resolution: {integrity: sha512-hDMXqKHSys6w+kXFW1Q6EvN8QgRvtXKXJ2TpYByKI4TquaPjiTOv99aLD26X4LNRzdna8Ci1PVyzr0jYZv0oNQ==}
+    peerDependencies:
+      '@types/node': ^18.18.7 || >=20.8.4
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+
+  '@ts-rest/nest@3.53.0-rc.1':
+    resolution: {integrity: sha512-tiuxTwXElFrAGFiUpqn78HmGgVY848D5s+uz/wCQwzRgPsfEneeZwOnEtxvXyrAp6tS5VtbVIxrI/kD+yR2zjw==}
+    peerDependencies:
+      '@nestjs/common': ^9.0.0 || ^10.0.0 || ^11.0.0
+      '@nestjs/core': ^9.0.0 || ^10.0.0 || ^11.0.0
+      '@ts-rest/core': 3.53.0-rc.1
+      rxjs: ^7.1.0
 
   '@tsconfig/node10@1.0.11':
     resolution: {integrity: sha512-DcRjDCujK/kCk/cUe8Xz8ZSpm8mS3mNNpta+jGCA6USEDfktlNvm1+IuZ9eTcDbNk41BHwpHHeW+N1lKCz4zOw==}
@@ -13710,6 +13739,17 @@ snapshots:
     dependencies:
       '@ts-graphviz/ast': 2.0.7
       '@ts-graphviz/common': 2.1.5
+
+  '@ts-rest/core@3.53.0-rc.1(@types/node@24.1.0)':
+    optionalDependencies:
+      '@types/node': 24.1.0
+
+  '@ts-rest/nest@3.53.0-rc.1(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))(@ts-rest/core@3.53.0-rc.1(@types/node@24.1.0))(rxjs@7.8.2)':
+    dependencies:
+      '@nestjs/common': 11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core': 11.1.19(@nestjs/common@11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@ts-rest/core': 3.53.0-rc.1(@types/node@24.1.0)
+      rxjs: 7.8.2
 
   '@tsconfig/node10@1.0.11': {}
 

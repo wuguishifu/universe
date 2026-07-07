@@ -35,6 +35,12 @@
     },
     {
       "path": "./apps/silver"
+    },
+    {
+      "path": "./libs/contracts-silver"
+    },
+    {
+      "path": "./libs/utils-crypto"
     }
   ]
 }
