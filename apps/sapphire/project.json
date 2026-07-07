@@ -4,7 +4,6 @@
   "sourceRoot": "apps/sapphire",
   "projectType": "application",
   "tags": ["scope:hybrid"],
-  "// targets": "to see all targets run: nx show project sapphire --web",
   "targets": {
     "clean": {
       "executor": "nx:run-commands",
@@ -13,36 +12,17 @@
       }
     },
     "build": {
-      "executor": "@nx/next:build",
-      "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
-      "dependsOn": ["clean", "^build"],
-      "options": {
-        "outputPath": "apps/sapphire"
-      },
-      "configurations": {
-        "development": {},
-        "staging": {},
-        "production": {}
-      }
+      "dependsOn": ["clean", "^build"]
     },
     "serve": {
-      "executor": "@nx/next:server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "sapphire:build",
-        "dev": true,
         "port": 4201
       },
       "configurations": {
-        "development": {
-          "buildTarget": "sapphire:build:development",
-          "dev": true
-        },
-        "production": {
-          "buildTarget": "sapphire:build:production",
-          "dev": false
-        }
+        "development": {},
+        "production": {}
       }
     },
     "typecheck": {
