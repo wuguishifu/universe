@@ -34,6 +34,6 @@ export const filesRouter = c.router(
     },
   },
   {
-    pathPrefix: '/file',
+    pathPrefix: '/files',
   },
 );
