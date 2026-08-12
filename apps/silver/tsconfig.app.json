@@ -22,9 +22,6 @@
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "references": [
     {
-      "path": "../../libs/utils-crypto/tsconfig.lib.json"
-    },
-    {
       "path": "../../libs/contracts-silver/tsconfig.lib.json"
     },
     {

@@ -4,7 +4,6 @@
   "private": true,
   "dependencies": {
     "@universe/nest-common": "workspace:*",
-    "@universe/contracts-silver": "workspace:*",
-    "@universe/utils-crypto": "workspace:*"
+    "@universe/contracts-silver": "workspace:*"
   }
 }

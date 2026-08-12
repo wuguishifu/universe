@@ -291,9 +291,6 @@ importers:
       '@universe/nest-common':
         specifier: workspace:*
         version: link:../../libs/nest-common
-      '@universe/utils-crypto':
-        specifier: workspace:*
-        version: link:../../libs/utils-crypto
 
   apps/topaz:
     dependencies:
@@ -320,8 +317,6 @@ importers:
   libs/sandbox: {}
 
   libs/ui-web: {}
-
-  libs/utils-crypto: {}
 
   libs/utils-web: {}
 
