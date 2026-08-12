@@ -28,9 +28,6 @@
       "path": "../../libs/contracts-silver/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/utils-parse/tsconfig.lib.json"
-    },
-    {
       "path": "../../libs/nest-common/tsconfig.lib.json"
     }
   ]

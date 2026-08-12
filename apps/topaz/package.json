@@ -4,7 +4,6 @@
   "private": true,
   "dependencies": {
     "@universe/hydrogen-kore": "workspace:*",
-    "@universe/nest-common": "workspace:*",
-    "@universe/utils-parse": "workspace:*"
+    "@universe/nest-common": "workspace:*"
   }
 }

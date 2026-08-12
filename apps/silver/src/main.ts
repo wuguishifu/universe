@@ -27,15 +27,6 @@ async function bootstrap() {
     },
   );
 
-  const fastifyInstance = app.getHttpAdapter().getInstance();
-
-  // File uploads are streamed straight to disk via `req.raw`, so skip Fastify's
-  // body parsing for any content type it doesn't already handle (json/urlencoded)
-  // to avoid it buffering/consuming the stream before the handler runs.
-  fastifyInstance.addContentTypeParser('*', (_req, _payload, done) => {
-    done(null);
-  });
-
   app.enableCors();
 
   const port = process.env.PORT || 3001;

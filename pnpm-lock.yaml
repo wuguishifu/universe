@@ -294,9 +294,6 @@ importers:
       '@universe/utils-crypto':
         specifier: workspace:*
         version: link:../../libs/utils-crypto
-      '@universe/utils-parse':
-        specifier: workspace:*
-        version: link:../../libs/utils-parse
 
   apps/topaz:
     dependencies:
@@ -306,9 +303,6 @@ importers:
       '@universe/nest-common':
         specifier: workspace:*
         version: link:../../libs/nest-common
-      '@universe/utils-parse':
-        specifier: workspace:*
-        version: link:../../libs/utils-parse
 
   libs/contracts-silver: {}
 
@@ -328,8 +322,6 @@ importers:
   libs/ui-web: {}
 
   libs/utils-crypto: {}
-
-  libs/utils-parse: {}
 
   libs/utils-web: {}
 

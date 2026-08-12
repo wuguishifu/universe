@@ -16,9 +16,6 @@
       "path": "./libs/nest-common"
     },
     {
-      "path": "./libs/utils-parse"
-    },
-    {
       "path": "./apps/hydrogen"
     },
     {
