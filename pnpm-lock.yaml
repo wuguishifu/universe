@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@convex-dev/resend':
         specifier: ^0.2.3
-        version: 0.2.3(convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@3.21.4))(convex@1.37.0(react@19.0.0))(react@19.0.0)
+        version: 0.2.3(convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@4.3.6))(convex@1.37.0(react@19.0.0))(react@19.0.0)
       '@icons-pack/react-simple-icons':
         specifier: ^13.13.0
         version: 13.13.0(react@19.0.0)
@@ -67,7 +67,7 @@ importers:
         version: 1.37.0(react@19.0.0)
       convex-helpers:
         specifier: ^0.1.115
-        version: 0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@3.21.4)
+        version: 0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@4.3.6)
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
@@ -120,8 +120,8 @@ importers:
         specifier: ^2.8.2
         version: 2.8.2
       zod:
-        specifier: ^3.21.4
-        version: 3.21.4
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@convex-dev/eslint-plugin':
         specifier: ^2.0.0
@@ -2553,6 +2553,7 @@ packages:
 
   '@oslojs/crypto@1.0.1':
     resolution: {integrity: sha512-7n08G8nWjAr/Yu3vu9zzrd0L9XnrJfpMioQcvCMxBIiF5orECHe5/3J0jmXRVvgfqMm/+4oxlQ+Sq39COYLcNQ==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   '@oslojs/encoding@1.1.0':
     resolution: {integrity: sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==}
@@ -5092,6 +5093,7 @@ packages:
   cron-parser@4.9.0:
     resolution: {integrity: sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q==}
     engines: {node: '>=12.0.0'}
+    deprecated: v4 is no longer maintained, upgrade to v5
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -9832,9 +9834,6 @@ packages:
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
-  zod@3.21.4:
-    resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
-
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
@@ -10753,12 +10752,12 @@ snapshots:
     optionalDependencies:
       react: 19.0.0
 
-  '@convex-dev/resend@0.2.3(convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@3.21.4))(convex@1.37.0(react@19.0.0))(react@19.0.0)':
+  '@convex-dev/resend@0.2.3(convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@4.3.6))(convex@1.37.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@convex-dev/rate-limiter': 0.3.2(convex@1.37.0(react@19.0.0))(react@19.0.0)
-      '@convex-dev/workpool': 0.3.2(convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@3.21.4))(convex@1.37.0(react@19.0.0))
+      '@convex-dev/workpool': 0.3.2(convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@4.3.6))(convex@1.37.0(react@19.0.0))
       convex: 1.37.0(react@19.0.0)
-      convex-helpers: 0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@3.21.4)
+      convex-helpers: 0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@4.3.6)
       remeda: 2.34.0
       resend: 6.12.2
       svix: 1.92.2
@@ -10766,10 +10765,10 @@ snapshots:
       - '@react-email/render'
       - react
 
-  '@convex-dev/workpool@0.3.2(convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@3.21.4))(convex@1.37.0(react@19.0.0))':
+  '@convex-dev/workpool@0.3.2(convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@4.3.6))(convex@1.37.0(react@19.0.0))':
     dependencies:
       convex: 1.37.0(react@19.0.0)
-      convex-helpers: 0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@3.21.4)
+      convex-helpers: 0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@4.3.6)
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -15170,14 +15169,14 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@3.21.4):
+  convex-helpers@0.1.115(@standard-schema/spec@1.0.0)(convex@1.37.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3)(zod@4.3.6):
     dependencies:
       convex: 1.37.0(react@19.0.0)
     optionalDependencies:
       '@standard-schema/spec': 1.0.0
       react: 19.0.0
       typescript: 5.9.3
-      zod: 3.21.4
+      zod: 4.3.6
 
   convex@1.37.0(react@19.0.0):
     dependencies:
@@ -20758,8 +20757,6 @@ snapshots:
   zod-validation-error@4.0.2(zod@3.25.76):
     dependencies:
       zod: 3.25.76
-
-  zod@3.21.4: {}
 
   zod@3.25.76: {}
 
