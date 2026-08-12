@@ -2,6 +2,9 @@
   "apps": {
     "topaz": {
       "registryPath": "wuguishifu/universe/topaz"
+    },
+    "silver": {
+      "registryPath": "wuguishifu/universe/silver"
     }
   }
 }
