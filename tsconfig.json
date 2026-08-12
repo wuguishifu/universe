@@ -16,9 +16,6 @@
       "path": "./libs/nest-common"
     },
     {
-      "path": "./libs/utils-parse"
-    },
-    {
       "path": "./apps/hydrogen"
     },
     {
@@ -32,6 +29,12 @@
     },
     {
       "path": "./libs/sandbox"
+    },
+    {
+      "path": "./apps/silver"
+    },
+    {
+      "path": "./libs/contracts-silver"
     }
   ]
 }

@@ -1,6 +1,6 @@
 name: Deploy Server App
 
-run-name: ${{ inputs.app }} - deploy ${{ inputs.environment }}
+run-name: ${{ inputs.app }}
 
 on:
   workflow_dispatch:
@@ -11,12 +11,7 @@ on:
         type: choice
         options:
           - topaz
-      environment:
-        description: 'Environment'
-        required: true
-        type: choice
-        options:
-          - production
+          - silver
       version-bump-type:
         description: 'Version bump type'
         required: true
@@ -26,8 +21,12 @@ on:
           - minor
           - major
 
+permissions:
+  contents: read
+  packages: write
+
 concurrency:
-  group: deploy-${{ inputs.app }}-${{ inputs.environment }}
+  group: deploy-${{ inputs.app }}
   cancel-in-progress: true
 
 env:
@@ -36,7 +35,7 @@ env:
 
 jobs:
   deploy:
-    name: Deploy ${{ inputs.app }} to ${{ inputs.environment }}
+    name: Deploy ${{ inputs.app }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -52,7 +51,7 @@ jobs:
           CONFIG_PATH=".apps.\"${{ inputs.app }}\""
           REGISTRY_PATH=$(echo "$CONFIG" | jq -r "$CONFIG_PATH.registryPath")
           if [ "$REGISTRY_PATH" == "null" ]; then
-            echo "Error: Invalid configuration for app '${{ inputs.app }}' in environment '${{ inputs.environment }}'."
+            echo "Error: Invalid configuration for app '${{ inputs.app }}'."
             exit 1
           fi
 
@@ -66,7 +65,7 @@ jobs:
       - name: Get docker version
         id: docker_version
         run: |
-          ./.github/scripts/versioning/docker-version.sh ${{ env.REGISTRY }} ${{ steps.config.outputs.registry_path }} ${{ steps.version.outputs.version }} ${{ inputs.environment }}
+          ./.github/scripts/versioning/docker-version.sh ${{ env.REGISTRY }} ${{ steps.config.outputs.registry_path }} ${{ steps.version.outputs.version }}
 
       - name: Login to GHCR
         uses: docker/login-action@v3

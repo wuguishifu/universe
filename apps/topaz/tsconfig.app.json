@@ -22,9 +22,6 @@
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "references": [
     {
-      "path": "../../libs/utils-parse/tsconfig.lib.json"
-    },
-    {
       "path": "../../libs/nest-common/tsconfig.lib.json"
     },
     {

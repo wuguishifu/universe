@@ -1,15 +1,16 @@
 {
-  "name": "utils-parse",
+  "name": "contracts-silver",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/utils-parse/src",
+  "sourceRoot": "libs/contracts-silver/src",
   "projectType": "library",
   "tags": ["scope:shared"],
+  "// targets": "to see all targets run: nx show project contracts-silver --web",
   "targets": {
     "circular-deps": {
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude '(^|/)convex/_generated(/|$)'",
-        "cwd": "libs/utils-parse"
+        "cwd": "libs/contracts-silver"
       }
     }
   }

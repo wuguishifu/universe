@@ -1,0 +1,9 @@
+{
+  "name": "@universe/silver",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@universe/nest-common": "workspace:*",
+    "@universe/contracts-silver": "workspace:*"
+  }
+}

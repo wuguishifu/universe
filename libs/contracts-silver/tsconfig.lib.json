@@ -11,7 +11,9 @@
     "forceConsistentCasingInFileNames": true,
     "jsx": "react-jsx",
     "lib": ["es2022", "dom", "dom.iterable"],
-    "types": ["node"]
+    "types": ["node"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "references": []
