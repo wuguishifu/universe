@@ -34,6 +34,6 @@ ENV ENVIRONMENT=${BUILD_ENV}
 COPY --from=build_image /app/dist/apps/silver ./dist
 COPY --from=build_image /app/node_modules ./node_modules
 
-EXPOSE 3000
+EXPOSE 3001
 
 CMD ["node", "dist/main.js"]

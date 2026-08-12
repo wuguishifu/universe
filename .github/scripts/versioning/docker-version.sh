@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
-if [ $# -lt 4 ]; then
+if [ $# -lt 3 ]; then
   echo "Usage: $0 <registry_host> <registry_path> <version>"
   echo "Example: $0 ghcr.io wuguishifu/universe/topaz 1.0.0 production"
   exit 1
