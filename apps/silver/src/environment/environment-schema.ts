@@ -11,6 +11,7 @@ export const environmentSchema = z
     s3Region: z.string().min(1),
     s3SecretAccessKey: z.string().min(1),
     silverAdminApiToken: z.string().min(1),
+    redisUrl: z.string().min(1),
   })
   .transform(({ silverAdminApiToken: adminApiToken, ...data }) => {
     return {

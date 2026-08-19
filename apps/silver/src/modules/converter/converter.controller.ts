@@ -12,8 +12,8 @@ export class ConverterController {
     return tsRestHandler(
       silverRootRouter.converter.convert,
       async ({ body }) => {
-        const url = await this.converterService.convert(body.url);
-        return { status: 200, body: url };
+        await this.converterService.queueConversionJob(body.url);
+        return { status: 200, body: 'ok' };
       },
     );
   }

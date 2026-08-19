@@ -10,7 +10,7 @@ export const converterRouter = c.router(
         url: z.url(),
       }),
       responses: {
-        200: z.string(),
+        200: z.literal('ok'),
       },
     },
   },
