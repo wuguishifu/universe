@@ -22,6 +22,12 @@
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "references": [
     {
+      "path": "../../libs/hydrogen-kore/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/queue/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/contracts-silver/tsconfig.lib.json"
     },
     {

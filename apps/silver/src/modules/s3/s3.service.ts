@@ -1,5 +1,6 @@
 import {
   GetObjectCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   PutObjectCommandOutput,
   S3Client,
@@ -21,7 +22,7 @@ export class S3Service {
         accessKeyId: this.environmentService.environment.s3AccessKeyId,
         secretAccessKey: this.environmentService.environment.s3SecretAccessKey,
       },
-      forcePathStyle: true,
+      forcePathStyle: this.environmentService.environment.s3ForcePathStyle,
     });
   }
 
@@ -44,14 +45,30 @@ export class S3Service {
     );
   }
 
-  public getSignedUrl({ key }: { key: string }): Promise<string> {
+  public getSignedUrl(key: string): Promise<string> {
     return getSignedUrl(
       this.s3Client,
       new GetObjectCommand({
         Bucket: this.environmentService.environment.s3Bucket,
         Key: key,
+        ResponseContentDisposition: `attachment; filename="${key}"`,
       }),
       { expiresIn: 60 * 15 },
     );
+  }
+
+  public async exists(key: string): Promise<boolean> {
+    try {
+      await this.s3Client.send(
+        new HeadObjectCommand({
+          Bucket: this.environmentService.environment.s3Bucket,
+          Key: key,
+        }),
+      );
+
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }

@@ -35,6 +35,9 @@
     },
     {
       "path": "./libs/contracts-silver"
+    },
+    {
+      "path": "./libs/queue"
     }
   ]
 }

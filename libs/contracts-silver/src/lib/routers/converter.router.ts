@@ -7,10 +7,10 @@ export const converterRouter = c.router(
       path: '/',
       method: 'POST',
       body: z.object({
-        url: z.url(),
+        videoId: z.string().regex(/^[A-Za-z0-9_-]{11}$/),
       }),
       responses: {
-        200: z.string(),
+        200: z.literal('ok'),
       },
     },
   },

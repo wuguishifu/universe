@@ -8,7 +8,7 @@
       "publicPrefix": "NEXT_PUBLIC_"
     },
     "sapphire": {
-      "hasSecrets": false,
+      "hasSecrets": true,
       "hasConvex": true,
       "publicPrefix": "NEXT_PUBLIC_"
     },
@@ -18,7 +18,7 @@
     },
     "silver": {
       "hasSecrets": true,
-      "hasConvex": false
+      "hasConvex": true
     }
   }
 }

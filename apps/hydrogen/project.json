@@ -18,6 +18,13 @@
         ]
       }
     },
+    "codegen": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/hydrogen",
+        "command": "nx convex hydrogen -- codegen"
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "options": {

@@ -1,9 +1,10 @@
+import { RouteSpec } from 'convex/server';
 import { v } from 'convex/values';
 import { z } from 'zod';
 import { internal } from '../../_generated/api';
 import { internalMutation, query } from '../../_generated/server';
 import { httpPostAction } from '../../common/functions/customFunctions';
-import { systemStatus } from '../../schema';
+import { systemStatus } from '../tables';
 
 export const list = query({
   args: {},
@@ -60,3 +61,11 @@ export const reportStatusesHandler = httpPostAction({
     return new Response(null, { status: 204 });
   },
 });
+
+export const routes: RouteSpec[] = [
+  {
+    path: '/topaz/report-status',
+    method: 'POST',
+    handler: reportStatusesHandler,
+  },
+];
