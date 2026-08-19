@@ -1,12 +1,8 @@
 import { httpRouter } from 'convex/server';
-import { reportStatusesHandler } from './sapphire/v1/systemStatuses';
+import { routes } from './routes';
 
 const http = httpRouter();
 
-http.route({
-  path: '/topaz/report-status',
-  method: 'POST',
-  handler: reportStatusesHandler,
-});
+routes.forEach((route) => http.route(route));
 
 export default http;

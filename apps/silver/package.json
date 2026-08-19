@@ -5,6 +5,7 @@
   "dependencies": {
     "@universe/nest-common": "workspace:*",
     "@universe/contracts-silver": "workspace:*",
-    "@universe/queue": "workspace:*"
+    "@universe/queue": "workspace:*",
+    "@universe/hydrogen-kore": "workspace:*"
   }
 }

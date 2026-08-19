@@ -306,6 +306,9 @@ importers:
       '@universe/contracts-silver':
         specifier: workspace:*
         version: link:../../libs/contracts-silver
+      '@universe/hydrogen-kore':
+        specifier: workspace:*
+        version: link:../../libs/hydrogen-kore
       '@universe/nest-common':
         specifier: workspace:*
         version: link:../../libs/nest-common
