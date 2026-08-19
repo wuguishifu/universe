@@ -8,9 +8,6 @@ export default function YoutubeToMp3Page() {
         <h2>youtube to mp3</h2>
       </Section>
       <Section>
-        <p className="font-vga text-white/70 text-sm mb-2">
-          paste a youtube watch link and get an mp3 back.
-        </p>
         <ConvertForm />
       </Section>
     </main>

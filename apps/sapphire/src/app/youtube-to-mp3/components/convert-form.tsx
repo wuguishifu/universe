@@ -37,12 +37,12 @@ export function ConvertForm() {
           placeholder="https://www.youtube.com/watch?v=..."
           autoComplete="off"
           spellCheck={false}
-          className="flex-1 bg-transparent border border-gray-400/20 rounded-sm px-3 py-2 placeholder:text-white/30 focus:border-highlight/40 outline-none"
+          className="flex-1 bg-transparent rounded-sm px-3 py-2 placeholder:text-white/30 focus:border-highlight/40 outline-none"
         />
         <button
           type="submit"
           disabled={isPending}
-          className="px-4 py-2 border border-gray-400/20 rounded-sm hover:bg-gray-400/10 transition-all duration-150 disabled:opacity-50 flex items-center gap-2"
+          className="px-4 py-2 rounded-lg hover:bg-gray-400/10 transition-all duration-150 disabled:opacity-50 flex items-center gap-2"
         >
           {isPending && <Spinner />}
           convert
