@@ -4,6 +4,7 @@ import { LinkItem, LinksSection } from './links-section';
 const navLinks: LinkItem[] = [
   { href: '/', label: 'home' },
   { href: '/the-list', label: 'the list' },
+  { href: '/youtube-to-mp3', label: 'yt to mp3' },
 ] as const;
 
 export function Tp() {

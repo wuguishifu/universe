@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { mutation } from '../../_generated/server';
+import { mutation, query } from '../../_generated/server';
 import { status } from '../tables';
 
 export const upsertRecord = mutation({
@@ -44,5 +44,19 @@ export const updateStatus = mutation({
       status,
       statusDescription,
     });
+  },
+});
+
+export const getRecord = query({
+  args: {
+    youtubeId: v.string(),
+  },
+  handler: async (ctx, { youtubeId }) => {
+    const item = await ctx.db
+      .query('convertedAudioFiles')
+      .withIndex('by_youtubeId', (q) => q.eq('youtubeId', youtubeId))
+      .first();
+
+    return item;
   },
 });

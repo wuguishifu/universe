@@ -9,7 +9,7 @@ import { Box } from '../../types';
 import { ConvexClientService } from '../common/convex-client.service';
 import { S3Service } from '../s3/s3.service';
 import { YtDlpService } from '../ytdlp/ytdlp.service';
-import { extractYoutubeId, s3Key } from './youtube-id';
+import { s3Key, watchUrl } from './youtube-id';
 
 @Processor(SILVER_QUEUE_CONFIG.youtubeConverter.queueName)
 export class ConverterQueueProcessor
@@ -44,22 +44,23 @@ export class ConverterQueueProcessor
   }
 
   override async process(job: SilverQueueJob<'youtubeConverter'>) {
-    const { url } = job.data;
-    const youtubeId = extractYoutubeId(url, this.logger.error);
-    if (!youtubeId) return;
+    const { videoId: youtubeId } = job.data;
 
     const key = s3Key(youtubeId);
-    if (await this.s3Service.exists(key)) return;
+    if (await this.s3Service.exists(key)) {
+      await this.updateStatus(youtubeId, 'completed');
+      return;
+    }
 
     const outputPath = path.join(this.tempDir, key);
 
     const cleanUp = () => {
-      rmSync(outputPath);
+      rmSync(outputPath, { force: true });
     };
 
     await this.updateStatus(youtubeId, 'processing', 'downloading');
     const downloadResult = await this.ytDlpService.downloadYoutubeVideo({
-      url,
+      url: watchUrl(youtubeId),
       outputPath,
     });
 

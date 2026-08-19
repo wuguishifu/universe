@@ -22,7 +22,7 @@ export class S3Service {
         accessKeyId: this.environmentService.environment.s3AccessKeyId,
         secretAccessKey: this.environmentService.environment.s3SecretAccessKey,
       },
-      forcePathStyle: true,
+      forcePathStyle: this.environmentService.environment.s3ForcePathStyle,
     });
   }
 
@@ -51,6 +51,7 @@ export class S3Service {
       new GetObjectCommand({
         Bucket: this.environmentService.environment.s3Bucket,
         Key: key,
+        ResponseContentDisposition: `attachment; filename="${key}"`,
       }),
       { expiresIn: 60 * 15 },
     );

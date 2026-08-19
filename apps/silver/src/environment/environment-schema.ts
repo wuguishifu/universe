@@ -10,6 +10,7 @@ export const environmentSchema = z
     s3Endpoint: z.string().min(1),
     s3Region: z.string().min(1),
     s3SecretAccessKey: z.string().min(1),
+    s3ForcePathStyle: z.stringbool().default(false),
     silverAdminApiToken: z.string().min(1),
     redisUrl: z.string().min(1),
     convexUrl: z.string().min(1),

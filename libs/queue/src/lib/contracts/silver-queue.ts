@@ -7,7 +7,7 @@ export const SILVER_QUEUE_CONFIG = {
     queueName: 'youtube-converter',
     jobName: 'convert-youtube-video',
     jobSchema: z.object({
-      url: z.url(),
+      videoId: z.string(),
     }),
   },
 } satisfies Record<string, QueueConfig>;

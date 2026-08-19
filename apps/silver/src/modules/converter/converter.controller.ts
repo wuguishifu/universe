@@ -12,7 +12,7 @@ export class ConverterController {
     return tsRestHandler(
       silverRootRouter.converter.convert,
       async ({ body }) => {
-        await this.converterService.queueConversionJob(body.url);
+        await this.converterService.queueConversionJob(body.videoId);
         return { status: 200, body: 'ok' };
       },
     );
