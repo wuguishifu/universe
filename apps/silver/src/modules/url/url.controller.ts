@@ -12,7 +12,7 @@ export class UrlController {
     return tsRestHandler(
       silverRootRouter.url.getSignedUrl,
       async ({ query }) => {
-        const url = await this.s3Service.getSignedUrl({ key: query.s3Key });
+        const url = await this.s3Service.getSignedUrl(query.s3Key);
         return { status: 200, body: url };
       },
     );

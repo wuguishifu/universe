@@ -49,6 +49,7 @@ export class ConverterQueueProcessor
     if (!youtubeId) return;
 
     const key = s3Key(youtubeId);
+    if (await this.s3Service.exists(key)) return;
 
     const outputPath = path.join(this.tempDir, key);
 
@@ -89,7 +90,7 @@ export class ConverterQueueProcessor
         contentType: 'audio/mp3',
       });
 
-      const signedUrl = await this.s3Service.getSignedUrl({ key });
+      const signedUrl = await this.s3Service.getSignedUrl(key);
       this.logger.log(signedUrl);
       await this.updateStatus(youtubeId, 'completed');
     } catch (error) {
