@@ -17,11 +17,12 @@ export class YtDlpService {
     const abortController = new AbortController();
     const process = spawn('yt-dlp', [
       '--extract-audio',
+      '--extractor-args',
+      'youtube:player_client=android',
       '--audio-format',
       'mp3',
       '--audio-quality',
       '0',
-      '-U',
       '-o',
       outputPath,
       url,
