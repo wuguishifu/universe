@@ -18,8 +18,11 @@ export async function requestConversion(
   try {
     const result = await silverApi.converter.convert({ body: { videoId } });
     if (result.status !== 200) return { error: 'failed to queue conversion' };
-  } catch {
-    return { error: 'failed to queue conversion' };
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error ? error.message : 'failed to queue conversion',
+    };
   }
 
   redirect(`/youtube-to-mp3/${videoId}`);
@@ -45,7 +48,11 @@ export async function getDownloadUrl(
     }
 
     return { success: true, url: result.body };
-  } catch {
-    return { success: false, error: 'failed to get download link' };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'failed to get download link',
+    };
   }
 }
