@@ -19,10 +19,11 @@ ENV VERSION=${VERSION}
 
 RUN pnpm install --frozen-lockfile
 
+# emits dist/apps/topaz with main.js plus a pruned package.json + pnpm-lock.yaml
+# (generatePackageJson in webpack.config.js)
 RUN NX_DAEMON=false ENVIRONMENT=$BUILD_ENV pnpm nx build topaz
 
-# remove development dependencies
-RUN npm prune --production --legacy-peer-deps
+RUN node tools/scripts/prune-deploy-manifest.mjs dist/apps/topaz/package.json
 
 FROM node:22-slim
 
@@ -31,9 +32,20 @@ ARG BUILD_ENV
 ENV VERSION=${VERSION}
 ENV ENVIRONMENT=${BUILD_ENV}
 
-COPY --from=build_image /app/dist/apps/topaz ./dist
-COPY --from=build_image /app/node_modules ./node_modules
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+ENV COREPACK_INTEGRITY_KEYS="0"
+RUN corepack enable
+
+WORKDIR /app
+
+COPY --from=build_image /app/dist/apps/topaz ./
+
+# --no-frozen-lockfile because the pruned manifest no longer matches the
+# generated lockfile's workspace entries; versions stay pinned by the lockfile
+RUN pnpm install --prod --ignore-scripts --no-frozen-lockfile \
+    && rm -rf "$(pnpm store path)"
 
 EXPOSE 3000
 
-CMD ["node", "dist/main.js"]
+CMD ["node", "main.js"]

@@ -6,6 +6,7 @@
     "@universe/nest-common": "workspace:*",
     "@universe/contracts-silver": "workspace:*",
     "@universe/queue": "workspace:*",
-    "@universe/hydrogen-kore": "workspace:*"
+    "@universe/hydrogen-kore": "workspace:*",
+    "tslib": "^2.3.0"
   }
 }

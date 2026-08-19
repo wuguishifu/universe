@@ -19,10 +19,11 @@ ENV VERSION=${VERSION}
 
 RUN pnpm install --frozen-lockfile
 
+# emits dist/apps/silver with main.js plus a pruned package.json + pnpm-lock.yaml
+# (generatePackageJson in webpack.config.js)
 RUN NX_DAEMON=false ENVIRONMENT=$BUILD_ENV pnpm nx build silver
 
-# remove development dependencies
-RUN npm prune --production --legacy-peer-deps
+RUN node tools/scripts/prune-deploy-manifest.mjs dist/apps/silver/package.json
 
 FROM node:22-slim
 
@@ -30,6 +31,11 @@ ARG VERSION
 ARG BUILD_ENV
 ENV VERSION=${VERSION}
 ENV ENVIRONMENT=${BUILD_ENV}
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+ENV COREPACK_INTEGRITY_KEYS="0"
+RUN corepack enable
 
 # ffmpeg is required by yt-dlp for audio extraction; python3 is required to run yt-dlp.
 # yt-dlp comes from GitHub releases rather than apt because YouTube frequently
@@ -42,10 +48,16 @@ RUN apt-get update \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=build_image /app/dist/apps/silver ./dist
-COPY --from=build_image /app/node_modules ./node_modules
+WORKDIR /app
+
+COPY --from=build_image /app/dist/apps/silver ./
+
+# --no-frozen-lockfile because the pruned manifest no longer matches the
+# generated lockfile's workspace entries; versions stay pinned by the lockfile
+RUN pnpm install --prod --ignore-scripts --no-frozen-lockfile \
+    && rm -rf "$(pnpm store path)"
 
 EXPOSE 3001
 
 # self-update yt-dlp on startup; don't block startup if the update fails
-CMD ["sh", "-c", "yt-dlp -U || true; exec node dist/main.js"]
+CMD ["sh", "-c", "yt-dlp -U || true; exec node main.js"]
