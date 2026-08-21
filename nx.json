@@ -106,5 +106,8 @@
     }
   },
   "analytics": false,
-  "neverConnectToCloud": true
+  "neverConnectToCloud": true,
+  "migrate": {
+    "agentic": true
+  }
 }
