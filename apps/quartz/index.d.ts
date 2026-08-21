@@ -1,8 +1,8 @@
-import { FunctionComponent, SVGProps } from 'react';
-
 declare module '*.svg' {
   const content: string;
-  export const ReactComponent: FunctionComponent<SVGProps<SVGSVGElement>>;
+  export const ReactComponent: import('react').FunctionComponent<
+    import('react').SVGProps<SVGSVGElement>
+  >;
   export default content;
 }
 declare module '*.jpg';
