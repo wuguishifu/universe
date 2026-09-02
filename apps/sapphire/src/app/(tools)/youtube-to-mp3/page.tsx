@@ -1,4 +1,4 @@
-import { Section } from '../../modules/layout/section';
+import { Section } from '../../../modules/layout/section';
 import { ConvertForm } from './components/convert-form';
 
 export default function YoutubeToMp3Page() {

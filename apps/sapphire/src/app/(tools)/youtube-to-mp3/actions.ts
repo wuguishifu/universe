@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { silverApi } from '../../modules/server/silver-api';
+import { silverApi } from '../../../modules/server/silver-api';
 import { extractYoutubeVideoId, isYoutubeVideoId } from './lib/youtube';
 
 export type ConvertFormState = { error: string } | null;

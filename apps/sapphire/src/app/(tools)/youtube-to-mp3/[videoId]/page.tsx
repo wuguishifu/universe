@@ -1,4 +1,4 @@
-import { Section } from '../../../modules/layout/section';
+import { Section } from '../../../../modules/layout/section';
 import { ConversionStatus } from './components/conversion-status';
 
 export default async function VideoConvertPage({

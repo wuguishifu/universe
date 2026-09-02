@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { api } from '@universe/hydrogen-kore';
 import { cn, Spinner } from '@universe/ui-web';
-import { useQuery } from '../../../../modules/convex/use-query';
-import { Section } from '../../../../modules/layout/section';
+import { useQuery } from '../../../../../modules/convex/use-query';
+import { Section } from '../../../../../modules/layout/section';
 import { getDownloadUrl } from '../../actions';
 
 export function ConversionStatus({ videoId }: { videoId: string }) {
@@ -39,7 +39,8 @@ export function ConversionStatus({ videoId }: { videoId: string }) {
     );
   }
 
-  const inProgress = record.status === 'queued' || record.status === 'processing';
+  const inProgress =
+    record.status === 'queued' || record.status === 'processing';
 
   return (
     <Section className="font-vga">
