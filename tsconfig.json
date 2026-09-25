@@ -38,6 +38,12 @@
     },
     {
       "path": "./libs/queue"
+    },
+    {
+      "path": "./libs/contracts-tungsten"
+    },
+    {
+      "path": "./apps/tungsten"
     }
   ],
   "compilerOptions": {

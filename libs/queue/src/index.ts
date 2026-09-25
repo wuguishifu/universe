@@ -1,4 +1,3 @@
 export * from './lib/bull-queue.module';
 export * from './lib/common';
-export * from './lib/contracts';
 export * from './lib/redis-url';
