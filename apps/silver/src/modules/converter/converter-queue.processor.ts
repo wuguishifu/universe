@@ -4,10 +4,11 @@ import { mkdtempSync, readFile, rmSync } from 'fs';
 import { tmpdir } from 'os';
 import path from 'path';
 import { api } from '@universe/hydrogen-kore';
-import { SILVER_QUEUE_CONFIG, SilverQueueJob } from '@universe/queue';
+import { S3Service } from '@universe/nest-common';
+import { EnvironmentService } from '../../environment/environment-service';
+import { SILVER_QUEUE_CONFIG, SilverQueueJob } from '../../queues/queue';
 import { Box } from '../../types';
 import { ConvexClientService } from '../common/convex-client.service';
-import { S3Service } from '../s3/s3.service';
 import { YtDlpService } from '../ytdlp/ytdlp.service';
 import { s3Key, watchUrl } from './youtube-id';
 
@@ -23,6 +24,7 @@ export class ConverterQueueProcessor
     private readonly s3Service: S3Service,
     private readonly ytDlpService: YtDlpService,
     private readonly convexClientService: ConvexClientService,
+    private readonly environmentService: EnvironmentService,
   ) {
     super();
     this.tempDir = mkdtempSync(path.join(tmpdir(), 'silver-temp-'));
@@ -30,6 +32,10 @@ export class ConverterQueueProcessor
 
   onModuleDestroy() {
     rmSync(this.tempDir, { recursive: true, force: true });
+  }
+
+  private get bucket() {
+    return this.environmentService.environment.s3Bucket;
   }
 
   private async updateStatus(
@@ -47,7 +53,7 @@ export class ConverterQueueProcessor
     const { videoId: youtubeId } = job.data;
 
     const key = s3Key(youtubeId);
-    if (await this.s3Service.exists(key)) {
+    if (await this.s3Service.exists({ key, bucket: this.bucket })) {
       await this.updateStatus(youtubeId, 'completed');
       return;
     }
@@ -89,9 +95,13 @@ export class ConverterQueueProcessor
         key,
         data: dataResult.data,
         contentType: 'audio/mp3',
+        bucket: this.bucket,
       });
 
-      const signedUrl = await this.s3Service.getSignedUrl(key);
+      const signedUrl = await this.s3Service.getSignedUrl({
+        key,
+        bucket: this.bucket,
+      });
       this.logger.log(signedUrl);
       await this.updateStatus(youtubeId, 'completed');
     } catch (error) {

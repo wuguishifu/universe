@@ -19,6 +19,10 @@
     "silver": {
       "hasSecrets": true,
       "hasConvex": true
+    },
+    "tungsten": {
+      "hasSecrets": true,
+      "hasConvex": false
     }
   }
 }

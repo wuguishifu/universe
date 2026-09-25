@@ -16,9 +16,29 @@ export const environmentSchema = z
     convexUrl: z.string().min(1),
     convexSiteUrl: z.string().min(1),
   })
-  .transform(({ silverAdminApiToken: adminApiToken, ...data }) => {
-    return {
-      adminApiToken,
-      ...data,
-    };
-  });
+  .transform(
+    ({
+      silverAdminApiToken: adminApiToken,
+      s3Endpoint,
+      s3AccessKeyId,
+      s3SecretAccessKey,
+      s3Region,
+      s3ForcePathStyle,
+      ...data
+    }) => {
+      return {
+        ...data,
+        adminApiToken,
+        s3:
+          s3Endpoint && s3AccessKeyId && s3SecretAccessKey
+            ? {
+                endpoint: s3Endpoint,
+                region: s3Region,
+                accessKeyId: s3AccessKeyId,
+                secretAccessKey: s3SecretAccessKey,
+                forcePathStyle: s3ForcePathStyle,
+              }
+            : null,
+      };
+    },
+  );
