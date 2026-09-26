@@ -1,4 +1,4 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { UnrecoverableError } from 'bullmq';
 import { findPhraseMatches, type PhraseMatch } from '@universe/phrase-matching';
@@ -22,6 +22,30 @@ export class UtteranceProcessor extends WorkerHost {
     private readonly leaderboard: LeaderboardService,
   ) {
     super();
+  }
+
+  // BullMQ swallows processing errors (it just retries, then marks the job failed), so log them.
+  @OnWorkerEvent('failed')
+  onFailed(job: RubyQueueJob<'utterances'> | undefined, error: Error) {
+    // fetch's "fetch failed" hides the real reason (e.g. ECONNREFUSED) in `cause`.
+    const reason =
+      error.cause instanceof Error
+        ? `${error.message}: ${error.cause.message}`
+        : error.message;
+    if (!job) {
+      this.logger.error(`Utterance job failed: ${reason}`);
+      return;
+    }
+    const { guildId, userId } = job.data;
+    const attempts = job.opts.attempts ?? 1;
+    const final =
+      error instanceof UnrecoverableError || job.attemptsMade >= attempts;
+    const message = `[${guildId}] ${userId}: attempt ${job.attemptsMade}/${attempts} failed: ${reason}`;
+    if (final) {
+      this.logger.error(`${message} (giving up)`);
+    } else {
+      this.logger.warn(`${message} (will retry)`);
+    }
   }
 
   override async process(

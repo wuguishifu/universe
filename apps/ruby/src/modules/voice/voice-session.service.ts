@@ -130,6 +130,9 @@ export class VoiceSessionService implements OnApplicationShutdown {
   private async enqueue(data: RubyJobData<'utterances'>) {
     try {
       await this.utterances.add(RUBY_QUEUE_CONFIG.utterances.jobName, data);
+      this.logger.debug(
+        `[${data.guildId}] ${data.userId}: queued ${((data.opusPackets.length * OPUS_FRAME_MS) / 1000).toFixed(1)}s of audio`,
+      );
     } catch (error) {
       this.logger.error(
         `Failed to enqueue utterance for ${data.userId}`,
