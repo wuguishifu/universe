@@ -56,6 +56,16 @@ export class TranscriberService {
   ): Promise<Transcript> {
     const env = this.environmentService.environment;
     const { timeoutMs } = LANE_LIMITS[lane];
+    const { threads, beamSize } =
+      lane === 'interactive'
+        ? {
+            threads: env.whisperThreadsInteractive,
+            beamSize: env.whisperBeamSizeInteractive,
+          }
+        : {
+            threads: env.whisperThreadsBatch,
+            beamSize: env.whisperBeamSizeBatch,
+          };
 
     // The API resolves the model before queueing; this only guards against config drift.
     const model = this.models.resolve(options.model);
@@ -93,7 +103,9 @@ export class TranscriberService {
         '-m', modelPath,
         '-f', wavPath,
         '-l', options.language,
-        '-t', String(lane === 'interactive' ? env.whisperThreadsInteractive : env.whisperThreadsBatch),
+        '-t', String(threads),
+        // Beam size 1 switches whisper-cli to greedy decoding; best-of matches it.
+        '--beam-size', String(beamSize), '--best-of', String(beamSize),
         '--output-json', '-of', outputBase,
         '--no-prints',
         ...(options.prompt ? ['--prompt', options.prompt] : []),

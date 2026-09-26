@@ -89,6 +89,21 @@ See [`.env.example`](./.env.example). Models are `ggml-<name>.bin` files in `WHI
 allow-list callers can request; keep it identical on API and worker pods. Setting
 `WHISPER_VAD_MODEL_PATH` to a Silero VAD model enables the `vad` option.
 
+## Performance notes
+
+Whisper's encoder always processes a 30-second window, so a 2-second clip costs almost as much
+as 30 seconds of audio; on CPU the encoder is most of the time for short clips. What helps
+(benchmarked on the homelab's Intel N100, Sep 2026):
+
+- **`q8_0` quantized models** (e.g. `base.en-q8_0`): ~2x faster than the f16 originals with
+  identical transcripts. `q5_1` was slower than `q8_0` and less accurate.
+- **Greedy decoding** (`WHISPER_BEAM_SIZE_*=1`): 10–35% faster, more so on longer clips.
+- **More threads**: 3 vs 2 threads was ~25% faster.
+
+What doesn't: whisper-cli's `--audio-ctx`, which shrinks the 30-second window. It made very short
+clips up to 4x faster but produced repeated sentences (a 7.6s clip with 2s of headroom repeated
+its last sentence three times), which would corrupt phrase counts. Don't use it.
+
 ## Local development
 
 Nx loads two env files for `nx serve tungsten` (`.env.local` wins where both set a variable):

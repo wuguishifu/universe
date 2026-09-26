@@ -28,6 +28,12 @@ export const environmentSchema = z
     whisperVadModelPath: z.string().optional(),
     whisperThreadsInteractive: z.coerce.number().int().positive().default(4),
     whisperThreadsBatch: z.coerce.number().int().positive().default(4),
+    /**
+     * 1 = greedy decoding. Beam search (whisper-cli's default, 5) is a little more robust on
+     * hard audio but noticeably slower, so interactive defaults to greedy and batch to beam.
+     */
+    whisperBeamSizeInteractive: z.coerce.number().int().positive().default(1),
+    whisperBeamSizeBatch: z.coerce.number().int().positive().default(5),
 
     /** Optional: only needed to accept `s3` audio sources. */
     s3Endpoint: z.string().optional(),
