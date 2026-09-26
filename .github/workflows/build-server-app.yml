@@ -23,7 +23,8 @@ on:
           - major
 
 permissions:
-  contents: read
+  # write: creating the release also creates the <app>-vX.Y.Z tag that version-bump.sh counts from
+  contents: write
   packages: write
 
 concurrency:
@@ -84,3 +85,40 @@ jobs:
             .
           docker push ${{ steps.docker_version.outputs.docker_image }}
           docker push ${{ steps.docker_version.outputs.docker_image_latest }}
+
+      - name: Package release bundle
+        id: bundle
+        env:
+          APP: ${{ inputs.app }}
+          VERSION: ${{ steps.version.outputs.version }}
+          IMAGE: ${{ steps.docker_version.outputs.docker_image }}
+        run: |
+          CID=$(docker create "$IMAGE")
+          mkdir -p bundle
+          docker cp "$CID:/app/." bundle/
+          docker rm "$CID" > /dev/null
+          rm -rf bundle/node_modules
+
+          NODE_VERSION=$(docker run --rm --entrypoint node "$IMAGE" --version)
+          jq -n \
+            --arg app "$APP" --arg version "$VERSION" --arg commit "$GITHUB_SHA" \
+            --arg image "$IMAGE" --arg node "$NODE_VERSION" \
+            '{app: $app, version: $version, commit: $commit, image: $image, node: $node}' \
+            > bundle/release.json
+
+          tar -czf "$VERSION.tar.gz" -C bundle .
+          echo "asset=$VERSION.tar.gz" >> "$GITHUB_OUTPUT"
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          IMAGE: ${{ steps.docker_version.outputs.docker_image }}
+        run: |
+          # --latest=false: releases from different apps share this repo, so "latest" would be
+          # meaningless. Consumers look up releases by tag.
+          gh release create "$VERSION" "${{ steps.bundle.outputs.asset }}" \
+            --target "$GITHUB_SHA" \
+            --title "$VERSION" \
+            --notes "Image: \`$IMAGE\`" \
+            --latest=false
