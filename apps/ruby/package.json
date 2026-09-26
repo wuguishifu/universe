@@ -1,0 +1,13 @@
+{
+  "name": "@universe/ruby",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@universe/contracts-tungsten": "workspace:*",
+    "@universe/hydrogen-kore": "workspace:*",
+    "@universe/nest-common": "workspace:*",
+    "@universe/phrase-matching": "workspace:*",
+    "@universe/queue": "workspace:*",
+    "tslib": "^2.3.0"
+  }
+}

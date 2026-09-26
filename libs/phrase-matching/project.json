@@ -1,0 +1,24 @@
+{
+  "name": "phrase-matching",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/phrase-matching/src",
+  "projectType": "library",
+  "tags": ["scope:shared"],
+  "// targets": "to see all targets run: nx show project phrase-matching --web",
+  "targets": {
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude '(^|/)convex/_generated(/|$)'",
+        "cwd": "libs/phrase-matching"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --test 'src/**/*.spec.ts'",
+        "cwd": "libs/phrase-matching"
+      }
+    }
+  }
+}

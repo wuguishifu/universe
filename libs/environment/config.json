@@ -23,6 +23,10 @@
     "tungsten": {
       "hasSecrets": true,
       "hasConvex": false
+    },
+    "ruby": {
+      "hasSecrets": true,
+      "hasConvex": true
     }
   }
 }

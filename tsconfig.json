@@ -44,6 +44,12 @@
     },
     {
       "path": "./apps/tungsten"
+    },
+    {
+      "path": "./libs/phrase-matching"
+    },
+    {
+      "path": "./apps/ruby"
     }
   ],
   "compilerOptions": {

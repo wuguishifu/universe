@@ -8,6 +8,9 @@
     },
     "tungsten": {
       "registryPath": "wuguishifu/universe/tungsten"
+    },
+    "ruby": {
+      "registryPath": "wuguishifu/universe/ruby"
     }
   }
 }
