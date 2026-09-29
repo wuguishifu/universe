@@ -3,6 +3,12 @@ import { AppItem, AppItemProps } from './components/app-item';
 
 const apps: AppItemProps[] = [
   {
+    title: 'gtools',
+    type: 'command',
+    command: 'curl -fsSL https://wuguishifu.dev/d/gtools | sh',
+    homepage: 'https://github.com/wuguishifu/gtools',
+  },
+  {
     title: 'homework downloader',
     type: 'command',
     command: 'curl -fsSL https://wuguishifu.dev/d/hwdl | sh',
