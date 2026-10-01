@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@universe/contracts-tungsten": "workspace:*",
+    "@universe/platform/transcription/contracts": "workspace:*",
     "@universe/hydrogen-kore": "workspace:*",
     "@universe/nest-common": "workspace:*",
     "@universe/phrase-matching": "workspace:*",

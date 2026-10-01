@@ -1,5 +1,5 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import type { Transcript } from '@universe/contracts-tungsten';
+import type { Transcript } from '@universe/platform/transcription/contracts';
 import {
   TUNGSTEN_QUEUE_CONFIG,
   type TranscriptionJob,

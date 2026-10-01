@@ -315,9 +315,6 @@ importers:
 
   apps/ruby:
     dependencies:
-      '@universe/contracts-tungsten':
-        specifier: workspace:*
-        version: link:../../libs/contracts-tungsten
       '@universe/hydrogen-kore':
         specifier: workspace:*
         version: link:../../libs/hydrogen-kore
@@ -327,6 +324,9 @@ importers:
       '@universe/phrase-matching':
         specifier: workspace:*
         version: link:../../libs/phrase-matching
+      '@universe/platform/transcription/contracts':
+        specifier: workspace:*
+        version: link:../../platform/transcription/contracts
       '@universe/queue':
         specifier: workspace:*
         version: link:../../core/queue
@@ -346,24 +346,7 @@ importers:
         specifier: workspace:*
         version: link:../../libs/utils-web
 
-  apps/tungsten:
-    dependencies:
-      '@universe/contracts-tungsten':
-        specifier: workspace:*
-        version: link:../../libs/contracts-tungsten
-      '@universe/nest-common':
-        specifier: workspace:*
-        version: link:../../libs/nest-common
-      '@universe/queue':
-        specifier: workspace:*
-        version: link:../../core/queue
-      tslib:
-        specifier: ^2.3.0
-        version: 2.8.1
-
   core/queue: {}
-
-  libs/contracts-tungsten: {}
 
   libs/hydrogen-kore: {}
 
@@ -381,6 +364,23 @@ importers:
   libs/ui-web: {}
 
   libs/utils-web: {}
+
+  platform/transcription/contracts: {}
+
+  platform/transcription/service:
+    dependencies:
+      '@universe/nest-common':
+        specifier: workspace:*
+        version: link:../../../libs/nest-common
+      '@universe/platform/transcription/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@universe/queue':
+        specifier: workspace:*
+        version: link:../../../core/queue
+      tslib:
+        specifier: ^2.3.0
+        version: 2.8.1
 
 packages:
 

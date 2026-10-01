@@ -1,10 +1,10 @@
-# tungsten
+# transcription-service
 
-Media worker service. Other apps own their business logic and hand tungsten the heavy media
+Media worker service. Other apps own their business logic and hand transcription-service the heavy media
 work over HTTP. For now that's speech-to-text with [whisper.cpp](https://github.com/ggml-org/whisper.cpp):
 audio in, transcript out.
 
-The contract is `@universe/contracts-tungsten` (ts-rest). Callers never see tungsten's queues.
+The contract is `@universe/contracts-transcription-service` (ts-rest). Callers never see transcription-service's queues.
 
 ## Architecture
 
@@ -17,7 +17,7 @@ The contract is `@universe/contracts-tungsten` (ts-rest). Callers never see tung
  │ validate → add job to the lane's queue │
  │ sync: wait for completion (≤60s)       │
  └───────────────────┬────────────────────┘
-                     │ Redis (BullMQ, prefix `tungsten-queue`)
+                     │ Redis (BullMQ, prefix `transcription-service-queue`)
         ┌────────────┴─────────────┐
         ▼                          ▼
   transcription-interactive   transcription-batch
@@ -29,7 +29,7 @@ The contract is `@universe/contracts-tungsten` (ts-rest). Callers never see tung
  └────────────────────────────────────────┘
 ```
 
-**One image, three roles** (`TUNGSTEN_ROLE`):
+**One image, three roles** (`TRANSCRIPTION_SERVICE_ROLE`):
 
 | Role     | Runs                   | Deploy as                                      |
 | -------- | ---------------------- | ---------------------------------------------- |
@@ -44,11 +44,11 @@ whisper.cpp), or on a GPU node, without callers noticing.
 **Two lanes, each its own queue and worker.** BullMQ priorities only reorder _waiting_ jobs;
 a running 20-minute batch job would still block a 2-second clip. Separate queues with their
 own workers and thread budgets (`WHISPER_THREADS_*`) keep interactive latency independent of
-batch load. `TUNGSTEN_WORKER_LANES` picks which lanes a worker process takes.
+batch load. `TRANSCRIPTION_SERVICE_WORKER_LANES` picks which lanes a worker process takes.
 
 ## API
 
-All routes except `/api/health` and `/api/version` need `Authorization: Bearer <TUNGSTEN_API_TOKEN>`.
+All routes except `/api/health` and `/api/version` need `Authorization: Bearer <TRANSCRIPTION_SERVICE_API_TOKEN>`.
 
 | Route                                | Lane        | Response                                        |
 | ------------------------------------ | ----------- | ----------------------------------------------- |
@@ -62,7 +62,7 @@ Request body (both POSTs):
 ```jsonc
 {
   "source": { "type": "inline", "data": "<base64, ≤10MB, any ffmpeg format>" },
-  //     or { "type": "s3", "bucket": "…", "key": "…" }  (tungsten reads with its own key)
+  //     or { "type": "s3", "bucket": "…", "key": "…" }  (transcription-service reads with its own key)
   "options": { "model": "base.en", "language": "en", "prompt": "…", "vad": false },
 }
 ```
@@ -78,7 +78,7 @@ again:
 - **Lost response**: same. A completed job is kept for 5 minutes (interactive) or 1 hour (batch).
 - **Failed job**: a retry with the same key runs it again.
 
-`422` means the audio couldn't be decoded or transcribed; retrying won't help. Tungsten doesn't
+`422` means the audio couldn't be decoded or transcribed; retrying won't help. `transcription-service` doesn't
 retry interactive jobs itself (the waiting caller decides). Batch jobs retry 3 times with
 backoff, except for permanent failures such as undecodable audio or a missing S3 object.
 
@@ -106,9 +106,9 @@ its last sentence three times), which would corrupt phrase counts. Don't use it.
 
 ## Local development
 
-Nx loads two env files for `nx serve tungsten` (`.env.local` wins where both set a variable):
+Nx loads two env files for `nx serve transcription-service` (`.env.local` wins where both set a variable):
 
-- `.env.local`: secrets (token, Redis, S3) generated from Infisical `/tungsten` by
+- `.env.local`: secrets (token, Redis, S3) generated from Infisical `/transcription-service` by
   `nx setup environment`. Don't edit it.
 - root `.env`: settings specific to your machine, mainly where whisper lives. For example, reusing
   a native whisper.cpp build and model:
@@ -120,7 +120,7 @@ Nx loads two env files for `nx serve tungsten` (`.env.local` wins where both set
   ```
 
 ```sh
-pnpm nx serve tungsten   # TUNGSTEN_ROLE defaults to `all`
+pnpm nx serve transcription-service   # TUNGSTEN_ROLE defaults to `all`
 ```
 
 ## Deployment notes
@@ -128,8 +128,8 @@ pnpm nx serve tungsten   # TUNGSTEN_ROLE defaults to `all`
 - Docker builds whisper.cpp from source (`WHISPER_CPP_VERSION` build arg), so the image
   never depends on a binary built elsewhere. It's a CPU build; a GPU worker needs a
   CUDA-enabled build of the same stage.
-- In the homelab, run two Deployments from the one image: `tungsten` (`api`, with a
-  ClusterIP Service) and `tungsten-worker` (`worker`, no Service, CPU requests/limits, models
+- In the homelab, run two Deployments from the one image: `transcription-service` (`api`, with a
+  ClusterIP Service) and `transcription-service-worker` (`worker`, no Service, CPU requests/limits, models
   PVC). Keep the worker's `terminationGracePeriodSeconds` longer than your longest expected job:
   on SIGTERM it finishes the job it's running before exiting.
 - Every transcription logs its realtime factor (processing time ÷ audio length), which is

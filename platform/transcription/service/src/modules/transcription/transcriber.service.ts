@@ -4,8 +4,8 @@ import { z } from 'zod';
 import { mkdtemp, readFile, rm, stat, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import path from 'path';
-import type { Transcript } from '@universe/contracts-tungsten';
 import { S3ObjectNotFoundError, S3Service } from '@universe/nest-common';
+import type { Transcript } from '@universe/platform/transcription/contracts';
 import { EnvironmentService } from '../../environment/environment-service';
 import type {
   TranscriptionJobData,

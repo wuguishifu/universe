@@ -35,7 +35,7 @@
       "path": "../../libs/hydrogen-kore/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/contracts-tungsten/tsconfig.lib.json"
+      "path": "../../platform/transcription/contracts/tsconfig.lib.json"
     }
   ]
 }

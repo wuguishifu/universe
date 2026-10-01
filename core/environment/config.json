@@ -2,23 +2,27 @@
   "infisicalDomain": "https://infisical.wuguishifu.dev",
   "infisicalProjectId": "49f61399-1e0e-419e-984d-1115793c8e29",
   "apps": {
-    "quartz": {
+    "apps/quartz": {
       "hasSecrets": true,
       "hasConvex": false,
-      "publicPrefix": "NEXT_PUBLIC_"
+      "publicPrefix": "NEXT_PUBLIC_",
+      "legacyAppName": "quartz"
     },
-    "sapphire": {
+    "apps/sapphire": {
       "hasSecrets": false,
       "hasConvex": true,
-      "publicPrefix": "NEXT_PUBLIC_"
+      "publicPrefix": "NEXT_PUBLIC_",
+      "legacyAppName": "sapphire"
     },
-    "tungsten": {
+    "platform/transcription/service": {
       "hasSecrets": true,
-      "hasConvex": false
+      "hasConvex": false,
+      "legacyAppName": "tungsten"
     },
-    "ruby": {
+    "apps/ruby": {
       "hasSecrets": true,
-      "hasConvex": true
+      "hasConvex": true,
+      "legacyAppName": "ruby"
     }
   }
 }

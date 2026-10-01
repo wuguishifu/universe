@@ -1,10 +1,10 @@
 {
-  "name": "@universe/tungsten",
+  "name": "@universe/platform/transcription/service",
   "version": "0.0.1",
   "private": true,
   "dependencies": {
     "@universe/nest-common": "workspace:*",
-    "@universe/contracts-tungsten": "workspace:*",
+    "@universe/platform/transcription/contracts": "workspace:*",
     "@universe/queue": "workspace:*",
     "tslib": "^2.3.0"
   }

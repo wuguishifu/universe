@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
     "module": "esnext",
@@ -23,13 +23,13 @@
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "references": [
     {
-      "path": "../../core/queue/tsconfig.lib.json"
+      "path": "../../../core/queue/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/contracts-tungsten/tsconfig.lib.json"
+      "path": "../contracts/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/nest-common/tsconfig.lib.json"
+      "path": "../../../libs/nest-common/tsconfig.lib.json"
     }
   ]
 }

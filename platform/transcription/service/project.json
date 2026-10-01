@@ -1,7 +1,7 @@
 {
-  "name": "tungsten",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/tungsten/src",
+  "name": "platform-transcription-service",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "platform/transcription/service/src",
   "projectType": "application",
   "tags": ["scope:server"],
   "targets": {
@@ -9,7 +9,7 @@
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "tungsten:build"
+        "buildTarget": "transcription-service:build"
       },
       "configurations": {
         "development": {},
@@ -20,7 +20,7 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude '(^|/)convex/_generated(/|$)'",
-        "cwd": "apps/tungsten"
+        "cwd": "platform/transcription/service"
       }
     }
   }

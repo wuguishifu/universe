@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { initClient } from '@ts-rest/core';
-import { tungstenRootRouter } from '@universe/contracts-tungsten';
+import { tungstenRootRouter } from '@universe/platform/transcription/contracts';
 import { EnvironmentService } from '../../environment/environment-service';
 
 /** Longer than tungsten's own 60s sync wait, so a 504 from tungsten arrives before we give up. */

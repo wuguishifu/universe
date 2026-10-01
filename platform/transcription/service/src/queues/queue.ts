@@ -4,7 +4,7 @@ import {
 } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { type Job, type JobsOptions } from 'bullmq';
-import { transcriptionRequestSchema } from '@universe/contracts-tungsten';
+import { transcriptionRequestSchema } from '@universe/platform/transcription/contracts';
 import {
   BullQueueModule,
   DEFAULT_QUEUE_CONFIG,

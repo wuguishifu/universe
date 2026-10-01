@@ -28,16 +28,16 @@
       "path": "./core/queue"
     },
     {
-      "path": "./libs/contracts-tungsten"
-    },
-    {
-      "path": "./apps/tungsten"
+      "path": "./platform/transcription/contracts"
     },
     {
       "path": "./libs/phrase-matching"
     },
     {
       "path": "./apps/ruby"
+    },
+    {
+      "path": "./platform/transcription/service"
     }
   ],
   "compilerOptions": {
