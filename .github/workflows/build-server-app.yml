@@ -11,7 +11,7 @@ on:
         type: choice
         options:
           - transcription/service
-          - ruby
+          - jankbot/ruby
       version-bump-type:
         description: 'Version bump type'
         required: true
