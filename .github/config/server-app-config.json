@@ -1,8 +1,5 @@
 {
   "apps": {
-    "silver": {
-      "registryPath": "wuguishifu/universe/silver"
-    },
     "tungsten": {
       "registryPath": "wuguishifu/universe/tungsten"
     },

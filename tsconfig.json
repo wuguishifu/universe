@@ -28,12 +28,6 @@
       "path": "./libs/sandbox"
     },
     {
-      "path": "./apps/silver"
-    },
-    {
-      "path": "./libs/contracts-silver"
-    },
-    {
       "path": "./libs/queue"
     },
     {

@@ -9,9 +9,4 @@ export const sapphireTables = {
     notes: v.optional(v.string()),
     recommendedBy: v.optional(v.string()),
   }),
-  systemStatuses: defineTable({
-    status: systemStatus,
-    serviceName: v.string(),
-    link: v.optional(v.string()),
-  }).index('serviceName', ['serviceName']),
 } as const;

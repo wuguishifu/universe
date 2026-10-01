@@ -9,7 +9,7 @@ The contract is `@universe/contracts-tungsten` (ts-rest). Callers never see tung
 ## Architecture
 
 ```plaintext
- caller (discord bot, silver, clipper…)
+ caller (discord bot, clipper...)
    │  POST /api/transcriptions        short audio, waits for the transcript
    │  POST /api/transcription-jobs    long audio, returns a job ID to poll
    ▼

@@ -336,9 +336,6 @@ importers:
 
   apps/sapphire:
     dependencies:
-      '@universe/contracts-silver':
-        specifier: workspace:*
-        version: link:../../libs/contracts-silver
       '@universe/hydrogen-kore':
         specifier: workspace:*
         version: link:../../libs/hydrogen-kore
@@ -348,24 +345,6 @@ importers:
       '@universe/utils-web':
         specifier: workspace:*
         version: link:../../libs/utils-web
-
-  apps/silver:
-    dependencies:
-      '@universe/contracts-silver':
-        specifier: workspace:*
-        version: link:../../libs/contracts-silver
-      '@universe/hydrogen-kore':
-        specifier: workspace:*
-        version: link:../../libs/hydrogen-kore
-      '@universe/nest-common':
-        specifier: workspace:*
-        version: link:../../libs/nest-common
-      '@universe/queue':
-        specifier: workspace:*
-        version: link:../../libs/queue
-      tslib:
-        specifier: ^2.3.0
-        version: 2.8.1
 
   apps/tungsten:
     dependencies:
@@ -381,8 +360,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-
-  libs/contracts-silver: {}
 
   libs/contracts-tungsten: {}
 
