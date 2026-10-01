@@ -17,7 +17,6 @@ import type * as ruby_phrases from "../ruby/phrases.js";
 import type * as ruby_tables from "../ruby/tables.js";
 import type * as sapphire_tables from "../sapphire/tables.js";
 import type * as sapphire_v1_readingList from "../sapphire/v1/readingList.js";
-import type * as sapphire_v1_systemStatuses from "../sapphire/v1/systemStatuses.js";
 import type * as silver_converter_audioConversions from "../silver/converter/audioConversions.js";
 import type * as silver_tables from "../silver/tables.js";
 
@@ -37,7 +36,6 @@ declare const fullApi: ApiFromModules<{
   "ruby/tables": typeof ruby_tables;
   "sapphire/tables": typeof sapphire_tables;
   "sapphire/v1/readingList": typeof sapphire_v1_readingList;
-  "sapphire/v1/systemStatuses": typeof sapphire_v1_systemStatuses;
   "silver/converter/audioConversions": typeof silver_converter_audioConversions;
   "silver/tables": typeof silver_tables;
 }>;

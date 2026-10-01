@@ -12,10 +12,6 @@
       "hasConvex": true,
       "publicPrefix": "NEXT_PUBLIC_"
     },
-    "topaz": {
-      "hasSecrets": true,
-      "hasConvex": true
-    },
     "silver": {
       "hasSecrets": true,
       "hasConvex": true

@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import { Section } from '../modules/layout/section';
-import { Statuses } from '../modules/statuses/components/statuses';
 
 export default function Index() {
   return (
@@ -19,7 +18,6 @@ export default function Index() {
           </h2>
         </div>
       </Section>
-      <Statuses />
     </main>
   );
 }

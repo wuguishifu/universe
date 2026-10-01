@@ -25,9 +25,6 @@
       "path": "./apps/quartz"
     },
     {
-      "path": "./apps/topaz"
-    },
-    {
       "path": "./libs/sandbox"
     },
     {

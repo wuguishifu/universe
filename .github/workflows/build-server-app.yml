@@ -10,7 +10,6 @@ on:
         required: true
         type: choice
         options:
-          - topaz
           - silver
           - tungsten
           - ruby
