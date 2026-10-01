@@ -49,7 +49,7 @@ for APP in $APPS; do
   # secrets in infisical still live under the legacy app name
   SECRETS_PATH=$(echo $CONFIG | jq -r --arg app "$APP" '.apps[$app].infisicalPath // $app')
 
-  echo "Loading secrets for app: $APP (infisical path: /$SECRETS_PATH)"
+  echo "Loading secrets for: $APP (infisical path: /$SECRETS_PATH)"
 
   SECRETS=$(
     infisical secrets \
@@ -94,7 +94,7 @@ for APP in $APPS; do
     continue
   fi
 
-  echo "Loading convex env variables for app: $APP"
+  echo "Loading convex env variables for: $APP"
   PUBLIC_PREFIX=$(echo $CONFIG | jq -r --arg app "$APP" '.apps[$app].publicPrefix // ""')
   echo "" >> $APP/.env.local
   echo "# convex variables" >> $APP/.env.local

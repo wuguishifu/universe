@@ -1,7 +1,7 @@
 {
   "name": "ruby",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/ruby/src",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/jankbot/ruby/src",
   "projectType": "application",
   "tags": ["scope:server"],
   "targets": {
@@ -20,7 +20,7 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude '(^|/)convex/_generated(/|$)'",
-        "cwd": "apps/ruby"
+        "cwd": "projects/jankbot/ruby"
       }
     }
   }

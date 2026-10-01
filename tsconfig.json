@@ -25,9 +25,6 @@
       "path": "./libs/phrase-matching"
     },
     {
-      "path": "./apps/ruby"
-    },
-    {
       "path": "./platform/transcription/service"
     },
     {
@@ -38,6 +35,9 @@
     },
     {
       "path": "./projects/portfolio/web"
+    },
+    {
+      "path": "./projects/jankbot/ruby"
     }
   ],
   "compilerOptions": {

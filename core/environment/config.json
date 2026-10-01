@@ -14,15 +14,15 @@
       "publicPrefix": "NEXT_PUBLIC_",
       "infisicalPath": "sapphire"
     },
+    "projects/jankbot/ruby": {
+      "hasSecrets": true,
+      "hasConvex": true,
+      "infisicalPath": "ruby"
+    },
     "platform/transcription/service": {
       "hasSecrets": true,
       "hasConvex": false,
       "infisicalPath": "tungsten"
-    },
-    "apps/ruby": {
-      "hasSecrets": true,
-      "hasConvex": true,
-      "infisicalPath": "ruby"
     }
   }
 }
