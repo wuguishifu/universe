@@ -1,5 +1,6 @@
 import './globals.css';
 
+import { ClerkProvider } from '@clerk/nextjs';
 import { Metadata } from 'next';
 import { Jersey_15, Source_Code_Pro } from 'next/font/google';
 import localFont from 'next/font/local';
@@ -45,27 +46,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body
-        className={cn(
-          jersey.variable,
-          vga.variable,
-          scp.variable,
-          'text-white',
-        )}
-      >
-        <ConvexClientProvider>
-          <ParallaxBackground />
-          <RainCanvas />
-          <div className="crt-container" />
-          <div className="flex max-w-4xl mx-auto h-full mt-20 gap-2">
-            <div className="flex-3 space-y-2">{children}</div>
-            <div className="flex-1 space-y-2">
-              <SideColumn />
+    <ClerkProvider>
+      <html lang="en">
+        <body
+          className={cn(
+            jersey.variable,
+            vga.variable,
+            scp.variable,
+            'text-white',
+          )}
+        >
+          <ConvexClientProvider>
+            <ParallaxBackground />
+            <RainCanvas />
+            <div className="crt-container" />
+            <div className="flex max-w-4xl mx-auto h-full mt-20 gap-2">
+              <div className="flex-3 space-y-2">{children}</div>
+              <div className="flex-1 space-y-2">
+                <SideColumn />
+              </div>
             </div>
-          </div>
-        </ConvexClientProvider>
-      </body>
-    </html>
+          </ConvexClientProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

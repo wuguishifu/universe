@@ -6,11 +6,13 @@ import {
   FastifyAdapter,
   type NestFastifyApplication,
 } from '@nestjs/platform-fastify';
+import { WsAdapter } from '@nestjs/platform-ws';
 
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
-  // The HTTP server only serves health checks; the bot itself is driven by the Discord gateway.
+  // The HTTP server serves health checks and the live feed socket; the bot itself is driven by
+  // the Discord gateway.
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
@@ -21,6 +23,8 @@ async function bootstrap() {
           : ['log', 'warn', 'error', 'fatal'],
     },
   );
+
+  app.useWebSocketAdapter(new WsAdapter(app));
 
   // On SIGTERM: leave voice channels and let in-flight utterance jobs finish.
   app.enableShutdownHooks();

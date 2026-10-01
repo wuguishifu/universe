@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
+    "@universe/contracts-ruby": "workspace:*",
     "@universe/contracts-tungsten": "workspace:*",
     "@universe/hydrogen-kore": "workspace:*",
     "@universe/nest-common": "workspace:*",

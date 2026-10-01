@@ -21,7 +21,26 @@ Discord voice ──► VoiceSessionService (@discordjs/voice)
   tungsten or Convex errors, and the idempotency key means a retry never transcribes twice.
 - **Data** lives in [hydrogen](../hydrogen/convex/ruby): `trackedPhrases` and `phraseCounts`.
   Every ruby function takes `RUBY_CONVEX_SECRET`, since the functions are public.
-- The HTTP server only serves `/api/health` and `/api/version`.
+- The HTTP server serves `/api/health`, `/api/version`, and the live feed socket (below).
+
+## Live feed
+
+Ruby keeps the last 100 transcripts per server **in memory** (a restart clears them) and
+streams them to [sapphire](../sapphire)'s `/ruby` page over a WebSocket at `/api/feed`:
+
+```plaintext
+browser ──(Clerk, Discord sign-in)──► sapphire server action
+            signs a 60s ticket { discord user id } with RUBY_FEED_SECRET
+browser ──wss://<ruby host>/api/feed?ticket=…──► FeedGateway
+            verifies the ticket, then guild.members.fetch(user) on every server ruby is in
+            sends { type: 'ready', guilds, utterances } then { type: 'utterance', … } live
+```
+
+- Viewers only get servers they're a member of, checked when they connect.
+- Speaker names and avatars are server profiles, cached for 10 minutes.
+- Behind a Cloudflare tunnel, `/api/feed` must not require a CF Access service token (the
+  browser can't send one); the ticket is the auth. The socket pings every 30s to stay under
+  Cloudflare's idle timeout.
 
 ## Commands
 
@@ -35,7 +54,8 @@ Discord voice ──► VoiceSessionService (@discordjs/voice)
 ## Local development
 
 1. Secrets in Infisical dev `/ruby`: `DISCORD_TOKEN`, `DISCORD_DEV_GUILD_IDS`, `REDIS_URL`,
-   `RUBY_CONVEX_SECRET`, `TUNGSTEN_URL`, `TUNGSTEN_API_TOKEN`. Then `nx setup environment`.
+   `RUBY_CONVEX_SECRET`, `TUNGSTEN_URL`, `TUNGSTEN_API_TOKEN`, `RUBY_FEED_SECRET` (same value as
+   sapphire's). Then `nx setup environment`.
    (Or put them in a gitignored `apps/ruby/.env`; see `.env.example`.)
 2. `RUBY_CONVEX_SECRET` must also be set on the hydrogen deployment:
    `pnpm nx convex hydrogen -- env set RUBY_CONVEX_SECRET <value>`.

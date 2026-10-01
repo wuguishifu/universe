@@ -35,6 +35,9 @@
   "exclude": ["node_modules", "jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
   "references": [
     {
+      "path": "../../libs/contracts-ruby"
+    },
+    {
       "path": "../../libs/contracts-silver"
     },
     {
