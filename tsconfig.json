@@ -50,9 +50,6 @@
     },
     {
       "path": "./apps/ruby"
-    },
-    {
-      "path": "./libs/contracts-ruby"
     }
   ],
   "compilerOptions": {

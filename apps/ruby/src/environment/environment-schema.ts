@@ -31,9 +31,6 @@ export const environmentSchema = z.object({
   tungstenUrl: z.url(),
   tungstenApiToken: z.string().min(16),
 
-  /** Signs the tickets browsers use to open the live feed socket. Must match sapphire's. */
-  rubyFeedSecret: z.string().min(32),
-
   /** How long a speaker must be silent before their utterance is considered finished. */
   utteranceSilenceMs: z.coerce.number().int().positive().default(1000),
   /** Utterances shorter than this are dropped without being transcribed. */

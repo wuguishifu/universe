@@ -4,7 +4,6 @@ import { UnrecoverableError } from 'bullmq';
 import { findPhraseMatches, type PhraseMatch } from '@universe/phrase-matching';
 import { RUBY_QUEUE_CONFIG, type RubyQueueJob } from '../../queues/queue';
 import { TungstenService } from '../common/tungsten.service';
-import { FeedService } from '../feed/feed.service';
 import { LeaderboardService } from '../leaderboard/leaderboard.service';
 import { TrackedWordsService } from '../tracked-words/tracked-words.service';
 import { opusPacketsToWav } from './audio';
@@ -21,7 +20,6 @@ export class UtteranceProcessor extends WorkerHost {
     private readonly tungsten: TungstenService,
     private readonly trackedWords: TrackedWordsService,
     private readonly leaderboard: LeaderboardService,
-    private readonly feed: FeedService,
   ) {
     super();
   }
@@ -79,13 +77,6 @@ export class UtteranceProcessor extends WorkerHost {
     const transcript = response.body.text;
     this.logger.debug(`[${guildId}] ${userId}: "${transcript}"`);
     if (!transcript) return { transcript, matches: [] };
-
-    // The feed is best-effort and must not fail (and so retry) the job.
-    await this.feed
-      .record(job.data, transcript)
-      .catch((error: Error) =>
-        this.logger.warn(`[${guildId}] ${userId}: feed: ${error.message}`),
-      );
 
     const phrases = await this.trackedWords.list(guildId);
     const matches = findPhraseMatches(transcript, phrases);
