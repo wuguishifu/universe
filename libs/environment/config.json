@@ -8,7 +8,7 @@
       "publicPrefix": "NEXT_PUBLIC_"
     },
     "sapphire": {
-      "hasSecrets": true,
+      "hasSecrets": false,
       "hasConvex": true,
       "publicPrefix": "NEXT_PUBLIC_"
     },
