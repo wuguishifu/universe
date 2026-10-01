@@ -1,4 +1,0 @@
-src/sandbox.ts
-src/tmp/*
-!src/tmp/
-!src/tmp/.gitkeep

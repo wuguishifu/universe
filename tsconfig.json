@@ -25,9 +25,6 @@
       "path": "./apps/quartz"
     },
     {
-      "path": "./libs/sandbox"
-    },
-    {
       "path": "./libs/queue"
     },
     {
