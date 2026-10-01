@@ -7,7 +7,7 @@ import type {
 } from 'convex/server';
 import { EnvironmentService } from '../../environment/environment-service';
 
-/** A hydrogen ruby function guarded by RUBY_CONVEX_SECRET (hydrogen/convex/ruby/auth.ts). */
+/** A convex ruby function guarded by RUBY_CONVEX_SECRET (platform/convex/convex-app/ruby/auth.ts). */
 type RubyFunction<Type extends 'query' | 'mutation'> = FunctionReference<
   Type,
   'public',

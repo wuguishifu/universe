@@ -1,6 +1,6 @@
 'use client';
 
-import { api } from '@universe/hydrogen-kore';
+import { api } from '@universe/platform/convex/contracts';
 import { Spinner } from '@universe/ui-web';
 import { useQuery } from '../../../modules/convex/use-query';
 import { Section } from '../../../modules/layout/section';

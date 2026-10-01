@@ -24,7 +24,7 @@ export const environmentSchema = z.object({
   discordDevGuildIds: commaSeparated,
 
   convexUrl: z.string().min(1),
-  /** Must match RUBY_CONVEX_SECRET on the hydrogen deployment. */
+  /** Must match RUBY_CONVEX_SECRET on the convex deployment. */
   rubyConvexSecret: z.string().min(16),
 
   /** tungsten's base URL, e.g. http://bos-mac-mini:3002. */

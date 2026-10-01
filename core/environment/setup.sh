@@ -70,12 +70,12 @@ if [ "$ENVIRONMENT" = "PRODUCTION" ]; then
   exit 0
 fi
 
-if [ ! -f "apps/hydrogen/.env.local" ]; then
-  echo "hydrogen .env.local missing"
+if [ ! -f "platform/convex/app/.env.local" ]; then
+  echo "convex .env.local missing"
   exit 1
 fi
 
-source apps/hydrogen/.env.local
+source platform/convex/app/.env.local
 if [ -z "$CONVEX_URL" ] || [ -z "$CONVEX_SITE_URL" ]; then
   echo "CONVEX_URL or CONVEX_SITE_URL missing"
   exit 1

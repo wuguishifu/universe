@@ -1,5 +1,5 @@
 {
-  "name": "@universe/hydrogen",
+  "name": "@universe/platform/convex/app",
   "version": "0.0.1",
   "private": true,
   "type": "module",

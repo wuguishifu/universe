@@ -32,7 +32,7 @@
       "path": "../../libs/nest-common/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/hydrogen-kore/tsconfig.lib.json"
+      "path": "../../platform/convex/contracts/tsconfig.lib.json"
     },
     {
       "path": "../../platform/transcription/contracts/tsconfig.lib.json"

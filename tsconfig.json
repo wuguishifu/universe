@@ -10,13 +10,10 @@
       "path": "./libs/utils-web"
     },
     {
-      "path": "./libs/hydrogen-kore"
+      "path": "./platform/convex/contracts"
     },
     {
       "path": "./libs/nest-common"
-    },
-    {
-      "path": "./apps/hydrogen"
     },
     {
       "path": "./apps/sapphire"
@@ -38,6 +35,9 @@
     },
     {
       "path": "./platform/transcription/service"
+    },
+    {
+      "path": "./platform/convex/app"
     }
   ],
   "compilerOptions": {

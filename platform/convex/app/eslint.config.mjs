@@ -1,4 +1,4 @@
-import baseConfig from '../../eslint.config.mjs';
+import baseConfig from '../../../eslint.config.mjs';
 
 export default [
   ...baseConfig,
@@ -6,7 +6,7 @@ export default [
     files: ['**/convex/**/*.ts'],
     languageOptions: {
       parserOptions: {
-        project: ['apps/hydrogen/tsconfig.*?.json'],
+        project: ['platform/convex/app/tsconfig.*?.json'],
       },
     },
   },

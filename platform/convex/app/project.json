@@ -1,15 +1,14 @@
 {
-  "name": "hydrogen",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/hydrogen",
+  "name": "convex-app",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "platform/convex/app",
   "projectType": "application",
   "tags": ["scope:server", "build-on-install"],
-  "// targets": "to see all targets run: nx show project hydrogen --web",
   "targets": {
     "clean": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "apps/hydrogen",
+        "cwd": "platform/convex/app",
         "parallel": true,
         "commands": [
           "rm -rf ./dist",
@@ -21,8 +20,8 @@
     "codegen": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "apps/hydrogen",
-        "command": "nx convex hydrogen -- codegen"
+        "cwd": "platform/convex/app",
+        "command": "nx convex convex-app -- codegen"
       }
     },
     "build": {
@@ -30,8 +29,8 @@
       "options": {
         "parallel": false,
         "commands": [
-          "nx typecheck hydrogen --skip-sync --skip-nx-cache",
-          "nx build hydrogen-kore --skip-nx-cache"
+          "nx typecheck convex-app --skip-sync --skip-nx-cache",
+          "nx build convex-contracts --skip-nx-cache"
         ]
       }
     },
@@ -39,14 +38,14 @@
       "executor": "nx:run-commands",
       "options": {
         "parallel": false,
-        "commands": ["nx build hydrogen", "nx build hydrogen-kore"]
+        "commands": ["nx build convex-app", "nx build convex-contracts"]
       }
     },
     "convex": {
       "executor": "nx:run-commands",
-      "//note": "Example for how to forward commands to the convex CLI: nx convex hydrogen -- dev --help",
+      "//note": "Example for how to forward commands to the convex CLI: nx convex convex-app -- dev --help",
       "options": {
-        "cwd": "apps/hydrogen",
+        "cwd": "platform/convex/app",
         "forwardAllArgs": true,
         "command": "convex"
       }
@@ -54,7 +53,7 @@
     "setup": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "apps/hydrogen",
+        "cwd": "platform/convex/app",
         "parallel": false,
         "commands": ["convex dev --once", "nx setup environment"]
       }
@@ -66,31 +65,31 @@
         "parallel": true,
         "commands": [
           {
-            "command": "nx convex hydrogen -- dev",
+            "command": "nx convex convex-app -- dev",
             "description": "Run Convex dev watcher",
-            "prefix": "hydrogen",
+            "prefix": "convex-app",
             "prefixColor": "cyan"
           },
           {
-            "command": "nx run hydrogen:watch-kore",
-            "description": "Rebuild hydrogen-kore on change",
+            "command": "nx run convex-app:watch-contracts",
+            "description": "Rebuild convex-contracts on change",
             "prefix": "kore",
             "prefixColor": "magenta"
           }
         ]
       }
     },
-    "watch-kore": {
+    "watch-contracts": {
       "executor": "nx:run-commands",
       "continuous": true,
       "options": {
-        "command": "nx watch --projects=hydrogen --initialRun -- nx build hydrogen-kore"
+        "command": "nx watch --projects=convex-app --initialRun -- nx build convex-contracts"
       }
     },
     "deploy": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "apps/hydrogen",
+        "cwd": "platform/convex/app",
         "command": "convex deploy"
       }
     },
@@ -103,7 +102,7 @@
     "update:ai-files": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "apps/hydrogen",
+        "cwd": "platform/convex/app",
         "command": "npx convex ai-files update"
       }
     },
@@ -111,7 +110,7 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude '(^|/)convex/_generated(/|$)'",
-        "cwd": "apps/hydrogen"
+        "cwd": "platform/convex/app"
       }
     }
   }

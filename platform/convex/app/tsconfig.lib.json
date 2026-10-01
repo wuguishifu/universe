@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "dist",
@@ -16,7 +16,7 @@
   "exclude": ["dist/**/*"],
   "references": [
     {
-      "path": "../../libs/phrase-matching/tsconfig.lib.json"
+      "path": "../../../libs/phrase-matching/tsconfig.lib.json"
     }
   ]
 }

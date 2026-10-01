@@ -41,7 +41,7 @@
       "path": "../../libs/ui-web"
     },
     {
-      "path": "../../libs/hydrogen-kore"
+      "path": "../../platform/convex/contracts"
     }
   ]
 }

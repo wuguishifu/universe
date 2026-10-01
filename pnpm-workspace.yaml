@@ -3,3 +3,4 @@ packages:
   - 'libs/*'
   - 'core/*'
   - 'platform/transcription/*'
+  - 'platform/convex/*'

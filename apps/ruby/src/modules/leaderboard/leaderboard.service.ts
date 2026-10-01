@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { api } from '@universe/hydrogen-kore';
 import type { PhraseMatch } from '@universe/phrase-matching';
+import { api } from '@universe/platform/convex/contracts';
 import { ConvexService } from '../common/convex.service';
 
 export interface LeaderboardEntry {

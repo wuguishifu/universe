@@ -1,0 +1,11 @@
+# convex-contracts
+
+`convex-contracts` exists only to expose client-safe Convex artifacts to shared apps/libs.
+
+This project builds a `dist/` package from `platform/convex/app` that contains:
+
+- the generated `api` runtime module
+- the generated `_generated` declaration files
+- emitted declaration files for the server modules those generated types reference
+
+This keeps client apps on the nice Convex API types without forcing Nx/TypeScript to compile the server source graph from `platform/convex/app`.

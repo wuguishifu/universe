@@ -6,7 +6,7 @@ import { ConvexError, v } from 'convex/values';
  * RUBY_CONVEX_SECRET env var. Call assertRubySecret first thing in every handler.
  *
  * (Not a convex-helpers customQuery: with this repo's hoisted node_modules, convex-helpers and
- * hydrogen see different copies of `convex`, and their types don't line up.)
+ * convex-app see different copies of `convex`, and their types don't line up.)
  */
 export const rubySecret = v.string();
 

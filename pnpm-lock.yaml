@@ -292,18 +292,6 @@ importers:
         specifier: ^7.0.0
         version: 7.2.1(js-yaml@4.1.0)(json5@2.2.3)(webpack-dev-server@5.2.2)(webpack@5.105.2)
 
-  apps/hydrogen:
-    dependencies:
-      '@convex-dev/auth':
-        specifier: '*'
-        version: 0.0.92(@auth/core@0.37.4)(convex@1.37.0(react@19.0.0))(react@19.0.0)
-      '@universe/phrase-matching':
-        specifier: workspace:^
-        version: link:../../libs/phrase-matching
-      convex:
-        specifier: '*'
-        version: 1.37.0(react@19.0.0)
-
   apps/quartz:
     dependencies:
       '@universe/ui-web':
@@ -315,15 +303,15 @@ importers:
 
   apps/ruby:
     dependencies:
-      '@universe/hydrogen-kore':
-        specifier: workspace:*
-        version: link:../../libs/hydrogen-kore
       '@universe/nest-common':
         specifier: workspace:*
         version: link:../../libs/nest-common
       '@universe/phrase-matching':
         specifier: workspace:*
         version: link:../../libs/phrase-matching
+      '@universe/platform/convex/contracts':
+        specifier: workspace:*
+        version: link:../../platform/convex/contracts
       '@universe/platform/transcription/contracts':
         specifier: workspace:*
         version: link:../../platform/transcription/contracts
@@ -336,9 +324,9 @@ importers:
 
   apps/sapphire:
     dependencies:
-      '@universe/hydrogen-kore':
+      '@universe/platform/convex/contracts':
         specifier: workspace:*
-        version: link:../../libs/hydrogen-kore
+        version: link:../../platform/convex/contracts
       '@universe/ui-web':
         specifier: workspace:*
         version: link:../../libs/ui-web
@@ -347,8 +335,6 @@ importers:
         version: link:../../libs/utils-web
 
   core/queue: {}
-
-  libs/hydrogen-kore: {}
 
   libs/nest-common:
     dependencies:
@@ -364,6 +350,20 @@ importers:
   libs/ui-web: {}
 
   libs/utils-web: {}
+
+  platform/convex/app:
+    dependencies:
+      '@convex-dev/auth':
+        specifier: '*'
+        version: 0.0.92(@auth/core@0.37.4)(convex@1.37.0(react@19.0.0))(react@19.0.0)
+      '@universe/phrase-matching':
+        specifier: workspace:^
+        version: link:../../../libs/phrase-matching
+      convex:
+        specifier: '*'
+        version: 1.37.0(react@19.0.0)
+
+  platform/convex/contracts: {}
 
   platform/transcription/contracts: {}
 

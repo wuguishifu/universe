@@ -6,9 +6,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const packageRoot = path.resolve(__dirname, '..');
-const workspaceRoot = path.resolve(packageRoot, '../..');
-const hydrogenRoot = path.join(workspaceRoot, 'apps/hydrogen');
-const hydrogenDist = path.join(hydrogenRoot, 'dist');
+const workspaceRoot = path.resolve(packageRoot, '../../..');
+const convexAppRoot = path.join(workspaceRoot, 'platform/convex/app');
+const convexAppDist = path.join(convexAppRoot, 'dist');
 const outputRoot = path.join(packageRoot, 'dist');
 const outputGeneratedRoot = path.join(outputRoot, 'convex/_generated');
 
@@ -17,7 +17,7 @@ const copyGeneratedFile = async (filename) => {
 
   await rm(destination, { force: true });
   await copyFile(
-    path.join(hydrogenRoot, 'convex/_generated', filename),
+    path.join(convexAppRoot, 'convex/_generated', filename),
     destination,
   );
 };
@@ -35,7 +35,7 @@ const buildDataModelJs = `export {};
 await rm(outputRoot, { recursive: true, force: true });
 await mkdir(outputGeneratedRoot, { recursive: true });
 
-await cp(path.join(hydrogenDist, 'convex'), path.join(outputRoot, 'convex'), {
+await cp(path.join(convexAppDist, 'convex'), path.join(outputRoot, 'convex'), {
   recursive: true,
 });
 

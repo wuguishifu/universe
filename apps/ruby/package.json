@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@universe/platform/transcription/contracts": "workspace:*",
-    "@universe/hydrogen-kore": "workspace:*",
+    "@universe/platform/convex/contracts": "workspace:*",
     "@universe/nest-common": "workspace:*",
     "@universe/phrase-matching": "workspace:*",
     "@universe/queue": "workspace:*",
