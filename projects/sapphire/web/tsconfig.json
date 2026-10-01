@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "preserve",
     "strict": true,
@@ -27,21 +27,19 @@
     "**/*.jsx",
     "**/*.ts",
     "**/*.tsx",
-    "../../apps/sapphire/.next/types/**/*.ts",
-    "../../dist/apps/sapphire/.next/types/**/*.ts",
     "next-env.d.ts",
     ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules", "jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
   "references": [
     {
-      "path": "../../libs/utils-web"
+      "path": "../../../libs/utils-web"
     },
     {
-      "path": "../../libs/ui-web"
+      "path": "../../../libs/ui-web"
     },
     {
-      "path": "../../platform/convex/contracts"
+      "path": "../../../platform/convex/contracts"
     }
   ]
 }

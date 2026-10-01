@@ -6,23 +6,23 @@
       "hasSecrets": true,
       "hasConvex": false,
       "publicPrefix": "NEXT_PUBLIC_",
-      "legacyAppName": "quartz"
+      "infisicalPath": "quartz"
     },
-    "apps/sapphire": {
+    "projects/sapphire/web": {
       "hasSecrets": false,
       "hasConvex": true,
       "publicPrefix": "NEXT_PUBLIC_",
-      "legacyAppName": "sapphire"
+      "infisicalPath": "sapphire"
     },
     "platform/transcription/service": {
       "hasSecrets": true,
       "hasConvex": false,
-      "legacyAppName": "tungsten"
+      "infisicalPath": "tungsten"
     },
     "apps/ruby": {
       "hasSecrets": true,
       "hasConvex": true,
-      "legacyAppName": "ruby"
+      "infisicalPath": "ruby"
     }
   }
 }

@@ -1,3 +1,0 @@
-# Sapphire
-
-Personal website

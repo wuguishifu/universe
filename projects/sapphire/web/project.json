@@ -1,14 +1,14 @@
 {
-  "name": "sapphire",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/sapphire",
+  "name": "sapphire-web",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/sapphire/web",
   "projectType": "application",
   "tags": ["scope:hybrid"],
   "targets": {
     "clean": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "rm -rf apps/sapphire/.next"
+        "command": "rm -rf projects/sapphire/web/.next"
       }
     },
     "build": {
@@ -51,7 +51,7 @@
       ],
       "syncGenerators": ["@nx/js:typescript-sync"],
       "options": {
-        "cwd": "apps/sapphire",
+        "cwd": "projects/sapphire/web",
         "command": "next typegen && tsc --project tsconfig.json --noEmit"
       }
     },

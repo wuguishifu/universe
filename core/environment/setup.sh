@@ -47,7 +47,7 @@ for APP in $APPS; do
   fi
 
   # secrets in infisical still live under the legacy app name
-  SECRETS_PATH=$(echo $CONFIG | jq -r --arg app "$APP" '.apps[$app].legacyAppName // $app')
+  SECRETS_PATH=$(echo $CONFIG | jq -r --arg app "$APP" '.apps[$app].infisicalPath // $app')
 
   echo "Loading secrets for app: $APP (infisical path: /$SECRETS_PATH)"
 

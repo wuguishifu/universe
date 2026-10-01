@@ -16,9 +16,6 @@
       "path": "./libs/nest-common"
     },
     {
-      "path": "./apps/sapphire"
-    },
-    {
       "path": "./apps/quartz"
     },
     {
@@ -38,6 +35,9 @@
     },
     {
       "path": "./platform/convex/app"
+    },
+    {
+      "path": "./projects/sapphire/web"
     }
   ],
   "compilerOptions": {
