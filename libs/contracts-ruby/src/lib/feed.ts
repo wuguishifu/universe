@@ -6,7 +6,7 @@ export const RUBY_FEED_SOCKET_PATH = '/api/feed';
 /** How many utterances ruby keeps in memory per server. */
 export const RUBY_FEED_HISTORY_SIZE = 100;
 
-export const feedGuildSchema = z.object({
+const feedGuildSchema = z.object({
   id: z.string(),
   name: z.string(),
   iconUrl: z.string().nullable(),

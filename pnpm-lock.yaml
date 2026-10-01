@@ -309,9 +309,6 @@ importers:
       '@convex-dev/auth':
         specifier: '*'
         version: 0.0.92(@auth/core@0.37.4)(convex@1.37.0(@clerk/react@6.17.4(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0))(react@19.0.0)
-      '@universe/contracts-ruby':
-        specifier: workspace:^
-        version: link:../../libs/contracts-ruby
       '@universe/phrase-matching':
         specifier: workspace:^
         version: link:../../libs/phrase-matching

@@ -16,9 +16,6 @@
   "exclude": ["dist/**/*"],
   "references": [
     {
-      "path": "../../libs/contracts-ruby/tsconfig.lib.json"
-    },
-    {
       "path": "../../libs/phrase-matching/tsconfig.lib.json"
     }
   ]

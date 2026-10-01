@@ -7,7 +7,6 @@
   "types": "./index.ts",
   "dependencies": {
     "@convex-dev/auth": "*",
-    "@universe/contracts-ruby": "workspace:^",
     "@universe/phrase-matching": "workspace:^",
     "convex": "*"
   }

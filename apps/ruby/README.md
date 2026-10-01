@@ -21,8 +21,7 @@ Discord voice ──► VoiceSessionService (@discordjs/voice)
   tungsten or Convex errors, and the idempotency key means a retry never transcribes twice.
 - **Data** lives in [hydrogen](../hydrogen/convex/ruby): `trackedPhrases` and `phraseCounts`.
   Every ruby function takes `RUBY_CONVEX_SECRET`, since the functions are public.
-- The HTTP server serves `/api/health`, `/api/version`, the live feed socket, and leaderboard
-  access (below).
+- The HTTP server serves `/api/health`, `/api/version`, and the live feed socket (below).
 
 ## Live feed
 
@@ -42,25 +41,6 @@ browser ──wss://<ruby host>/api/feed?ticket=…──► FeedGateway
 - Behind a Cloudflare tunnel, `/api/feed` must not require a CF Access service token (the
   browser can't send one); the ticket is the auth. The socket pings every 30s to stay under
   Cloudflare's idle timeout.
-
-## Live leaderboard
-
-Sapphire's `/jankbot/leaderboard` page reads straight from hydrogen with a Convex subscription;
-ruby only vouches for who can see what:
-
-```plaintext
-sapphire server action ──GET /api/leaderboard/access (Bearer <feed ticket>)──► ruby
-            verifies the ticket, checks membership like the feed
-            returns { guilds, grant, expiresAt }: the grant lists the viewer's server IDs,
-            HMAC-signed with RUBY_CONVEX_SECRET, valid 10 minutes
-browser ──useQuery(ruby.leaderboard.forViewer, { grant, guildId })──► hydrogen
-            verifies the grant, returns each tracked phrase's top 10
-```
-
-- Sapphire fetches a new grant 2 minutes before the old one expires, which also picks up servers
-  the viewer joined or left.
-- Display names and avatars come from hydrogen's `speakers` table, which ruby updates each
-  time it records counts for someone.
 
 ## Commands
 

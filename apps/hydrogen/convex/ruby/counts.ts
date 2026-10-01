@@ -10,31 +10,9 @@ export const record = mutation({
     guildId: v.string(),
     userId: v.string(),
     matches: v.array(v.object({ phrase: v.string(), count: v.number() })),
-    /** Their current server profile, if ruby could fetch it. */
-    speaker: v.optional(
-      v.object({ displayName: v.string(), avatarUrl: v.string() }),
-    ),
   },
-  handler: async (ctx, { secret, guildId, userId, matches, speaker }) => {
+  handler: async (ctx, { secret, guildId, userId, matches }) => {
     assertRubySecret(secret);
-    if (speaker) {
-      const existing = await ctx.db
-        .query('speakers')
-        .withIndex('by_guild_user', (q) =>
-          q.eq('guildId', guildId).eq('userId', userId),
-        )
-        .unique();
-      if (!existing) {
-        await ctx.db.insert('speakers', { guildId, userId, ...speaker });
-      } else if (
-        existing.displayName !== speaker.displayName ||
-        existing.avatarUrl !== speaker.avatarUrl
-      ) {
-        // Only patch on change, so leaderboard subscribers aren't woken for nothing.
-        await ctx.db.patch('speakers', existing._id, speaker);
-      }
-    }
-
     for (const match of matches) {
       if (!Number.isInteger(match.count) || match.count <= 0) continue;
       const normalized = normalizeText(match.phrase);

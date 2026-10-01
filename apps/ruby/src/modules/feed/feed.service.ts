@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { Client } from 'discord.js';
+import { Injectable, Logger } from '@nestjs/common';
+import { Client, DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 import { Subject } from 'rxjs';
 import {
+  type FeedGuild,
   type FeedUtterance,
   RUBY_FEED_HISTORY_SIZE,
 } from '@universe/contracts-ruby';
@@ -14,6 +15,7 @@ import { SpeakerProfilesService } from './speaker-profiles.service';
  */
 @Injectable()
 export class FeedService {
+  private readonly logger = new Logger(FeedService.name);
   private readonly history = new Map<string, FeedUtterance[]>();
   private readonly added = new Subject<FeedUtterance>();
   readonly added$ = this.added.asObservable();
@@ -57,4 +59,42 @@ export class FeedService {
   getHistory(guildIds: Iterable<string>): FeedUtterance[] {
     return [...guildIds].flatMap((guildId) => this.history.get(guildId) ?? []);
   }
+
+  /** The servers ruby is in that this Discord user is also a member of. */
+  async getGuildsForUser(userId: string): Promise<FeedGuild[]> {
+    const guilds = [...this.client.guilds.cache.values()];
+    const memberships = await Promise.all(
+      guilds.map(async (guild) => {
+        try {
+          // force: without the GuildMembers intent ruby never hears about members leaving,
+          // so the member cache can't be trusted for access checks.
+          await guild.members.fetch({ user: userId, force: true });
+          return true;
+        } catch (error) {
+          if (
+            error instanceof DiscordAPIError &&
+            error.code === RESTJSONErrorCodes.UnknownMember
+          ) {
+            return false;
+          }
+          this.logger.warn(
+            `[${guild.id}] couldn't check membership of ${userId}: ${errorMessage(error)}`,
+          );
+          return false;
+        }
+      }),
+    );
+
+    return guilds
+      .filter((_, index) => memberships[index])
+      .map((guild) => ({
+        id: guild.id,
+        name: guild.name,
+        iconUrl: guild.iconURL({ size: 64 }),
+      }));
+  }
+}
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
 }
