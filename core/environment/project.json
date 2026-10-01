@@ -1,7 +1,7 @@
 {
   "name": "environment",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/environment/src",
+  "sourceRoot": "core/environment/src",
   "projectType": "library",
   "tags": ["scope:shared"],
   "// targets": "to see all targets run: nx show project environment --web",
@@ -15,7 +15,7 @@
     "setup": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "/bin/sh ./libs/environment/setup.sh"
+        "command": "/bin/sh ./core/environment/setup.sh"
       }
     }
   }
