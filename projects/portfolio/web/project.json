@@ -1,14 +1,14 @@
 {
-  "name": "quartz",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/quartz",
+  "name": "portfolio-web",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/portfolio/web",
   "projectType": "application",
   "tags": ["scope:hybrid"],
   "targets": {
     "clean": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "rm -rf apps/quartz/.next"
+        "command": "rm -rf projects/portfolio/web/.next"
       }
     },
     "build": {
@@ -18,14 +18,14 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run-many --targets=slicemachine,serve --projects=quartz"
+        "command": "nx run-many --targets=slicemachine,serve --projects=portfolio-web"
       }
     },
     "slicemachine": {
       "executor": "nx:run-commands",
       "options": {
         "command": "start-slicemachine",
-        "cwd": "apps/quartz"
+        "cwd": "projects/portfolio/web"
       }
     },
     "serve": {
@@ -64,7 +64,7 @@
       ],
       "syncGenerators": ["@nx/js:typescript-sync"],
       "options": {
-        "cwd": "apps/quartz",
+        "cwd": "projects/portfolio/web",
         "command": "next typegen && tsc --project tsconfig.json --noEmit"
       }
     },
@@ -72,7 +72,7 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude '(^|/)convex/_generated(/|$)'",
-        "cwd": "apps/quartz"
+        "cwd": "projects/portfolio/web"
       }
     }
   }

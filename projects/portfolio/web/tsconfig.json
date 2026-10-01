@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "preserve",
     "strict": true,
@@ -34,10 +34,10 @@
   "exclude": ["node_modules"],
   "references": [
     {
-      "path": "../../libs/utils-web"
+      "path": "../../../libs/utils-web"
     },
     {
-      "path": "../../libs/ui-web"
+      "path": "../../../libs/ui-web"
     }
   ]
 }

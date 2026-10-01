@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@source "../../../../libs/ui-web/";
+@source "../../../../../libs/ui-web/";
 @custom-variant dark (&:where(.dark, .dark *));
 
 @import './glow.css';

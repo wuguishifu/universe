@@ -2,7 +2,7 @@
   "infisicalDomain": "https://infisical.wuguishifu.dev",
   "infisicalProjectId": "49f61399-1e0e-419e-984d-1115793c8e29",
   "apps": {
-    "apps/quartz": {
+    "projects/portfolio/web": {
       "hasSecrets": true,
       "hasConvex": false,
       "publicPrefix": "NEXT_PUBLIC_",

@@ -16,9 +16,6 @@
       "path": "./libs/nest-common"
     },
     {
-      "path": "./apps/quartz"
-    },
-    {
       "path": "./core/queue"
     },
     {
@@ -38,6 +35,9 @@
     },
     {
       "path": "./projects/sapphire/web"
+    },
+    {
+      "path": "./projects/portfolio/web"
     }
   ],
   "compilerOptions": {
