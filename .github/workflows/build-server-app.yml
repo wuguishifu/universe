@@ -10,7 +10,7 @@ on:
         required: true
         type: choice
         options:
-          - tungsten
+          - transcription/service
           - ruby
       version-bump-type:
         description: 'Version bump type'
@@ -32,7 +32,8 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  APP_PATH: apps/${{ inputs.app }}
+  # Every image is published as <IMAGE_NAMESPACE>/<imageName>
+  IMAGE_NAMESPACE: ${{ github.repository }}
 
 jobs:
   deploy:
@@ -50,30 +51,32 @@ jobs:
         run: |
           CONFIG=$(cat .github/config/server-app-config.json)
           CONFIG_PATH=".apps.\"${{ inputs.app }}\""
-          REGISTRY_PATH=$(echo "$CONFIG" | jq -r "$CONFIG_PATH.registryPath")
-          if [ "$REGISTRY_PATH" == "null" ]; then
+          IMAGE_NAME=$(echo "$CONFIG" | jq -r "$CONFIG_PATH.imageName")
+          PROJECT_ROOT=$(echo "$CONFIG" | jq -r "$CONFIG_PATH.projectRoot")
+          if [ "$IMAGE_NAME" == "null" ] || [ "$PROJECT_ROOT" == "null" ]; then
             echo "Error: Invalid configuration for app '${{ inputs.app }}'."
             exit 1
           fi
 
-          echo "registry_path=$REGISTRY_PATH" >> $GITHUB_OUTPUT
+          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+          echo "project_root=$PROJECT_ROOT" >> $GITHUB_OUTPUT
 
-      # Versions here are always the full <app>-vX.Y.Z tag (release name, docker tag, bundle name).
+      # Versions here are always the full <imageName>-vX.Y.Z tag (release name, docker tag, bundle name).
       - name: Bump version
         id: version
         uses: wuguishifu/version-bump-workflow@v1
         with:
           bump-type: ${{ inputs.version-bump-type }}
-          tag-prefix: ${{ inputs.app }}-v
-          # First release of an app is <app>-v1.0.1, matching the existing apps.
-          initial-version: 1.0.0
+          tag-prefix: ${{ steps.config.outputs.image_name }}-v
+          # First release of an app is <imageName>-v0.0.1, matching the existing apps.
+          initial-version: 0.0.0
 
       - name: Get docker version
         id: docker_version
         uses: wuguishifu/version-bump-workflow/docker-image@v1
         with:
           registry: ${{ env.REGISTRY }}
-          image: ${{ steps.config.outputs.registry_path }}
+          image: ${{ env.IMAGE_NAMESPACE }}/${{ steps.config.outputs.image_name }}
           version: ${{ steps.version.outputs.tag }}
 
       - name: Login to GHCR
@@ -86,7 +89,7 @@ jobs:
       - name: Create docker image and push
         run: |
           docker build \
-            -f ./${{ env.APP_PATH }}/Dockerfile \
+            -f ./${{ steps.config.outputs.project_root }}/Dockerfile \
             -t ${{ steps.docker_version.outputs.image }} \
             -t ${{ steps.docker_version.outputs.image-latest }} \
             .
