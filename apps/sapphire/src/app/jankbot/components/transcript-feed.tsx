@@ -1,21 +1,15 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import type { FeedGuild, FeedUtterance } from '@universe/contracts-ruby';
-import { cn, Spinner } from '@universe/ui-web';
+import { useMemo } from 'react';
+import type { FeedUtterance } from '@universe/contracts-ruby';
+import { Spinner } from '@universe/ui-web';
 import { Section } from '../../../modules/layout/section';
-import { type FeedStatus, useFeed } from '../lib/use-feed';
-
-const SELECTED_GUILD_KEY = 'ruby-feed-guild';
+import { useFeed } from '../lib/use-feed';
+import { GuildPicker, useSelectedGuild } from './guild-picker';
 
 export function TranscriptFeed() {
   const { status, error, guilds, utterances } = useFeed();
-  const [pickedGuildId, setPickedGuildId] = useState(readSavedGuild);
-
-  // Fall back to the first server if the saved one isn't available (any more).
-  const guildId = guilds.some((guild) => guild.id === pickedGuildId)
-    ? pickedGuildId
-    : guilds[0]?.id;
+  const [guildId, selectGuild] = useSelectedGuild(guilds);
 
   const visible = useMemo(
     () =>
@@ -43,26 +37,12 @@ export function TranscriptFeed() {
 
   return (
     <>
-      <Section className="font-vga flex flex-wrap items-center gap-2">
-        {guilds.length === 0 ? (
-          <p className="text-white/40 text-sm">
-            ruby isn&apos;t in any of your servers...
-          </p>
-        ) : (
-          guilds.map((guild) => (
-            <GuildButton
-              key={guild.id}
-              guild={guild}
-              selected={guild.id === guildId}
-              onSelect={() => {
-                setPickedGuildId(guild.id);
-                saveGuild(guild.id);
-              }}
-            />
-          ))
-        )}
-        <StatusBadge status={status} />
-      </Section>
+      <GuildPicker
+        guilds={guilds}
+        guildId={guildId}
+        status={status}
+        onSelect={selectGuild}
+      />
       {guildId && (
         <Section className="font-vga">
           {visible.length === 0 ? (
@@ -77,51 +57,6 @@ export function TranscriptFeed() {
         </Section>
       )}
     </>
-  );
-}
-
-function GuildButton({
-  guild,
-  selected,
-  onSelect,
-}: {
-  guild: FeedGuild;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      onClick={onSelect}
-      className={cn(
-        'flex items-center gap-2 px-3 py-1 border rounded-sm transition-all duration-150',
-        selected
-          ? 'border-white/40 bg-white/10'
-          : 'border-gray-400/20 hover:bg-gray-400/10',
-      )}
-    >
-      {guild.iconUrl ? (
-        <img src={guild.iconUrl} alt="" className="size-5 rounded-full" />
-      ) : (
-        <span className="size-5 rounded-full bg-white/10 text-xs flex items-center justify-center">
-          {guild.name.charAt(0)}
-        </span>
-      )}
-      {guild.name}
-    </button>
-  );
-}
-
-function StatusBadge({ status }: { status: FeedStatus }) {
-  return (
-    <span
-      className={cn('ml-auto text-sm flex items-center gap-1', {
-        'status-ok': status === 'live',
-        'status-degraded': status === 'reconnecting',
-      })}
-    >
-      {status === 'reconnecting' && <Spinner />}
-      {status.toUpperCase()}
-    </span>
   );
 }
 
@@ -153,20 +88,4 @@ function formatTime(epochMs: number) {
     hour: 'numeric',
     minute: '2-digit',
   });
-}
-
-function readSavedGuild(): string | undefined {
-  try {
-    return localStorage.getItem(SELECTED_GUILD_KEY) ?? undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function saveGuild(guildId: string) {
-  try {
-    localStorage.setItem(SELECTED_GUILD_KEY, guildId);
-  } catch {
-    // Remembering the server is only a convenience.
-  }
 }

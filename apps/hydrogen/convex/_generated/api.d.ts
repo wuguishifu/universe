@@ -13,6 +13,7 @@ import type * as http from "../http.js";
 import type * as routes from "../routes.js";
 import type * as ruby_auth from "../ruby/auth.js";
 import type * as ruby_counts from "../ruby/counts.js";
+import type * as ruby_leaderboard from "../ruby/leaderboard.js";
 import type * as ruby_phrases from "../ruby/phrases.js";
 import type * as ruby_tables from "../ruby/tables.js";
 import type * as sapphire_tables from "../sapphire/tables.js";
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   routes: typeof routes;
   "ruby/auth": typeof ruby_auth;
   "ruby/counts": typeof ruby_counts;
+  "ruby/leaderboard": typeof ruby_leaderboard;
   "ruby/phrases": typeof ruby_phrases;
   "ruby/tables": typeof ruby_tables;
   "sapphire/tables": typeof sapphire_tables;

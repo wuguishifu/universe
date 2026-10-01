@@ -15,6 +15,7 @@ import {
 } from '@universe/contracts-ruby';
 import { EnvironmentService } from '../../environment/environment-service';
 import { FeedService } from './feed.service';
+import { ViewerGuildsService } from './viewer-guilds.service';
 
 /** Cloudflare drops tunnel WebSockets that are idle for ~100s, so ping well inside that. */
 const HEARTBEAT_MS = 30_000;
@@ -37,6 +38,7 @@ export class FeedGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     private readonly feed: FeedService,
+    private readonly viewerGuilds: ViewerGuildsService,
     private readonly environmentService: EnvironmentService,
   ) {}
 
@@ -59,7 +61,7 @@ export class FeedGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
-    const guilds = await this.feed.getGuildsForUser(payload.sub);
+    const guilds = await this.viewerGuilds.getGuildsForUser(payload.sub);
     // The socket may have closed while membership was being checked.
     if (!this.clients.has(socket)) return;
 

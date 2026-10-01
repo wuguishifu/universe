@@ -23,4 +23,15 @@ export const rubyTables = {
   })
     .index('by_guild_phrase_user', ['guildId', 'normalized', 'userId'])
     .index('by_guild_phrase_count', ['guildId', 'normalized', 'count']),
+
+  /**
+   * Server display names and avatars of people with counts, so sapphire's leaderboard can show
+   * them without asking Discord. Refreshed whenever they say a tracked phrase.
+   */
+  speakers: defineTable({
+    guildId: v.string(),
+    userId: v.string(),
+    displayName: v.string(),
+    avatarUrl: v.string(),
+  }).index('by_guild_user', ['guildId', 'userId']),
 } as const;

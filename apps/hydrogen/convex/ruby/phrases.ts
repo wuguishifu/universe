@@ -4,7 +4,7 @@ import { mutation, query } from '../_generated/server';
 import { assertRubySecret, rubySecret } from './auth';
 
 /** Keeps per-utterance matching (and the /words list reply) small. */
-const MAX_PHRASES_PER_GUILD = 50;
+export const MAX_PHRASES_PER_GUILD = 50;
 
 export const list = query({
   args: {
