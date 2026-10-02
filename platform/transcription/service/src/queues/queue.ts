@@ -13,7 +13,7 @@ import {
   type UniverseJobData,
   type UniverseQueue,
   resolveRedisConnection,
-} from '../../../../../libs/queue/src';
+} from '@universe/queue';
 import { EnvironmentService } from '../environment/environment-service';
 
 /**

@@ -11,7 +11,7 @@ import {
   resolveRedisConnection,
   type UniverseJobData,
   type UniverseQueue,
-} from '../../../../../libs/queue/src';
+} from '@universe/queue';
 import { EnvironmentService } from '../environment/environment-service';
 
 export const RUBY_QUEUE_CONFIG = {
