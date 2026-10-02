@@ -6,23 +6,22 @@
       "hasSecrets": true,
       "hasConvex": false,
       "publicPrefix": "NEXT_PUBLIC_",
-      "infisicalPath": "quartz"
+      "infisicalPath": "projects/portfolio/web"
     },
     "projects/sapphire/web": {
       "hasSecrets": false,
       "hasConvex": true,
-      "publicPrefix": "NEXT_PUBLIC_",
-      "infisicalPath": "sapphire"
+      "publicPrefix": "NEXT_PUBLIC_"
     },
     "projects/jankbot/ruby": {
       "hasSecrets": true,
       "hasConvex": true,
-      "infisicalPath": "ruby"
+      "infisicalPath": "projects/jankbot/ruby"
     },
     "platform/transcription/service": {
       "hasSecrets": true,
       "hasConvex": false,
-      "infisicalPath": "tungsten"
+      "infisicalPath": "platform/transcription/service"
     }
   }
 }

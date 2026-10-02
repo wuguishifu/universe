@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import type { AppRoute } from '@ts-rest/core';
 import { tsRestHandler, TsRestHandler } from '@ts-rest/nest';
-import { tungstenRootRouter } from '@universe/platform/transcription/contracts';
+import { transcriptionRootRouter } from '@universe/platform/transcription/contracts';
 import {
   InvalidTranscriptionRequestError,
   TranscriptionApiService,
@@ -9,7 +9,7 @@ import {
   TranscriptionTimeoutError,
 } from './transcription-api.service';
 
-const router = tungstenRootRouter.transcription;
+const router = transcriptionRootRouter.transcription;
 
 /**
  * Explicit return type for handlers: with request headers in the contract, the inferred type

@@ -17,13 +17,13 @@ import {
 import { EnvironmentService } from '../environment/environment-service';
 
 /**
- * Tungsten's queues are an internal detail: callers go through the HTTP contract and never
+ * transcription-service's queues are an internal detail: callers go through the HTTP contract and never
  * touch these. That's why this config lives in the app rather than in @universe/queue.
  *
  * Each lane is a separate queue with its own worker, so a long batch job can never delay
  * an interactive one (BullMQ priorities only reorder waiting jobs; they can't preempt).
  */
-export const TUNGSTEN_QUEUE_CONFIG = {
+export const TRANSCRIPTION_SERVICE_QUEUE_CONFIG = {
   interactive: {
     queueName: 'transcription-interactive',
     jobName: 'transcribe',
@@ -36,14 +36,15 @@ export const TUNGSTEN_QUEUE_CONFIG = {
   },
 } satisfies Record<string, QueueConfig>;
 
-export type TungstenQueueConfig = typeof TUNGSTEN_QUEUE_CONFIG;
-export type TranscriptionLane = keyof TungstenQueueConfig;
+export type TranscriptionServiceQueueConfig =
+  typeof TRANSCRIPTION_SERVICE_QUEUE_CONFIG;
+export type TranscriptionLane = keyof TranscriptionServiceQueueConfig;
 export type TranscriptionJobData = UniverseJobData<
-  TungstenQueueConfig,
+  TranscriptionServiceQueueConfig,
   TranscriptionLane
 >;
 export type TranscriptionQueue = UniverseQueue<
-  TungstenQueueConfig,
+  TranscriptionServiceQueueConfig,
   TranscriptionLane
 >;
 export type TranscriptionJob = Job<TranscriptionJobData>;
@@ -65,7 +66,11 @@ const LANE_JOB_OPTIONS: Record<TranscriptionLane, JobsOptions> = {
 };
 
 export const registerQueue = (lane: TranscriptionLane) =>
-  BullQueueModule.register(TUNGSTEN_QUEUE_CONFIG, lane, LANE_JOB_OPTIONS[lane]);
+  BullQueueModule.register(
+    TRANSCRIPTION_SERVICE_QUEUE_CONFIG,
+    lane,
+    LANE_JOB_OPTIONS[lane],
+  );
 
 @Injectable()
 export class BullOptionsFactory implements SharedBullConfigurationFactory {
@@ -77,7 +82,7 @@ export class BullOptionsFactory implements SharedBullConfigurationFactory {
     );
 
     return {
-      prefix: 'tungsten-queue',
+      prefix: 'transcription-service-queue',
       connection: {
         host: connection.host,
         port: connection.port,

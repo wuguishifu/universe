@@ -6,7 +6,7 @@ export const MAX_INLINE_AUDIO_BYTES = 10 * 1024 * 1024;
 /**
  * Where the audio comes from. Any format ffmpeg can decode is accepted.
  * - `inline`: base64 bytes in the request. Meant for short clips (e.g. Discord utterances).
- * - `s3`: an object in Garage that tungsten reads with its own credentials. Meant for long audio.
+ * - `s3`: an object in Garage that transcription-service reads with its own credentials. Meant for long audio.
  */
 export const audioSourceSchema = z.discriminatedUnion('type', [
   z.object({

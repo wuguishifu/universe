@@ -19,7 +19,7 @@ export const RUBY_QUEUE_CONFIG = {
     queueName: 'utterances',
     jobName: 'process-utterance',
     jobSchema: z.object({
-      /** Also the tungsten idempotency key, so a retried job never transcribes twice. */
+      /** Also the transcription-service idempotency key, so a retried job never transcribes twice. */
       utteranceId: z.uuid(),
       guildId: z.string(),
       channelId: z.string(),
@@ -48,7 +48,7 @@ export type RubyQueue<T extends RubyQueueKey> = UniverseQueue<
 export type RubyQueueJob<T extends RubyQueueKey> = Job<RubyJobData<T>>;
 
 const UTTERANCE_JOB_OPTIONS: JobsOptions = {
-  // Retries cover tungsten or Convex being briefly unreachable. Transcription is idempotent
+  // Retries cover transcription-service or Convex being briefly unreachable. Transcription is idempotent
   // (keyed by utteranceId), so a retry never transcribes twice; in the rare case that the
   // Convex mutation succeeded but its response was lost, the utterance counts twice.
   attempts: 3,

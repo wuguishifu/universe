@@ -3,21 +3,21 @@ import { Logger } from '@nestjs/common';
 import { UnrecoverableError } from 'bullmq';
 import { findPhraseMatches, type PhraseMatch } from '@universe/phrase-matching';
 import { RUBY_QUEUE_CONFIG, type RubyQueueJob } from '../../queues/queue';
-import { TungstenService } from '../common/tungsten.service';
+import { TranscriptionClientService } from '../common/transcription-client.service';
 import { LeaderboardService } from '../leaderboard/leaderboard.service';
 import { TrackedWordsService } from '../tracked-words/tracked-words.service';
 import { opusPacketsToWav } from './audio';
 
 type UtteranceResult = { transcript: string; matches: PhraseMatch[] };
 
-// Transcription happens in tungsten, so jobs here mostly wait on HTTP; tungsten serializes the
+// Transcription happens in transcription-service, so jobs here mostly wait on HTTP; transcription-service serializes the
 // heavy work itself, so a few concurrent jobs just keep its queue fed.
 @Processor(RUBY_QUEUE_CONFIG.utterances.queueName, { concurrency: 4 })
 export class UtteranceProcessor extends WorkerHost {
   private readonly logger = new Logger(UtteranceProcessor.name);
 
   constructor(
-    private readonly tungsten: TungstenService,
+    private readonly transcriptionClient: TranscriptionClientService,
     private readonly trackedWords: TrackedWordsService,
     private readonly leaderboard: LeaderboardService,
   ) {
@@ -56,22 +56,27 @@ export class UtteranceProcessor extends WorkerHost {
     const wav = await opusPacketsToWav(
       opusPackets.map((packet) => Buffer.from(packet, 'base64')),
     );
-    const response = await this.tungsten.transcribe(wav, utteranceId);
+    const response = await this.transcriptionClient.transcribe(
+      wav,
+      utteranceId,
+    );
 
     switch (response.status) {
       case 200:
         break;
       case 422:
-        // Tungsten couldn't transcribe this audio; retrying won't change that.
+        // transcription-service couldn't transcribe this audio; retrying won't change that.
         this.logger.warn(`[${guildId}] ${userId}: ${response.body.message}`);
         return { transcript: '', matches: [] };
       case 400:
-        // A request tungsten rejects is a configuration problem (e.g. an unknown model).
-        throw new UnrecoverableError(`tungsten: ${response.body.message}`);
+        // A request transcription-service rejects is a configuration problem (e.g. an unknown model).
+        throw new UnrecoverableError(
+          `transcription-service: ${response.body.message}`,
+        );
       default:
         // 504 (still transcribing), 401, 5xx: retry. The idempotency key reattaches to the
         // original transcription instead of starting a new one.
-        throw new Error(`tungsten responded ${response.status}`);
+        throw new Error(`transcription-service responded ${response.status}`);
     }
 
     const transcript = response.body.text;

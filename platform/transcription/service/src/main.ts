@@ -41,7 +41,7 @@ async function bootstrap() {
     runsWorker && `worker (${workerLanes.join(', ')})`,
   ].filter(Boolean);
   Logger.log(
-    `🚀 Tungsten is running on: ${await app.getUrl()} as ${roles.join(' + ')}`,
+    `🚀 Transcription service is running on: ${await app.getUrl()} as ${roles.join(' + ')}`,
   );
 }
 

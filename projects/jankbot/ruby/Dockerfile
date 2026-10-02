@@ -42,7 +42,7 @@ WORKDIR /app
 
 COPY --from=build_image /app/dist/projects/jankbot/ruby ./
 
-# No system packages: audio is decoded in JS (opusscript) and transcribed by tungsten.
+# No system packages: audio is decoded in JS (opusscript) and transcribed by transcription-service.
 
 # --no-frozen-lockfile because the pruned manifest no longer matches the
 # generated lockfile's workspace entries; versions stay pinned by the lockfile

@@ -65,7 +65,7 @@ done
 
 # MARK: copy convex variables
 
-if [ "$ENVIRONMENT" = "PRODUCTION" ]; then
+if [ "$ENVIRONMENT" = "production" ]; then
   echo "Skipping convex environment variables for production environment"
   exit 0
 fi

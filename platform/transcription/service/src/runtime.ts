@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /**
- * Which parts of tungsten this process runs. Read straight from process.env (not the
+ * Which parts of transcription-service this process runs. Read straight from process.env (not the
  * EnvironmentService) because it decides which modules exist, before DI is set up.
  *
  * - `api`: HTTP only. Adds jobs to the queues and waits on them. Cheap, safe to expose.
@@ -11,8 +11,8 @@ import { z } from 'zod';
  * Lanes let a worker take only some of the work, e.g. a GPU box that runs just `batch`.
  */
 const runtimeSchema = z.object({
-  TUNGSTEN_ROLE: z.enum(['api', 'worker', 'all']).default('all'),
-  TUNGSTEN_WORKER_LANES: z
+  TRANSCRIPTION_SERVICE_ROLE: z.enum(['api', 'worker', 'all']).default('all'),
+  TRANSCRIPTION_SERVICE_WORKER_LANES: z
     .string()
     .default('interactive,batch')
     .transform((lanes) =>
@@ -31,8 +31,10 @@ export type Runtime = {
 };
 
 export function readRuntime(env: NodeJS.ProcessEnv = process.env): Runtime {
-  const { TUNGSTEN_ROLE: role, TUNGSTEN_WORKER_LANES: workerLanes } =
-    runtimeSchema.parse(env);
+  const {
+    TRANSCRIPTION_SERVICE_ROLE: role,
+    TRANSCRIPTION_SERVICE_WORKER_LANES: workerLanes,
+  } = runtimeSchema.parse(env);
   return {
     runsApi: role !== 'worker',
     runsWorker: role !== 'api',

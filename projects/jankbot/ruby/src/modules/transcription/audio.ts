@@ -12,7 +12,7 @@ const BYTES_PER_SAMPLE = 2;
 
 /**
  * Decodes Discord Opus packets (48kHz stereo) to a 16kHz mono 16-bit WAV: the format whisper
- * uses, so tungsten's ffmpeg step is a pass-through. ~32KB per second of audio.
+ * uses, so transcription-service's ffmpeg step is a pass-through. ~32KB per second of audio.
  */
 export async function opusPacketsToWav(packets: Buffer[]): Promise<Buffer> {
   const decoder = new opus.Decoder({

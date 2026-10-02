@@ -14,7 +14,7 @@ import {
   transcriptSchema,
 } from '@universe/platform/transcription/contracts';
 import {
-  TUNGSTEN_QUEUE_CONFIG,
+  TRANSCRIPTION_SERVICE_QUEUE_CONFIG,
   type TranscriptionJob,
   type TranscriptionLane,
   type TranscriptionQueue,
@@ -39,9 +39,9 @@ export class TranscriptionApiService implements OnModuleInit, OnModuleDestroy {
   private interactiveEvents!: QueueEvents;
 
   constructor(
-    @Inject(TUNGSTEN_QUEUE_CONFIG.interactive.queueName)
+    @Inject(TRANSCRIPTION_SERVICE_QUEUE_CONFIG.interactive.queueName)
     interactiveQueue: TranscriptionQueue,
-    @Inject(TUNGSTEN_QUEUE_CONFIG.batch.queueName)
+    @Inject(TRANSCRIPTION_SERVICE_QUEUE_CONFIG.batch.queueName)
     batchQueue: TranscriptionQueue,
     private readonly models: WhisperModelsService,
     private readonly s3: S3Service,
@@ -167,7 +167,7 @@ export class TranscriptionApiService implements OnModuleInit, OnModuleDestroy {
 
     // Pin the resolved model so the job doesn't depend on the worker's default.
     return queue.add(
-      TUNGSTEN_QUEUE_CONFIG[lane].jobName,
+      TRANSCRIPTION_SERVICE_QUEUE_CONFIG[lane].jobName,
       { ...request, options: { ...request.options, model } },
       { jobId },
     );

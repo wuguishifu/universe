@@ -79,7 +79,9 @@ export class TranscriberService {
       throw new UnrecoverableError('VAD is not configured on this worker');
     }
 
-    const workDir = await mkdtemp(path.join(tmpdir(), 'tungsten-'));
+    const workDir = await mkdtemp(
+      path.join(tmpdir(), 'transcription-service-'),
+    );
     try {
       const inputPath = path.join(workDir, 'input');
       if (source.type === 'inline') {

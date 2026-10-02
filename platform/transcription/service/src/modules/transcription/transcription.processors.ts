@@ -1,7 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import type { Transcript } from '@universe/platform/transcription/contracts';
 import {
-  TUNGSTEN_QUEUE_CONFIG,
+  TRANSCRIPTION_SERVICE_QUEUE_CONFIG,
   type TranscriptionJob,
   type TranscriptionLane,
 } from '../../queues/queue';
@@ -10,7 +10,9 @@ import { TranscriberService } from './transcriber.service';
 // One processor class per lane because @Processor binds a class to a single queue.
 // Concurrency 1: whisper already uses every thread it's given, so parallel jobs just contend.
 
-@Processor(TUNGSTEN_QUEUE_CONFIG.interactive.queueName, { concurrency: 1 })
+@Processor(TRANSCRIPTION_SERVICE_QUEUE_CONFIG.interactive.queueName, {
+  concurrency: 1,
+})
 export class InteractiveTranscriptionProcessor extends WorkerHost {
   constructor(private readonly transcriber: TranscriberService) {
     super();
@@ -21,7 +23,9 @@ export class InteractiveTranscriptionProcessor extends WorkerHost {
   }
 }
 
-@Processor(TUNGSTEN_QUEUE_CONFIG.batch.queueName, { concurrency: 1 })
+@Processor(TRANSCRIPTION_SERVICE_QUEUE_CONFIG.batch.queueName, {
+  concurrency: 1,
+})
 export class BatchTranscriptionProcessor extends WorkerHost {
   constructor(private readonly transcriber: TranscriberService) {
     super();

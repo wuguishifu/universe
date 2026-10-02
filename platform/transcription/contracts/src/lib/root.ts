@@ -1,7 +1,7 @@
 import { c } from './contract';
 import { transcriptionRouter } from './routers/transcription.router';
 
-export const tungstenRootRouter = c.router(
+export const transcriptionRootRouter = c.router(
   {
     transcription: transcriptionRouter,
   },

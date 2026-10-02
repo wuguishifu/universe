@@ -27,9 +27,9 @@ export const environmentSchema = z.object({
   /** Must match RUBY_CONVEX_SECRET on the convex deployment. */
   rubyConvexSecret: z.string().min(16),
 
-  /** tungsten's base URL, e.g. http://bos-mac-mini:3002. */
-  tungstenUrl: z.url(),
-  tungstenApiToken: z.string().min(16),
+  /** transcription-service's base URL, e.g. http://bos-mac-mini:3002. */
+  transcriptionServiceUrl: z.url(),
+  transcriptionServiceApiToken: z.string().min(16),
 
   /** How long a speaker must be silent before their utterance is considered finished. */
   utteranceSilenceMs: z.coerce.number().int().positive().default(1000),

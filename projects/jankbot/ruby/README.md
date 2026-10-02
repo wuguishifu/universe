@@ -12,14 +12,14 @@ Discord voice ──► VoiceSessionService (@discordjs/voice)
                     ▼  BullMQ "utterances" queue (raw Opus packets + utteranceId)
                   UtteranceProcessor
                     1. Opus ─► 16kHz mono WAV, in JS (audio.ts; no ffmpeg needed)
-                    2. POST tungsten /api/transcriptions  (Idempotency-Key: ruby:<utteranceId>)
+                    2. POST transcription-service /api/transcriptions  (Idempotency-Key: ruby:<utteranceId>)
                     3. findPhraseMatches (@universe/phrase-matching)
                     4. api.ruby.counts.record (convex, via @universe/platform/convex/contracts)
 ```
 
-- **Transcription** is [tungsten](../tungsten)'s job; ruby has no whisper or ffmpeg. Jobs retry on
-  tungsten or Convex errors, and the idempotency key means a retry never transcribes twice.
-- **Data** lives in [convex](../../platform/convex/app/convex/ruby/): `trackedPhrases` and `phraseCounts`.
+- **Transcription** is [transcription-service](../../../platform/transcription/service)'s job; ruby has no whisper or ffmpeg. Jobs retry on
+  transcription-service or Convex errors, and the idempotency key means a retry never transcribes twice.
+- **Data** lives in [convex](../../../platform/convex/app/convex/ruby/): `trackedPhrases` and `phraseCounts`.
   Every ruby function takes `RUBY_CONVEX_SECRET`, since the functions are public.
 - The HTTP server only serves `/api/health` and `/api/version`.
 
@@ -35,7 +35,7 @@ Discord voice ──► VoiceSessionService (@discordjs/voice)
 ## Local development
 
 1. Secrets in Infisical dev `/ruby`: `DISCORD_TOKEN`, `DISCORD_DEV_GUILD_IDS`, `REDIS_URL`,
-   `RUBY_CONVEX_SECRET`, `TUNGSTEN_URL`, `TUNGSTEN_API_TOKEN`. Then `nx setup environment`.
+   `RUBY_CONVEX_SECRET`, `TRANSCRIPTION_SERVICE_URL`, `TRANSCRIPTION_SERVICE_API_TOKEN`. Then `nx setup environment`.
    (Or put them in a gitignored `projects/jankbot/ruby/.env`; see `.env.example`.)
 2. `RUBY_CONVEX_SECRET` must also be set on the convex deployment:
    `pnpm nx convex convex-app -- env set RUBY_CONVEX_SECRET <value>`.

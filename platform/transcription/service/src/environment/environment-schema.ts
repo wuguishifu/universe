@@ -13,7 +13,7 @@ export const environmentSchema = z
   .object({
     debugLogging: z.stringbool().default(false),
     environment: z.enum(['development', 'production']).default('development'),
-    tungstenApiToken: z.string().min(16),
+    apiToken: z.string().min(16),
     redisUrl: z.string().min(1),
 
     ffmpegPath: z.string().default('ffmpeg'),
@@ -48,10 +48,8 @@ export const environmentSchema = z
       env.whisperModels.includes(env.whisperDefaultModel),
     { message: 'WHISPER_DEFAULT_MODEL must be one of WHISPER_MODELS' },
   )
-  .transform(
-    ({ tungstenApiToken: apiToken, whisperDefaultModel, ...data }) => ({
-      ...s3EnvAdapter(data),
-      apiToken,
-      whisperDefaultModel: whisperDefaultModel ?? data.whisperModels[0],
-    }),
-  );
+  .transform(({ apiToken: apiToken, whisperDefaultModel, ...data }) => ({
+    ...s3EnvAdapter(data),
+    apiToken,
+    whisperDefaultModel: whisperDefaultModel ?? data.whisperModels[0],
+  }));

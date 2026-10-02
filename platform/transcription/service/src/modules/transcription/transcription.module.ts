@@ -9,7 +9,7 @@ import { WhisperModelsService } from './whisper-models.service';
 
 /**
  * Assembled per role, so one image can run as the API, as a worker for some lanes, or as both.
- * Workers only exist for the lanes listed in TUNGSTEN_WORKER_LANES.
+ * Workers only exist for the lanes listed in TRANSCRIPTION_SERVICE_WORKER_LANES.
  */
 @Module({})
 export class TranscriptionModule {
