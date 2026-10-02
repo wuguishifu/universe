@@ -7,9 +7,6 @@
       "path": "./libs/ui-web"
     },
     {
-      "path": "./libs/utils-web"
-    },
-    {
       "path": "./platform/convex/contracts"
     },
     {

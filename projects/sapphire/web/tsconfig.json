@@ -33,9 +33,6 @@
   "exclude": ["node_modules", "jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
   "references": [
     {
-      "path": "../../../libs/utils-web"
-    },
-    {
       "path": "../../../libs/ui-web"
     },
     {

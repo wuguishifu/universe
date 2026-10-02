@@ -34,9 +34,6 @@
   "exclude": ["node_modules"],
   "references": [
     {
-      "path": "../../../libs/utils-web"
-    },
-    {
       "path": "../../../libs/ui-web"
     }
   ]

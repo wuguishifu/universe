@@ -1,6 +1,5 @@
 import { asImageSrc, isFilled } from '@prismicio/client';
 import { notFound } from 'next/navigation';
-import { PageProps } from '@libs/utils-web';
 
 import { AllDocumentTypes, ProjectDocument } from '../../../../prismicio-types';
 import { createClient } from '../../../prismicio';
@@ -13,7 +12,7 @@ function verifyParams(page: AllDocumentTypes): page is ProjectDocument {
 
 export default async function ProjectPage({
   params,
-}: PageProps<never, { projectId: string }>) {
+}: PageProps<'/projects/[projectId]'>) {
   const { projectId } = await params;
   const client = createClient();
   const page = await client
