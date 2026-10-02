@@ -36,9 +36,9 @@ Discord voice ──► VoiceSessionService (@discordjs/voice)
 
 1. Secrets in Infisical dev `/ruby`: `DISCORD_TOKEN`, `DISCORD_DEV_GUILD_IDS`, `REDIS_URL`,
    `RUBY_CONVEX_SECRET`, `TUNGSTEN_URL`, `TUNGSTEN_API_TOKEN`. Then `nx setup environment`.
-   (Or put them in a gitignored `apps/ruby/.env`; see `.env.example`.)
+   (Or put them in a gitignored `projects/jankbot/ruby/.env`; see `.env.example`.)
 2. `RUBY_CONVEX_SECRET` must also be set on the convex deployment:
    `pnpm nx convex convex-app -- env set RUBY_CONVEX_SECRET <value>`.
-3. `pnpm nx serve ruby`, then `/join` in a voice channel of a `DISCORD_DEV_GUILD_IDS` server.
+3. `pnpm nx serve jankbot-ruby`, then `/join` in a voice channel of a `DISCORD_DEV_GUILD_IDS` server.
 
 Only run one instance per bot token: two processes would both answer every command.

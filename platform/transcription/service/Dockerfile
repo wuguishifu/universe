@@ -44,11 +44,11 @@ ENV VERSION=${VERSION}
 
 RUN pnpm install --frozen-lockfile
 
-# emits dist/apps/tungsten with main.js plus a pruned package.json + pnpm-lock.yaml
+# emits dist/platform/transcription/service with main.js plus a pruned package.json + pnpm-lock.yaml
 # (generatePackageJson in webpack.config.js)
-RUN NX_DAEMON=false ENVIRONMENT=$BUILD_ENV pnpm nx build tungsten
+RUN NX_DAEMON=false ENVIRONMENT=$BUILD_ENV pnpm nx build transcription-service
 
-RUN node tools/scripts/prune-deploy-manifest.mjs dist/apps/tungsten/package.json
+RUN node tools/scripts/prune-deploy-manifest.mjs dist/platform/transcription/service/package.json
 
 # --- runtime -------------------------------------------------------------------
 FROM node:22-slim
@@ -78,7 +78,7 @@ ENV WHISPER_MODELS_DIR=/models
 
 WORKDIR /app
 
-COPY --from=build_image /app/dist/apps/tungsten ./
+COPY --from=build_image /app/dist/platform/transcription/service ./
 
 # --no-frozen-lockfile because the pruned manifest no longer matches the
 # generated lockfile's workspace entries; versions stay pinned by the lockfile

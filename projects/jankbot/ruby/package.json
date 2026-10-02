@@ -1,5 +1,5 @@
 {
-  "name": "@universe/ruby",
+  "name": "@universe/jankbot/ruby",
   "version": "0.0.1",
   "private": true,
   "dependencies": {

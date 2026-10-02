@@ -4,7 +4,7 @@ Media worker service. Other apps own their business logic and hand transcription
 work over HTTP. For now that's speech-to-text with [whisper.cpp](https://github.com/ggml-org/whisper.cpp):
 audio in, transcript out.
 
-The contract is `@universe/contracts-transcription-service` (ts-rest). Callers never see transcription-service's queues.
+The contract is `@universe/platform/transcription/contracts` (ts-rest). Callers never see transcription-service's queues.
 
 ## Architecture
 
@@ -17,7 +17,7 @@ The contract is `@universe/contracts-transcription-service` (ts-rest). Callers n
  │ validate → add job to the lane's queue │
  │ sync: wait for completion (≤60s)       │
  └───────────────────┬────────────────────┘
-                     │ Redis (BullMQ, prefix `transcription-service-queue`)
+                     │ Redis (BullMQ, prefix `tungsten-queue`)
         ┌────────────┴─────────────┐
         ▼                          ▼
   transcription-interactive   transcription-batch
@@ -29,7 +29,7 @@ The contract is `@universe/contracts-transcription-service` (ts-rest). Callers n
  └────────────────────────────────────────┘
 ```
 
-**One image, three roles** (`TRANSCRIPTION_SERVICE_ROLE`):
+**One image, three roles** (`TUNGSTEN_ROLE`):
 
 | Role     | Runs                   | Deploy as                                      |
 | -------- | ---------------------- | ---------------------------------------------- |
@@ -44,11 +44,11 @@ whisper.cpp), or on a GPU node, without callers noticing.
 **Two lanes, each its own queue and worker.** BullMQ priorities only reorder _waiting_ jobs;
 a running 20-minute batch job would still block a 2-second clip. Separate queues with their
 own workers and thread budgets (`WHISPER_THREADS_*`) keep interactive latency independent of
-batch load. `TRANSCRIPTION_SERVICE_WORKER_LANES` picks which lanes a worker process takes.
+batch load. `TUNGSTEN_WORKER_LANES` picks which lanes a worker process takes.
 
 ## API
 
-All routes except `/api/health` and `/api/version` need `Authorization: Bearer <TRANSCRIPTION_SERVICE_API_TOKEN>`.
+All routes except `/api/health` and `/api/version` need `Authorization: Bearer <TUNGSTEN_API_TOKEN>`.
 
 | Route                                | Lane        | Response                                        |
 | ------------------------------------ | ----------- | ----------------------------------------------- |
@@ -108,7 +108,7 @@ its last sentence three times), which would corrupt phrase counts. Don't use it.
 
 Nx loads two env files for `nx serve transcription-service` (`.env.local` wins where both set a variable):
 
-- `.env.local`: secrets (token, Redis, S3) generated from Infisical `/transcription-service` by
+- `.env.local`: secrets (token, Redis, S3) generated from Infisical `/tungsten` by
   `nx setup environment`. Don't edit it.
 - root `.env`: settings specific to your machine, mainly where whisper lives. For example, reusing
   a native whisper.cpp build and model:

@@ -1,5 +1,5 @@
 {
-  "name": "ruby",
+  "name": "jankbot-ruby",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "projects/jankbot/ruby/src",
   "projectType": "application",
@@ -9,7 +9,7 @@
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "ruby:build"
+        "buildTarget": "jankbot-ruby:build"
       },
       "configurations": {
         "development": {},

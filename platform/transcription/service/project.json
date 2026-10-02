@@ -1,5 +1,5 @@
 {
-  "name": "platform-transcription-service",
+  "name": "transcription-service",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "platform/transcription/service/src",
   "projectType": "application",

@@ -19,11 +19,11 @@ ENV VERSION=${VERSION}
 
 RUN pnpm install --frozen-lockfile
 
-# emits dist/apps/ruby with main.js plus a pruned package.json + pnpm-lock.yaml
+# emits dist/projects/jankbot/ruby with main.js plus a pruned package.json + pnpm-lock.yaml
 # (generatePackageJson in webpack.config.js)
-RUN NX_DAEMON=false ENVIRONMENT=$BUILD_ENV pnpm nx build ruby
+RUN NX_DAEMON=false ENVIRONMENT=$BUILD_ENV pnpm nx build jankbot-ruby
 
-RUN node tools/scripts/prune-deploy-manifest.mjs dist/apps/ruby/package.json
+RUN node tools/scripts/prune-deploy-manifest.mjs dist/projects/jankbot/ruby/package.json
 
 FROM node:22-slim
 
@@ -40,7 +40,7 @@ RUN corepack enable
 
 WORKDIR /app
 
-COPY --from=build_image /app/dist/apps/ruby ./
+COPY --from=build_image /app/dist/projects/jankbot/ruby ./
 
 # No system packages: audio is decoded in JS (opusscript) and transcribed by tungsten.
 
