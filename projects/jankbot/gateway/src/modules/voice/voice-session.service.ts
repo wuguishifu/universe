@@ -13,7 +13,7 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { Client, VoiceBasedChannel } from 'discord.js';
+import { Client, Guild, VoiceBasedChannel } from 'discord.js';
 import { Context, type ContextOf, On, Once } from 'necord';
 import { randomUUID } from 'crypto';
 import {
@@ -30,6 +30,8 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
   private readonly logger = new Logger(VoiceSessionService.name);
   /** Set once shutdown starts, so dropped connections stay remembered for the next start. */
   private shuttingDown = false;
+  /** Per guild: pending auto-leave while the bot is alone in its channel. */
+  private readonly idleTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(
     private readonly client: Client,
@@ -59,7 +61,10 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
     } catch (error) {
       connection.destroy();
       // The bot left its previous channel to get here, so there's nothing left to rejoin.
-      if (existing) await this.forget(channel.guild.id);
+      if (existing) {
+        this.stopIdleTimer(channel.guild.id);
+        await this.forget(channel.guild.id);
+      }
       throw error;
     }
 
@@ -68,6 +73,7 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
       this.captureUtterance(connection, userId),
     );
     await this.remember(channel.guild.id, channel.id);
+    this.updateIdleTimer(channel.guild);
     this.logger.log(`Listening in #${channel.name} (${channel.guild.name})`);
   }
 
@@ -75,11 +81,12 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
   async leave(guildId: string): Promise<boolean> {
     const connection = getVoiceConnection(guildId);
     connection?.destroy();
+    this.stopIdleTimer(guildId);
     await this.forget(guildId);
     return connection !== undefined;
   }
 
-  /** Rejoins the channels the bot was in before the gateway restarted. */
+  /** Rejoins the channels the bot was in before the gateway restarted, unless nobody is left in them. */
   @Once('clientReady')
   async restoreSessions() {
     let sessions: { guildId: string; channelId: string }[];
@@ -102,6 +109,14 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
           await this.forget(guildId);
           return;
         }
+        // Same outcome as sitting alone until the idle timeout: the session is over.
+        if (humanCount(channel) === 0) {
+          this.logger.log(
+            `[${guildId}] Nobody is in #${channel.name} anymore; not rejoining`,
+          );
+          await this.forget(guildId);
+          return;
+        }
         try {
           await this.join(channel);
         } catch (error) {
@@ -115,21 +130,29 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
     );
   }
 
-  /** Keeps the remembered channel current when someone drags the bot to another channel. */
+  /**
+   * Keeps the remembered channel current when someone drags the bot to another channel, and
+   * starts or cancels the idle timeout as people come and go.
+   */
   @On('voiceStateUpdate')
   async onVoiceStateUpdate(
     @Context() [oldState, newState]: ContextOf<'voiceStateUpdate'>,
   ) {
+    const { guild } = newState;
+    if (!getVoiceConnection(guild.id)) return;
+    this.updateIdleTimer(guild);
+
     if (newState.id !== this.client.user?.id) return;
     if (!newState.channelId || newState.channelId === oldState.channelId) {
       return;
     }
-    if (!getVoiceConnection(newState.guild.id)) return;
-    await this.remember(newState.guild.id, newState.channelId);
+    await this.remember(guild.id, newState.channelId);
   }
 
   beforeApplicationShutdown() {
     this.shuttingDown = true;
+    for (const timer of this.idleTimers.values()) clearTimeout(timer);
+    this.idleTimers.clear();
     for (const connection of getVoiceConnections().values()) {
       connection.destroy();
     }
@@ -200,6 +223,36 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
     }
   }
 
+  /** Starts the idle timeout if the bot is alone in its channel, and cancels it otherwise. */
+  private updateIdleTimer(guild: Guild) {
+    // discord.js's cache, not joinConfig: it's already current when the bot is dragged elsewhere.
+    const channel = guild.members.me?.voice.channel;
+    if (!channel || humanCount(channel) > 0) {
+      this.stopIdleTimer(guild.id);
+      return;
+    }
+    if (this.idleTimers.has(guild.id)) return;
+
+    const { voiceIdleTimeoutMs } = this.environmentService.environment;
+    this.idleTimers.set(
+      guild.id,
+      setTimeout(() => {
+        this.idleTimers.delete(guild.id);
+        const current = guild.members.me?.voice.channel;
+        if (!current || humanCount(current) > 0) return;
+        this.logger.log(
+          `[${guild.id}] Alone in #${current.name} for ${voiceIdleTimeoutMs / 1000}s; leaving`,
+        );
+        void this.leave(guild.id);
+      }, voiceIdleTimeoutMs),
+    );
+  }
+
+  private stopIdleTimer(guildId: string) {
+    clearTimeout(this.idleTimers.get(guildId));
+    this.idleTimers.delete(guildId);
+  }
+
   // The voice connection itself doesn't depend on the store, so a Redis failure only costs the rejoin.
   private async remember(guildId: string, channelId: string) {
     try {
@@ -232,6 +285,7 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
         if (connection.state.status !== VoiceConnectionStatus.Destroyed) {
           connection.destroy();
         }
+        this.stopIdleTimer(connection.joinConfig.guildId);
         // Kicked, or the channel was deleted. A shutdown also drops the connection, but that
         // session should survive the restart.
         if (!this.shuttingDown) {
@@ -240,4 +294,9 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
       }
     });
   }
+}
+
+/** Other bots don't count as company. */
+function humanCount(channel: VoiceBasedChannel): number {
+  return channel.members.filter((member) => !member.user.bot).size;
 }

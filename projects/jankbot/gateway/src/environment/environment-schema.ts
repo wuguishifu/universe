@@ -14,4 +14,7 @@ export const environmentSchema = z.object({
   utteranceMinMs: z.coerce.number().int().nonnegative().default(500),
   /** Utterances longer than this are split into multiple jobs. */
   utteranceMaxMs: z.coerce.number().int().positive().default(30_000),
+
+  /** The bot leaves a voice channel after being the only (non-bot) member for this long. */
+  voiceIdleTimeoutMs: z.coerce.number().int().positive().default(300_000),
 });
