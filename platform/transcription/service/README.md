@@ -110,8 +110,10 @@ Nx loads two env files for `nx serve transcription-service` (`.env.local` wins w
 
 - `.env.local`: secrets (token, Redis, S3) generated from Infisical `/platform/transcription/service` by
   `nx setup environment`. Don't edit it.
-- root `.env`: settings specific to your machine, mainly where whisper lives. For example, reusing
-  a native whisper.cpp build and model:
+- root `.env`: settings specific to your machine, mainly where whisper lives.
+  `tools/scripts/setup-whisper.sh [model...]` builds whisper-cli (Metal on Apple Silicon) at the
+  Dockerfile's `WHISPER_CPP_VERSION` and downloads models into the gitignored `bin/`. Point the root
+  `.env` at it, or at any other native whisper.cpp build and model:
 
   ```sh
   WHISPER_CLI_PATH=/path/to/whisper-cli

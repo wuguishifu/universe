@@ -34,10 +34,16 @@
       "path": "./projects/portfolio/web"
     },
     {
-      "path": "./projects/jankbot/ruby"
+      "path": "./projects/jankbot/core"
     },
     {
       "path": "./libs/queue"
+    },
+    {
+      "path": "./projects/jankbot/gateway"
+    },
+    {
+      "path": "./projects/jankbot/contracts"
     }
   ],
   "compilerOptions": {

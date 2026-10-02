@@ -14,12 +14,16 @@
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.32.0",
     "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.0.0",
     "@nx/eslint": "23.1.1",
     "@nx/eslint-plugin": "23.1.1",
     "@nx/js": "23.1.1",
     "@nx/nest": "23.1.1",
     "@nx/next": "23.1.1",
+    "@nx/node": "23.1.1",
     "@nx/react": "23.1.1",
+    "@nx/web": "23.1.1",
+    "@nx/webpack": "23.1.1",
     "@prismicio/client": "^7.19.0",
     "@prismicio/next": "^2.0.1",
     "@prismicio/react": "^3.2.1",
@@ -50,7 +54,9 @@
     "tsconfig-paths": "^4.2.0",
     "tslib": "^2.3.0",
     "typescript": "6.0.3",
-    "webpack-cli": "^7.0.0"
+    "webpack": "^5.101.3",
+    "webpack-cli": "^7.0.0",
+    "webpack-dev-server": "^5.2.1"
   },
   "packageManager": "pnpm@10.2.0",
   "nx": {

@@ -1,0 +1,16 @@
+{
+  "name": "jankbot-contracts",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/jankbot/contracts/src",
+  "projectType": "library",
+  "tags": ["scope:shared"],
+  "targets": {
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning",
+        "cwd": "projects/jankbot/contracts"
+      }
+    }
+  }
+}

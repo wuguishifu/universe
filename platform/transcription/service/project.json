@@ -16,6 +16,12 @@
         "production": {}
       }
     },
+    "bin": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sh tools/scripts/setup-whisper.sh"
+      }
+    },
     "circular-deps": {
       "executor": "nx:run-commands",
       "options": {
