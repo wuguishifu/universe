@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { LeaderboardCommands } from '../leaderboard/leaderboard.commands';
 import { TrackedWordsCommands } from '../tracked-words/tracked-words.commands';
+import { JoinCommand, LeaveCommand } from '../voice/voice.commands';
 import { type CommandHandler } from './command-handler';
 
-/** core's commands. Adding one here registers it with Discord and routes it to its handler. */
+/** Every jankbot command. Adding one here registers it with Discord and routes it to its handler. */
 @Injectable()
 export class CommandRegistry {
   readonly handlers: readonly CommandHandler[];
@@ -12,8 +13,10 @@ export class CommandRegistry {
   constructor(
     trackedWords: TrackedWordsCommands,
     leaderboard: LeaderboardCommands,
+    join: JoinCommand,
+    leave: LeaveCommand,
   ) {
-    this.handlers = [trackedWords, leaderboard];
+    this.handlers = [join, leave, trackedWords, leaderboard];
     this.byName = new Map(
       this.handlers.map((handler) => [handler.definition.name, handler]),
     );

@@ -54,6 +54,8 @@ export const JANKBOT_QUEUE_CONFIG = {
       guildId: z.string().nullable(),
       channelId: z.string().nullable(),
       userId: z.string(),
+      /** The caller's voice channel when the command was run, from the gateway's cache. */
+      voiceChannelId: z.string().nullable(),
       commandName: z.string(),
       subcommandGroup: z.string().nullable(),
       subcommand: z.string().nullable(),

@@ -17,7 +17,7 @@ const isTokenExpired = (interaction: CommandInteraction) =>
   Date.now() - interaction.receivedAt >
   INTERACTION_TOKEN_TTL_MS - TOKEN_SAFETY_MARGIN_MS;
 
-/** Answers the slash commands the gateway forwards (everything except /join and /leave). */
+/** Answers the slash commands the primary gateway forwards. */
 @Processor(JANKBOT_QUEUE_CONFIG.interactions.queueName, { concurrency: 8 })
 export class InteractionProcessor extends WorkerHost {
   private readonly logger = new Logger(InteractionProcessor.name);

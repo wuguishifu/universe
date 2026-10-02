@@ -7,11 +7,12 @@ says tracked phrases (like "I don't know") the most. Formerly `ruby`, and before
 jankbot is split so that deploying core never kicks the bot out of voice:
 
 - **[jankbot-gateway](../gateway)** holds the Discord gateway connection and the voice connections.
-  It handles `/join` and `/leave` itself, and only changes when voice handling does.
+  One runs per voice bot (a bot can only be in one voice channel per server, so more bots means more
+  channels at once). The primary one receives every slash command and forwards it here. It only
+  changes when voice handling does.
 - **jankbot-core** (this) does the work: transcription, phrase matching, Convex, and every other
   command. It never connects to the Discord gateway; it talks to Discord over HTTP only.
-- **[jankbot-contracts](../contracts)** holds what both share: the queue payloads and the command
-  definitions.
+- **[jankbot-contracts](../contracts)** holds what both share: the queue payloads and Redis keys.
 
 ## How it works
 
@@ -26,21 +27,23 @@ Discord voice ──► gateway: VoiceSessionService (@discordjs/voice)
                     3. findPhraseMatches (@libs/phrase-matching)
                     4. api.ruby.counts.record (convex, via @platform/convex-contracts)
 
-Slash command ──► gateway: InteractionRouter
-                    /join, /leave: handled in the gateway
-                    anything else: deferReply(), then
+Slash command ──► primary gateway: InteractionRouter
+                    deferReply(), then
                     │
-                    ▼  BullMQ "interactions" queue (command, options, interaction token)
+                    ▼  BullMQ "interactions" queue (command, options, caller's voice channel, interaction token)
                   core: InteractionProcessor
                     runs the command, then edits the deferred reply through the interaction webhook
+                    │
+                    ▼  /join, /leave: BullMQ "voice-commands-<name>" queue, one per voice bot
+                  that bot's gateway: VoiceCommandWorker joins or leaves, and core waits for the result
 ```
 
 - While core is down or redeploying, utterances and commands wait in Redis. Commands show
   "thinking..." until core picks them up; interaction tokens last 15 minutes, so core gives up on
   (and reports) anything older than that.
-- **Commands** are defined in `@projects/jankbot-contracts` and registered by core over REST on
-  every start (in `DISCORD_DEV_GUILD_IDS` if set, otherwise globally). The gateway runs Necord with
-  `skipRegistration` so it doesn't overwrite them. A new core command works without a gateway
+- **Commands** are defined in core and registered on the primary bot (`DISCORD_TOKEN`) over REST on
+  every start (in `DISCORD_DEV_GUILD_IDS` if set, otherwise globally). The gateways run Necord with
+  `skipRegistration` so they don't overwrite them. A new core command works without a gateway
   deploy; the gateway defers commands it doesn't know about publicly. Making a command ephemeral
   needs a gateway deploy, since the gateway decides that when it defers.
 - **Transcription** is [transcription-service](../../../platform/transcription/service)'s job; core has no whisper or
@@ -55,10 +58,22 @@ Slash command ──► gateway: InteractionRouter
 
 | Command                    | Handled by | Notes                                                 |
 | -------------------------- | ---------- | ----------------------------------------------------- |
-| `/join`                    | gateway    | Joins the caller's voice channel and starts listening |
-| `/leave`                   | gateway    | Leaves the voice channel                              |
+| `/join [bot]`              | core       | Sends a voice bot to the caller's voice channel       |
+| `/leave [bot]`             | core       | Disconnects the named bot, or the one in your channel |
 | `/words list\|add\|remove` | core       | Manage tracked phrases (50 per server)                |
 | `/leaderboard phrase:<..>` | core       | Top speakers for a phrase                             |
+
+## Voice bots
+
+`VOICE_BOTS` (e.g. `Bo,Mikey,Steven`) lists the voice bots by each gateway's `NAME`; they're also the choices for the
+`bot` option. For every `/join` and `/leave`, core looks each bot up fresh: online if its gateway's heartbeat is in
+Redis, then its guild membership and voice state from Discord's API. Nothing about where bots are is cached.
+
+- `/join` without `bot` sends the first free bot in `VOICE_BOTS` order. A short Redis claim per bot and guild keeps two
+  `/join`s at once from picking the same one. With `bot`, it's that bot or an error (offline, not in this server, or
+  already in a channel).
+- `/leave` without `bot` disconnects whichever bot is in the caller's voice channel.
+- Every bot has to be invited to each server separately. Only the primary bot needs the commands scope.
 
 ## Local development
 

@@ -1,14 +1,14 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { RedisCacheService } from '@libs/nest-common';
-import { GATEWAY_COMMANDS, JANKBOT_REDIS } from '@projects/jankbot-contracts';
+import { JANKBOT_REDIS } from '@projects/jankbot-contracts';
 import { EnvironmentService } from '../../environment/environment-service';
 import { DiscordRestService } from '../discord/discord-rest.service';
 import { CommandRegistry } from './command-registry';
 
 /**
- * Registers every jankbot command (the gateway's from contracts, plus core's own) so command
- * definitions change with a core deploy. The gateway runs Necord with registration turned off so it
- * can't overwrite these.
+ * Registers every jankbot command on the primary bot (DISCORD_TOKEN) so command definitions change
+ * with a core deploy. The gateways run Necord with registration turned off so they can't overwrite
+ * these, and the worker bots have no commands at all.
  */
 @Injectable()
 export class CommandRegistrationService implements OnApplicationBootstrap {
@@ -44,10 +44,9 @@ export class CommandRegistrationService implements OnApplicationBootstrap {
 
   private async registerCommands() {
     const { discordDevGuildIds } = this.environmentService.environment;
-    const commands = [
-      ...Object.values(GATEWAY_COMMANDS),
-      ...this.registry.handlers.map((handler) => handler.definition),
-    ];
+    const commands = this.registry.handlers.map(
+      (handler) => handler.definition,
+    );
 
     // Failing here leaves the previously registered commands in place, which still work.
     try {

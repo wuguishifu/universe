@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import {
+  DiscordAPIError,
   REST,
+  RESTJSONErrorCodes,
   type RESTPatchAPIWebhookWithTokenMessageJSONBody,
   Routes,
 } from 'discord.js';
@@ -9,6 +11,10 @@ import { type JankbotJobData } from '@projects/jankbot-contracts';
 import { EnvironmentService } from '../../environment/environment-service';
 
 const applicationSchema = z.object({ id: z.string() });
+const voiceStateSchema = z.object({ channel_id: z.string().nullable() });
+
+const isDiscordError = (error: unknown, code: RESTJSONErrorCodes) =>
+  error instanceof DiscordAPIError && error.code === code;
 
 export type InteractionReply = RESTPatchAPIWebhookWithTokenMessageJSONBody;
 
@@ -45,6 +51,34 @@ export class DiscordRestService {
         : Routes.applicationCommands(applicationId),
       { body: commands },
     );
+  }
+
+  async isGuildMember(guildId: string, userId: string): Promise<boolean> {
+    try {
+      await this.rest.get(Routes.guildMember(guildId, userId));
+      return true;
+    } catch (error) {
+      if (isDiscordError(error, RESTJSONErrorCodes.UnknownMember)) return false;
+      throw error;
+    }
+  }
+
+  /** The voice channel the user is in, or null. The user must be a member of the guild. */
+  async getVoiceChannelId(
+    guildId: string,
+    userId: string,
+  ): Promise<string | null> {
+    try {
+      const state = voiceStateSchema.parse(
+        await this.rest.get(Routes.guildVoiceState(guildId, userId)),
+      );
+      return state.channel_id;
+    } catch (error) {
+      if (isDiscordError(error, RESTJSONErrorCodes.UnknownVoiceState)) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   /** Edits the reply the gateway deferred. Authenticated by the interaction token, not the bot token. */

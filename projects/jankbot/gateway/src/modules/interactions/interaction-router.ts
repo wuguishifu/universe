@@ -8,13 +8,12 @@ import {
 import { Context, type ContextOf, On } from 'necord';
 import { RedisCacheService } from '@libs/nest-common';
 import {
-  isGatewayCommand,
   JANKBOT_QUEUE_CONFIG,
   JANKBOT_REDIS,
   type JankbotJobData,
   type JankbotQueue,
 } from '@projects/jankbot-contracts';
-import { VoiceCommands } from '../voice/voice.commands';
+import { EnvironmentService } from '../../environment/environment-service';
 
 type OptionValue = JankbotJobData<'interactions'>['options'][string];
 
@@ -22,33 +21,41 @@ type OptionValue = JankbotJobData<'interactions'>['options'][string];
 const EPHEMERAL_LOOKUP_TIMEOUT_MS = 500;
 
 /**
- * Every slash command arrives here. Voice commands run in the gateway; the rest are deferred and
- * forwarded to jankbot-core, which edits the deferred reply when it's done. The gateway knows
- * nothing else about core's commands, so adding or changing one never needs a gateway deploy.
+ * On the primary gateway, every slash command arrives here, is deferred, and is forwarded to
+ * jankbot-core, which edits the deferred reply when it's done (including /join and /leave, which it
+ * hands to whichever voice bot it picks). The gateway knows nothing about the commands themselves,
+ * so adding or changing one never needs a gateway deploy.
  */
 @Injectable()
 export class InteractionRouter {
   private readonly logger = new Logger(InteractionRouter.name);
+  private readonly isPrimary: boolean;
 
   constructor(
-    private readonly voiceCommands: VoiceCommands,
     private readonly cache: RedisCacheService,
     @Inject(JANKBOT_QUEUE_CONFIG.interactions.queueName)
     private readonly interactions: JankbotQueue<'interactions'>,
-  ) {}
+    environmentService: EnvironmentService,
+  ) {
+    this.isPrimary = environmentService.environment.role === 'primary';
+  }
 
   @On('interactionCreate')
   async onInteraction(
     @Context() [interaction]: ContextOf<'interactionCreate'>,
   ) {
     if (!interaction.isChatInputCommand()) return;
+    // Commands are registered on the primary bot only. A worker that gets one has stale commands
+    // registered (e.g. its bot used to be the primary); answering would race the primary.
+    if (!this.isPrimary) {
+      this.logger.warn(
+        `Ignoring /${interaction.commandName}: this gateway is a worker, but its bot has commands registered`,
+      );
+      return;
+    }
 
     try {
-      if (isGatewayCommand(interaction.commandName)) {
-        await this.voiceCommands.handle(interaction);
-      } else {
-        await this.forward(interaction);
-      }
+      await this.forward(interaction);
     } catch (error) {
       this.logger.error(`/${interaction.commandName} failed`, error);
     }
@@ -108,6 +115,9 @@ function toJobData(
     guildId: interaction.guildId,
     channelId: interaction.channelId,
     userId: interaction.user.id,
+    voiceChannelId: interaction.inCachedGuild()
+      ? interaction.member.voice.channelId
+      : null,
     commandName: interaction.commandName,
     subcommandGroup: interaction.options.getSubcommandGroup(false),
     subcommand: interaction.options.getSubcommand(false),

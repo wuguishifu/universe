@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { voiceBotId } from '@projects/jankbot-contracts';
 
 const commaSeparated = z
   .string()
@@ -23,6 +24,18 @@ export const environmentSchema = z.object({
    * can take up to an hour to propagate). Leave empty in production to register globally.
    */
   discordDevGuildIds: commaSeparated,
+
+  /**
+   * The voice bots' names (each gateway's NAME), e.g. "Bo,Mikey,Steven". /join picks the first free
+   * one in this order, and these are the choices for /join and /leave's `bot` option.
+   */
+  voiceBots: commaSeparated
+    .refine((names) => names.length > 0, 'List at least one voice bot')
+    .refine((names) => names.length <= 25, 'Discord allows at most 25 choices')
+    .refine(
+      (names) => new Set(names.map(voiceBotId)).size === names.length,
+      'Voice bot names must be unique (ignoring case)',
+    ),
 
   convexUrl: z.string().min(1),
   /** Must match RUBY_CONVEX_SECRET on the convex deployment. */
