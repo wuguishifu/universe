@@ -16,9 +16,6 @@
       "path": "./libs/nest-common"
     },
     {
-      "path": "./core/queue"
-    },
-    {
       "path": "./platform/transcription/contracts"
     },
     {
@@ -38,6 +35,9 @@
     },
     {
       "path": "./projects/jankbot/ruby"
+    },
+    {
+      "path": "./libs/queue"
     }
   ],
   "compilerOptions": {

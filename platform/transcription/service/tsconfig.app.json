@@ -23,7 +23,7 @@
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "references": [
     {
-      "path": "../../../core/queue/tsconfig.lib.json"
+      "path": "../../../libs/queue/tsconfig.lib.json"
     },
     {
       "path": "../contracts/tsconfig.lib.json"
