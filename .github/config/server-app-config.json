@@ -4,9 +4,13 @@
       "imageName": "transcription-service",
       "projectRoot": "platform/transcription/service"
     },
-    "jankbot/ruby": {
-      "imageName": "ruby",
-      "projectRoot": "projects/jankbot/ruby"
+    "jankbot/core": {
+      "imageName": "jankbot-core",
+      "projectRoot": "projects/jankbot/core"
+    },
+    "jankbot/gateway": {
+      "imageName": "jankbot-gateway",
+      "projectRoot": "projects/jankbot/gateway"
     }
   }
 }

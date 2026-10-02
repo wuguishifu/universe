@@ -11,8 +11,8 @@ import {
   type QueueConfig,
   type UniverseJobData,
   type UniverseQueue,
-  resolveRedisConnection,
 } from '@libs/queue';
+import { resolveRedisConnection } from '@libs/redis-cache';
 import { transcriptionRequestSchema } from '@platform/transcription-contracts';
 import { EnvironmentService } from '../environment/environment-service';
 

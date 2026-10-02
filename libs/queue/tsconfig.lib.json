@@ -12,5 +12,9 @@
     "ignoreDeprecations": "6.0"
   },
   "include": ["src/**/*.ts"],
-  "references": []
+  "references": [
+    {
+      "path": "../redis-cache/tsconfig.lib.json"
+    }
+  ]
 }
