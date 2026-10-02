@@ -34,7 +34,7 @@ Discord voice ──► VoiceSessionService (@discordjs/voice)
 
 ## Local development
 
-1. Secrets in Infisical dev `/ruby`: `DISCORD_TOKEN`, `DISCORD_DEV_GUILD_IDS`, `REDIS_URL`,
+1. Secrets in Infisical dev `/projects/jankbot/ruby`: `DISCORD_TOKEN`, `DISCORD_DEV_GUILD_IDS`, `REDIS_URL`,
    `RUBY_CONVEX_SECRET`, `TRANSCRIPTION_SERVICE_URL`, `TRANSCRIPTION_SERVICE_API_TOKEN`. Then `nx setup environment`.
    (Or put them in a gitignored `projects/jankbot/ruby/.env`; see `.env.example`.)
 2. `RUBY_CONVEX_SECRET` must also be set on the convex deployment:

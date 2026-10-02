@@ -108,7 +108,7 @@ its last sentence three times), which would corrupt phrase counts. Don't use it.
 
 Nx loads two env files for `nx serve transcription-service` (`.env.local` wins where both set a variable):
 
-- `.env.local`: secrets (token, Redis, S3) generated from Infisical `/tungsten` by
+- `.env.local`: secrets (token, Redis, S3) generated from Infisical `/platform/transcription/service` by
   `nx setup environment`. Don't edit it.
 - root `.env`: settings specific to your machine, mainly where whisper lives. For example, reusing
   a native whisper.cpp build and model:

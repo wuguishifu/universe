@@ -23,7 +23,7 @@ CONFIG=$(cat platform/environment/config.json)
 INFISICAL_DOMAIN=$(echo $CONFIG | jq -r '.infisicalDomain')
 INFISICAL_PROJECT_ID=$(echo $CONFIG | jq -r '.infisicalProjectId')
 
-# infisical for some reason only accepts 'dev' and 'prod' as env names
+# convert local env key to infisical env key
 INFISICAL_ENVIRONMENT_MAP='{"development": "dev", "production": "prod"}'
 INFISICAL_ENVIRONMENT=$(echo $INFISICAL_ENVIRONMENT_MAP | jq -r ".$ENVIRONMENT")
 
@@ -46,7 +46,7 @@ for APP in $APPS; do
     continue
   fi
 
-  # secrets in infisical still live under the legacy app name
+  # secrets in infisical may live under a different path
   SECRETS_PATH=$(echo $CONFIG | jq -r --arg app "$APP" '.apps[$app].infisicalPath // $app')
 
   echo "Loading secrets for: $APP (infisical path: /$SECRETS_PATH)"
