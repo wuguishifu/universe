@@ -3,7 +3,7 @@ import './globals.css';
 import { Metadata } from 'next';
 import { Jersey_15, Source_Code_Pro } from 'next/font/google';
 import localFont from 'next/font/local';
-import { cn } from '@universe/ui-web';
+import { cn } from '@libs/ui-web';
 
 import { ConvexClientProvider } from '../modules/convex/components/convex-client-provider';
 import { RainCanvas } from '../modules/rain/rain-canvas';

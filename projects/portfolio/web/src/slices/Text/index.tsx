@@ -1,6 +1,6 @@
 import { Content, isFilled } from '@prismicio/client';
 import { FC } from 'react';
-import { cn } from '@universe/ui-web';
+import { cn } from '@libs/ui-web';
 
 import { RichText } from '../../components/text/text';
 import { animation } from '../animation';

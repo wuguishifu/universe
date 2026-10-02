@@ -311,7 +311,7 @@ importers:
       '@convex-dev/auth':
         specifier: '*'
         version: 0.0.92(@auth/core@0.37.4)(convex@1.37.0(react@19.0.0))(react@19.0.0)
-      '@universe/phrase-matching':
+      '@libs/phrase-matching':
         specifier: workspace:^
         version: link:../../../libs/phrase-matching
       convex:
@@ -324,60 +324,60 @@ importers:
 
   platform/transcription/service:
     dependencies:
-      '@universe/nest-common':
+      '@libs/nest-common':
         specifier: workspace:*
         version: link:../../../libs/nest-common
-      '@universe/platform/transcription/contracts':
-        specifier: workspace:*
-        version: link:../contracts
-      '@universe/queue':
+      '@libs/queue':
         specifier: workspace:*
         version: link:../../../libs/queue
+      '@platform/transcription-contracts':
+        specifier: workspace:*
+        version: link:../contracts
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
 
   projects/jankbot/ruby:
     dependencies:
-      '@universe/nest-common':
+      '@libs/nest-common':
         specifier: workspace:*
         version: link:../../../libs/nest-common
-      '@universe/phrase-matching':
+      '@libs/phrase-matching':
         specifier: workspace:*
         version: link:../../../libs/phrase-matching
-      '@universe/platform/convex/contracts':
-        specifier: workspace:*
-        version: link:../../../platform/convex/contracts
-      '@universe/platform/transcription/contracts':
-        specifier: workspace:*
-        version: link:../../../platform/transcription/contracts
-      '@universe/queue':
+      '@libs/queue':
         specifier: workspace:*
         version: link:../../../libs/queue
+      '@platform/convex-contracts':
+        specifier: workspace:*
+        version: link:../../../platform/convex/contracts
+      '@platform/transcription-contracts':
+        specifier: workspace:*
+        version: link:../../../platform/transcription/contracts
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
 
   projects/portfolio/web:
     dependencies:
-      '@universe/ui-web':
+      '@libs/ui-web':
         specifier: workspace:*
         version: link:../../../libs/ui-web
-      '@universe/utils-web':
+      '@libs/utils-web':
         specifier: workspace:*
         version: link:../../../libs/utils-web
 
   projects/sapphire/web:
     dependencies:
-      '@universe/platform/convex/contracts':
-        specifier: workspace:*
-        version: link:../../../platform/convex/contracts
-      '@universe/ui-web':
+      '@libs/ui-web':
         specifier: workspace:*
         version: link:../../../libs/ui-web
-      '@universe/utils-web':
+      '@libs/utils-web':
         specifier: workspace:*
         version: link:../../../libs/utils-web
+      '@platform/convex-contracts':
+        specifier: workspace:*
+        version: link:../../../platform/convex/contracts
 
 packages:
 

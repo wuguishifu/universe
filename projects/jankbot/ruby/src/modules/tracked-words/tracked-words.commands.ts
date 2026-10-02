@@ -9,7 +9,7 @@ import {
   StringOption,
   Subcommand,
 } from 'necord';
-import { MAX_PHRASE_LENGTH } from '@universe/phrase-matching';
+import { MAX_PHRASE_LENGTH } from '@libs/phrase-matching';
 import { replyGuildOnly } from '../discord/guild-only';
 import { TrackedWordsService } from './tracked-words.service';
 

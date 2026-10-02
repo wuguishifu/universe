@@ -1,5 +1,5 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import type { Transcript } from '@universe/platform/transcription/contracts';
+import type { Transcript } from '@platform/transcription-contracts';
 import {
   TRANSCRIPTION_SERVICE_QUEUE_CONFIG,
   type TranscriptionJob,

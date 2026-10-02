@@ -16,7 +16,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
   LinkedIn,
-} from '@universe/ui-web';
+} from '@libs/ui-web';
 
 export function NavbarMobile() {
   const pathname = usePathname();

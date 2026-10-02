@@ -13,8 +13,8 @@ Discord voice ──► VoiceSessionService (@discordjs/voice)
                   UtteranceProcessor
                     1. Opus ─► 16kHz mono WAV, in JS (audio.ts; no ffmpeg needed)
                     2. POST transcription-service /api/transcriptions  (Idempotency-Key: ruby:<utteranceId>)
-                    3. findPhraseMatches (@universe/phrase-matching)
-                    4. api.ruby.counts.record (convex, via @universe/platform/convex/contracts)
+                    3. findPhraseMatches (@libs/phrase-matching)
+                    4. api.ruby.counts.record (convex, via @platform/convex-contracts)
 ```
 
 - **Transcription** is [transcription-service](../../../platform/transcription/service)'s job; ruby has no whisper or ffmpeg. Jobs retry on

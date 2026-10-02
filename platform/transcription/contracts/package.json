@@ -1,5 +1,5 @@
 {
-  "name": "@universe/platform/transcription/contracts",
+  "name": "@platform/transcription-contracts",
   "version": "0.0.1",
   "private": true,
   "type": "module",

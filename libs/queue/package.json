@@ -1,5 +1,5 @@
 {
-  "name": "@universe/queue",
+  "name": "@libs/queue",
   "version": "0.0.1",
   "private": true,
   "type": "module",

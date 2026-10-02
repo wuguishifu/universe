@@ -4,7 +4,7 @@ Media worker service. Other apps own their business logic and hand transcription
 work over HTTP. For now that's speech-to-text with [whisper.cpp](https://github.com/ggml-org/whisper.cpp):
 audio in, transcript out.
 
-The contract is `@universe/platform/transcription/contracts` (ts-rest). Callers never see transcription-service's queues.
+The contract is `@platform/transcription-contracts` (ts-rest). Callers never see transcription-service's queues.
 
 ## Architecture
 

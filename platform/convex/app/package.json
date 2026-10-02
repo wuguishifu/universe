@@ -1,5 +1,5 @@
 {
-  "name": "@universe/platform/convex/app",
+  "name": "@platform/convex-app",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -7,7 +7,7 @@
   "types": "./index.ts",
   "dependencies": {
     "@convex-dev/auth": "*",
-    "@universe/phrase-matching": "workspace:^",
+    "@libs/phrase-matching": "workspace:^",
     "convex": "*"
   }
 }

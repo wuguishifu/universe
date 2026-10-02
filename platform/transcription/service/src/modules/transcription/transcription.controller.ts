@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import type { AppRoute } from '@ts-rest/core';
 import { tsRestHandler, TsRestHandler } from '@ts-rest/nest';
-import { transcriptionRootRouter } from '@universe/platform/transcription/contracts';
+import { transcriptionRootRouter } from '@platform/transcription-contracts';
 import {
   InvalidTranscriptionRequestError,
   TranscriptionApiService,

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { s3EnvAdapter } from '@universe/nest-common';
+import { s3EnvAdapter } from '@libs/nest-common';
 
 const commaSeparated = z.string().transform((value) =>
   value

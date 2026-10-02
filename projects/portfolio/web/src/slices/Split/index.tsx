@@ -1,7 +1,7 @@
 import { Content, isFilled } from '@prismicio/client';
 import Image from 'next/image';
 import { FC } from 'react';
-import { cn } from '@universe/ui-web';
+import { cn } from '@libs/ui-web';
 
 import {
   Simplify,

@@ -1,5 +1,5 @@
 import { PropsWithChildren } from 'react';
-import { cn } from '@universe/ui-web';
+import { cn } from '@libs/ui-web';
 
 type SectionProps = PropsWithChildren<{
   className?: string;

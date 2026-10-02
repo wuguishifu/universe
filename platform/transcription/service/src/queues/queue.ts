@@ -4,7 +4,6 @@ import {
 } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { type Job, type JobsOptions } from 'bullmq';
-import { transcriptionRequestSchema } from '@universe/platform/transcription/contracts';
 import {
   BullQueueModule,
   DEFAULT_QUEUE_CONFIG,
@@ -13,12 +12,13 @@ import {
   type UniverseJobData,
   type UniverseQueue,
   resolveRedisConnection,
-} from '@universe/queue';
+} from '@libs/queue';
+import { transcriptionRequestSchema } from '@platform/transcription-contracts';
 import { EnvironmentService } from '../environment/environment-service';
 
 /**
  * transcription-service's queues are an internal detail: callers go through the HTTP contract and never
- * touch these. That's why this config lives in the app rather than in @universe/queue.
+ * touch these. That's why this config lives in the app rather than in @libs/queue.
  *
  * Each lane is a separate queue with its own worker, so a long batch job can never delay
  * an interactive one (BullMQ priorities only reorder waiting jobs; they can't preempt).

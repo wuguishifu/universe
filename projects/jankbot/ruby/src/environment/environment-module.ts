@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { LocalEnvironmentModule } from '@universe/nest-common';
+import { LocalEnvironmentModule } from '@libs/nest-common';
 import { environmentSchema } from './environment-schema';
 import { EnvironmentService } from './environment-service';
 

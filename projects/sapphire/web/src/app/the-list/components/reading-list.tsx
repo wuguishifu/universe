@@ -1,7 +1,7 @@
 'use client';
 
-import { api } from '@universe/platform/convex/contracts';
-import { Spinner } from '@universe/ui-web';
+import { Spinner } from '@libs/ui-web';
+import { api } from '@platform/convex-contracts';
 import { useQuery } from '../../../modules/convex/use-query';
 import { Section } from '../../../modules/layout/section';
 

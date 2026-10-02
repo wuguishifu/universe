@@ -2,7 +2,7 @@ import { Content, isFilled } from '@prismicio/client';
 import { ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 import { FC } from 'react';
-import { buttonVariants, cn } from '@universe/ui-web';
+import { buttonVariants, cn } from '@libs/ui-web';
 
 import { RichText } from '../../components/text/text';
 import { animation } from '../animation';

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { buttonVariants, cn } from '@universe/ui-web';
+import { buttonVariants, cn } from '@libs/ui-web';
 
 export function SocialMediaButton({
   href,

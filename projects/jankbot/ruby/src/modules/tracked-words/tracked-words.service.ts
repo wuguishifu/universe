@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { api } from '@universe/platform/convex/contracts';
+import { api } from '@platform/convex-contracts';
 import { ConvexService } from '../common/convex.service';
 
 @Injectable()

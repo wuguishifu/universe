@@ -1,11 +1,11 @@
 {
-  "name": "@universe/platform/transcription/service",
+  "name": "@platform/transcription-service",
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@universe/nest-common": "workspace:*",
-    "@universe/platform/transcription/contracts": "workspace:*",
-    "@universe/queue": "workspace:*",
+    "@libs/nest-common": "workspace:*",
+    "@platform/transcription-contracts": "workspace:*",
+    "@libs/queue": "workspace:*",
     "tslib": "^2.3.0"
   }
 }

@@ -1,6 +1,6 @@
 import { asImageSrc, isFilled } from '@prismicio/client';
 import { notFound } from 'next/navigation';
-import { PageProps } from '@universe/utils-web';
+import { PageProps } from '@libs/utils-web';
 
 import { AllDocumentTypes, ProjectDocument } from '../../../../prismicio-types';
 import { createClient } from '../../../prismicio';

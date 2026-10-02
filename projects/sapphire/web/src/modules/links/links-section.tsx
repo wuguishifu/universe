@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { HTMLAttributeAnchorTarget, PropsWithChildren } from 'react';
-import { cn } from '@universe/ui-web';
+import { cn } from '@libs/ui-web';
 import { Section } from '../layout/section';
 
 export type LinkItem = {

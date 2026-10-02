@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { initClient } from '@ts-rest/core';
-import { transcriptionRootRouter } from '@universe/platform/transcription/contracts';
+import { transcriptionRootRouter } from '@platform/transcription-contracts';
 import { EnvironmentService } from '../../environment/environment-service';
 
 /** Longer than transcription-service's own 60s sync wait, so a 504 from transcription-service arrives before we give up. */

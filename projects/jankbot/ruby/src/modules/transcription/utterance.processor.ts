@@ -1,7 +1,7 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { UnrecoverableError } from 'bullmq';
-import { findPhraseMatches, type PhraseMatch } from '@universe/phrase-matching';
+import { findPhraseMatches, type PhraseMatch } from '@libs/phrase-matching';
 import { RUBY_QUEUE_CONFIG, type RubyQueueJob } from '../../queues/queue';
 import { TranscriptionClientService } from '../common/transcription-client.service';
 import { LeaderboardService } from '../leaderboard/leaderboard.service';

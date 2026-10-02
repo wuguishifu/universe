@@ -14,7 +14,7 @@ import {
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-} from '@universe/ui-web';
+} from '@libs/ui-web';
 
 export function NavbarDesktop() {
   const pathname = usePathname();

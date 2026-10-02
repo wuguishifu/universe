@@ -9,7 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
   cn,
-} from '@universe/ui-web';
+} from '@libs/ui-web';
 
 import { animation } from '../animation';
 import { backgroundClass } from '../background';

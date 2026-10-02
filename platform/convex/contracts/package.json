@@ -1,5 +1,5 @@
 {
-  "name": "@universe/platform/convex/contracts",
+  "name": "@platform/convex-contracts",
   "version": "0.0.1",
   "private": true,
   "type": "module",

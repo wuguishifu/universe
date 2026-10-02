@@ -6,13 +6,13 @@ import {
 } from '@nestjs/common';
 import { QueueEvents } from 'bullmq';
 import { createHash } from 'crypto';
-import { S3Service } from '@universe/nest-common';
+import { S3Service } from '@libs/nest-common';
 import {
   type Transcript,
   type TranscriptionJobStatus,
   type TranscriptionRequest,
   transcriptSchema,
-} from '@universe/platform/transcription/contracts';
+} from '@platform/transcription-contracts';
 import {
   TRANSCRIPTION_SERVICE_QUEUE_CONFIG,
   type TranscriptionJob,

@@ -1,5 +1,5 @@
 import { ConvexError, v } from 'convex/values';
-import { MAX_PHRASE_LENGTH, normalizeText } from '@universe/phrase-matching';
+import { MAX_PHRASE_LENGTH, normalizeText } from '@libs/phrase-matching';
 import { mutation, query } from '../_generated/server';
 import { assertRubySecret, rubySecret } from './auth';
 
