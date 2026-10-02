@@ -29,7 +29,7 @@ The contract is `@universe/platform/transcription/contracts` (ts-rest). Callers 
  └────────────────────────────────────────┘
 ```
 
-**One image, three roles** (`TRANSCRIPTION_SERVICE_ROLE`):
+**One image, three roles** (`ROLE`):
 
 | Role     | Runs                   | Deploy as                                      |
 | -------- | ---------------------- | ---------------------------------------------- |
@@ -44,11 +44,11 @@ whisper.cpp), or on a GPU node, without callers noticing.
 **Two lanes, each its own queue and worker.** BullMQ priorities only reorder _waiting_ jobs;
 a running 20-minute batch job would still block a 2-second clip. Separate queues with their
 own workers and thread budgets (`WHISPER_THREADS_*`) keep interactive latency independent of
-batch load. `TRANSCRIPTION_SERVICE_WORKER_LANES` picks which lanes a worker process takes.
+batch load. `WORKER_LANES` picks which lanes a worker process takes.
 
 ## API
 
-All routes except `/api/health` and `/api/version` need `Authorization: Bearer <TRANSCRIPTION_SERVICE_API_TOKEN>`.
+All routes except `/api/health` and `/api/version` need `Authorization: Bearer <API_TOKEN>`.
 
 | Route                                | Lane        | Response                                        |
 | ------------------------------------ | ----------- | ----------------------------------------------- |
@@ -120,7 +120,7 @@ Nx loads two env files for `nx serve transcription-service` (`.env.local` wins w
   ```
 
 ```sh
-pnpm nx serve transcription-service   # TRANSCRIPTION_SERVICE_ROLE defaults to `all`
+pnpm nx serve transcription-service   # ROLE defaults to `all`
 ```
 
 ## Deployment notes

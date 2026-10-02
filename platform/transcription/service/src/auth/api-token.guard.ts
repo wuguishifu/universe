@@ -9,7 +9,7 @@ import { createHash, timingSafeEqual } from 'crypto';
 import { EnvironmentService } from '../environment/environment-service';
 import { IS_PUBLIC_KEY } from './public.decorator';
 
-/** Requires `Authorization: Bearer <TRANSCRIPTION_SERVICE_API_TOKEN>` on every non-public route. */
+/** Requires `Authorization: Bearer <API_TOKEN>` on every non-public route. */
 @Injectable()
 export class ApiTokenGuard implements CanActivate {
   private readonly expectedDigest: Buffer;

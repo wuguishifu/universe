@@ -11,8 +11,8 @@ import { z } from 'zod';
  * Lanes let a worker take only some of the work, e.g. a GPU box that runs just `batch`.
  */
 const runtimeSchema = z.object({
-  TRANSCRIPTION_SERVICE_ROLE: z.enum(['api', 'worker', 'all']).default('all'),
-  TRANSCRIPTION_SERVICE_WORKER_LANES: z
+  ROLE: z.enum(['api', 'worker', 'all']).default('all'),
+  WORKER_LANES: z
     .string()
     .default('interactive,batch')
     .transform((lanes) =>
@@ -31,10 +31,7 @@ export type Runtime = {
 };
 
 export function readRuntime(env: NodeJS.ProcessEnv = process.env): Runtime {
-  const {
-    TRANSCRIPTION_SERVICE_ROLE: role,
-    TRANSCRIPTION_SERVICE_WORKER_LANES: workerLanes,
-  } = runtimeSchema.parse(env);
+  const { ROLE: role, WORKER_LANES: workerLanes } = runtimeSchema.parse(env);
   return {
     runsApi: role !== 'worker',
     runsWorker: role !== 'api',
