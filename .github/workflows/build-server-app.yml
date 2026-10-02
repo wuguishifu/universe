@@ -68,7 +68,7 @@ jobs:
         with:
           bump-type: ${{ inputs.version-bump-type }}
           tag-prefix: ${{ steps.config.outputs.image_name }}-v
-          # First release of an app is <imageName>-v0.0.1, matching the existing apps.
+          # First version bump of an app will be applied on top of 0.0.0.
           initial-version: 0.0.0
 
       - name: Get docker version
