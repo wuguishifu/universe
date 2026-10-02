@@ -11,8 +11,8 @@ What it does:
   `interactions` queue. core edits the reply.
 - **Rejoining**: the channels the bot is in are kept in the Redis hash `jankbot:voice-sessions`. On
   start the gateway rejoins them, skipping any channel that has no one left in it. They're removed
-  on `/leave`, when the bot is kicked or the channel is deleted, or when it auto-leaves, but not on
-  shutdown.
+  on `/leave`, when someone disconnects the bot or the channel is deleted, or when it auto-leaves,
+  but not on shutdown.
 - **Auto-leave**: after the bot has been alone in its channel (other bots don't count) for
   `VOICE_IDLE_TIMEOUT_MS` (default 5 minutes), it leaves.
 

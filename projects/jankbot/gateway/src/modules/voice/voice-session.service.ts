@@ -131,22 +131,35 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
   }
 
   /**
-   * Keeps the remembered channel current when someone drags the bot to another channel, and
-   * starts or cancels the idle timeout as people come and go.
+   * Treats being disconnected by someone else like `/leave`, keeps the remembered channel current
+   * when someone drags the bot to another channel, and starts or cancels the idle timeout as people
+   * come and go.
    */
   @On('voiceStateUpdate')
   async onVoiceStateUpdate(
     @Context() [oldState, newState]: ContextOf<'voiceStateUpdate'>,
   ) {
     const { guild } = newState;
-    if (!getVoiceConnection(guild.id)) return;
-    this.updateIdleTimer(guild);
+    const connection = getVoiceConnection(guild.id);
+    // Our own leaves destroy the connection first, so they stop here.
+    if (!connection) return;
 
-    if (newState.id !== this.client.user?.id) return;
-    if (!newState.channelId || newState.channelId === oldState.channelId) {
-      return;
+    if (newState.id === this.client.user?.id) {
+      if (!newState.channelId) {
+        // The channel check ignores the old channel's leave when /join moves the bot elsewhere.
+        if (oldState.channelId === connection.joinConfig.channelId) {
+          this.logger.log(
+            `[${guild.id}] Disconnected from ${oldState.channelId}; leaving`,
+          );
+          await this.leave(guild.id);
+        }
+        return;
+      }
+      if (newState.channelId !== oldState.channelId) {
+        await this.remember(guild.id, newState.channelId);
+      }
     }
-    await this.remember(guild.id, newState.channelId);
+    this.updateIdleTimer(guild);
   }
 
   beforeApplicationShutdown() {
@@ -282,15 +295,15 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
           entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
         ]);
       } catch {
-        if (connection.state.status !== VoiceConnectionStatus.Destroyed) {
-          connection.destroy();
-        }
-        this.stopIdleTimer(connection.joinConfig.guildId);
+        const { guildId } = connection.joinConfig;
+        // Already handled (by /leave or the voice state update), or replaced by a newer /join
+        // whose session isn't ours to forget.
+        if (getVoiceConnection(guildId) !== connection) return;
+        connection.destroy();
+        this.stopIdleTimer(guildId);
         // Kicked, or the channel was deleted. A shutdown also drops the connection, but that
         // session should survive the restart.
-        if (!this.shuttingDown) {
-          await this.forget(connection.joinConfig.guildId);
-        }
+        if (!this.shuttingDown) await this.forget(guildId);
       }
     });
   }
