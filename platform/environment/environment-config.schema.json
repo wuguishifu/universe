@@ -26,6 +26,13 @@
     "infisicalPath": {
       "description": "Infisical secrets path, without the leading slash. Defaults to the app path.",
       "type": "string"
+    },
+    "extraSecrets": {
+      "description": "Additional Infisical secrets paths, without the leading slash. Loaded after infisicalPath in order; later paths override earlier ones for duplicate keys.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   }
 }

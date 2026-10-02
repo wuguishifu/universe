@@ -22,7 +22,7 @@ CONFIG=$(cat platform/environment/config.json)
 # every app that needs environment variables has an `environment-config.json` at its root
 # includes untracked (but not ignored) files so new apps work before their first commit
 CONFIG_FILENAME="environment-config.json"
-ALLOWED_KEYS='["$schema", "hasSecrets", "hasConvex", "publicPrefix", "infisicalPath"]'
+ALLOWED_KEYS='["$schema", "hasSecrets", "hasConvex", "publicPrefix", "infisicalPath", "extraSecrets"]'
 
 CONFIG_FILES=$(git ls-files --cached --others --exclude-standard -- "*$CONFIG_FILENAME" "$CONFIG_FILENAME")
 
@@ -81,18 +81,41 @@ for APP in $APPS; do
   # secrets in infisical may live under a different path
   SECRETS_PATH=$(jq -r --arg app "$APP" '.infisicalPath // $app' "$APP_CONFIG")
 
-  echo "Loading secrets for: $APP (infisical path: /$SECRETS_PATH)"
+  # extra paths are layered on top of the base path, later paths override earlier ones
+  EXTRA_SECRETS_PATHS=$(jq -r '.extraSecrets // [] | .[]' "$APP_CONFIG")
 
-  SECRETS=$(
-    infisical secrets \
-      --domain $INFISICAL_DOMAIN \
-      --env $INFISICAL_ENVIRONMENT \
-      --projectId $INFISICAL_PROJECT_ID \
-      --path /$SECRETS_PATH \
-      --output dotenv
-  )
+  SECRETS=""
+  for PATH_ENTRY in $SECRETS_PATH $EXTRA_SECRETS_PATHS; do
+    echo "Loading secrets for: $APP (infisical path: /$PATH_ENTRY)"
 
-  echo "$SECRETS" >> $APP/.env.local
+    PATH_SECRETS=$(
+      infisical secrets \
+        --domain $INFISICAL_DOMAIN \
+        --env $INFISICAL_ENVIRONMENT \
+        --projectId $INFISICAL_PROJECT_ID \
+        --path /$PATH_ENTRY \
+        --output dotenv
+    ) || {
+      echo "ERROR: failed to load secrets from infisical path: /$PATH_ENTRY"
+      exit 1
+    }
+
+    SECRETS="$SECRETS
+$PATH_SECRETS"
+  done
+
+  # dedupe keys so the last definition wins, keeping first-seen order
+  # lines that don't start a new `KEY=` belong to the previous key (multi-line values)
+  echo "$SECRETS" | awk '
+    /^[A-Za-z_][A-Za-z0-9_]*=/ {
+      key = substr($0, 1, index($0, "=") - 1)
+      if (!(key in value)) order[n++] = key
+      value[key] = $0
+      next
+    }
+    key != "" { value[key] = value[key] "\n" $0 }
+    END { for (i = 0; i < n; i++) print value[order[i]] }
+  ' >> $APP/.env.local
 done
 
 # MARK: copy convex variables
