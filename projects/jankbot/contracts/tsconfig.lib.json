@@ -15,6 +15,9 @@
   "references": [
     {
       "path": "../../../libs/queue/tsconfig.lib.json"
+    },
+    {
+      "path": "../../../libs/redis-cache/tsconfig.lib.json"
     }
   ]
 }

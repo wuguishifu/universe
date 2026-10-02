@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { RedisService } from '../redis/redis.service';
-
-/** guildId → channelId of every voice channel the bot should be in. */
-const SESSIONS_KEY = 'jankbot:voice-sessions';
+import { RedisCacheService } from '@libs/nest-common';
+import { JANKBOT_REDIS } from '@projects/jankbot-contracts';
 
 /**
  * Remembers which voice channels the bot was asked to join, so a restarted gateway can rejoin them.
@@ -10,21 +8,30 @@ const SESSIONS_KEY = 'jankbot:voice-sessions';
  */
 @Injectable()
 export class VoiceSessionStore {
-  constructor(private readonly redis: RedisService) {}
+  constructor(private readonly cache: RedisCacheService) {}
 
   async list(): Promise<{ guildId: string; channelId: string }[]> {
-    const sessions = await this.redis.client.hgetall(SESSIONS_KEY);
-    return Object.entries(sessions).map(([guildId, channelId]) => ({
+    const sessions = await this.cache.hashGetAll({
+      key: JANKBOT_REDIS.voiceSessions,
+    });
+    return [...sessions].map(([guildId, channelId]) => ({
       guildId,
       channelId,
     }));
   }
 
   async save(guildId: string, channelId: string): Promise<void> {
-    await this.redis.client.hset(SESSIONS_KEY, guildId, channelId);
+    await this.cache.hashSet({
+      key: JANKBOT_REDIS.voiceSessions,
+      field: guildId,
+      value: channelId,
+    });
   }
 
   async remove(guildId: string): Promise<void> {
-    await this.redis.client.hdel(SESSIONS_KEY, guildId);
+    await this.cache.hashDelete({
+      key: JANKBOT_REDIS.voiceSessions,
+      field: guildId,
+    });
   }
 }

@@ -6,14 +6,14 @@ import {
   MessageFlags,
 } from 'discord.js';
 import { Context, type ContextOf, On } from 'necord';
+import { RedisCacheService } from '@libs/nest-common';
 import {
-  EPHEMERAL_COMMANDS_KEY,
   isGatewayCommand,
   JANKBOT_QUEUE_CONFIG,
+  JANKBOT_REDIS,
   type JankbotJobData,
   type JankbotQueue,
 } from '@projects/jankbot-contracts';
-import { RedisService } from '../redis/redis.service';
 import { VoiceCommands } from '../voice/voice.commands';
 
 type OptionValue = JankbotJobData<'interactions'>['options'][string];
@@ -32,7 +32,7 @@ export class InteractionRouter {
 
   constructor(
     private readonly voiceCommands: VoiceCommands,
-    private readonly redis: RedisService,
+    private readonly cache: RedisCacheService,
     @Inject(JANKBOT_QUEUE_CONFIG.interactions.queueName)
     private readonly interactions: JankbotQueue<'interactions'>,
   ) {}
@@ -75,8 +75,11 @@ export class InteractionRouter {
   /** core publishes its ephemeral commands on startup. If Redis can't say, reply publicly. */
   private async isEphemeral(commandName: string): Promise<boolean> {
     try {
-      const isMember = await Promise.race([
-        this.redis.client.sismember(EPHEMERAL_COMMANDS_KEY, commandName),
+      return await Promise.race([
+        this.cache.setHas({
+          key: JANKBOT_REDIS.ephemeralCommands,
+          member: commandName,
+        }),
         new Promise<never>((_, reject) =>
           setTimeout(
             () => reject(new Error('timed out')),
@@ -84,7 +87,6 @@ export class InteractionRouter {
           ),
         ),
       ]);
-      return isMember === 1;
     } catch (error) {
       this.logger.warn(
         `Couldn't check whether /${commandName} is ephemeral`,

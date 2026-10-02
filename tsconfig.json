@@ -44,6 +44,9 @@
     },
     {
       "path": "./projects/jankbot/contracts"
+    },
+    {
+      "path": "./libs/redis-cache"
     }
   ],
   "compilerOptions": {

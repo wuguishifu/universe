@@ -26,10 +26,3 @@ export type GatewayCommandName = keyof typeof GATEWAY_COMMANDS;
 export function isGatewayCommand(name: string): name is GatewayCommandName {
   return Object.hasOwn(GATEWAY_COMMANDS, name);
 }
-
-/**
- * Redis set of core's commands whose replies are ephemeral. Discord fixes ephemerality when the
- * gateway defers, so core publishes this on startup and the gateway checks it per command. That
- * keeps core's command definitions out of the gateway's build.
- */
-export const EPHEMERAL_COMMANDS_KEY = 'jankbot:ephemeral-commands';

@@ -14,7 +14,9 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
+    "@libs/redis-cache": "workspace:*",
     "axios": "*",
-    "axios-retry": "*"
+    "axios-retry": "*",
+    "ioredis": "*"
   }
 }

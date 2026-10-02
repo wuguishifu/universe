@@ -1,10 +1,7 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
-import {
-  EPHEMERAL_COMMANDS_KEY,
-  GATEWAY_COMMANDS,
-} from '@projects/jankbot-contracts';
+import { RedisCacheService } from '@libs/nest-common';
+import { GATEWAY_COMMANDS, JANKBOT_REDIS } from '@projects/jankbot-contracts';
 import { EnvironmentService } from '../../environment/environment-service';
-import { RedisService } from '../common/redis.service';
 import { DiscordRestService } from '../discord/discord-rest.service';
 import { CommandRegistry } from './command-registry';
 
@@ -19,7 +16,7 @@ export class CommandRegistrationService implements OnApplicationBootstrap {
 
   constructor(
     private readonly discord: DiscordRestService,
-    private readonly redis: RedisService,
+    private readonly cache: RedisCacheService,
     private readonly registry: CommandRegistry,
     private readonly environmentService: EnvironmentService,
   ) {}
@@ -35,9 +32,10 @@ export class CommandRegistrationService implements OnApplicationBootstrap {
       .filter((handler) => handler.ephemeral)
       .map((handler) => handler.definition.name);
     try {
-      const transaction = this.redis.client.multi().del(EPHEMERAL_COMMANDS_KEY);
-      if (names.length > 0) transaction.sadd(EPHEMERAL_COMMANDS_KEY, ...names);
-      await transaction.exec();
+      await this.cache.setReplace({
+        key: JANKBOT_REDIS.ephemeralCommands,
+        members: names,
+      });
     } catch (error) {
       // The previous set stays; at worst a reply is deferred with the wrong visibility.
       this.logger.error('Failed to publish ephemeral commands', error);

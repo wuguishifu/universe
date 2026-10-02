@@ -1,5 +1,5 @@
 import { type BullRootModuleOptions } from '@nestjs/bullmq';
-import { resolveRedisConnection } from './redis-url';
+import { resolveRedisConnection } from '@libs/redis-cache';
 
 /** Root BullMQ options for services that share queues: same Redis and the same key prefix. */
 export function createBullRootOptions(

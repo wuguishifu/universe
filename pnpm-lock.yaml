@@ -309,16 +309,28 @@ importers:
 
   libs/nest-common:
     dependencies:
+      '@libs/redis-cache':
+        specifier: workspace:*
+        version: link:../redis-cache
       axios:
         specifier: '*'
         version: 1.13.4
       axios-retry:
         specifier: '*'
         version: 4.5.0(axios@1.13.4)
+      ioredis:
+        specifier: '*'
+        version: 6.0.0
 
   libs/phrase-matching: {}
 
-  libs/queue: {}
+  libs/queue:
+    dependencies:
+      '@libs/redis-cache':
+        specifier: workspace:*
+        version: link:../redis-cache
+
+  libs/redis-cache: {}
 
   libs/ui-web: {}
 
@@ -360,6 +372,9 @@ importers:
       '@libs/queue':
         specifier: workspace:*
         version: link:../../../libs/queue
+      '@libs/redis-cache':
+        specifier: workspace:*
+        version: link:../../../libs/redis-cache
 
   projects/jankbot/core:
     dependencies:
