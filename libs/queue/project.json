@@ -1,7 +1,7 @@
 {
   "name": "queue",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "core/queue/src",
+  "sourceRoot": "libs/queue/src",
   "projectType": "library",
   "tags": ["scope:shared"],
   "// targets": "to see all targets run: nx show project queue --web",
