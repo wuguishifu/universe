@@ -37,7 +37,15 @@ export default [
           ],
           pathGroups: [
             {
-              pattern: '@universe/**',
+              pattern: '@libs/**',
+              group: 'internal',
+            },
+            {
+              pattern: '@platform/**',
+              group: 'internal',
+            },
+            {
+              pattern: '@projects/**',
               group: 'internal',
             },
             {

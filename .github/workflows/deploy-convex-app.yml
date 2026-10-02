@@ -1,0 +1,72 @@
+name: Deploy Convex App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # nx-set-shas reads past runs of this workflow to find the last successful deploy
+  actions: read
+
+concurrency:
+  group: deploy-convex-app-production
+  # Never cancel a deploy halfway through; queue the next one instead.
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy convex-app to production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # nx affected needs the history between the base and head commits
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Base is the commit of the last successful run of this workflow on main, so a failed
+      # deploy gets retried on the next merge instead of being skipped.
+      - name: Derive base and head SHAs
+        uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: main
+
+      - name: Check if convex-app is affected
+        id: affected
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "Manual run, deploying regardless of affected projects."
+            echo "affected=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          AFFECTED=$(pnpm --silent nx show projects --affected --base="$NX_BASE" --head="$NX_HEAD" --json)
+          echo "Affected projects ($NX_BASE..$NX_HEAD): $AFFECTED"
+
+          if echo "$AFFECTED" | jq -e 'index("convex-app") != null' > /dev/null; then
+            echo "affected=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "convex-app is not affected, skipping deploy."
+            echo "affected=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy
+        if: steps.affected.outputs.affected == 'true'
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: pnpm nx run convex-app:deploy

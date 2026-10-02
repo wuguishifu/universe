@@ -1,0 +1,13 @@
+{
+  "name": "@projects/sapphire-web",
+  "version": "0.0.1",
+  "packageManager": "pnpm@10.2.0",
+  "scripts": {
+    "start": "next start"
+  },
+  "dependencies": {
+    "@platform/convex-contracts": "workspace:*",
+    "@libs/ui-web": "workspace:*",
+    "@libs/utils-web": "workspace:*"
+  }
+}

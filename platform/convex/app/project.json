@@ -1,0 +1,117 @@
+{
+  "name": "convex-app",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "platform/convex/app",
+  "projectType": "application",
+  "tags": ["scope:server", "build-on-install"],
+  "targets": {
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "platform/convex/app",
+        "parallel": true,
+        "commands": [
+          "rm -rf ./dist",
+          "rm -rf ./node_modules",
+          "rm -rf ./out-tsc"
+        ]
+      }
+    },
+    "codegen": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "platform/convex/app",
+        "command": "nx convex convex-app -- codegen"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "parallel": false,
+        "commands": [
+          "nx typecheck convex-app --skip-sync --skip-nx-cache",
+          "nx build convex-contracts --skip-nx-cache"
+        ]
+      }
+    },
+    "build:kore": {
+      "executor": "nx:run-commands",
+      "options": {
+        "parallel": false,
+        "commands": ["nx build convex-app", "nx build convex-contracts"]
+      }
+    },
+    "convex": {
+      "executor": "nx:run-commands",
+      "//note": "Example for how to forward commands to the convex CLI: nx convex convex-app -- dev --help",
+      "options": {
+        "cwd": "platform/convex/app",
+        "forwardAllArgs": true,
+        "command": "convex"
+      }
+    },
+    "setup": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "platform/convex/app",
+        "parallel": false,
+        "commands": ["convex dev --once", "nx setup environment"]
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "parallel": true,
+        "commands": [
+          {
+            "command": "nx convex convex-app -- dev",
+            "description": "Run Convex dev watcher",
+            "prefix": "convex-app",
+            "prefixColor": "cyan"
+          },
+          {
+            "command": "nx run convex-app:watch-contracts",
+            "description": "Rebuild convex-contracts on change",
+            "prefix": "kore",
+            "prefixColor": "magenta"
+          }
+        ]
+      }
+    },
+    "watch-contracts": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "nx watch --projects=convex-app --initialRun -- nx build convex-contracts"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "platform/convex/app",
+        "command": "convex deploy"
+      }
+    },
+    "preview-urls": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash ./scripts/convex/get-preview-urls.sh {args.previewName}"
+      }
+    },
+    "update:ai-files": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "platform/convex/app",
+        "command": "npx convex ai-files update"
+      }
+    },
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude '(^|/)convex/_generated(/|$)'",
+        "cwd": "platform/convex/app"
+      }
+    }
+  }
+}

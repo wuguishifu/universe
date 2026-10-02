@@ -1,0 +1,13 @@
+{
+  "name": "@projects/jankbot-ruby",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@platform/transcription-contracts": "workspace:*",
+    "@platform/convex-contracts": "workspace:*",
+    "@libs/nest-common": "workspace:*",
+    "@libs/phrase-matching": "workspace:*",
+    "@libs/queue": "workspace:*",
+    "tslib": "^2.3.0"
+  }
+}

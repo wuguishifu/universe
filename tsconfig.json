@@ -10,34 +10,34 @@
       "path": "./libs/utils-web"
     },
     {
-      "path": "./libs/hydrogen-kore"
+      "path": "./platform/convex/contracts"
     },
     {
       "path": "./libs/nest-common"
     },
     {
-      "path": "./apps/hydrogen"
-    },
-    {
-      "path": "./apps/sapphire"
-    },
-    {
-      "path": "./apps/quartz"
-    },
-    {
-      "path": "./libs/queue"
-    },
-    {
-      "path": "./libs/contracts-tungsten"
-    },
-    {
-      "path": "./apps/tungsten"
+      "path": "./platform/transcription/contracts"
     },
     {
       "path": "./libs/phrase-matching"
     },
     {
-      "path": "./apps/ruby"
+      "path": "./platform/transcription/service"
+    },
+    {
+      "path": "./platform/convex/app"
+    },
+    {
+      "path": "./projects/sapphire/web"
+    },
+    {
+      "path": "./projects/portfolio/web"
+    },
+    {
+      "path": "./projects/jankbot/ruby"
+    },
+    {
+      "path": "./libs/queue"
     }
   ],
   "compilerOptions": {

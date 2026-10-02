@@ -1,10 +1,12 @@
 {
   "apps": {
-    "tungsten": {
-      "registryPath": "wuguishifu/universe/tungsten"
+    "transcription/service": {
+      "imageName": "transcription-service",
+      "projectRoot": "platform/transcription/service"
     },
-    "ruby": {
-      "registryPath": "wuguishifu/universe/ruby"
+    "jankbot/ruby": {
+      "imageName": "ruby",
+      "projectRoot": "projects/jankbot/ruby"
     }
   }
 }

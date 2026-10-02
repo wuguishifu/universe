@@ -1,0 +1,8 @@
+{
+  "name": "@projects/portfolio-web",
+  "version": "0.0.1",
+  "dependencies": {
+    "@libs/ui-web": "workspace:*",
+    "@libs/utils-web": "workspace:*"
+  }
+}

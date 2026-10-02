@@ -1,15 +1,17 @@
-// Cleans the package.json that Nx's generatePackageJson emits into dist/apps/<app>
+// Cleans the package.json that Nx's generatePackageJson emits into dist/path/to/package.json
 // so it can be installed standalone in a Docker runtime stage:
 // - workspace:* libs are already bundled into main.js by webpack, and their
 //   "workspace:" specifiers don't resolve outside the monorepo
 // - @nx/webpack leaks in via webpack.config.js but is never required at runtime
 //
-// Usage: node tools/scripts/prune-deploy-manifest.mjs dist/apps/<app>/package.json
+// Usage: node tools/scripts/prune-deploy-manifest.mjs dist/path/to/package.json
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const manifestPath = process.argv[2];
 if (!manifestPath) {
-  console.error('usage: node prune-deploy-manifest.mjs <path-to-package.json>');
+  console.error(
+    'usage: node prune-deploy-manifest.mjs dist/path/to/package.json',
+  );
   process.exit(1);
 }
 

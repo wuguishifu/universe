@@ -1,0 +1,32 @@
+{
+  "name": "convex-contracts",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "platform/convex/contracts/src",
+  "projectType": "library",
+  "tags": ["scope:shared"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        {
+          "projects": ["convex-app"],
+          "target": "typecheck"
+        }
+      ],
+      "options": {
+        "cwd": "platform/convex/contracts",
+        "command": "node ./scripts/build.mjs"
+      }
+    },
+    "typecheck": {
+      "dependsOn": ["build"]
+    },
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude '(^|/)convex/_generated(/|$)'",
+        "cwd": "platform/convex/contracts"
+      }
+    }
+  }
+}
