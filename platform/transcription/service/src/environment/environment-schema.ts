@@ -48,8 +48,7 @@ export const environmentSchema = z
       env.whisperModels.includes(env.whisperDefaultModel),
     { message: 'WHISPER_DEFAULT_MODEL must be one of WHISPER_MODELS' },
   )
-  .transform(({ apiToken: apiToken, whisperDefaultModel, ...data }) => ({
+  .transform(({ whisperDefaultModel, ...data }) => ({
     ...s3EnvAdapter(data),
-    apiToken,
     whisperDefaultModel: whisperDefaultModel ?? data.whisperModels[0],
   }));
