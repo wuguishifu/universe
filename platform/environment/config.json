@@ -5,8 +5,7 @@
     "projects/portfolio/web": {
       "hasSecrets": true,
       "hasConvex": false,
-      "publicPrefix": "NEXT_PUBLIC_",
-      "infisicalPath": "projects/portfolio/web"
+      "publicPrefix": "NEXT_PUBLIC_"
     },
     "projects/sapphire/web": {
       "hasSecrets": false,
@@ -15,13 +14,11 @@
     },
     "projects/jankbot/ruby": {
       "hasSecrets": true,
-      "hasConvex": true,
-      "infisicalPath": "projects/jankbot/ruby"
+      "hasConvex": true
     },
     "platform/transcription/service": {
       "hasSecrets": true,
-      "hasConvex": false,
-      "infisicalPath": "platform/transcription/service"
+      "hasConvex": false
     }
   }
 }
