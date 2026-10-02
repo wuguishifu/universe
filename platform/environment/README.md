@@ -25,3 +25,18 @@ This library handles secrets integration and storage with [infisical](https://in
    ```sh
    nx setup environment
    ```
+
+## Adding an app
+
+Add an `environment-config.json` to the root of any app that needs environment variables. The setup command finds these files (including uncommitted ones) and writes a `.env.local` next to each.
+
+```json
+{
+  "$schema": "../../../platform/environment/environment-config.schema.json",
+  "hasSecrets": true,
+  "hasConvex": true,
+  "publicPrefix": "NEXT_PUBLIC_"
+}
+```
+
+All keys are optional; see [`environment-config.schema.json`](./environment-config.schema.json) for what they do. Unknown keys cause the setup command to fail.

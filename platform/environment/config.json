@@ -1,24 +1,4 @@
 {
   "infisicalDomain": "https://infisical.wuguishifu.dev",
-  "infisicalProjectId": "49f61399-1e0e-419e-984d-1115793c8e29",
-  "apps": {
-    "projects/portfolio/web": {
-      "hasSecrets": true,
-      "hasConvex": false,
-      "publicPrefix": "NEXT_PUBLIC_"
-    },
-    "projects/sapphire/web": {
-      "hasSecrets": false,
-      "hasConvex": true,
-      "publicPrefix": "NEXT_PUBLIC_"
-    },
-    "projects/jankbot/ruby": {
-      "hasSecrets": true,
-      "hasConvex": true
-    },
-    "platform/transcription/service": {
-      "hasSecrets": true,
-      "hasConvex": false
-    }
-  }
+  "infisicalProjectId": "49f61399-1e0e-419e-984d-1115793c8e29"
 }

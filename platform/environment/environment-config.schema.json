@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "environment-config.json",
+  "description": "Per-app environment config consumed by platform/environment/setup.sh. The app path is the directory containing this file.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "hasSecrets": {
+      "description": "Pull secrets from Infisical into the app's .env.local.",
+      "type": "boolean",
+      "default": false
+    },
+    "hasConvex": {
+      "description": "Write CONVEX_URL and CONVEX_SITE_URL into the app's .env.local (non-production only).",
+      "type": "boolean",
+      "default": false
+    },
+    "publicPrefix": {
+      "description": "Prefix for public convex variables (e.g. NEXT_PUBLIC_).",
+      "type": "string",
+      "default": ""
+    },
+    "infisicalPath": {
+      "description": "Infisical secrets path, without the leading slash. Defaults to the app path.",
+      "type": "string"
+    }
+  }
+}
