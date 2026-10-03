@@ -14,3 +14,7 @@ allowBuilds:
   nx: true
   sharp: true
   unrs-resolver: true
+autoInstallPeers: true
+ignoreWorkspaceRootCheck: true
+nodeLinker: hoisted
+strictPeerDependencies: false
