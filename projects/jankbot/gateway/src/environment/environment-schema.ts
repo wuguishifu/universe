@@ -6,6 +6,9 @@ export const environmentSchema = z.object({
   environment: z.enum(['development', 'production']).default('development'),
   redisUrl: z.string().min(1),
 
+  analyticsServiceBaseUrl: z.string().min(1),
+  analyticsServiceApiToken: z.string().min(1),
+
   discordToken: z.string().min(1),
 
   /**

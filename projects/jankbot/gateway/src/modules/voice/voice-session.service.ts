@@ -16,6 +16,7 @@ import {
 import { Client, Guild, VoiceBasedChannel, VoiceState } from 'discord.js';
 import { Context, type ContextOf, On, Once } from 'necord';
 import { randomUUID } from 'crypto';
+import { TrackingService } from '@platform/analytics-client-nest';
 import {
   JANKBOT_QUEUE_CONFIG,
   type JankbotJobData,
@@ -39,6 +40,7 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
     private readonly store: VoiceSessionStore,
     @Inject(JANKBOT_QUEUE_CONFIG.utterances.queueName)
     private readonly utterances: JankbotQueue<'utterances'>,
+    private readonly trackingService: TrackingService,
   ) {}
 
   /** Joins (or moves to) the channel and starts listening to everyone who speaks in it. */
@@ -77,6 +79,8 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
     );
     await this.remember(channel.guild.id, channel.id);
     this.updateIdleTimer(channel.guild);
+    // The baseline for how often receive stalls happen.
+    this.track('voice_session-joined', channel.guild.id, channel.id);
     this.logger.log(`Listening in #${channel.name} (${channel.guild.name})`);
   }
 
@@ -326,10 +330,11 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
    * connection looks healthy but hears nothing until it's recreated.
    */
   private watchReceive(connection: VoiceConnection): ReceiveHealth {
-    const { guildId } = connection.joinConfig;
+    const { guildId, channelId } = connection.joinConfig;
     const health: ReceiveHealth = {
       unheardSince: undefined,
       decryptFailures: 0,
+      lastDaveEvent: undefined,
     };
 
     connection.on('stateChange', (oldState, newState) => {
@@ -346,7 +351,12 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
         health.decryptFailures++;
         return;
       }
+      health.lastDaveEvent = message;
       this.logger.log(`[${guildId}] ${message}`);
+      // @discordjs/voice recovering from a bad transition on its own; happens with or without a stall.
+      if (message.includes('errored') || message.includes('Invalidating')) {
+        this.track('voice_session-dave-error', guildId, channelId, { message });
+      }
     });
 
     const { voiceReceiveStallMs } = this.environmentService.environment;
@@ -358,6 +368,12 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
       this.logger.warn(
         `[${guildId}] No audio for ${Math.round(unheardMs / 1000)}s while people were speaking (${health.decryptFailures} decrypt failures); rejoining`,
       );
+      this.track('voice_session-receive-stalled', guildId, channelId, {
+        unheardMs,
+        decryptFailures: health.decryptFailures,
+        // Which DAVE step it was stuck after, e.g. a transition that was prepared but never executed.
+        lastDaveEvent: health.lastDaveEvent,
+      });
       void this.rejoin(connection);
     }, 5_000);
     connection.once(VoiceConnectionStatus.Destroyed, () =>
@@ -378,16 +394,42 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
       .catch(() => null);
     if (!channel?.isVoiceBased()) return;
 
+    const startedAt = Date.now();
     connection.destroy();
     // Otherwise the leave's voice state update can arrive after the new connection exists, and
     // onVoiceStateUpdate would take it for being kicked from the channel.
     await this.waitForVoiceLeave(channel.guild);
     try {
       await this.join(channel);
+      this.track('voice_session-rejoined', guildId, channelId, {
+        succeeded: true,
+        durationMs: Date.now() - startedAt,
+      });
     } catch (error) {
+      this.track('voice_session-rejoined', guildId, channelId, {
+        succeeded: false,
+        durationMs: Date.now() - startedAt,
+        error: error instanceof Error ? error.message : String(error),
+      });
       // Kept, so the next restart tries again, as in restoreSessions.
       this.logger.error(`[${guildId}] Failed to rejoin ${channelId}`, error);
     }
+  }
+
+  private track(
+    name: string,
+    guildId: string,
+    channelId: string | null,
+    extra?: Record<string, unknown>,
+  ) {
+    this.trackingService.trackEvent({
+      name,
+      properties: {
+        userId: `bot-${this.environmentService.environment.name}`,
+        reconciliationId: `${guildId}-${channelId}`,
+      },
+      extra,
+    });
   }
 
   /** Resolves once Discord confirms the bot left voice in this guild, or after 5s. */
@@ -420,6 +462,8 @@ type ReceiveHealth = {
   unheardSince: number | undefined;
   /** Packets DAVE failed to decrypt since the last one that got through. */
   decryptFailures: number;
+  /** The most recent DAVE debug message other than a decrypt failure. */
+  lastDaveEvent: string | undefined;
 };
 
 /** Other bots don't count as company. */

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { RedisCacheModule } from '@libs/nest-common';
+import { TrackingModule } from '@platform/analytics-client-nest';
 import { EnvironmentModule } from '../environment/environment-module';
 import { EnvironmentService } from '../environment/environment-service';
 import { DiscordModule } from '../modules/discord/discord.module';
@@ -16,6 +17,17 @@ import { AppController } from './app.controller';
       inject: [EnvironmentService],
       useFactory: (environmentService: EnvironmentService) => ({
         url: environmentService.environment.redisUrl,
+      }),
+    }),
+    TrackingModule.forRootAsync({
+      inject: [EnvironmentService],
+      useFactory: (environmentService: EnvironmentService) => ({
+        serviceName: 'jankbot/gateway',
+        enableBatching: true,
+        analyticsServiceBaseUrl:
+          environmentService.environment.analyticsServiceBaseUrl,
+        analyticsServiceApiKey:
+          environmentService.environment.analyticsServiceApiToken,
       }),
     }),
     DiscordModule,
