@@ -8,10 +8,12 @@
     "$schema": {
       "type": "string"
     },
-    "hasSecrets": {
-      "description": "Pull secrets from Infisical into the app's .env.local.",
-      "type": "boolean",
-      "default": false
+    "secretsPaths": {
+      "description": "Infisical paths for secrets to load.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "hasConvex": {
       "description": "Write CONVEX_URL and CONVEX_SITE_URL into the app's .env.local (non-production only).",
@@ -22,17 +24,6 @@
       "description": "Prefix for public convex variables (e.g. NEXT_PUBLIC_).",
       "type": "string",
       "default": ""
-    },
-    "infisicalPath": {
-      "description": "Infisical secrets path, without the leading slash. Defaults to the app path.",
-      "type": "string"
-    },
-    "extraSecrets": {
-      "description": "Additional Infisical secrets paths, without the leading slash. Loaded after infisicalPath in order; later paths override earlier ones for duplicate keys.",
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
     }
   }
 }

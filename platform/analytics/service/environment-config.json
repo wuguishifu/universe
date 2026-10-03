@@ -1,4 +1,3 @@
 {
-  "$schema": "../../../platform/environment/environment-config.schema.json",
-  "hasSecrets": true
+  "$schema": "../../../platform/environment/environment-config.schema.json"
 }

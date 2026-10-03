@@ -33,10 +33,12 @@ Add an `environment-config.json` to the root of any app that needs environment v
 ```json
 {
   "$schema": "../../../platform/environment/environment-config.schema.json",
-  "hasSecrets": true,
+  "secretsPaths": ["projects/portfolio/web"],
   "hasConvex": true,
   "publicPrefix": "NEXT_PUBLIC_"
 }
 ```
+
+`secretsPaths` lists the Infisical paths to load secrets from. Paths are applied in order, so a key in a later path overrides the same key in an earlier one. Omit it if the app has no secrets.
 
 All keys are optional; see [`environment-config.schema.json`](./environment-config.schema.json) for what they do. Unknown keys cause the setup command to fail.
