@@ -2,3 +2,14 @@ packages:
   - 'libs/*'
   - 'platform/*/*'
   - 'projects/*/*'
+allowBuilds:
+  '@nestjs/core': true
+  '@parcel/watcher': true
+  '@scarf/scarf': true
+  '@swc/core': true
+  esbuild: true
+  msgpackr-extract: true
+  necord: true
+  nx: true
+  sharp: true
+  unrs-resolver: true

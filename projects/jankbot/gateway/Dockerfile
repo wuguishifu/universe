@@ -1,4 +1,4 @@
-FROM node:22-slim AS build_image
+FROM node:24-slim AS build_image
 
 LABEL maintainer="Bo Bramer <bramer.bo@gmail.com>"
 LABEL org.opencontainers.image.source=https://github.com/wuguishifu/universe
@@ -25,7 +25,7 @@ RUN NX_DAEMON=false ENVIRONMENT=$BUILD_ENV pnpm nx build jankbot-gateway
 
 RUN node tools/scripts/prune-deploy-manifest.mjs dist/projects/jankbot/gateway/package.json
 
-FROM node:22-slim
+FROM node:24-slim
 
 ARG VERSION
 # CI doesn't pass --build-arg BUILD_ENV; without a default ENVIRONMENT would be "" and fail validation.
