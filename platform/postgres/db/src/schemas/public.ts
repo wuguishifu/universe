@@ -24,7 +24,7 @@ export const events = pgTable(
      * ```
      */
     properties: jsonb('properties').notNull(),
-    extra: jsonb('properties').notNull(),
+    extra: jsonb('extra').notNull(),
   },
   (table) => [
     index('events_name_timestamp_idx').on(table.name, table.timestamp),
