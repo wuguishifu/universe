@@ -64,7 +64,46 @@ INFISICAL_PROJECT_ID=$(echo $CONFIG | jq -r '.infisicalProjectId')
 INFISICAL_ENVIRONMENT_MAP='{"development": "dev", "production": "prod"}'
 INFISICAL_ENVIRONMENT=$(echo $INFISICAL_ENVIRONMENT_MAP | jq -r ".$ENVIRONMENT")
 
-# iterate over apps and load secrets for each app
+# collect the unique infisical paths across all apps so each one is fetched once
+ALL_SECRETS_PATHS=""
+for APP in $APPS; do
+  ALL_SECRETS_PATHS="$ALL_SECRETS_PATHS $(jq -r '.secretsPaths // [] | .[] | ltrimstr("/")' "$APP/$CONFIG_FILENAME")"
+done
+ALL_SECRETS_PATHS=$(printf '%s\n' $ALL_SECRETS_PATHS | sort -u)
+
+# fetch every path in parallel, mirroring the infisical folder structure in a temp dir
+SECRETS_DIR=$(mktemp -d)
+trap 'rm -rf "$SECRETS_DIR"' EXIT
+
+PIDS=""
+for PATH_ENTRY in $ALL_SECRETS_PATHS; do
+  echo "Loading secrets from infisical path: /$PATH_ENTRY"
+  mkdir -p "$SECRETS_DIR/$PATH_ENTRY"
+
+  infisical secrets \
+    --silent \
+    --domain $INFISICAL_DOMAIN \
+    --env $INFISICAL_ENVIRONMENT \
+    --projectId $INFISICAL_PROJECT_ID \
+    --path /$PATH_ENTRY \
+    --output dotenv \
+    > "$SECRETS_DIR/$PATH_ENTRY/secrets.env" &
+
+  PIDS="$PIDS $!:$PATH_ENTRY"
+done
+
+FAILED=false
+for ENTRY in $PIDS; do
+  if ! wait "${ENTRY%%:*}"; then
+    echo "ERROR: failed to load secrets from infisical path: /${ENTRY#*:}"
+    FAILED=true
+  fi
+done
+if [ "$FAILED" = true ]; then
+  exit 1
+fi
+
+# iterate over apps and write secrets for each app
 # apps are paths relative to the repo root (e.g. `platform/transcription/service`)
 for APP in $APPS; do
   APP_CONFIG="$APP/$CONFIG_FILENAME"
@@ -83,22 +122,8 @@ for APP in $APPS; do
 
   SECRETS=""
   for PATH_ENTRY in $SECRETS_PATHS; do
-    echo "Loading secrets for: $APP (infisical path: /$PATH_ENTRY)"
-
-    PATH_SECRETS=$(
-      infisical secrets \
-        --domain $INFISICAL_DOMAIN \
-        --env $INFISICAL_ENVIRONMENT \
-        --projectId $INFISICAL_PROJECT_ID \
-        --path /$PATH_ENTRY \
-        --output dotenv
-    ) || {
-      echo "ERROR: failed to load secrets from infisical path: /$PATH_ENTRY"
-      exit 1
-    }
-
     SECRETS="$SECRETS
-$PATH_SECRETS"
+$(cat "$SECRETS_DIR/$PATH_ENTRY/secrets.env")"
   done
 
   # dedupe keys so the last definition wins, keeping first-seen order
