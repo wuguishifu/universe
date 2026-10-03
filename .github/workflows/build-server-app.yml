@@ -10,6 +10,7 @@ on:
         required: true
         type: choice
         options:
+          - analytics/service
           - transcription/service
           - jankbot/core
           - jankbot/gateway
