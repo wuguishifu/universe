@@ -466,6 +466,9 @@ importers:
       '@libs/redis-cache':
         specifier: workspace:*
         version: link:../../../libs/redis-cache
+      '@platform/analytics-client-nest':
+        specifier: workspace:*
+        version: link:../../../platform/analytics/client-nest
       '@projects/jankbot-contracts':
         specifier: workspace:*
         version: link:../contracts

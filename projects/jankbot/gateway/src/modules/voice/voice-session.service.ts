@@ -13,9 +13,10 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { Client, Guild, VoiceBasedChannel } from 'discord.js';
+import { Client, Guild, VoiceBasedChannel, VoiceState } from 'discord.js';
 import { Context, type ContextOf, On, Once } from 'necord';
 import { randomUUID } from 'crypto';
+import { TrackingService } from '@platform/analytics-client-nest';
 import {
   JANKBOT_QUEUE_CONFIG,
   type JankbotJobData,
@@ -39,6 +40,7 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
     private readonly store: VoiceSessionStore,
     @Inject(JANKBOT_QUEUE_CONFIG.utterances.queueName)
     private readonly utterances: JankbotQueue<'utterances'>,
+    private readonly trackingService: TrackingService,
   ) {}
 
   /** Joins (or moves to) the channel and starts listening to everyone who speaks in it. */
@@ -54,6 +56,8 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
       // Must be undeafened to receive audio.
       selfDeaf: false,
       selfMute: true,
+      // DAVE (end-to-end encryption) problems only surface as debug events; see watchReceive.
+      debug: true,
     });
 
     try {
@@ -69,11 +73,14 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
     }
 
     this.handleDisconnects(connection);
+    const health = this.watchReceive(connection);
     connection.receiver.speaking.on('start', (userId) =>
-      this.captureUtterance(connection, userId),
+      this.captureUtterance(connection, health, userId),
     );
     await this.remember(channel.guild.id, channel.id);
     this.updateIdleTimer(channel.guild);
+    // The baseline for how often receive stalls happen.
+    this.track('voice_session-joined', channel.guild.id, channel.id);
     this.logger.log(`Listening in #${channel.name} (${channel.guild.name})`);
   }
 
@@ -171,11 +178,17 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
     }
   }
 
-  private captureUtterance(connection: VoiceConnection, userId: string) {
+  private captureUtterance(
+    connection: VoiceConnection,
+    health: ReceiveHealth,
+    userId: string,
+  ) {
     const { receiver } = connection;
+    if (this.client.users.cache.get(userId)?.bot) return;
+    // 'start' fires as soon as the user's packets arrive, before they're decrypted.
+    health.unheardSince ??= Date.now();
     // Already capturing this user; 'start' fires again after short pauses within an utterance.
     if (receiver.subscriptions.has(userId)) return;
-    if (this.client.users.cache.get(userId)?.bot) return;
 
     const { utteranceMinMs, utteranceMaxMs, utteranceSilenceMs } =
       this.environmentService.environment;
@@ -211,6 +224,8 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
     };
 
     stream.on('data', (packet: Buffer) => {
+      health.unheardSince = undefined;
+      health.decryptFailures = 0;
       packets.push(packet);
       // Split very long monologues so transcription stays bounded. A phrase spanning the
       // split point can be missed, which is an acceptable trade-off.
@@ -307,7 +322,149 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
       }
     });
   }
+
+  /**
+   * Logs connection state changes and DAVE events, and rejoins when people keep speaking but no
+   * audio gets through. @discordjs/voice silently drops packets it can't decrypt while a DAVE
+   * transition is pending, and a transition whose commit never arrives stays pending forever: the
+   * connection looks healthy but hears nothing until it's recreated.
+   */
+  private watchReceive(connection: VoiceConnection): ReceiveHealth {
+    const { guildId, channelId } = connection.joinConfig;
+    const health: ReceiveHealth = {
+      unheardSince: undefined,
+      decryptFailures: 0,
+      lastDaveEvent: undefined,
+    };
+
+    connection.on('stateChange', (oldState, newState) => {
+      if (oldState.status === newState.status) return;
+      this.logger.log(
+        `[${guildId}] Voice connection ${oldState.status} -> ${newState.status}`,
+      );
+    });
+    connection.on('debug', (message) => {
+      // The rest is websocket and UDP traffic.
+      if (!message.includes('[DAVE]')) return;
+      // One per dropped packet, so they're counted and reported with the stall instead.
+      if (message.includes('Failed to decrypt')) {
+        health.decryptFailures++;
+        return;
+      }
+      health.lastDaveEvent = message;
+      this.logger.log(`[${guildId}] ${message}`);
+      // @discordjs/voice recovering from a bad transition on its own; happens with or without a stall.
+      if (message.includes('errored') || message.includes('Invalidating')) {
+        this.track('voice_session-dave-error', guildId, channelId, { message });
+      }
+    });
+
+    const { voiceReceiveStallMs } = this.environmentService.environment;
+    const timer = setInterval(() => {
+      if (health.unheardSince === undefined) return;
+      const unheardMs = Date.now() - health.unheardSince;
+      if (unheardMs < voiceReceiveStallMs) return;
+      clearInterval(timer);
+      this.logger.warn(
+        `[${guildId}] No audio for ${Math.round(unheardMs / 1000)}s while people were speaking (${health.decryptFailures} decrypt failures); rejoining`,
+      );
+      this.track('voice_session-receive-stalled', guildId, channelId, {
+        unheardMs,
+        decryptFailures: health.decryptFailures,
+        // Which DAVE step it was stuck after, e.g. a transition that was prepared but never executed.
+        lastDaveEvent: health.lastDaveEvent,
+      });
+      void this.rejoin(connection);
+    }, 5_000);
+    connection.once(VoiceConnectionStatus.Destroyed, () =>
+      clearInterval(timer),
+    );
+
+    return health;
+  }
+
+  /** Recreates a connection that stopped receiving audio, in the same channel. */
+  private async rejoin(connection: VoiceConnection) {
+    const { guildId, channelId } = connection.joinConfig;
+    // Left or replaced since the stall was detected.
+    if (getVoiceConnection(guildId) !== connection || !channelId) return;
+
+    const channel = await this.client.channels
+      .fetch(channelId)
+      .catch(() => null);
+    if (!channel?.isVoiceBased()) return;
+
+    const startedAt = Date.now();
+    connection.destroy();
+    // Otherwise the leave's voice state update can arrive after the new connection exists, and
+    // onVoiceStateUpdate would take it for being kicked from the channel.
+    await this.waitForVoiceLeave(channel.guild);
+    try {
+      await this.join(channel);
+      this.track('voice_session-rejoined', guildId, channelId, {
+        succeeded: true,
+        durationMs: Date.now() - startedAt,
+      });
+    } catch (error) {
+      this.track('voice_session-rejoined', guildId, channelId, {
+        succeeded: false,
+        durationMs: Date.now() - startedAt,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      // Kept, so the next restart tries again, as in restoreSessions.
+      this.logger.error(`[${guildId}] Failed to rejoin ${channelId}`, error);
+    }
+  }
+
+  private track(
+    name: string,
+    guildId: string,
+    channelId: string | null,
+    extra?: Record<string, unknown>,
+  ) {
+    this.trackingService.trackEvent({
+      name,
+      properties: {
+        userId: `bot-${this.environmentService.environment.name}`,
+        reconciliationId: `${guildId}-${channelId}`,
+      },
+      extra,
+    });
+  }
+
+  /** Resolves once Discord confirms the bot left voice in this guild, or after 5s. */
+  private waitForVoiceLeave(guild: Guild): Promise<void> {
+    if (!guild.members.me?.voice.channelId) return Promise.resolve();
+    return new Promise((resolve) => {
+      const done = () => {
+        clearTimeout(timeout);
+        this.client.off('voiceStateUpdate', onUpdate);
+        resolve();
+      };
+      const onUpdate = (_: VoiceState, state: VoiceState) => {
+        if (
+          state.guild.id === guild.id &&
+          state.id === this.client.user?.id &&
+          !state.channelId
+        ) {
+          done();
+        }
+      };
+      const timeout = setTimeout(done, 5_000);
+      this.client.on('voiceStateUpdate', onUpdate);
+    });
+  }
 }
+
+/** Per connection: whether audio is getting through to the speakers' streams. */
+type ReceiveHealth = {
+  /** When someone started speaking with no packet reaching a stream since. */
+  unheardSince: number | undefined;
+  /** Packets DAVE failed to decrypt since the last one that got through. */
+  decryptFailures: number;
+  /** The most recent DAVE debug message other than a decrypt failure. */
+  lastDaveEvent: string | undefined;
+};
 
 /** Other bots don't count as company. */
 function humanCount(channel: VoiceBasedChannel): number {
