@@ -56,6 +56,9 @@
     },
     {
       "path": "./platform/analytics/contracts"
+    },
+    {
+      "path": "./platform/analytics/client-nest"
     }
   ],
   "compilerOptions": {

@@ -352,6 +352,15 @@ importers:
 
   libs/ui-web: {}
 
+  platform/analytics/client-nest:
+    dependencies:
+      '@libs/nest-common':
+        specifier: workspace:*
+        version: link:../../../libs/nest-common
+      '@platform/analytics-contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
   platform/analytics/contracts: {}
 
   platform/analytics/service:

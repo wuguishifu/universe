@@ -1,0 +1,1 @@
+export const TRACKING_CONFIG = 'TRACKING_CONFIG';
