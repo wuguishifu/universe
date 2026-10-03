@@ -44,6 +44,9 @@
     },
     {
       "path": "./libs/redis-cache"
+    },
+    {
+      "path": "./platform/analytics/service"
     }
   ],
   "compilerOptions": {
