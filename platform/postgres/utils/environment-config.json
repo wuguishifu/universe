@@ -1,0 +1,4 @@
+{
+  "$schema": "../../../platform/environment/environment-config.schema.json",
+  "secretsPaths": ["platform/postgres"]
+}

@@ -50,6 +50,9 @@
     },
     {
       "path": "./platform/postgres/db"
+    },
+    {
+      "path": "./platform/postgres/utils"
     }
   ],
   "compilerOptions": {
