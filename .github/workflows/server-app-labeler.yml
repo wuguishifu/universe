@@ -1,0 +1,83 @@
+name: Server App Labeler
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - main
+
+permissions:
+  contents: read
+  # labels live on the issues API
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  # Every server app label is <LABEL_PREFIX><project>; labels with this prefix are owned by this workflow.
+  LABEL_PREFIX: 'app:'
+  LABEL_COLOR: 1d76db
+
+jobs:
+  label:
+    name: Label affected server apps
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # nx affected needs the history back to where the PR branched off main
+          fetch-depth: 0
+
+      - name: Install packages
+        uses: ./.github/actions/setup-packages
+
+      # The checkout is the PR merged into main, so diffing against the merge base gives exactly
+      # what this PR changes. (On merge, build-server-apps diffs against its last successful run
+      # instead, so it may also pick up apps left over from a failed build.)
+      - name: Derive base
+        id: base
+        run: echo "sha=$(git merge-base origin/main HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Find affected server apps
+        id: apps
+        uses: ./.github/actions/affected-server-apps
+        with:
+          base: ${{ steps.base.outputs.sha }}
+          head: HEAD
+
+      - name: Update labels
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          APPS: ${{ steps.apps.outputs.apps }}
+        run: |
+          CURRENT=$(gh pr view "$PR" --json labels --jq '[.labels[].name]')
+          ADD=$(jq -nr --argjson apps "$APPS" --argjson current "$CURRENT" --arg prefix "$LABEL_PREFIX" \
+            '[$apps[] | $prefix + .project] - $current | .[]')
+          REMOVE=$(jq -nr --argjson apps "$APPS" --argjson current "$CURRENT" --arg prefix "$LABEL_PREFIX" \
+            '[$current[] | select(startswith($prefix))] - [$apps[] | $prefix + .project] | .[]')
+
+          if [ -z "$ADD" ] && [ -z "$REMOVE" ]; then
+            echo "Labels already up to date."
+            exit 0
+          fi
+
+          ARGS=()
+          for LABEL in $ADD; do
+            # --force: updates the label instead of failing if it already exists in the repo
+            gh label create "$LABEL" --force --color "$LABEL_COLOR" --description "Built and deployed on merge"
+            echo "Adding $LABEL"
+            ARGS+=(--add-label "$LABEL")
+          done
+          for LABEL in $REMOVE; do
+            echo "Removing $LABEL"
+            ARGS+=(--remove-label "$LABEL")
+          done
+
+          gh pr edit "$PR" "${ARGS[@]}"

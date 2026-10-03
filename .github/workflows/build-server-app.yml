@@ -6,15 +6,15 @@ on:
   workflow_dispatch:
     inputs:
       app:
-        description: 'App to deploy'
+        description: 'App to deploy (directory containing its app-config.json)'
         required: true
         type: choice
         options:
-          - analytics/service
-          - transcription/service
-          - jankbot/core
-          - jankbot/gateway
-          - postgres/migrations
+          - platform/analytics/service
+          - platform/transcription/service
+          - projects/jankbot/core
+          - projects/jankbot/gateway
+          - platform/postgres/utils
       version-bump-type:
         description: 'Version bump type'
         required: true
@@ -51,18 +51,20 @@ jobs:
 
       - name: Load config
         id: config
+        env:
+          PROJECT_ROOT: ${{ inputs.app }}
         run: |
-          CONFIG=$(cat .github/config/server-app-config.json)
-          CONFIG_PATH=".apps.\"${{ inputs.app }}\""
-          IMAGE_NAME=$(echo "$CONFIG" | jq -r "$CONFIG_PATH.imageName")
-          PROJECT_ROOT=$(echo "$CONFIG" | jq -r "$CONFIG_PATH.projectRoot")
-          if [ "$IMAGE_NAME" == "null" ] || [ "$PROJECT_ROOT" == "null" ]; then
-            echo "Error: Invalid configuration for app '${{ inputs.app }}'."
+          CONFIG_FILE="$PROJECT_ROOT/app-config.json"
+          IMAGE_NAME=$(jq -r '.imageName // empty' "$CONFIG_FILE")
+          PROJECT=$(jq -r '.name // empty' "$PROJECT_ROOT/project.json")
+          if [ -z "$IMAGE_NAME" ] || [ -z "$PROJECT" ]; then
+            echo "Error: Invalid configuration for app '$PROJECT_ROOT'."
             exit 1
           fi
 
           echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
           echo "project_root=$PROJECT_ROOT" >> $GITHUB_OUTPUT
+          echo "project=$PROJECT" >> $GITHUB_OUTPUT
 
       # Versions here are always the full <imageName>-vX.Y.Z tag (release name, docker tag, bundle name).
       - name: Bump version
@@ -102,7 +104,7 @@ jobs:
       - name: Package release bundle
         id: bundle
         env:
-          APP: ${{ inputs.app }}
+          APP: ${{ steps.config.outputs.project }}
           VERSION: ${{ steps.version.outputs.tag }}
           IMAGE: ${{ steps.docker_version.outputs.image }}
         run: |

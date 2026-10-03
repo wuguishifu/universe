@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "app-config.json",
+  "description": "Per-app server deploy config consumed by the build-server-app(s) workflows. The app root is the directory containing this file, which must also contain the app's Dockerfile.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["imageName"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "imageName": {
+      "description": "Image name under ghcr.io/<repo>/. Also the release tag prefix: <imageName>-vX.Y.Z.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+([._-][a-z0-9]+)*$"
+    }
+  }
+}

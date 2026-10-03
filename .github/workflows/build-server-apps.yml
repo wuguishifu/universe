@@ -1,0 +1,238 @@
+name: Build Server Apps
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  # write: creating a release also creates the <imageName>-vX.Y.Z tag that the version bump counts from
+  contents: write
+  packages: write
+  # nx-set-shas reads past runs of this workflow to find the last successful build
+  actions: read
+
+concurrency:
+  group: build-server-apps
+  # Never cancel halfway through publishing; queue the next run instead.
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  # Every image is published as <IMAGE_NAMESPACE>/<imageName>
+  IMAGE_NAMESPACE: ${{ github.repository }}
+
+jobs:
+  plan:
+    name: Find affected server apps
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      apps: ${{ steps.apps.outputs.apps }}
+      bump-type: ${{ steps.bump.outputs.bump-type }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # nx affected and the bump type both need the history between the base and head commits
+          fetch-depth: 0
+
+      - name: Install packages
+        uses: ./.github/actions/setup-packages
+
+      # Base is the commit of the last successful run of this workflow on main, so apps from a
+      # failed run get rebuilt on the next merge instead of being skipped.
+      - name: Derive base and head SHAs
+        uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: main
+
+      # Every app is bumped by the same amount: the largest [major] / [minor] / [patch] marker found
+      # in any commit message since the base, defaulting to patch.
+      - name: Determine bump type
+        id: bump
+        run: |
+          LOG=$(git log --format=%B "$NX_BASE..$NX_HEAD")
+          if echo "$LOG" | grep -qiF '[major]'; then
+            BUMP_TYPE=major
+          elif echo "$LOG" | grep -qiF '[minor]'; then
+            BUMP_TYPE=minor
+          else
+            BUMP_TYPE=patch
+          fi
+
+          echo "Bump type: $BUMP_TYPE"
+          echo "bump-type=$BUMP_TYPE" >> "$GITHUB_OUTPUT"
+
+      - name: Find affected server apps
+        id: apps
+        uses: ./.github/actions/affected-server-apps
+        with:
+          base: ${{ env.NX_BASE }}
+          head: ${{ env.NX_HEAD }}
+
+  # Builds every app without publishing anything. ArgoCD picks up new image versions within a
+  # minute, so nothing is pushed until every app has built; otherwise one app could ship against
+  # a contract change that another app failed to build with.
+  build:
+    name: Build ${{ matrix.app.project }}
+    needs: plan
+    if: needs.plan.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      # The publish job is skipped as soon as any build fails, so don't waste time on the rest.
+      fail-fast: true
+      matrix:
+        app: ${{ fromJson(needs.plan.outputs.apps) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Versions here are always the full <imageName>-vX.Y.Z tag (release name, docker tag, bundle name).
+      - name: Bump version
+        id: version
+        uses: wuguishifu/version-bump-workflow@v1
+        with:
+          bump-type: ${{ needs.plan.outputs.bump-type }}
+          tag-prefix: ${{ matrix.app.imageName }}-v
+          # First version bump of an app will be applied on top of 0.0.0.
+          initial-version: 0.0.0
+
+      - name: Get docker version
+        id: docker_version
+        uses: wuguishifu/version-bump-workflow/docker-image@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          image: ${{ env.IMAGE_NAMESPACE }}/${{ matrix.app.imageName }}
+          version: ${{ steps.version.outputs.tag }}
+
+      - name: Build docker image
+        run: |
+          docker build \
+            -f "./${{ matrix.app.root }}/Dockerfile" \
+            -t "${{ steps.docker_version.outputs.image }}" \
+            -t "${{ steps.docker_version.outputs.image-latest }}" \
+            .
+
+      - name: Package release bundle
+        env:
+          APP: ${{ matrix.app.project }}
+          VERSION: ${{ steps.version.outputs.tag }}
+          IMAGE: ${{ steps.docker_version.outputs.image }}
+        run: |
+          CID=$(docker create "$IMAGE")
+          mkdir -p bundle
+          docker cp "$CID:/app/." bundle/
+          docker rm "$CID" > /dev/null
+          rm -rf bundle/node_modules
+
+          NODE_VERSION=$(docker run --rm --entrypoint node "$IMAGE" --version)
+          jq -n \
+            --arg app "$APP" --arg version "$VERSION" --arg commit "$GITHUB_SHA" \
+            --arg image "$IMAGE" --arg node "$NODE_VERSION" \
+            '{app: $app, version: $version, commit: $commit, image: $image, node: $node}' \
+            > bundle/release.json
+
+          mkdir -p out
+          tar -czf "out/$VERSION.tar.gz" -C bundle .
+
+      - name: Save docker image
+        env:
+          VERSION: ${{ steps.version.outputs.tag }}
+          IMAGE: ${{ steps.docker_version.outputs.image }}
+          IMAGE_LATEST: ${{ steps.docker_version.outputs.image-latest }}
+        run: |
+          docker save "$IMAGE" "$IMAGE_LATEST" | gzip > out/image.tar.gz
+          jq -n \
+            --arg version "$VERSION" --arg image "$IMAGE" --arg imageLatest "$IMAGE_LATEST" \
+            --arg bundle "$VERSION.tar.gz" \
+            '{version: $version, image: $image, imageLatest: $imageLatest, bundle: $bundle}' \
+            > out/publish.json
+
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-app-${{ matrix.app.project }}
+          path: out/
+          retention-days: 1
+          # already gzipped
+          compression-level: 0
+          if-no-files-found: error
+
+  publish:
+    name: Publish ${{ matrix.app.project }}
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      # Once publishing has started, finish every app rather than leave the rest half-released.
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.plan.outputs.apps) }}
+    steps:
+      - name: Download build
+        uses: actions/download-artifact@v4
+        with:
+          name: server-app-${{ matrix.app.project }}
+          path: out
+
+      - name: Load build metadata
+        id: meta
+        run: |
+          jq -r 'to_entries[] | "\(.key)=\(.value)"' out/publish.json >> "$GITHUB_OUTPUT"
+          cat out/publish.json
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push docker image
+        run: |
+          gunzip -c out/image.tar.gz | docker load
+          docker push "${{ steps.meta.outputs.image }}"
+          docker push "${{ steps.meta.outputs.imageLatest }}"
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          IMAGE: ${{ steps.meta.outputs.image }}
+          BUNDLE: out/${{ steps.meta.outputs.bundle }}
+        run: |
+          # --latest=false: releases from different apps share this repo, so "latest" would be
+          # meaningless. Consumers look up releases by tag.
+          gh release create "$VERSION" "$BUNDLE" \
+            --target "$GITHUB_SHA" \
+            --title "$VERSION" \
+            --notes "Image: \`$IMAGE\`" \
+            --latest=false
+
+  # The artifacts only carry images from build to publish, so delete them once everything has
+  # shipped. They're kept (until retention expires) when anything fails, so "Re-run failed jobs"
+  # still has the other apps' builds to publish.
+  cleanup:
+    name: Delete build artifacts
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Delete build artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh api --paginate "repos/$GH_REPO/actions/runs/$GITHUB_RUN_ID/artifacts" \
+            --jq '.artifacts[] | select(.name | startswith("server-app-")) | "\(.id) \(.name)"' \
+            | while read -r ID NAME; do
+              echo "Deleting $NAME"
+              gh api -X DELETE "repos/$GH_REPO/actions/artifacts/$ID"
+            done
