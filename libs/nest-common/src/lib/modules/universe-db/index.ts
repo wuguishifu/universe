@@ -1,1 +1,1 @@
-export * from './pluto-db.module';
+export * from './universe-db.module';

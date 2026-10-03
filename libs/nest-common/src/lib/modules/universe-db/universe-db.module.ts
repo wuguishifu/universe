@@ -12,12 +12,12 @@ const environmentSchema = z.object({
 });
 
 @Module({})
-export class PlutoDbModule {
+export class UniverseDbModule {
   static register(): DynamicModule {
     const parsed = environmentSchema.parse(process.env);
 
     return {
-      module: PlutoDbModule,
+      module: UniverseDbModule,
       providers: [
         {
           provide: UNIVERSE_DB,
