@@ -1,3 +1,4 @@
 {
-  "$schema": "../../../platform/environment/environment-config.schema.json"
+  "$schema": "../../../platform/environment/environment-config.schema.json",
+  "secretsPaths": ["platform/analytics/service"]
 }
