@@ -22,6 +22,10 @@ What it does:
   but not on shutdown.
 - **Auto-leave**: after the bot has been alone in its channel (other bots don't count) for
   `VOICE_IDLE_TIMEOUT_MS` (default 5 minutes), it leaves.
+- **Stall recovery**: if people have been speaking for `VOICE_RECEIVE_STALL_MS` (default 30s)
+  without any audio getting through, it rejoins the channel. This happens when the connection's
+  DAVE (end-to-end encryption) session gets stuck on a transition, which @discordjs/voice handles by
+  silently dropping every packet. DAVE events and connection state changes are logged.
 
 It doesn't register commands; core does that. Keep this service small, since every deploy of it
 drops the bot from voice for a few seconds.

@@ -24,6 +24,12 @@ export const environmentSchema = z.object({
   /** Utterances longer than this are split into multiple jobs. */
   utteranceMaxMs: z.coerce.number().int().positive().default(30_000),
 
+  /**
+   * The bot rejoins its channel if people have been speaking this long without a single audio
+   * packet getting through, which happens when the voice connection's DAVE session gets stuck.
+   */
+  voiceReceiveStallMs: z.coerce.number().int().positive().default(30_000),
+
   /** The bot leaves a voice channel after being the only (non-bot) member for this long. */
   voiceIdleTimeoutMs: z.coerce.number().int().positive().default(300_000),
 });
