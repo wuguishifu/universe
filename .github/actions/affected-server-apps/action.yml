@@ -1,0 +1,66 @@
+name: Affected Server Apps
+description: >-
+  List the server apps (projects with an app-config.json and a Dockerfile at their root) affected
+  between two commits. Packages must already be installed and the history between base and head
+  fetched.
+
+inputs:
+  base:
+    description: Base commit for nx affected
+    required: true
+  head:
+    description: Head commit for nx affected
+    required: true
+
+outputs:
+  apps:
+    description: 'JSON array of {project, root, imageName}, e.g. [{"project": "jankbot-core", ...}]'
+    value: ${{ steps.apps.outputs.apps }}
+
+runs:
+  using: composite
+  steps:
+    - name: Find affected server apps
+      id: apps
+      shell: bash
+      env:
+        BASE: ${{ inputs.base }}
+        HEAD: ${{ inputs.head }}
+      run: |
+        ALLOWED_KEYS='["$schema", "imageName"]'
+
+        AFFECTED=$(pnpm --silent nx show projects --affected --base="$BASE" --head="$HEAD" --json)
+        echo "Affected projects ($BASE..$HEAD): $AFFECTED"
+
+        APPS='[]'
+        for PROJECT in $(echo "$AFFECTED" | jq -r '.[]'); do
+          ROOT=$(pnpm --silent nx show project "$PROJECT" --json | jq -r '.root')
+          CONFIG_FILE="$ROOT/app-config.json"
+          if [ ! -f "$CONFIG_FILE" ]; then
+            continue
+          fi
+
+          UNKNOWN_KEYS=$(jq -r --argjson allowed "$ALLOWED_KEYS" 'keys - $allowed | join(", ")' "$CONFIG_FILE")
+          if [ -n "$UNKNOWN_KEYS" ]; then
+            echo "::error file=$CONFIG_FILE::unknown keys: $UNKNOWN_KEYS (see .github/config/app-config.schema.json)"
+            exit 1
+          fi
+
+          IMAGE_NAME=$(jq -r '.imageName // empty' "$CONFIG_FILE")
+          if [ -z "$IMAGE_NAME" ]; then
+            echo "::error file=$CONFIG_FILE::missing imageName"
+            exit 1
+          fi
+
+          if [ ! -f "$ROOT/Dockerfile" ]; then
+            echo "::error file=$CONFIG_FILE::$ROOT has an app-config.json but no Dockerfile"
+            exit 1
+          fi
+
+          APPS=$(echo "$APPS" | jq -c \
+            --arg project "$PROJECT" --arg root "$ROOT" --arg imageName "$IMAGE_NAME" \
+            '. + [{project: $project, root: $root, imageName: $imageName}]')
+        done
+
+        echo "Server apps: $APPS"
+        echo "apps=$APPS" >> "$GITHUB_OUTPUT"
