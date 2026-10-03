@@ -53,6 +53,9 @@
     },
     {
       "path": "./platform/postgres/utils"
+    },
+    {
+      "path": "./platform/analytics/contracts"
     }
   ],
   "compilerOptions": {

@@ -352,11 +352,19 @@ importers:
 
   libs/ui-web: {}
 
+  platform/analytics/contracts: {}
+
   platform/analytics/service:
     dependencies:
       '@libs/nest-common':
         specifier: workspace:*
         version: link:../../../libs/nest-common
+      '@platform/analytics-contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@platform/postgres-db':
+        specifier: workspace:*
+        version: link:../../postgres/db
       tslib:
         specifier: ^2.3.0
         version: 2.8.1

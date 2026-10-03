@@ -33,6 +33,6 @@ export const events = pgTable(
   ],
 );
 
-export const schema = {
+export const publicSchema = {
   events,
 };
