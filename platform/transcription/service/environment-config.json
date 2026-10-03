@@ -1,4 +1,4 @@
 {
   "$schema": "../../../platform/environment/environment-config.schema.json",
-  "hasSecrets": true
+  "secretsPaths": ["platform/transcription/service"]
 }

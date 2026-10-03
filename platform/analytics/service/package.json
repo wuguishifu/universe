@@ -1,0 +1,11 @@
+{
+  "name": "analytics-service",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@libs/nest-common": "workspace:*",
+    "@platform/analytics-contracts": "workspace:*",
+    "@platform/postgres-db": "workspace:*",
+    "tslib": "^2.3.0"
+  }
+}

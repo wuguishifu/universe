@@ -77,9 +77,9 @@ Redis, then its guild membership and voice state from Discord's API. Nothing abo
 
 ## Local development
 
-1. Secrets in Infisical dev `/projects/jankbot/ruby` (still the old path; see `infisicalPath` in
-   `platform/environment/config.json`): `DISCORD_TOKEN`, `DISCORD_DEV_GUILD_IDS`, `REDIS_URL`,
-   `RUBY_CONVEX_SECRET`, `TRANSCRIPTION_SERVICE_URL`, `TRANSCRIPTION_SERVICE_API_TOKEN`. Then `nx setup environment`.
+1. Secrets in Infisical dev `/projects/jankbot/core` (see `secretsPaths` in `environment-config.json`):
+   `DISCORD_TOKEN`, `DISCORD_DEV_GUILD_IDS`, `REDIS_URL`, `RUBY_CONVEX_SECRET`, `TRANSCRIPTION_SERVICE_URL`,
+   `TRANSCRIPTION_SERVICE_API_TOKEN`. Then `nx setup environment`.
    (Or put them in a gitignored `projects/jankbot/core/.env`; see `.env.example`.)
 2. `RUBY_CONVEX_SECRET` must also be set on the convex deployment:
    `pnpm nx convex convex-app -- env set RUBY_CONVEX_SECRET <value>`.

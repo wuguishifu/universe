@@ -1,6 +1,7 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { UnrecoverableError } from 'bullmq';
+import { TrackingService } from '@platform/analytics-client-nest';
 import {
   INTERACTION_TOKEN_TTL_MS,
   JANKBOT_QUEUE_CONFIG,
@@ -24,6 +25,7 @@ export class InteractionProcessor extends WorkerHost {
   constructor(
     private readonly discord: DiscordRestService,
     private readonly registry: CommandRegistry,
+    private readonly trackingService: TrackingService,
   ) {
     super();
   }
@@ -62,11 +64,24 @@ export class InteractionProcessor extends WorkerHost {
     }
   }
 
-  override async process(job: JankbotQueueJob<'interactions'>): Promise<void> {
-    const interaction = job.data;
+  override async process({
+    data: interaction,
+  }: JankbotQueueJob<'interactions'>): Promise<void> {
     if (isTokenExpired(interaction)) {
       throw new UnrecoverableError('Interaction token is about to expire');
     }
+
+    this.trackingService.trackEvent({
+      name: 'interaction_processor-interaction',
+      properties: {
+        userId: interaction.userId,
+      },
+      extra: {
+        command: interaction.commandName,
+        options: interaction.options,
+      },
+      timestamp: interaction.receivedAt,
+    });
 
     const handler = this.registry.find(interaction.commandName);
     const reply = handler

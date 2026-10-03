@@ -1,6 +1,8 @@
 {
   "$schema": "../../../platform/environment/environment-config.schema.json",
-  "hasSecrets": true,
   "hasConvex": false,
-  "extraSecrets": ["projects/jankbot/gateway/bot-bo"]
+  "secretsPaths": [
+    "projects/jankbot/gateway",
+    "projects/jankbot/gateway/bot-bo"
+  ]
 }

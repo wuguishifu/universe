@@ -23,6 +23,9 @@
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "references": [
     {
+      "path": "../../../libs/redis-cache/tsconfig.lib.json"
+    },
+    {
       "path": "../../../libs/queue/tsconfig.lib.json"
     },
     {
@@ -32,7 +35,7 @@
       "path": "../../../libs/nest-common/tsconfig.lib.json"
     },
     {
-      "path": "../../../libs/redis-cache/tsconfig.lib.json"
+      "path": "../../../platform/analytics/client-nest/tsconfig.lib.json"
     },
     {
       "path": "../../../platform/convex/contracts/tsconfig.lib.json"

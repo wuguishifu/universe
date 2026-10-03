@@ -1,0 +1,66 @@
+{
+  "name": "postgres-utils",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "platform/postgres/utils/src",
+  "projectType": "library",
+  "tags": ["scope:server"],
+  "targets": {
+    "migrate:generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "platform/postgres/utils",
+        "command": "drizzle-kit generate --config=./drizzle.config.ts"
+      }
+    },
+    "migrate:run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "platform/postgres/utils",
+        "command": "tsx ./src/lib/migrate.ts"
+      }
+    },
+    "bundle:migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "platform/postgres/utils",
+        "parallel": false,
+        "commands": [
+          "rm -rf ../../../dist/platform/postgres/migrations",
+          "esbuild ./src/lib/migrate.ts --bundle --platform=node --target=node22 --format=esm --external:pg-native --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --outfile=../../../dist/platform/postgres/migrations/migrate.mjs",
+          "cp -r ./src/lib/migrations ../../../dist/platform/postgres/migrations/migrations"
+        ]
+      }
+    },
+    "create:db": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "platform/postgres/utils",
+        "command": "tsx ./src/lib/db/setup.ts"
+      }
+    },
+    "init:db": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "platform/postgres/utils",
+        "parallel": false,
+        "commands": [
+          "pnpm nx create:db postgres-utils",
+          "pnpm nx migrate:run postgres-utils"
+        ]
+      }
+    },
+    "docker": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "platform/postgres/utils",
+        "parallel": false,
+        "commands": [
+          "docker compose -f docker-compose.dev.yml down",
+          "docker compose -f docker-compose.dev.yml up --detach --wait",
+          "pnpm nx init:db postgres-utils",
+          "docker ps"
+        ]
+      }
+    }
+  }
+}

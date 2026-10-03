@@ -1,0 +1,1 @@
+CREATE INDEX "events_properties_gin_idx" ON "events" USING gin ("properties");

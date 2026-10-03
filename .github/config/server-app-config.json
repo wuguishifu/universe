@@ -1,5 +1,9 @@
 {
   "apps": {
+    "analytics/service": {
+      "imageName": "analytics-service",
+      "projectRoot": "platform/analytics/service"
+    },
     "transcription/service": {
       "imageName": "transcription-service",
       "projectRoot": "platform/transcription/service"
@@ -11,6 +15,10 @@
     "jankbot/gateway": {
       "imageName": "jankbot-gateway",
       "projectRoot": "projects/jankbot/gateway"
+    },
+    "postgres/migrations": {
+      "imageName": "universe-db-migrations",
+      "projectRoot": "platform/postgres/utils"
     }
   }
 }

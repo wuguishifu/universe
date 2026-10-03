@@ -1,0 +1,32 @@
+name: universe-postgres
+
+services:
+  postgres:
+    image: postgres
+    container_name: universe-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - '${UNIVERSE_DB_PORT:-5432}:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready --username postgres']
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: universe-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@universe.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - '${UNIVERSE_PGADMIN_PORT:-5050}:80'
+    volumes:
+      - ./pgadmin-servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy

@@ -44,6 +44,21 @@
     },
     {
       "path": "./libs/redis-cache"
+    },
+    {
+      "path": "./platform/analytics/service"
+    },
+    {
+      "path": "./platform/postgres/db"
+    },
+    {
+      "path": "./platform/postgres/utils"
+    },
+    {
+      "path": "./platform/analytics/contracts"
+    },
+    {
+      "path": "./platform/analytics/client-nest"
     }
   ],
   "compilerOptions": {
