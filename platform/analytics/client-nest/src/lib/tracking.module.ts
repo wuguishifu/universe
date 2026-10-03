@@ -1,45 +1,48 @@
-import { DynamicModule, Global, Module } from '@nestjs/common';
-import { z } from 'zod';
+import {
+  DynamicModule,
+  InjectionToken,
+  Module,
+  ModuleMetadata,
+  OptionalFactoryDependency,
+} from '@nestjs/common';
 
 import { TrackingConfig } from './config';
 import { TRACKING_CONFIG } from './constants';
 import { TrackingService } from './tracking.service';
 
-const environmentSchema = z.object({
-  OSMIUM_BASE_URL: z.string(),
-  OSMIUM_ADMIN_TOKEN: z.string(),
-});
+export type TrackingModuleAsyncOptions = Pick<ModuleMetadata, 'imports'> & {
+  inject?: (InjectionToken | OptionalFactoryDependency)[];
+  useFactory: (...args: never[]) => TrackingConfig | Promise<TrackingConfig>;
+};
 
-@Global()
 @Module({})
-export class OsmiumModule {
-  static register(
-    config: Omit<
-      TrackingConfig,
-      'analyticsServiceBaseUrl' | 'analyticsServiceApiToken'
-    >,
-    key: string,
-  ): DynamicModule {
-    const parsed = environmentSchema.parse(process.env);
-
+export class TrackingModule {
+  public static forRoot(config: TrackingConfig): DynamicModule {
     return {
-      module: OsmiumModule,
+      module: TrackingModule,
+      global: true,
       providers: [
+        { provide: TRACKING_CONFIG, useValue: config },
         TrackingService,
-        {
-          provide: TRACKING_CONFIG,
-          useValue: {
-            ...config,
-            osmiumBaseUrl: parsed.OSMIUM_BASE_URL,
-            osmiumApiAccessKey: parsed.OSMIUM_ADMIN_TOKEN,
-          },
-        },
-        {
-          provide: key,
-          useExisting: TrackingService,
-        },
       ],
-      exports: [TrackingService, key],
+      exports: [TrackingService],
+    };
+  }
+
+  public static forRootAsync({
+    imports = [],
+    inject = [],
+    useFactory,
+  }: TrackingModuleAsyncOptions): DynamicModule {
+    return {
+      module: TrackingModule,
+      global: true,
+      imports,
+      providers: [
+        { provide: TRACKING_CONFIG, inject, useFactory },
+        TrackingService,
+      ],
+      exports: [TrackingService],
     };
   }
 }

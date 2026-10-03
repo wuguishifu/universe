@@ -11,7 +11,9 @@ import { TrackingEvent } from '@platform/analytics-contracts';
 import { TrackingConfig } from './config';
 import { TRACKING_CONFIG } from './constants';
 
-type TrackEventParams = Omit<TrackingEvent, 'createdAt' | 'source'>;
+type TrackEventParams = Omit<TrackingEvent, 'timestamp' | 'source'> & {
+  timestamp?: number;
+};
 type QueuedEvent = TrackingEvent & { _retries: number };
 
 @Injectable()
@@ -99,23 +101,9 @@ export class TrackingService implements OnModuleInit, OnModuleDestroy {
     const event: TrackingEvent = {
       ...params,
       source: this.config.serviceName,
-      timestamp: Date.now(),
+      timestamp: params.timestamp ?? Date.now(),
     };
     this.dispatchEvent(event);
-  }
-
-  public trackDebug(params: TrackEventParams) {
-    const event: TrackingEvent = {
-      ...params,
-      name: this.formatDebugEventName(params.name),
-      source: this.config.serviceName,
-      timestamp: Date.now(),
-    };
-    this.dispatchEvent(event);
-  }
-
-  private formatDebugEventName(name: string) {
-    return `${this.config.debugPrefix ?? 'debug'}-${name}`;
   }
 
   private dispatchEvent(event: TrackingEvent) {

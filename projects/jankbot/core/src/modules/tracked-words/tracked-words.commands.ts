@@ -65,11 +65,13 @@ export class TrackedWordsCommands implements CommandHandler {
         return this.add(
           guildId,
           parseOptions(interaction, phraseOptions).phrase,
+          interaction.userId,
         );
       case 'remove':
         return this.remove(
           guildId,
           parseOptions(interaction, phraseOptions).phrase,
+          interaction.userId,
         );
       default:
         return Promise.resolve({ content: "I don't know that subcommand." });
@@ -88,9 +90,10 @@ export class TrackedWordsCommands implements CommandHandler {
   private async add(
     guildId: string,
     phrase: string,
+    userId: string,
   ): Promise<InteractionReply> {
     try {
-      const added = await this.trackedWords.add(guildId, phrase);
+      const added = await this.trackedWords.add(guildId, phrase, userId);
       return {
         content: added
           ? `Now tracking "${phrase}".`
@@ -106,8 +109,9 @@ export class TrackedWordsCommands implements CommandHandler {
   private async remove(
     guildId: string,
     phrase: string,
+    userId: string,
   ): Promise<InteractionReply> {
-    const removed = await this.trackedWords.remove(guildId, phrase);
+    const removed = await this.trackedWords.remove(guildId, phrase, userId);
     return {
       content: removed
         ? `Stopped tracking "${phrase}".`
