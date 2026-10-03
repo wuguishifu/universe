@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RedisCacheService } from '@libs/nest-common';
 import { api } from '@platform/convex-contracts';
-import { JANKBOT_REDIS } from '@projects/jankbot-contracts';
+import { CORE_REDIS } from '../../redis/redis-keys';
 import { ConvexService } from '../common/convex.service';
 
 /**
@@ -18,7 +18,7 @@ export class TrackedWordsService {
   ) {}
 
   async list(guildId: string): Promise<string[]> {
-    const target = { key: JANKBOT_REDIS.phrases, id: guildId };
+    const target = { key: CORE_REDIS.phrases, id: guildId };
     const cached = await this.cache.get(target);
     if (cached) return cached;
 
@@ -57,6 +57,6 @@ export class TrackedWordsService {
   }
 
   private async invalidate(guildId: string): Promise<void> {
-    await this.cache.delete({ key: JANKBOT_REDIS.phrases, id: guildId });
+    await this.cache.delete({ key: CORE_REDIS.phrases, id: guildId });
   }
 }

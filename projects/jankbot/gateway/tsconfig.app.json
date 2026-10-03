@@ -29,6 +29,9 @@
       "path": "../../../libs/nest-common/tsconfig.lib.json"
     },
     {
+      "path": "../../../libs/redis-cache/tsconfig.lib.json"
+    },
+    {
       "path": "../contracts/tsconfig.lib.json"
     }
   ]

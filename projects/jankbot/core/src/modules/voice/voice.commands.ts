@@ -8,10 +8,10 @@ import {
 import { z } from 'zod';
 import { RedisCacheService } from '@libs/nest-common';
 import {
-  JANKBOT_REDIS,
   type VoiceCommandResult,
   voiceBotId,
 } from '@projects/jankbot-contracts';
+import { CORE_REDIS } from '../../redis/redis-keys';
 import { type InteractionReply } from '../discord/discord-rest.service';
 import {
   type CommandHandler,
@@ -174,7 +174,7 @@ export class JoinCommand implements CommandHandler {
     channelId: string,
   ): Promise<InteractionReply | undefined> {
     const claim = {
-      key: JANKBOT_REDIS.joinClaims,
+      key: CORE_REDIS.joinClaims,
       id: `${voiceBotId(name)}:${guildId}`,
     };
     const token = await this.cache.tryAcquireLock({

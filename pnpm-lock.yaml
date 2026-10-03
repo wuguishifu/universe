@@ -388,6 +388,9 @@ importers:
       '@libs/queue':
         specifier: workspace:*
         version: link:../../../libs/queue
+      '@libs/redis-cache':
+        specifier: workspace:*
+        version: link:../../../libs/redis-cache
       '@platform/convex-contracts':
         specifier: workspace:*
         version: link:../../../platform/convex/contracts
@@ -409,6 +412,9 @@ importers:
       '@libs/queue':
         specifier: workspace:*
         version: link:../../../libs/queue
+      '@libs/redis-cache':
+        specifier: workspace:*
+        version: link:../../../libs/redis-cache
       '@projects/jankbot-contracts':
         specifier: workspace:*
         version: link:../contracts
