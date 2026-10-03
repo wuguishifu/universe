@@ -7,12 +7,16 @@ import { dirname } from 'path';
 import { dbMigrate } from './db/dev-client';
 
 const isCI = process.env.CI === 'true';
+// No TTY means nobody can answer the prompt, e.g. the universe-db-migrations Job in the homelab.
+const isInteractive = Boolean(stdin.isTTY);
 const environment = process.env.ENVIRONMENT ?? 'development';
 const ENV = environment.toUpperCase();
 
 const processMigrations = () => {
   console.log(`📢 Running migrations on the ${ENV} universe database`);
-  const migrationsFolder = `${dirname(process.argv[1] ?? '.')}/migrations`;
+  const migrationsFolder =
+    process.env.MIGRATIONS_DIR ??
+    `${dirname(process.argv[1] ?? '.')}/migrations`;
 
   console.log('📁 Starting migration from directory:', migrationsFolder);
 
@@ -28,7 +32,7 @@ const processMigrations = () => {
 };
 
 const handleMigrations = async () => {
-  if (isCI) {
+  if (isCI || !isInteractive) {
     processMigrations();
     // Return but do not exit the process - `processMigrations` will handle the exit of the process once migrations are complete
     return;

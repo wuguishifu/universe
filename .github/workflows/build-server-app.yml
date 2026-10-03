@@ -13,6 +13,7 @@ on:
           - transcription/service
           - jankbot/core
           - jankbot/gateway
+          - postgres/migrations
       version-bump-type:
         description: 'Version bump type'
         required: true
