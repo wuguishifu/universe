@@ -22,11 +22,15 @@ export class TranscriptionClientService {
 
   /**
    * Transcribes a short clip on transcription-service's interactive lane. `idempotencyKey` makes retries
-   * safe: repeating it returns the original result instead of transcribing again.
+   * safe: repeating it returns the original result instead of transcribing again. `prompt` biases
+   * whisper toward expected vocabulary.
    */
-  transcribe(wav: Buffer, idempotencyKey: string) {
+  transcribe(wav: Buffer, idempotencyKey: string, prompt?: string) {
     return this.client.transcription.transcribe({
-      body: { source: { type: 'inline', data: wav.toString('base64') } },
+      body: {
+        source: { type: 'inline', data: wav.toString('base64') },
+        options: { prompt },
+      },
       headers: { 'idempotency-key': `jankbot:${idempotencyKey}` },
       fetchOptions: { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) },
     });

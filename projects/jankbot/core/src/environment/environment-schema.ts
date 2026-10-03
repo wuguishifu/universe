@@ -44,4 +44,12 @@ export const environmentSchema = z.object({
   /** transcription-service's base URL, e.g. http://bos-mac-mini:3002. */
   transcriptionServiceUrl: z.url(),
   transcriptionServiceApiToken: z.string().min(16),
+
+  /**
+   * Utterances with less than this much audio above UTTERANCE_LOUDNESS_THRESHOLD_DBFS aren't
+   * transcribed, which skips mic ticks and hiss that whisper turns into [BLANK_AUDIO]. 0 disables.
+   */
+  utteranceMinLoudMs: z.coerce.number().int().nonnegative().default(300),
+  /** How loud (dBFS, so ≤ 0) a 20ms frame must be to count toward UTTERANCE_MIN_LOUD_MS. */
+  utteranceLoudnessThresholdDbfs: z.coerce.number().max(0).default(-45),
 });

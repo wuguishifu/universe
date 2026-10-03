@@ -8,15 +8,20 @@ const SAMPLE_RATE = 16_000;
 const CHANNELS = 1;
 const BYTES_PER_SAMPLE = 2;
 
+/** Samples per OPUS_FRAME_MS frame, the window loudness is measured over. */
+const SAMPLES_PER_FRAME = (SAMPLE_RATE * OPUS_FRAME_MS) / 1000;
+/** Full scale for 16-bit samples, the 0 in dBFS. */
+const FULL_SCALE = 32_768;
+
 /**
- * Decodes Discord Opus packets (48kHz stereo) to a 16kHz mono 16-bit WAV: the format whisper
- * uses, so transcription-service's ffmpeg step is a pass-through. ~32KB per second of audio.
+ * Decodes Discord Opus packets (48kHz stereo) to 16kHz mono 16-bit PCM: the format whisper uses,
+ * so transcription-service's ffmpeg step is a pass-through. ~32KB per second of audio.
  */
-export async function opusPacketsToWav(packets: Buffer[]): Promise<Buffer> {
+export async function decodeOpusPackets(packets: Buffer[]): Promise<Buffer> {
   const decoder = new opus.Decoder({
     rate: SAMPLE_RATE,
     channels: CHANNELS,
-    frameSize: (SAMPLE_RATE * OPUS_FRAME_MS) / 1000,
+    frameSize: SAMPLES_PER_FRAME,
   });
   const chunks: Buffer[] = [];
 
@@ -27,8 +32,35 @@ export async function opusPacketsToWav(packets: Buffer[]): Promise<Buffer> {
     }
   });
 
-  const data = Buffer.concat(chunks);
-  return Buffer.concat([wavHeader(data.length), data]);
+  return Buffer.concat(chunks);
+}
+
+/** Wraps PCM from decodeOpusPackets in a WAV header. */
+export function pcmToWav(pcm: Buffer): Buffer {
+  return Buffer.concat([wavHeader(pcm.length), pcm]);
+}
+
+/**
+ * How much of the PCM from decodeOpusPackets is louder than `thresholdDbfs`, in ms: the number of
+ * OPUS_FRAME_MS frames whose RMS level is above it. Mic ticks and background hiss come out near 0
+ * even when Discord transmitted for a while.
+ */
+export function loudMs(pcm: Buffer, thresholdDbfs: number): number {
+  // Compare mean squares rather than taking a log per frame.
+  const threshold = FULL_SCALE * 10 ** (thresholdDbfs / 20);
+  const thresholdSquared = threshold * threshold;
+  const frameBytes = SAMPLES_PER_FRAME * BYTES_PER_SAMPLE;
+
+  let loudFrames = 0;
+  for (let start = 0; start + frameBytes <= pcm.length; start += frameBytes) {
+    let sumSquares = 0;
+    for (let offset = start; offset < start + frameBytes; offset += 2) {
+      const sample = pcm.readInt16LE(offset);
+      sumSquares += sample * sample;
+    }
+    if (sumSquares / SAMPLES_PER_FRAME > thresholdSquared) loudFrames++;
+  }
+  return loudFrames * OPUS_FRAME_MS;
 }
 
 function wavHeader(dataBytes: number): Buffer {

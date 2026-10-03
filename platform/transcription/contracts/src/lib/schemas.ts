@@ -25,13 +25,16 @@ export const audioSourceSchema = z.discriminatedUnion('type', [
 ]);
 export type AudioSource = z.infer<typeof audioSourceSchema>;
 
+/** Whisper only uses ~224 tokens of prompt anyway, which is roughly this many characters of English. */
+export const MAX_PROMPT_LENGTH = 1000;
+
 export const transcriptionOptionsSchema = z.object({
   /** One of the models from `GET /api/models`. Defaults to the server's default model. */
   model: z.string().min(1).optional(),
   /** ISO 639-1 code, or `auto` to detect. English-only (`*.en`) models ignore this. */
   language: z.string().min(2).default('en'),
   /** Biases the decoder toward expected vocabulary, e.g. names or "[laughter]". */
-  prompt: z.string().max(1000).optional(),
+  prompt: z.string().max(MAX_PROMPT_LENGTH).optional(),
   /** Skip non-speech with voice activity detection. Requires the server to have a VAD model. */
   vad: z.boolean().default(false),
 });

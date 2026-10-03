@@ -5,11 +5,14 @@ import { findPhraseMatches, type PhraseMatch } from '@libs/phrase-matching';
 import {
   JANKBOT_QUEUE_CONFIG,
   type JankbotQueueJob,
+  OPUS_FRAME_MS,
 } from '@projects/jankbot-contracts';
+import { EnvironmentService } from '../../environment/environment-service';
 import { TranscriptionClientService } from '../common/transcription-client.service';
 import { LeaderboardService } from '../leaderboard/leaderboard.service';
 import { TrackedWordsService } from '../tracked-words/tracked-words.service';
-import { opusPacketsToWav } from './audio';
+import { decodeOpusPackets, loudMs, pcmToWav } from './audio';
+import { vocabularyPrompt } from './vocabulary-prompt';
 
 type UtteranceResult = { transcript: string; matches: PhraseMatch[] };
 
@@ -23,6 +26,7 @@ export class UtteranceProcessor extends WorkerHost {
     private readonly transcriptionClient: TranscriptionClientService,
     private readonly trackedWords: TrackedWordsService,
     private readonly leaderboard: LeaderboardService,
+    private readonly environmentService: EnvironmentService,
   ) {
     super();
   }
@@ -56,12 +60,29 @@ export class UtteranceProcessor extends WorkerHost {
   ): Promise<UtteranceResult> {
     const { utteranceId, guildId, userId, opusPackets } = job.data;
 
-    const wav = await opusPacketsToWav(
+    const pcm = await decodeOpusPackets(
       opusPackets.map((packet) => Buffer.from(packet, 'base64')),
     );
+
+    // The gateway's UTTERANCE_MIN_MS measures how long Discord transmitted, so a mic tick can pass it
+    // while holding almost no sound, which whisper just turns into [BLANK_AUDIO].
+    const { utteranceMinLoudMs, utteranceLoudnessThresholdDbfs } =
+      this.environmentService.environment;
+    const loud = loudMs(pcm, utteranceLoudnessThresholdDbfs);
+    if (loud < utteranceMinLoudMs) {
+      this.logger.debug(
+        `[${guildId}] ${userId}: skipped, ${loud}ms loud of ${opusPackets.length * OPUS_FRAME_MS}ms`,
+      );
+      return { transcript: '', matches: [] };
+    }
+
+    // Fetched before transcribing so whisper can be prompted with the guild's phrases; otherwise
+    // it mangles made-up words (e.g. "cosclaire" → "cause clair") and they never match.
+    const phrases = await this.trackedWords.list(guildId);
     const response = await this.transcriptionClient.transcribe(
-      wav,
+      pcmToWav(pcm),
       utteranceId,
+      vocabularyPrompt(phrases),
     );
 
     switch (response.status) {
@@ -83,10 +104,11 @@ export class UtteranceProcessor extends WorkerHost {
     }
 
     const transcript = response.body.text;
-    this.logger.debug(`[${guildId}] ${userId}: "${transcript}"`);
+    this.logger.debug(
+      `[${guildId}] ${userId} (${loud}ms loud): "${transcript}"`,
+    );
     if (!transcript) return { transcript, matches: [] };
 
-    const phrases = await this.trackedWords.list(guildId);
     const matches = findPhraseMatches(transcript, phrases);
     if (matches.length > 0) {
       await this.leaderboard.recordMatches(guildId, userId, matches);
