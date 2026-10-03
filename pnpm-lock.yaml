@@ -334,8 +334,6 @@ importers:
 
   libs/ui-web: {}
 
-  libs/utils-web: {}
-
   platform/convex/app:
     dependencies:
       '@convex-dev/auth':
@@ -423,18 +421,12 @@ importers:
       '@libs/ui-web':
         specifier: workspace:*
         version: link:../../../libs/ui-web
-      '@libs/utils-web':
-        specifier: workspace:*
-        version: link:../../../libs/utils-web
 
   projects/sapphire/web:
     dependencies:
       '@libs/ui-web':
         specifier: workspace:*
         version: link:../../../libs/ui-web
-      '@libs/utils-web':
-        specifier: workspace:*
-        version: link:../../../libs/utils-web
       '@platform/convex-contracts':
         specifier: workspace:*
         version: link:../../../platform/convex/contracts

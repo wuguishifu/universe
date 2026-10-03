@@ -7,7 +7,6 @@
   },
   "dependencies": {
     "@platform/convex-contracts": "workspace:*",
-    "@libs/ui-web": "workspace:*",
-    "@libs/utils-web": "workspace:*"
+    "@libs/ui-web": "workspace:*"
   }
 }
