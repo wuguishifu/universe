@@ -25,4 +25,9 @@ export const JANKBOT_REDIS = defineRedisKeys('jankbot', {
    * at once don't pick the same free bot.
    */
   joinClaims: redisLock('join-claims', { perId: true }),
+  /**
+   * Per guildId: core's cache of the guild's tracked phrases from convex. A value rather than a
+   * set so an empty list is cached too (an empty set doesn't exist in Redis).
+   */
+  phrases: redisValue('phrases', z.array(z.string()), { perId: true }),
 });
