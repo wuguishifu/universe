@@ -17,6 +17,7 @@ export class UniverseDbModule {
     const parsed = environmentSchema.parse(process.env);
 
     return {
+      global: true,
       module: UniverseDbModule,
       providers: [
         {

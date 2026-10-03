@@ -6,7 +6,6 @@ import {
   OptionalFactoryDependency,
 } from '@nestjs/common';
 
-import { TrackingConfig } from './config';
 import { TRACKING_CONFIG } from './constants';
 import { TrackingService } from './tracking.service';
 
