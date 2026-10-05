@@ -20,7 +20,7 @@
   "exclude": ["eslint.config.js", "eslint.config.cjs", "eslint.config.mjs"],
   "references": [
     {
-      "path": "../../../platform/analytics/client-nest/tsconfig.lib.json"
+      "path": "../../../platform/transcription/contracts/tsconfig.lib.json"
     },
     {
       "path": "../contracts/tsconfig.lib.json"
@@ -33,9 +33,6 @@
     },
     {
       "path": "../../../libs/nest-common/tsconfig.lib.json"
-    },
-    {
-      "path": "../../../platform/transcription/client-nest/tsconfig.lib.json"
     }
   ]
 }
