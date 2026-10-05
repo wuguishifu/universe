@@ -42,7 +42,15 @@ export class S3Service {
     return this.client;
   }
 
-  public async downloadToFile(bucket: string, key: string, path: string) {
+  public async downloadToFile({
+    bucket,
+    key,
+    path,
+  }: {
+    bucket: string;
+    key: string;
+    path: string;
+  }) {
     try {
       const { Body } = await this.s3Client.send(
         new GetObjectCommand({ Bucket: bucket, Key: key }),
