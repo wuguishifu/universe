@@ -20,15 +20,20 @@ RUN NX_DAEMON=false pnpm nx bundle:migrate postgres-utils
 
 FROM node:24-slim
 
-ARG VERSION
 # Runs against the homelab database; without a TTY migrate.mjs skips its confirmation prompt.
 ARG BUILD_ENV=production
-ENV VERSION=${VERSION}
 ENV ENVIRONMENT=${BUILD_ENV}
 
 WORKDIR /app
 
 COPY --from=build_image /app/dist/platform/postgres/migrations ./
+
+# Set last so a new version only changes this layer. CI passes both (see build-server-apps.yml);
+# migrate.mjs doesn't read them, they just identify the image like the other server apps.
+ARG VERSION
+ARG VERSION_TAG
+ENV VERSION=${VERSION}
+ENV VERSION_TAG=${VERSION_TAG}
 
 # Needs UNIVERSE_DB_CONNECTION_STRING (a role that owns the universe database's schema).
 CMD ["node", "migrate.mjs"]

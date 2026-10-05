@@ -13,9 +13,6 @@ WORKDIR /app
 COPY . ./
 
 ARG BUILD_ENV
-ARG VERSION
-
-ENV VERSION=${VERSION}
 
 RUN pnpm install --frozen-lockfile
 
@@ -27,10 +24,8 @@ RUN node tools/scripts/prune-deploy-manifest.mjs dist/platform/analytics/service
 
 FROM node:24-slim
 
-ARG VERSION
 # CI doesn't pass --build-arg BUILD_ENV; without a default ENVIRONMENT would be "" and fail validation.
 ARG BUILD_ENV=production
-ENV VERSION=${VERSION}
 ENV ENVIRONMENT=${BUILD_ENV}
 
 ENV PNPM_HOME="/pnpm"
@@ -48,5 +43,12 @@ RUN pnpm install --prod --ignore-scripts --no-frozen-lockfile \
     && rm -rf "$(pnpm store path)"
 
 EXPOSE 3005
+
+# Set last so a new version only changes this layer. CI passes both (see build-server-apps.yml);
+# local builds leave them empty and the app reports "unknown".
+ARG VERSION
+ARG VERSION_TAG
+ENV VERSION=${VERSION}
+ENV VERSION_TAG=${VERSION_TAG}
 
 CMD ["node", "main.js"]

@@ -9,7 +9,8 @@ export class AppController {
   getVersion() {
     return {
       status: 200,
-      version: 'unknown',
+      version: this.environmentService.environment.version,
+      versionTag: this.environmentService.environment.versionTag,
       environment: this.environmentService.environment.environment,
     };
   }
