@@ -5,13 +5,13 @@ import { mkdtemp, readFile, rm, stat, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import path from 'path';
 import { S3ObjectNotFoundError, S3Service } from '@libs/nest-common';
+import { ProcessError, runProcess } from '@libs/nest-common';
 import type { Transcript } from '@platform/transcription-contracts';
 import { EnvironmentService } from '../../environment/environment';
 import type {
   TranscriptionJobData,
   TranscriptionLane,
 } from '../../queues/queue';
-import { ProcessError, runProcess } from '../../utils/run-process';
 import { WhisperModelsService } from './whisper-models.service';
 
 const WHISPER_SAMPLE_RATE = 16_000;
@@ -151,7 +151,7 @@ export class TranscriberService {
       );
     }
     try {
-      await this.s3.downloadToFile(bucket, key, filePath);
+      await this.s3.downloadToFile({ bucket, key, path: filePath });
     } catch (error) {
       // A missing object won't appear on retry; other S3 errors might be transient.
       if (error instanceof S3ObjectNotFoundError) {

@@ -3,7 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
+    "@platform/transcription-client-nest": "workspace:*",
     "@libs/nest-common": "workspace:*",
+    "@libs/queue": "workspace:*",
+    "@libs/redis-cache": "workspace:*",
     "@projects/clipper-contracts": "workspace:*"
   }
 }

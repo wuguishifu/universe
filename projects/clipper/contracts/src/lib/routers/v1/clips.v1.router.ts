@@ -3,11 +3,11 @@ import { c } from '../../contract';
 
 export const clipsV1Router = c.router(
   {
-    processClip: {
+    processClips: {
       path: '/process',
       method: 'POST',
       body: z.object({
-        key: z.string(),
+        keys: z.string().array().min(1),
       }),
       responses: {
         200: z.literal('ok'),
