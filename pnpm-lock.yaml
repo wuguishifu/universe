@@ -577,6 +577,17 @@ importers:
         specifier: ^2.3.0
         version: 2.8.1
 
+  projects/clipper/contracts: {}
+
+  projects/clipper/server:
+    dependencies:
+      '@libs/nest-common':
+        specifier: workspace:*
+        version: link:../../../libs/nest-common
+      '@projects/clipper-contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
   projects/jankbot/contracts:
     dependencies:
       '@libs/queue':

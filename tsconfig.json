@@ -59,6 +59,12 @@
     },
     {
       "path": "./platform/analytics/client-nest"
+    },
+    {
+      "path": "./projects/clipper/server"
+    },
+    {
+      "path": "./projects/clipper/contracts"
     }
   ],
   "compilerOptions": {

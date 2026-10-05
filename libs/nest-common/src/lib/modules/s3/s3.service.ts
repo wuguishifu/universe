@@ -97,6 +97,23 @@ export class S3Service {
     );
   }
 
+  public getSignedUploadUrl({
+    key,
+    bucket,
+  }: {
+    key: string;
+    bucket: string;
+  }): Promise<string> {
+    return getSignedUrl(
+      this.s3Client,
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+      }),
+      { expiresIn: 60 * 15 },
+    );
+  }
+
   public async exists({
     key,
     bucket,
