@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "environment-config.json",
-  "description": "Per-app environment config consumed by platform/environment/setup.sh. The app path is the directory containing this file.",
+  "description": "Per-app environment config consumed by tools/environment/setup.sh. The app path is the directory containing this file.",
   "type": "object",
   "additionalProperties": false,
   "properties": {

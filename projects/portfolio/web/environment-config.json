@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../platform/environment/environment-config.schema.json",
+  "$schema": "../../../tools/environment/environment-config.schema.json",
   "publicPrefix": "NEXT_PUBLIC_",
   "secretsPaths": ["projects/portfolio/web"]
 }

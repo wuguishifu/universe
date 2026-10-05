@@ -32,7 +32,7 @@ Add an `environment-config.json` to the root of any app that needs environment v
 
 ```json
 {
-  "$schema": "../../../platform/environment/environment-config.schema.json",
+  "$schema": "../../../tools/environment/environment-config.schema.json",
   "secretsPaths": ["projects/portfolio/web"],
   "hasConvex": true,
   "publicPrefix": "NEXT_PUBLIC_"

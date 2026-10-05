@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../platform/environment/environment-config.schema.json",
+  "$schema": "../../../tools/environment/environment-config.schema.json",
   "hasConvex": false,
   "secretsPaths": [
     "projects/jankbot/gateway",

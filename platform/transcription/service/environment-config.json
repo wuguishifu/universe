@@ -1,4 +1,4 @@
 {
-  "$schema": "../../../platform/environment/environment-config.schema.json",
+  "$schema": "../../../tools/environment/environment-config.schema.json",
   "secretsPaths": ["platform/transcription/service"]
 }
