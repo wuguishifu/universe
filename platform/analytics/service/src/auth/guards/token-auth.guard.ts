@@ -8,8 +8,10 @@ import {
 } from '@nestjs/common';
 
 import { extractAuthTokenFromHeader } from '@libs/nest-common';
-import { EnvironmentSchema } from '../../environment/environment-schema';
-import { EnvironmentService } from '../../environment/environment-service';
+import {
+  type EnvironmentSchema,
+  EnvironmentService,
+} from '../../environment/environment';
 
 export function TokenAuthGuard(
   envKey: keyof EnvironmentSchema,

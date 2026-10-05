@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { IntentsBitField } from 'discord.js';
 import { NecordModule } from 'necord';
-import { EnvironmentService } from '../../environment/environment-service';
+import { EnvironmentService } from '../../environment/environment';
 import { DiscordLifecycle } from './discord.lifecycle';
 
 @Module({

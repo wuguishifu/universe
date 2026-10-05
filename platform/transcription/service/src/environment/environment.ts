@@ -1,18 +1,15 @@
 import { z } from 'zod';
-import { s3EnvAdapter } from '@libs/nest-common';
-
-const commaSeparated = z.string().transform((value) =>
-  value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean),
-);
+import {
+  baseEnvironmentSchema,
+  commaSeparated,
+  createEnvironmentService,
+  LocalEnvironmentModule,
+  s3EnvAdapter,
+} from '@libs/nest-common';
 
 export type EnvironmentSchema = z.infer<typeof environmentSchema>;
-export const environmentSchema = z
-  .object({
-    debugLogging: z.stringbool().default(false),
-    environment: z.enum(['development', 'production']).default('development'),
+export const environmentSchema = baseEnvironmentSchema
+  .extend({
     apiToken: z.string().min(16),
     redisUrl: z.string().min(1),
 
@@ -52,3 +49,10 @@ export const environmentSchema = z
     ...s3EnvAdapter(data),
     whisperDefaultModel: whisperDefaultModel ?? data.whisperModels[0],
   }));
+
+export class EnvironmentService extends createEnvironmentService(
+  environmentSchema,
+) {}
+
+export const EnvironmentModule =
+  LocalEnvironmentModule.forRoot(EnvironmentService);

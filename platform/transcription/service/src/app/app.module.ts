@@ -2,8 +2,10 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { S3Module } from '@libs/nest-common';
 import { ApiTokenGuard } from '../auth/api-token.guard';
-import { EnvironmentModule } from '../environment/environment-module';
-import { EnvironmentService } from '../environment/environment-service';
+import {
+  EnvironmentModule,
+  EnvironmentService,
+} from '../environment/environment';
 import { TranscriptionModule } from '../modules/transcription/transcription.module';
 import { QueueModule } from '../queues/queue.module';
 import { readRuntime } from '../runtime';

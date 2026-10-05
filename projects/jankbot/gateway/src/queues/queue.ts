@@ -10,7 +10,7 @@ import {
   JANKBOT_QUEUE_PREFIX,
   type JankbotQueueKey,
 } from '@projects/jankbot-contracts';
-import { EnvironmentService } from '../environment/environment-service';
+import { EnvironmentService } from '../environment/environment';
 
 export const registerQueue = (queueKey: JankbotQueueKey) =>
   BullQueueModule.register(

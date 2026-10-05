@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { existsSync } from 'fs';
 import path from 'path';
-import { EnvironmentService } from '../../environment/environment-service';
+import { EnvironmentService } from '../../environment/environment';
 
 /**
  * The allow-list of models callers may request. Both roles use it: the API to reject unknown

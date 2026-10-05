@@ -6,7 +6,7 @@ import { tmpdir } from 'os';
 import path from 'path';
 import { S3ObjectNotFoundError, S3Service } from '@libs/nest-common';
 import type { Transcript } from '@platform/transcription-contracts';
-import { EnvironmentService } from '../../environment/environment-service';
+import { EnvironmentService } from '../../environment/environment';
 import type {
   TranscriptionJobData,
   TranscriptionLane,

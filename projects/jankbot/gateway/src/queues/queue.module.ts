@@ -1,6 +1,6 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
-import { EnvironmentModule } from '../environment/environment-module';
+import { EnvironmentModule } from '../environment/environment';
 import { BullOptionsFactory } from './queue';
 
 @Module({

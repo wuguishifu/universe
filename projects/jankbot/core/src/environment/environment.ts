@@ -1,20 +1,17 @@
 import { z } from 'zod';
+import {
+  baseEnvironmentSchema,
+  commaSeparated,
+  createEnvironmentService,
+  LocalEnvironmentModule,
+} from '@libs/nest-common';
 import { voiceBotId } from '@projects/jankbot-contracts';
 
-const commaSeparated = z
-  .string()
-  .default('')
-  .transform((value) =>
-    value
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean),
-  );
+/** Like commaSeparated, but missing means empty. */
+const optionalCommaSeparated = z.string().default('').pipe(commaSeparated);
 
 export type EnvironmentSchema = z.infer<typeof environmentSchema>;
-export const environmentSchema = z.object({
-  debugLogging: z.stringbool().default(false),
-  environment: z.enum(['development', 'production']).default('development'),
+export const environmentSchema = baseEnvironmentSchema.extend({
   redisUrl: z.string().min(1),
 
   analyticsServiceBaseUrl: z.string().min(1),
@@ -26,13 +23,13 @@ export const environmentSchema = z.object({
    * Guilds to register slash commands in directly, which updates instantly (global commands
    * can take up to an hour to propagate). Leave empty in production to register globally.
    */
-  discordDevGuildIds: commaSeparated,
+  discordDevGuildIds: optionalCommaSeparated,
 
   /**
    * The voice bots' names (each gateway's NAME), e.g. "Bo,Mikey,Steven". /join picks the first free
    * one in this order, and these are the choices for /join and /leave's `bot` option.
    */
-  voiceBots: commaSeparated
+  voiceBots: optionalCommaSeparated
     .refine((names) => names.length > 0, 'List at least one voice bot')
     .refine((names) => names.length <= 25, 'Discord allows at most 25 choices')
     .refine(
@@ -56,3 +53,10 @@ export const environmentSchema = z.object({
   /** How loud (dBFS, so ≤ 0) a 20ms frame must be to count toward UTTERANCE_MIN_LOUD_MS. */
   utteranceLoudnessThresholdDbfs: z.coerce.number().max(0).default(-45),
 });
+
+export class EnvironmentService extends createEnvironmentService(
+  environmentSchema,
+) {}
+
+export const EnvironmentModule =
+  LocalEnvironmentModule.forRoot(EnvironmentService);

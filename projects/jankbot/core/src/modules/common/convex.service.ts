@@ -5,7 +5,7 @@ import type {
   FunctionReference,
   FunctionReturnType,
 } from 'convex/server';
-import { EnvironmentService } from '../../environment/environment-service';
+import { EnvironmentService } from '../../environment/environment';
 
 /** A convex ruby function guarded by RUBY_CONVEX_SECRET (platform/convex/convex-app/ruby/auth.ts). */
 type RubyFunction<Type extends 'query' | 'mutation'> = FunctionReference<

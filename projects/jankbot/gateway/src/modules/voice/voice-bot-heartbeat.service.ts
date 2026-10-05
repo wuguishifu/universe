@@ -8,7 +8,7 @@ import {
   VOICE_BOT_HEARTBEAT_TTL_SECONDS,
   voiceBotId,
 } from '@projects/jankbot-contracts';
-import { EnvironmentService } from '../../environment/environment-service';
+import { EnvironmentService } from '../../environment/environment';
 
 /**
  * Tells core this voice bot is online and which Discord user it is, so core can map the names in

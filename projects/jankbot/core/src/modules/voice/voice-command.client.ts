@@ -13,7 +13,7 @@ import {
   type VoiceCommandResult,
   voiceBotId,
 } from '@projects/jankbot-contracts';
-import { EnvironmentService } from '../../environment/environment-service';
+import { EnvironmentService } from '../../environment/environment';
 
 /** Joining waits up to 20s for the voice connection, so give the gateway a bit longer than that. */
 const VOICE_COMMAND_TIMEOUT_MS = 30_000;

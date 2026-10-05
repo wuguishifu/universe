@@ -1,70 +1,69 @@
-import { Inject, Injectable } from '@nestjs/common';
-import z from 'zod';
-import {
-  ENVIRONMENT_OPTIONS,
-  ENVIRONMENT_SCHEMA,
-  type EnvironmentOptions,
-} from './local-environment.constants';
+import { Injectable } from '@nestjs/common';
+import { z } from 'zod';
 
-@Injectable()
-export class LocalEnvironmentService<T extends z.ZodType = z.ZodType> {
-  private cached: unknown | null = null;
+export type EnvironmentOptions = {
+  /**
+   * Optional prefix for env variables, e.g. "API_".
+   * If set, process.env.API_FOO is read into schema key "FOO".
+   */
+  prefix?: string;
+  /**
+   * Converts SNAKE_CASE keys to camelCase before parsing. Defaults to true.
+   */
+  camelize?: boolean;
+};
 
-  constructor(
-    @Inject(ENVIRONMENT_SCHEMA) private readonly schema: T,
-    @Inject(ENVIRONMENT_OPTIONS) private readonly options: EnvironmentOptions,
-  ) {}
+/**
+ * Parses process.env against a schema. Use this directly for anything that has to read the
+ * environment before DI is set up; everything else should inject the app's EnvironmentService.
+ */
+export function readEnvironment<T extends z.ZodType>(
+  schema: T,
+  { prefix, camelize = true }: EnvironmentOptions = {},
+): z.infer<T> {
+  let env: Record<string, unknown> = process.env;
 
-  public get environment(): z.infer<T> {
-    if (this.cached) {
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      return this.cached as z.infer<T>;
-    }
-
-    const raw = this.rawEnvObject;
-    const parsed = this.schema.parse(raw);
-    this.cached = parsed;
-    return parsed;
-  }
-
-  private get rawEnvObject(): Record<string, unknown> {
-    const { prefix, camelize } = this.options;
-    const env = camelize ? this.camelize(process.env) : process.env;
-
-    if (!prefix) {
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      return env as unknown as Record<string, unknown>;
-    }
-
-    return Object.entries(env).reduce<Record<string, unknown>>(
-      (acc, [key, value]) => {
-        if (key.startsWith(prefix)) {
-          acc[key.slice(prefix.length)] = value;
-        }
-        return acc;
-      },
-      {},
+  if (prefix) {
+    env = Object.fromEntries(
+      Object.entries(env)
+        .filter(([key]) => key.startsWith(prefix))
+        .map(([key, value]) => [key.slice(prefix.length), value]),
     );
   }
 
-  private camelize(
-    env: Record<string, string | undefined>,
-  ): Record<string, string> {
-    return Object.entries(env).reduce<Record<string, string>>(
-      (acc, [key, value]) => {
-        if (value === undefined) {
-          return acc;
-        }
-        acc[this.snakeToCamel(key)] = value;
-        return acc;
-      },
-      {},
+  if (camelize) {
+    env = Object.fromEntries(
+      Object.entries(env)
+        .filter(([, value]) => value !== undefined)
+        .map(([key, value]) => [snakeToCamel(key), value]),
     );
   }
 
-  private snakeToCamel(s: string): string {
-    return s
-      .toLowerCase()
-      .replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
+  return schema.parse(env);
+}
+
+/**
+ * Builds an injectable service exposing the parsed environment. The environment is parsed when
+ * the service is constructed, so a bad config fails the app at startup.
+ *
+ * @example
+ * export class EnvironmentService extends createEnvironmentService(environmentSchema) {}
+ * export const EnvironmentModule = LocalEnvironmentModule.forRoot(EnvironmentService);
+ */
+export function createEnvironmentService<T extends z.ZodType>(
+  schema: T,
+  options?: EnvironmentOptions,
+) {
+  @Injectable()
+  class LocalEnvironmentService {
+    public readonly environment: z.infer<T> = readEnvironment(schema, options);
   }
+
+  return LocalEnvironmentService;
+}
+
+function snakeToCamel(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
 }

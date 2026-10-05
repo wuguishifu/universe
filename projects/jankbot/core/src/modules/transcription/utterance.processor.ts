@@ -8,7 +8,7 @@ import {
   type JankbotQueueJob,
   OPUS_FRAME_MS,
 } from '@projects/jankbot-contracts';
-import { EnvironmentService } from '../../environment/environment-service';
+import { EnvironmentService } from '../../environment/environment';
 import { TranscriptionClientService } from '../common/transcription-client.service';
 import { LeaderboardService } from '../leaderboard/leaderboard.service';
 import { TrackedWordsService } from '../tracked-words/tracked-words.service';

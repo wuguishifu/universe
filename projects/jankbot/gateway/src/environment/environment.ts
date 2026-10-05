@@ -1,9 +1,12 @@
 import { z } from 'zod';
+import {
+  baseEnvironmentSchema,
+  createEnvironmentService,
+  LocalEnvironmentModule,
+} from '@libs/nest-common';
 
 export type EnvironmentSchema = z.infer<typeof environmentSchema>;
-export const environmentSchema = z.object({
-  debugLogging: z.stringbool().default(false),
-  environment: z.enum(['development', 'production']).default('development'),
+export const environmentSchema = baseEnvironmentSchema.extend({
   redisUrl: z.string().min(1),
 
   analyticsServiceBaseUrl: z.string().min(1),
@@ -36,3 +39,10 @@ export const environmentSchema = z.object({
   /** The bot leaves a voice channel after being the only (non-bot) member for this long. */
   voiceIdleTimeoutMs: z.coerce.number().int().positive().default(300_000),
 });
+
+export class EnvironmentService extends createEnvironmentService(
+  environmentSchema,
+) {}
+
+export const EnvironmentModule =
+  LocalEnvironmentModule.forRoot(EnvironmentService);

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { createHash, timingSafeEqual } from 'crypto';
-import { EnvironmentService } from '../environment/environment-service';
+import { EnvironmentService } from '../environment/environment';
 import { IS_PUBLIC_KEY } from './public.decorator';
 
 /** Requires `Authorization: Bearer <API_TOKEN>` on every non-public route. */

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { UniverseDbModule } from '@libs/nest-common';
-import { EnvironmentModule } from '../environment/environment-module';
+import { EnvironmentModule } from '../environment/environment';
 import { TrackingModule } from '../modules/tracking/tracking.module';
 import { AppController } from './app.controller';
 

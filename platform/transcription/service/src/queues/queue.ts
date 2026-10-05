@@ -14,7 +14,7 @@ import {
 } from '@libs/queue';
 import { resolveRedisConnection } from '@libs/redis-cache';
 import { transcriptionRequestSchema } from '@platform/transcription-contracts';
-import { EnvironmentService } from '../environment/environment-service';
+import { EnvironmentService } from '../environment/environment';
 
 /**
  * transcription-service's queues are an internal detail: callers go through the HTTP contract and never

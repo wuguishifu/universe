@@ -1,33 +1,16 @@
-import { DynamicModule, Module } from '@nestjs/common';
-import { z } from 'zod';
-import {
-  ENVIRONMENT_OPTIONS,
-  ENVIRONMENT_SCHEMA,
-  EnvironmentOptions,
-} from './local-environment.constants';
-import { LocalEnvironmentService } from './local-environment.service';
+import { DynamicModule, Module, Type } from '@nestjs/common';
 
 @Module({})
 export class LocalEnvironmentModule {
-  public static forRoot<T extends z.ZodType>({
-    schema,
-    options,
-  }: {
-    schema: T;
-    options: EnvironmentOptions;
-  }): DynamicModule {
+  /**
+   * Provides an app's EnvironmentService (see createEnvironmentService) globally.
+   */
+  public static forRoot(service: Type): DynamicModule {
     return {
       module: LocalEnvironmentModule,
-      providers: [
-        LocalEnvironmentService,
-        { provide: ENVIRONMENT_SCHEMA, useValue: schema },
-        { provide: ENVIRONMENT_OPTIONS, useValue: options },
-      ],
-      exports: [
-        LocalEnvironmentService,
-        ENVIRONMENT_SCHEMA,
-        ENVIRONMENT_OPTIONS,
-      ],
+      global: true,
+      providers: [service],
+      exports: [service],
     };
   }
 }

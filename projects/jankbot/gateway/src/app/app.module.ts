@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { RedisCacheModule } from '@libs/nest-common';
 import { TrackingModule } from '@platform/analytics-client-nest';
-import { EnvironmentModule } from '../environment/environment-module';
-import { EnvironmentService } from '../environment/environment-service';
+import {
+  EnvironmentModule,
+  EnvironmentService,
+} from '../environment/environment';
 import { DiscordModule } from '../modules/discord/discord.module';
 import { InteractionsModule } from '../modules/interactions/interactions.module';
 import { VoiceModule } from '../modules/voice/voice.module';
