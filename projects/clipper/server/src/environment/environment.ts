@@ -23,10 +23,6 @@ export const environmentSchema = z
     s3SecretAccessKey: z.string(),
     s3ForcePathStyle: z.stringbool().default(true),
     s3DefaultBucket: z.string().min(1),
-
-    // required transcription endpoint
-    transcriptionServiceUrl: z.string(),
-    transcriptionServiceApiToken: z.string(),
   })
   .transform(s3EnvAdapter);
 

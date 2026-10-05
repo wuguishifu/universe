@@ -584,6 +584,12 @@ importers:
       '@libs/nest-common':
         specifier: workspace:*
         version: link:../../../libs/nest-common
+      '@libs/queue':
+        specifier: workspace:*
+        version: link:../../../libs/queue
+      '@libs/redis-cache':
+        specifier: workspace:*
+        version: link:../../../libs/redis-cache
       '@projects/clipper-contracts':
         specifier: workspace:*
         version: link:../contracts

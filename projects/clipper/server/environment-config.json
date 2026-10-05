@@ -5,7 +5,6 @@
     "projects/clipper/server",
     "platform/s3",
     "platform/redis",
-    "platform/analytics/client",
-    "platform/transcription/client"
+    "platform/analytics/client"
   ]
 }
