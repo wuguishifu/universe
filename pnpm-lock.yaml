@@ -560,6 +560,15 @@ importers:
 
   platform/postgres/utils: {}
 
+  platform/transcription/client-nest:
+    dependencies:
+      '@libs/queue':
+        specifier: workspace:*
+        version: link:../../../libs/queue
+      '@platform/transcription-contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
   platform/transcription/contracts:
     dependencies:
       '@libs/queue':
