@@ -1,6 +1,6 @@
 import z from 'zod';
 
-export const MAX_INLINE_AUDIO_BYTES = 10 * 1024 * 1024;
+export const MAX_INLINE_AUDIO_BYTES = 3 * 1024 * 1024;
 export const MAX_PROMPT_LENGTH = 1000;
 
 export const audioSourceSchema = z.discriminatedUnion('type', [
