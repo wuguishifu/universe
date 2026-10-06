@@ -62,7 +62,7 @@ export class TranscriptionProcessor extends WorkerHost {
         prompt: options?.prompt,
         beamSize: options?.beamSize,
         // if we're transcribing at 3x real time that's a bit wack
-        timeoutMs: durationMs * 3,
+        timeoutMs: Math.max(DEFAULT_TIMEOUT_MS, durationMs * 3),
       });
 
       const segments = transcription.map((segment) => ({
