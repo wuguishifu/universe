@@ -1,4 +1,4 @@
-import { JobsOptions, Queue } from 'bullmq';
+import { Job, JobsOptions, Queue } from 'bullmq';
 import { z } from 'zod';
 
 export const ONE_MINUTE_MS = 60 * 1000;
@@ -25,6 +25,7 @@ export type QueueConfig = {
   queueName: string;
   jobName: string;
   jobSchema: z.ZodType;
+  resultsSchema?: z.ZodType;
 };
 
 export type QueueConfigMap = Record<string, QueueConfig>;
@@ -34,8 +35,21 @@ export type UniverseJobData<
   T extends keyof C,
 > = z.infer<C[T]['jobSchema']>;
 
+export type UniverseJobResult<
+  C extends QueueConfigMap,
+  T extends keyof C,
+> = C[T] extends { resultsSchema: infer S extends z.ZodType }
+  ? z.infer<S>
+  : unknown;
+
 export type UniverseQueue<C extends QueueConfigMap, T extends keyof C> = Queue<
   UniverseJobData<C, T>,
-  unknown,
+  UniverseJobResult<C, T>,
+  C[T]['jobName']
+>;
+
+export type UniverseJob<C extends QueueConfigMap, T extends keyof C> = Job<
+  UniverseJobData<C, T>,
+  UniverseJobResult<C, T>,
   C[T]['jobName']
 >;
