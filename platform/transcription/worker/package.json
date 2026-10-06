@@ -1,0 +1,10 @@
+{
+  "name": "transcription-worker",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@libs/nest-common": "workspace:*",
+    "@libs/queue": "workspace:*",
+    "@platform/transcription-contracts": "workspace:*"
+  }
+}

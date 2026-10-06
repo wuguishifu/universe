@@ -59,6 +59,9 @@
     },
     {
       "path": "./platform/analytics/client-nest"
+    },
+    {
+      "path": "./platform/transcription/worker"
     }
   ],
   "compilerOptions": {
