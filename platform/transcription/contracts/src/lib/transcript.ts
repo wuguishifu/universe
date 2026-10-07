@@ -23,7 +23,7 @@ export type AudioSource = z.infer<typeof audioSourceSchema>;
 export const transcriptionOptionsSchema = z.object({
   model: z.string().min(1).optional(),
   prompt: z.string().max(MAX_PROMPT_LENGTH).optional(),
-  beamSize: z.number().optional(),
+  beamSize: z.number().max(5).min(0).optional(),
 });
 export type TranscriptionOptions = z.infer<typeof transcriptionOptionsSchema>;
 
