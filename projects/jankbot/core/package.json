@@ -7,6 +7,7 @@
     "@platform/transcription-contracts": "workspace:*",
     "@platform/convex-contracts": "workspace:*",
     "@platform/analytics-client-nest": "workspace:*",
+    "@platform/transcription-client-nest": "workspace:*",
     "@libs/nest-common": "workspace:*",
     "@libs/phrase-matching": "workspace:*",
     "@libs/queue": "workspace:*",

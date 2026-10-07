@@ -41,10 +41,6 @@ export const environmentSchema = baseEnvironmentSchema.extend({
   /** Must match RUBY_CONVEX_SECRET on the convex deployment. */
   rubyConvexSecret: z.string().min(16),
 
-  /** transcription-service's base URL, e.g. http://bos-mac-mini:3002. */
-  transcriptionServiceUrl: z.url(),
-  transcriptionServiceApiToken: z.string().min(16),
-
   /**
    * Utterances with less than this much audio above UTTERANCE_LOUDNESS_THRESHOLD_DBFS aren't
    * transcribed, which skips mic ticks and hiss that whisper turns into [BLANK_AUDIO]. 0 disables.

@@ -1,10 +1,10 @@
 #!/bin/sh
 # Builds whisper-cli for this machine and downloads whisper models into bin/, for running
-# transcription-service locally (see platform/transcription/service/README.md). bin/ is gitignored.
+# transcription-worker locally (see platform/transcription/worker/README.md). bin/ is gitignored.
 #
 # Usage: tools/scripts/setup-whisper.sh [model...]   (default: base.en)
 #
-# The whisper.cpp version comes from transcription-service's Dockerfile, so local runs match the image.
+# The whisper.cpp version comes from transcription-worker's Dockerfile, so local runs match the image.
 # Re-running rebuilds whisper-cli and skips models that are already downloaded.
 set -eu
 
@@ -59,7 +59,7 @@ done
 
 cat << EOF
 
-Done. Point transcription-service at these in the root .env:
+Done. Point transcription-worker at these in the root .env:
   WHISPER_CLI_PATH=bin/whisper-cli
   WHISPER_MODELS_DIR=bin
   WHISPER_MODELS=$(echo "$@" | tr ' ' ',')

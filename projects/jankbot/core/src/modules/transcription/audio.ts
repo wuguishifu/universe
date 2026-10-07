@@ -15,7 +15,7 @@ const FULL_SCALE = 32_768;
 
 /**
  * Decodes Discord Opus packets (48kHz stereo) to 16kHz mono 16-bit PCM: the format whisper uses,
- * so transcription-service's ffmpeg step is a pass-through. ~32KB per second of audio.
+ * so transcription-worker's ffmpeg step is a pass-through. ~32KB per second of audio.
  */
 export async function decodeOpusPackets(packets: Buffer[]): Promise<Buffer> {
   const decoder = new opus.Decoder({

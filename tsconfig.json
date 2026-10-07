@@ -19,9 +19,6 @@
       "path": "./libs/phrase-matching"
     },
     {
-      "path": "./platform/transcription/service"
-    },
-    {
       "path": "./platform/convex/app"
     },
     {
@@ -61,10 +58,16 @@
       "path": "./platform/analytics/client-nest"
     },
     {
-      "path": "./projects/clipper/server"
+      "path": "./platform/transcription/client-nest"
+    },
+    {
+      "path": "./platform/transcription/worker"
     },
     {
       "path": "./projects/clipper/contracts"
+    },
+    {
+      "path": "./projects/clipper/server"
     }
   ],
   "compilerOptions": {
