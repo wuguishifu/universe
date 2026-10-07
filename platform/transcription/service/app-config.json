@@ -1,4 +1,0 @@
-{
-  "$schema": "../../../.github/config/app-config.schema.json",
-  "imageName": "transcription-service"
-}

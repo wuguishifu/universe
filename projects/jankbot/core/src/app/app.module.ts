@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { RedisCacheModule } from '@libs/nest-common';
 import { TrackingModule } from '@platform/analytics-client-nest';
+import { TranscriptionClientModule } from '@platform/transcription-client-nest';
 import {
   EnvironmentModule,
   EnvironmentService,
@@ -35,6 +36,8 @@ import { AppController } from './app.controller';
           environmentService.environment.analyticsServiceApiToken,
       }),
     }),
+    // Reuses QueueModule's Redis connection: the transcription flows' queues must share a Redis.
+    TranscriptionClientModule.forRoot(),
     CommonModule,
     DiscordModule,
     TrackedWordsModule,

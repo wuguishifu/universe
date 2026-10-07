@@ -19,9 +19,6 @@
       "path": "./libs/phrase-matching"
     },
     {
-      "path": "./platform/transcription/service"
-    },
-    {
       "path": "./platform/convex/app"
     },
     {
@@ -59,6 +56,12 @@
     },
     {
       "path": "./platform/analytics/client-nest"
+    },
+    {
+      "path": "./platform/transcription/worker"
+    },
+    {
+      "path": "./platform/transcription/client-nest"
     }
   ],
   "compilerOptions": {
