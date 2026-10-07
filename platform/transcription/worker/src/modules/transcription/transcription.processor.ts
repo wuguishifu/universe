@@ -13,7 +13,7 @@ import { FilesService } from './files.service';
 import { ModelsService } from './models.service';
 import { WhisperService } from './whisper.service';
 
-const DEFAULT_TIMEOUT_MS = 3 * 60 * 60 * 1000;
+const DEFAULT_TIMEOUT_MS = 3 * 60 * 1000;
 
 @UniverseProcessor(TRANSCRIPTION_QUEUE_CONFIG, 'transcribe')
 export class TranscriptionProcessor extends WorkerHost {

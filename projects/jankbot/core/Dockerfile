@@ -37,7 +37,7 @@ WORKDIR /app
 
 COPY --from=build_image /app/dist/projects/jankbot/core ./
 
-# No system packages: audio is decoded in JS (opusscript) and transcribed by transcription-service.
+# No system packages: audio is decoded in JS (opusscript) and transcribed by the transcription worker.
 
 # --no-frozen-lockfile because the pruned manifest no longer matches the
 # generated lockfile's workspace entries; versions stay pinned by the lockfile

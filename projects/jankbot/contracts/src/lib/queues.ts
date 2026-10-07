@@ -23,7 +23,7 @@ export const JANKBOT_QUEUE_CONFIG = {
     queueName: 'utterances',
     jobName: 'process-utterance',
     jobSchema: z.object({
-      /** Also the transcription-service idempotency key, so a retried job never transcribes twice. */
+      /** Also the transcription flow's idempotency key, so a retried job never transcribes twice. */
       utteranceId: z.uuid(),
       guildId: z.string(),
       channelId: z.string(),
@@ -35,6 +35,26 @@ export const JANKBOT_QUEUE_CONFIG = {
        * Compressed Opus keeps Redis payloads small (~50KB per 10s).
        */
       opusPackets: z.array(z.string()),
+    }),
+  },
+  /**
+   * core → core: an utterance whose transcription is done. Added by core as the parent of a
+   * transcription-worker job (a BullMQ flow), so it runs once the transcript is ready.
+   */
+  transcribedUtterances: {
+    queueName: 'transcribed-utterances',
+    jobName: 'process-transcribed-utterance',
+    jobSchema: z.object({
+      utteranceId: z.uuid(),
+      guildId: z.string(),
+      channelId: z.string(),
+      userId: z.string(),
+      /** Epoch ms when the user started speaking. */
+      startedAt: z.number(),
+      /** Epoch ms when core queued the transcription. */
+      queuedAt: z.number(),
+      /** How much of the utterance was above the loudness threshold. */
+      loudMs: z.number(),
     }),
   },
   /**
@@ -77,12 +97,23 @@ export type JankbotQueue<T extends JankbotQueueKey> = UniverseQueue<
 >;
 export type JankbotQueueJob<T extends JankbotQueueKey> = Job<JankbotJobData<T>>;
 
-/** Job defaults are set by whichever side adds the job (the gateway), but both register the queue with them. */
+/**
+ * Job defaults are set by whichever side adds the job, but both register the queue with them.
+ * Jobs added through a flow don't get a queue's defaults, so core passes them explicitly there.
+ */
 export const JANKBOT_JOB_OPTIONS = {
-  // Retries cover transcription-service or Convex being briefly unreachable. Transcription is idempotent
-  // (keyed by utteranceId), so a retry never transcribes twice; in the rare case that the
-  // Convex mutation succeeded but its response was lost, the utterance counts twice.
+  // Retries cover Redis or Convex being briefly unreachable. The transcription flow is keyed by
+  // utteranceId, so a retry never queues a second transcription.
   utterances: {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 5_000 },
+    removeOnComplete: { age: 60 * 60, count: 1000 },
+    removeOnFail: { age: 24 * 60 * 60, count: 1000 },
+  },
+  // Retries cover Convex being briefly unreachable, and reuse the stored transcript rather than
+  // transcribing again. In the rare case that the Convex mutation succeeded but its response was
+  // lost, the utterance counts twice.
+  transcribedUtterances: {
     attempts: 3,
     backoff: { type: 'exponential', delay: 5_000 },
     removeOnComplete: { age: 60 * 60, count: 1000 },

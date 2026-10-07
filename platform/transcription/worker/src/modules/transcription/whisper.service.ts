@@ -53,7 +53,7 @@ export class WhisperService implements OnModuleDestroy {
         '-f', wavPath,
         '-l', 'en',
         '--beam-size', String(beamSize), '--best-of', String(beamSize),
-        '--output-json', 'of', outputBase,
+        '--output-json', '-of', outputBase,
         '--no-prints',
         ...(prompt ? ['--prompt', prompt] : []),
       ],

@@ -23,9 +23,15 @@ Discord voice ──► gateway: VoiceSessionService (@discordjs/voice)
                     ▼  BullMQ "utterances" queue (raw Opus packets + utteranceId)
                   core: UtteranceProcessor
                     1. Opus ─► 16kHz mono WAV, in JS (audio.ts; no ffmpeg needed)
-                    2. POST transcription-service /api/transcriptions  (Idempotency-Key: jankbot:<utteranceId>)
-                    3. findPhraseMatches (@libs/phrase-matching)
-                    4. api.ruby.counts.record (convex, via @platform/convex-contracts)
+                    2. add a BullMQ flow (@platform/transcription-client-nest, keyed by utteranceId)
+                    │
+                    ▼  child: transcription worker's queue (WAV + vocabulary prompt)
+                  transcription worker: whisper
+                    │
+                    ▼  parent: "transcribed-utterances" queue, runs once the transcript is ready
+                  core: TranscribedUtteranceProcessor
+                    1. findPhraseMatches (@libs/phrase-matching)
+                    2. api.ruby.counts.record (convex, via @platform/convex-contracts)
 
 Slash command ──► primary gateway: InteractionRouter
                     deferReply(), then
@@ -46,9 +52,12 @@ Slash command ──► primary gateway: InteractionRouter
   `skipRegistration` so they don't overwrite them. A new core command works without a gateway
   deploy; the gateway defers commands it doesn't know about publicly. Making a command ephemeral
   needs a gateway deploy, since the gateway decides that when it defers.
-- **Transcription** is [transcription-service](../../../platform/transcription/service)'s job; core has no whisper or
-  ffmpeg. Jobs retry on transcription-service or Convex errors, and the idempotency key means a retry never transcribes
-  twice.
+- **Transcription** is the [transcription worker](../../../platform/transcription/worker)'s job; core has no whisper
+  or ffmpeg. core hands it work through Redis as a [flow](../../../platform/transcription/client-nest), so the worker
+  must use the same `REDIS_URL`. Transcripts aren't needed in real time: when the worker falls behind, utterances wait
+  in its queue. Flows are keyed by `utteranceId`, so a retried utterance job never transcribes twice, and a retried
+  `transcribed-utterances` job reuses the stored transcript. A failed transcription is logged and tracked, then
+  skipped.
 - **Data** lives in [convex](../../../platform/convex/app/convex/ruby/): `trackedPhrases` and `phraseCounts`.
   Every ruby function takes `RUBY_CONVEX_SECRET`, since the functions are public. (The Convex side still uses the
   `ruby` name.)
@@ -78,13 +87,13 @@ Redis, then its guild membership and voice state from Discord's API. Nothing abo
 ## Local development
 
 1. Secrets in Infisical dev `/projects/jankbot/core` (see `secretsPaths` in `environment-config.json`):
-   `DISCORD_TOKEN`, `DISCORD_DEV_GUILD_IDS`, `REDIS_URL`, `RUBY_CONVEX_SECRET`, `TRANSCRIPTION_SERVICE_URL`,
-   `TRANSCRIPTION_SERVICE_API_TOKEN`. Then `nx setup environment`.
+   `DISCORD_TOKEN`, `DISCORD_DEV_GUILD_IDS`, `REDIS_URL`, `RUBY_CONVEX_SECRET`. Then `nx setup environment`.
    (Or put them in a gitignored `projects/jankbot/core/.env`; see `.env.example`.)
 2. `RUBY_CONVEX_SECRET` must also be set on the convex deployment:
    `pnpm nx convex convex-app -- env set RUBY_CONVEX_SECRET <value>`.
-3. `pnpm nx serve jankbot-core` and `pnpm nx serve jankbot-gateway` (same `REDIS_URL` and bot token), then `/join` in
-   a voice channel of a `DISCORD_DEV_GUILD_IDS` server.
+3. `pnpm nx serve jankbot-core`, `pnpm nx serve jankbot-gateway` and `pnpm nx serve transcription-worker` (all on the
+   same `REDIS_URL`; core and gateway on the same bot token), then `/join` in a voice channel of a
+   `DISCORD_DEV_GUILD_IDS` server.
 
 core can run as many instances as you like. Only run one gateway per bot token: every gateway would
 receive every command.

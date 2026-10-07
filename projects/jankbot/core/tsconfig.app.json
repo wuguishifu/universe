@@ -44,6 +44,9 @@
       "path": "../../../platform/transcription/contracts/tsconfig.lib.json"
     },
     {
+      "path": "../../../platform/transcription/client-nest/tsconfig.lib.json"
+    },
+    {
       "path": "../contracts/tsconfig.lib.json"
     }
   ]

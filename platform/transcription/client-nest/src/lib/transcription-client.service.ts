@@ -58,7 +58,12 @@ export type TranscriptionParentJob<
   queueConfig: C;
   queueKey: K;
   data: UniverseJobData<C, K>;
-  opts?: NonNullable<FlowJob['opts']>;
+  /**
+   * The queue's registered `defaultJobOptions` don't apply to jobs added through a flow, so pass
+   * them here. Set the parent's ID with `addFlow`'s `idempotencyKey`, which also dedupes the
+   * transcription.
+   */
+  opts?: Omit<NonNullable<FlowJob['opts']>, 'jobId'>;
   /** Defaults to the app's own Bull prefix (from `BullRootModule`). */
   prefix?: string;
 };
@@ -82,6 +87,7 @@ export class TranscriptionClient {
    *
    * @example
    * await transcription.addFlow({
+   *   idempotencyKey: recordingId,
    *   request: { source: { type: 's3', bucket, key } },
    *   parent: {
    *     queueConfig: MY_QUEUE_CONFIG,
@@ -91,13 +97,19 @@ export class TranscriptionClient {
    * });
    */
   public async addFlow<C extends QueueConfigMap, K extends keyof C>({
+    idempotencyKey,
     request,
     parent,
     jobOptions,
   }: {
+    /**
+     * Makes adding the flow again a no-op while its jobs are still in Redis (e.g. when the job
+     * that adds it retries). Used as both jobs' ID, so it can't contain ':'.
+     */
+    idempotencyKey?: string;
     request: TranscriptionRequest;
     parent: TranscriptionParentJob<C, K>;
-    jobOptions?: TranscriptionJobOptions;
+    jobOptions?: Omit<TranscriptionJobOptions, 'jobId'>;
   }): Promise<{ parentJobId: string; transcriptionJobId: string }> {
     const { queueConfig, queueKey, data, opts, prefix } = parent;
     const config = queueConfig[queueKey];
@@ -109,9 +121,10 @@ export class TranscriptionClient {
       name: config.jobName,
       queueName: config.queueName,
       data: parseOrThrow(config.jobSchema, data, `${config.queueName} job`),
-      opts,
+      // Both IDs have to be fixed: with only the parent's, BullMQ attaches a second transcription.
+      opts: { ...opts, jobId: idempotencyKey },
       prefix,
-      children: [this.child(request, jobOptions)],
+      children: [this.child(request, { ...jobOptions, jobId: idempotencyKey })],
     });
 
     // BullMQ types IDs as optional for jobs not yet added; flow jobs always have one.

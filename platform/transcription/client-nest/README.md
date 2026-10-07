@@ -46,6 +46,15 @@ override async process(job: MyQueueJob<'wordDetection'>) {
 }
 ```
 
+### Retries and idempotency
+
+Pass an `idempotencyKey` (e.g. the ID of whatever you're transcribing) when the code adding the
+flow can run more than once, like a job that retries. Adding a flow with the same key again is a
+no-op while its jobs are still in Redis. It becomes both jobs' ID, so it can't contain `:`.
+
+A retried parent job doesn't transcribe again either: `getResult` reads the result stored on the
+parent.
+
 ### When transcription fails
 
 Undecodable audio fails right away; other errors retry 3 times with exponential backoff. What
@@ -56,8 +65,8 @@ happens to the parent after that is up to `jobOptions.onFailure`:
 | `fail-parent` (default) | Fails without running.                                      |
 | `run-parent`            | Runs anyway; `getResult` throws `TranscriptionFailedError`. |
 
-`jobOptions` also takes `attempts`, `backoff`, `priority`, `removeOnComplete`, `removeOnFail` and
-`jobId` for the transcription job. These have to be set here rather than on the worker: in a
+`jobOptions` also takes `attempts`, `backoff`, `priority`, `removeOnComplete` and `removeOnFail` for
+the transcription job. These have to be set here rather than on the worker: in a
 flow, job options come from whoever adds the job.
 
 ### Custom flows

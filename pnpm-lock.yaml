@@ -634,6 +634,9 @@ importers:
       '@platform/convex-contracts':
         specifier: workspace:*
         version: link:../../../platform/convex/contracts
+      '@platform/transcription-client-nest':
+        specifier: workspace:*
+        version: link:../../../platform/transcription/client-nest
       '@platform/transcription-contracts':
         specifier: workspace:*
         version: link:../../../platform/transcription/contracts
