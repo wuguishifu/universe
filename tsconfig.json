@@ -19,9 +19,6 @@
       "path": "./libs/phrase-matching"
     },
     {
-      "path": "./platform/transcription/service"
-    },
-    {
       "path": "./platform/convex/app"
     },
     {

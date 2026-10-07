@@ -575,24 +575,6 @@ importers:
         specifier: workspace:*
         version: link:../../../libs/queue
 
-  platform/transcription/service:
-    dependencies:
-      '@libs/nest-common':
-        specifier: workspace:*
-        version: link:../../../libs/nest-common
-      '@libs/queue':
-        specifier: workspace:*
-        version: link:../../../libs/queue
-      '@libs/redis-cache':
-        specifier: 'workspace:'
-        version: link:../../../libs/redis-cache
-      '@platform/transcription-contracts':
-        specifier: workspace:*
-        version: link:../contracts
-      tslib:
-        specifier: ^2.3.0
-        version: 2.8.1
-
   platform/transcription/worker:
     dependencies:
       '@libs/nest-common':
