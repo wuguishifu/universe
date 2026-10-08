@@ -1,0 +1,9 @@
+{
+  "name": "@projects/internet-monitor-service",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@libs/nest-common": "workspace:*",
+    "@platform/analytics-client-nest": "workspace:*"
+  }
+}

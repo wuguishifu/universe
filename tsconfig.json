@@ -62,6 +62,9 @@
     },
     {
       "path": "./platform/transcription/client-nest"
+    },
+    {
+      "path": "./projects/internet-monitor/service"
     }
   ],
   "compilerOptions": {
