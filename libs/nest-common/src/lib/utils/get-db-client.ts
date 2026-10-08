@@ -9,14 +9,15 @@ export const getDbClient = (
 ): PostgresJsDatabase => {
   const databaseName = (() => {
     try {
-      return new URL(options.connectionString).pathname.slice(1) || 'pluto';
+      return new URL(options.connectionString).pathname.slice(1) || 'universe';
     } catch {
-      return 'pluto';
+      return 'universe';
     }
   })();
   const queryClient = postgres(options.connectionString, {
     connect_timeout: 30,
     idle_timeout: 300,
+    max: 3,
   });
   new Logger(databaseName).debug(`Creating DB Client: '${databaseName}' DB`);
   return drizzle(queryClient);
