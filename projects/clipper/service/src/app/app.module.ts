@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { S3Module } from '@libs/nest-common';
+import { ClaudeModule, S3Module } from '@libs/nest-common';
 import { BullRootModule } from '@libs/queue';
 import { TranscriptionClientModule } from '@platform/transcription-client-nest';
 import {
@@ -29,6 +29,13 @@ import { AppController } from './app.controller';
     }),
     TranscriptionClientModule.forRoot({
       parentQueueConfig: CLIPPER_QUEUE_CONFIG,
+    }),
+    ClaudeModule.forRootAsync({
+      imports: [EnvironmentModule],
+      inject: [EnvironmentService],
+      useFactory: (env: EnvironmentService) => ({
+        apiKey: env.environment.claudeApiToken,
+      }),
     }),
     UploadsModule,
     ClipsModule,

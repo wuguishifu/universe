@@ -6,6 +6,7 @@ import {
 } from '@platform/transcription-client-nest';
 import { ClipJobData } from '@projects/clipper-contracts';
 import { ClipperQueueConfig } from '../../queue/queue';
+import { AnalysisService } from '../analysis/analysis.service';
 
 const PROCESS_TRANSCRIPTION_OPTS: Job['opts'] = {
   attempts: 3,
@@ -18,6 +19,7 @@ const PROCESS_TRANSCRIPTION_OPTS: Job['opts'] = {
 export class ClipsService {
   constructor(
     private readonly transcriptionClient: TranscriptionClient<ClipperQueueConfig>,
+    private readonly analysisService: AnalysisService,
   ) {}
 
   public async processClips(clips: ClipJobData[]) {
@@ -37,7 +39,26 @@ export class ClipsService {
     });
   }
 
-  public async processTranscript(data: ClipJobData & TranscriptionResult) {
-    // TODO: process
+  public async processTranscript({
+    jobData,
+    result,
+  }: {
+    jobData: ClipJobData;
+    result: TranscriptionResult;
+  }) {
+    const analysis = await this.analysisService.analyzeTranscript({
+      transcript: JSON.stringify(result.transcript.segments, null, 2),
+    });
+    console.log(
+      JSON.stringify(
+        {
+          analysis,
+          analytics: result.analytics,
+          jobData,
+        },
+        null,
+        2,
+      ),
+    );
   }
 }

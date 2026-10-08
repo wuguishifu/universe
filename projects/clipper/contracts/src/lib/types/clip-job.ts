@@ -11,19 +11,3 @@ export const clipJobDataSchema = z.object({
   originalPathOnDisk: z.string(),
 });
 export type ClipJobData = z.infer<typeof clipJobDataSchema>;
-
-export const clipJobResultSchema = z.discriminatedUnion('found', [
-  z.object({
-    found: z.literal(true),
-    transcription: z.string(),
-    quoteStart: z.string(),
-    quoteEnd: z.string(),
-    startSeconds: z.number(),
-    endSeconds: z.number(),
-    clipTitle: z.string(),
-  }),
-  z.object({
-    found: z.literal(false),
-    reasoning: z.string(),
-  }),
-]);

@@ -13,6 +13,8 @@ export const environmentSchema = z
     environment: z.enum(['development', 'production']).default('development'),
     redisUrl: z.string().min(1),
 
+    claudeApiToken: z.string().min(1),
+
     analyticsServiceBaseUrl: z.string().min(1),
     analyticsServiceApiToken: z.string().min(1),
 

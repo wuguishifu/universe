@@ -23,7 +23,7 @@ export class ClipsQueueProcessor extends WorkerHost {
   override async process(job: ClipperQueueJob<'processTranscript'>) {
     try {
       const result = await this.transcriptionClient.getResult(job);
-      await this.clipsService.processTranscript({ ...job.data, ...result });
+      await this.clipsService.processTranscript({ jobData: job.data, result });
     } catch (error) {
       if (!(error instanceof TranscriptionFailedError)) throw error;
       // TODO: tracking
