@@ -67,7 +67,7 @@
       "path": "./projects/clipper/contracts"
     },
     {
-      "path": "./projects/clipper/server"
+      "path": "./projects/clipper/service"
     }
   ],
   "compilerOptions": {

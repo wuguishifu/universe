@@ -1,7 +1,7 @@
 {
-  "name": "clipper-server",
+  "name": "clipper-service",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "projects/clipper/server/src",
+  "sourceRoot": "projects/clipper/service/src",
   "projectType": "application",
   "tags": ["scope:server"],
   "targets": {
@@ -12,7 +12,7 @@
         "env": {
           "NODE_ENV": "production"
         },
-        "cwd": "projects/clipper/server"
+        "cwd": "projects/clipper/service"
       },
       "configurations": {
         "development": {
@@ -27,8 +27,8 @@
       "cache": true,
       "executor": "@nx/js:prune-lockfile",
       "outputs": [
-        "{workspaceRoot}/projects/clipper/server/dist/package.json",
-        "{workspaceRoot}/projects/clipper/server/dist/pnpm-lock.yaml"
+        "{workspaceRoot}/projects/clipper/service/dist/package.json",
+        "{workspaceRoot}/projects/clipper/service/dist/pnpm-lock.yaml"
       ],
       "options": {
         "buildTarget": "build"
@@ -38,7 +38,7 @@
       "dependsOn": ["build"],
       "cache": true,
       "outputs": [
-        "{workspaceRoot}/projects/clipper/server/dist/workspace_modules"
+        "{workspaceRoot}/projects/clipper/service/dist/workspace_modules"
       ],
       "executor": "@nx/js:copy-workspace-modules",
       "options": {
@@ -55,15 +55,15 @@
       "defaultConfiguration": "development",
       "dependsOn": ["build"],
       "options": {
-        "buildTarget": "clipper-server:build",
+        "buildTarget": "clipper-service:build",
         "runBuildTargetDependencies": false
       },
       "configurations": {
         "development": {
-          "buildTarget": "clipper-server:build:development"
+          "buildTarget": "clipper-service:build:development"
         },
         "production": {
-          "buildTarget": "clipper-server:build:production"
+          "buildTarget": "clipper-service:build:production"
         }
       }
     }

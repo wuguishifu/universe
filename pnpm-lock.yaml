@@ -592,7 +592,7 @@ importers:
 
   projects/clipper/contracts: {}
 
-  projects/clipper/server:
+  projects/clipper/service:
     dependencies:
       '@libs/nest-common':
         specifier: workspace:*
