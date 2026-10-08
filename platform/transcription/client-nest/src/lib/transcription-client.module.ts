@@ -1,6 +1,10 @@
 import { BullModule } from '@nestjs/bullmq';
 import { DynamicModule, Module } from '@nestjs/common';
-import { TRANSCRIPTION_FLOW_PRODUCER } from './constants';
+import { QueueConfigMap } from '@libs/queue';
+import {
+  TRANSCRIPTION_CLIENT_CONFIG,
+  TRANSCRIPTION_FLOW_PRODUCER,
+} from './constants';
 import { TranscriptionClient } from './transcription-client.service';
 
 /**
@@ -11,15 +15,25 @@ import { TranscriptionClient } from './transcription-client.service';
  */
 @Module({})
 export class TranscriptionClientModule {
-  public static forRoot(): DynamicModule {
+  public static forRoot<C extends QueueConfigMap>({
+    parentQueueConfig,
+  }: {
+    parentQueueConfig: C;
+  }): DynamicModule {
     return {
       module: TranscriptionClientModule,
       global: true,
       imports: [
         BullModule.registerFlowProducer({ name: TRANSCRIPTION_FLOW_PRODUCER }),
       ],
-      providers: [TranscriptionClient],
-      exports: [TranscriptionClient],
+      providers: [
+        TranscriptionClient<C>,
+        {
+          provide: TRANSCRIPTION_CLIENT_CONFIG,
+          useExisting: parentQueueConfig,
+        },
+      ],
+      exports: [TranscriptionClient<C>],
     };
   }
 }

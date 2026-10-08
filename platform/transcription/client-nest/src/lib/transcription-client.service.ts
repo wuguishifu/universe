@@ -1,5 +1,5 @@
 import { InjectFlowProducer } from '@nestjs/bullmq';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import type {
   FlowJob,
   FlowNestedLeafJob,
@@ -19,7 +19,10 @@ import {
   type TranscriptionJobData,
   type TranscriptionJobResult,
 } from '@platform/transcription-contracts';
-import { TRANSCRIPTION_FLOW_PRODUCER } from './constants';
+import {
+  TRANSCRIPTION_CLIENT_CONFIG,
+  TRANSCRIPTION_FLOW_PRODUCER,
+} from './constants';
 
 const QUEUE = TRANSCRIPTION_QUEUE_CONFIG.transcribe;
 
@@ -55,7 +58,6 @@ export type TranscriptionParentJob<
   C extends QueueConfigMap,
   K extends keyof C,
 > = {
-  queueConfig: C;
   queueKey: K;
   data: UniverseJobData<C, K>;
   /**
@@ -75,10 +77,12 @@ export class TranscriptionFailedError extends Error {
 
 /** Queues transcriptions on the transcription worker as children of the app's own jobs. */
 @Injectable()
-export class TranscriptionClient {
+export class TranscriptionClient<C extends QueueConfigMap> {
   constructor(
     @InjectFlowProducer(TRANSCRIPTION_FLOW_PRODUCER)
     private readonly flowProducer: FlowProducer,
+    @Inject(TRANSCRIPTION_CLIENT_CONFIG)
+    private readonly queueConfig: C,
   ) {}
 
   /**
@@ -96,7 +100,7 @@ export class TranscriptionClient {
    *   },
    * });
    */
-  public async addFlow<C extends QueueConfigMap, K extends keyof C>({
+  public async addFlow<K extends keyof C>({
     idempotencyKey,
     request,
     parent,
@@ -111,8 +115,8 @@ export class TranscriptionClient {
     parent: TranscriptionParentJob<C, K>;
     jobOptions?: Omit<TranscriptionJobOptions, 'jobId'>;
   }): Promise<{ parentJobId: string; transcriptionJobId: string }> {
-    const { queueConfig, queueKey, data, opts, prefix } = parent;
-    const config = queueConfig[queueKey];
+    const { queueKey, data, opts, prefix } = parent;
+    const config = this.queueConfig[queueKey];
     if (!config) {
       throw new Error(`Unknown queue key: ${String(queueKey)}`);
     }
@@ -136,23 +140,19 @@ export class TranscriptionClient {
     return { parentJobId, transcriptionJobId };
   }
 
-  public async addFlows<C extends QueueConfigMap, K extends keyof C>({
+  public async addFlows<K extends keyof C>({
     jobs,
-    parentQueueConfig,
+    queueKey,
     jobOptions,
   }: {
     jobs: {
       data: { idempotencyKey?: string; request: TranscriptionRequest };
-      parent: Omit<TranscriptionParentJob<C, K>, 'queueConfig' | 'queueKey'>;
+      parent: Omit<TranscriptionParentJob<C, K>, 'queueKey'>;
     }[];
-    parentQueueConfig: Pick<
-      TranscriptionParentJob<C, K>,
-      'queueConfig' | 'queueKey'
-    >;
+    queueKey: keyof C;
     jobOptions: Omit<TranscriptionJobOptions, 'jobId'>;
   }): Promise<{ parentJobId?: string; transcriptionJobId?: string }[]> {
-    const { queueConfig, queueKey } = parentQueueConfig;
-    const config = queueConfig[queueKey];
+    const config = this.queueConfig[queueKey];
     if (!config) {
       throw new Error(`Unknown queue key: ${String(queueKey)}`);
     }

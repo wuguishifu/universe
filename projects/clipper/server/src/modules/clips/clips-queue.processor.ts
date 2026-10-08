@@ -3,7 +3,11 @@ import {
   TranscriptionClient,
   TranscriptionFailedError,
 } from '@platform/transcription-client-nest';
-import { CLIPPER_QUEUE_CONFIG, ClipperQueueJob } from '../../queue/queue';
+import {
+  CLIPPER_QUEUE_CONFIG,
+  ClipperQueueConfig,
+  ClipperQueueJob,
+} from '../../queue/queue';
 import { ClipsService } from './clips.service';
 
 // this processor runs in CPU land
@@ -11,7 +15,7 @@ import { ClipsService } from './clips.service';
 export class ClipsQueueProcessor extends WorkerHost {
   constructor(
     private readonly clipsService: ClipsService,
-    private readonly transcriptionClient: TranscriptionClient,
+    private readonly transcriptionClient: TranscriptionClient<ClipperQueueConfig>,
   ) {
     super();
   }

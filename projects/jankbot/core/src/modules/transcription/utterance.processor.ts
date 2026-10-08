@@ -4,6 +4,7 @@ import { TranscriptionClient } from '@platform/transcription-client-nest';
 import {
   JANKBOT_JOB_OPTIONS,
   JANKBOT_QUEUE_CONFIG,
+  JankbotQueueConfig,
   type JankbotQueueJob,
   OPUS_FRAME_MS,
 } from '@projects/jankbot-contracts';
@@ -23,7 +24,7 @@ export class UtteranceProcessor extends WorkerHost {
   private readonly logger = new Logger(UtteranceProcessor.name);
 
   constructor(
-    private readonly transcription: TranscriptionClient,
+    private readonly transcriptionClient: TranscriptionClient<JankbotQueueConfig>,
     private readonly trackedWords: TrackedWordsService,
     private readonly environmentService: EnvironmentService,
   ) {
@@ -58,7 +59,7 @@ export class UtteranceProcessor extends WorkerHost {
     // Prompting whisper with the guild's phrases keeps it from mangling made-up words
     // (e.g. "cosclaire" → "cause clair"), which would otherwise never match.
     const phrases = await this.trackedWords.list(guildId);
-    await this.transcription.addFlow({
+    await this.transcriptionClient.addFlow({
       // A retry of this job (e.g. after a crash) won't queue a second transcription.
       idempotencyKey: utteranceId,
       request: {
@@ -66,7 +67,6 @@ export class UtteranceProcessor extends WorkerHost {
         options: { prompt: vocabularyPrompt(phrases) },
       },
       parent: {
-        queueConfig: JANKBOT_QUEUE_CONFIG,
         queueKey: 'transcribedUtterances',
         data: {
           utteranceId,

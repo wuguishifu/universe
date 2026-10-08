@@ -9,6 +9,7 @@ import {
 } from '@platform/transcription-client-nest';
 import {
   JANKBOT_QUEUE_CONFIG,
+  JankbotQueueConfig,
   type JankbotJobData,
   type JankbotQueueJob,
 } from '@projects/jankbot-contracts';
@@ -24,7 +25,7 @@ export class TranscribedUtteranceProcessor extends WorkerHost {
   private readonly logger = new Logger(TranscribedUtteranceProcessor.name);
 
   constructor(
-    private readonly transcription: TranscriptionClient,
+    private readonly transcriptionClient: TranscriptionClient<JankbotQueueConfig>,
     private readonly trackedWords: TrackedWordsService,
     private readonly leaderboard: LeaderboardService,
     private readonly trackingService: TrackingService,
@@ -47,7 +48,7 @@ export class TranscribedUtteranceProcessor extends WorkerHost {
 
     let result: TranscriptionResult;
     try {
-      result = await this.transcription.getResult(job);
+      result = await this.transcriptionClient.getResult(job);
     } catch (error) {
       if (!(error instanceof TranscriptionFailedError)) throw error;
       // The worker gave up on this audio; retrying here would just read the same failure.

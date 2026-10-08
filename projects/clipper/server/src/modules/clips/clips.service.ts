@@ -5,7 +5,7 @@ import {
   TranscriptionResult,
 } from '@platform/transcription-client-nest';
 import { ClipJobData } from '@projects/clipper-contracts';
-import { CLIPPER_QUEUE_CONFIG } from '../../queue/queue';
+import { ClipperQueueConfig } from '../../queue/queue';
 
 const PROCESS_TRANSCRIPTION_OPTS: Job['opts'] = {
   attempts: 3,
@@ -16,7 +16,9 @@ const PROCESS_TRANSCRIPTION_OPTS: Job['opts'] = {
 
 @Injectable()
 export class ClipsService {
-  constructor(private readonly transcriptionClient: TranscriptionClient) {}
+  constructor(
+    private readonly transcriptionClient: TranscriptionClient<ClipperQueueConfig>,
+  ) {}
 
   public async processClips(clips: ClipJobData[]) {
     await this.transcriptionClient.addFlows({
@@ -30,10 +32,7 @@ export class ClipsService {
         },
         parent: { data, opts: PROCESS_TRANSCRIPTION_OPTS },
       })),
-      parentQueueConfig: {
-        queueConfig: CLIPPER_QUEUE_CONFIG,
-        queueKey: 'processTranscript',
-      },
+      queueKey: 'processTranscript',
       jobOptions: { onFailure: 'fail-parent' },
     });
   }

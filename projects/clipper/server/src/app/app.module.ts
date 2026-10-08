@@ -8,7 +8,7 @@ import {
 } from '../environment/environment';
 import { ClipsModule } from '../modules/clips/clips.module';
 import { UploadsModule } from '../modules/uploads/uploads.module';
-import { CLIPPER_QUEUE_PREFIX } from '../queue/queue';
+import { CLIPPER_QUEUE_CONFIG, CLIPPER_QUEUE_PREFIX } from '../queue/queue';
 import { AppController } from './app.controller';
 
 @Module({
@@ -27,7 +27,9 @@ import { AppController } from './app.controller';
       inject: [EnvironmentService],
       useFactory: (env: EnvironmentService) => env.environment.s3,
     }),
-    TranscriptionClientModule.forRoot(),
+    TranscriptionClientModule.forRoot({
+      parentQueueConfig: CLIPPER_QUEUE_CONFIG,
+    }),
     UploadsModule,
     ClipsModule,
   ],
