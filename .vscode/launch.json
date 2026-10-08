@@ -58,9 +58,9 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug internet-monitor with Nx",
+      "name": "Debug internet-monitor-service with Nx",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["exec", "nx", "serve", "internet-monitor"],
+      "runtimeArgs": ["exec", "nx", "serve", "internet-monitor-service"],
       "env": {
         "NODE_OPTIONS": "--inspect=9232"
       },
