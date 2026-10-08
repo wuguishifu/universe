@@ -6,6 +6,7 @@
     "@libs/nest-common": "workspace:*",
     "@libs/queue": "workspace:*",
     "@libs/redis-cache": "workspace:*",
+    "@platform/transcription-client-nest": "workspace:*",
     "@projects/clipper-contracts": "workspace:*"
   }
 }

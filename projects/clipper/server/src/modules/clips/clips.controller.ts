@@ -1,28 +1,18 @@
-import { Controller, Inject } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { tsRestHandler, TsRestHandler } from '@ts-rest/nest';
-import { DEFAULT_QUEUE_CONFIG } from '@libs/queue';
 import { clipperRootRouter } from '@projects/clipper-contracts';
-import { CLIPPER_QUEUE_CONFIG, type ClipperQueue } from '../../queue/queue';
+import { ClipsService } from './clips.service';
 
 const clipsV1Router = clipperRootRouter.v1.clips;
 
 @Controller()
 export class ClipsController {
-  constructor(
-    @Inject(CLIPPER_QUEUE_CONFIG.processClip.queueName)
-    private readonly processClipQueue: ClipperQueue<'processClip'>,
-  ) {}
+  constructor(private readonly clipsService: ClipsService) {}
 
   @TsRestHandler(clipsV1Router.processClips)
   public processClips() {
     return tsRestHandler(clipsV1Router.processClips, async ({ body }) => {
-      await this.processClipQueue.addBulk(
-        body.keys.map((key) => ({
-          name: CLIPPER_QUEUE_CONFIG.processClip.jobName,
-          data: { key },
-          DEFAULT_QUEUE_CONFIG,
-        })),
-      );
+      await this.clipsService.processClips(body);
       return { status: 200, body: 'ok' };
     });
   }

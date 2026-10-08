@@ -14,7 +14,11 @@ export class FilesService {
     }
 
     try {
-      await this.s3.downloadToFile(source.bucket, source.key, dest);
+      await this.s3.downloadToFile({
+        bucket: source.bucket,
+        key: source.key,
+        path: dest,
+      });
     } catch (error) {
       if (error instanceof S3ObjectNotFoundError) {
         throw new UnrecoverableError(error.message);

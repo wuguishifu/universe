@@ -603,6 +603,9 @@ importers:
       '@libs/redis-cache':
         specifier: workspace:*
         version: link:../../../libs/redis-cache
+      '@platform/transcription-client-nest':
+        specifier: workspace:*
+        version: link:../../../platform/transcription/client-nest
       '@projects/clipper-contracts':
         specifier: workspace:*
         version: link:../contracts

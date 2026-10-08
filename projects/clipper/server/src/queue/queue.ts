@@ -4,7 +4,6 @@ import {
 } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { Job } from 'bullmq';
-import z from 'zod';
 
 import {
   BullQueueModule,
@@ -13,15 +12,16 @@ import {
   UniverseQueue,
 } from '@libs/queue';
 import { resolveRedisConnection } from '@libs/redis-cache';
+import { clipJobDataSchema } from '@projects/clipper-contracts';
 import { EnvironmentService } from '../environment/environment';
 
+export const CLIPPER_QUEUE_PREFIX = 'clipper-queue';
+
 export const CLIPPER_QUEUE_CONFIG = {
-  processClip: {
-    queueName: 'process-clip',
-    jobName: 'process-clip',
-    jobSchema: z.object({
-      key: z.string(),
-    }),
+  processTranscript: {
+    queueName: 'process-transcript',
+    jobName: 'process-transcript',
+    jobSchema: clipJobDataSchema,
   },
 } satisfies Record<string, QueueConfig>;
 

@@ -136,6 +136,60 @@ export class TranscriptionClient {
     return { parentJobId, transcriptionJobId };
   }
 
+  public async addFlows<C extends QueueConfigMap, K extends keyof C>({
+    jobs,
+    parentQueueConfig,
+    jobOptions,
+  }: {
+    jobs: {
+      data: { idempotencyKey?: string; request: TranscriptionRequest };
+      parent: Omit<TranscriptionParentJob<C, K>, 'queueConfig' | 'queueKey'>;
+    }[];
+    parentQueueConfig: Pick<
+      TranscriptionParentJob<C, K>,
+      'queueConfig' | 'queueKey'
+    >;
+    jobOptions: Omit<TranscriptionJobOptions, 'jobId'>;
+  }): Promise<{ parentJobId?: string; transcriptionJobId?: string }[]> {
+    const { queueConfig, queueKey } = parentQueueConfig;
+    const config = queueConfig[queueKey];
+    if (!config) {
+      throw new Error(`Unknown queue key: ${String(queueKey)}`);
+    }
+
+    const flowJobs: FlowJob[] = jobs.map(
+      ({
+        data: { idempotencyKey, request },
+        parent: { opts, prefix, data },
+      }) => ({
+        name: config.jobName,
+        queueName: config.queueName,
+        data: parseOrThrow(
+          config.jobSchema,
+          data,
+          `${config.queueName} bulk job`,
+        ),
+        opts: {
+          ...opts,
+          jobId: idempotencyKey,
+        },
+        prefix,
+        children: [
+          this.child(request, { ...jobOptions, jobId: idempotencyKey }),
+        ],
+      }),
+    );
+
+    const nodes = await this.flowProducer.addBulk(flowJobs);
+    const results: { parentJobId?: string; transcriptionJobId?: string }[] =
+      nodes.map((node) => ({
+        parentJobId: node.job.id,
+        transcriptionJobId: node.children?.[0]?.job.id,
+      }));
+
+    return results;
+  }
+
   /**
    * Builds the transcription job as a flow child, for flows `addFlow` doesn't cover (e.g. a parent
    * with other children too). A parent can have at most one transcription child.
@@ -201,7 +255,9 @@ function parseOrThrow<S extends z.ZodType>(
 ): z.output<S> {
   const parsed = schema.safeParse(value);
   if (!parsed.success) {
-    throw new Error(`Invalid ${label}:\n${z.prettifyError(parsed.error)}`);
+    throw new Error(`Invalid ${label}:\n${z.prettifyError(parsed.error)}`, {
+      cause: parsed.error,
+    });
   }
   return parsed.data;
 }
