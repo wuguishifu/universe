@@ -1,4 +1,4 @@
-declare type TrackingConfig = {
+export type TrackingConfig = {
   serviceName: string;
   enableBatching?: boolean;
   analyticsServiceBaseUrl: string;
