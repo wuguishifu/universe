@@ -30,10 +30,10 @@ export class TranscriptionClientModule {
         TranscriptionClient<C>,
         {
           provide: TRANSCRIPTION_CLIENT_CONFIG,
-          useExisting: parentQueueConfig,
+          useValue: parentQueueConfig,
         },
       ],
-      exports: [TranscriptionClient<C>],
+      exports: [TranscriptionClient<C>, TRANSCRIPTION_CLIENT_CONFIG],
     };
   }
 }
