@@ -107,8 +107,8 @@ export const JANKBOT_JOB_OPTIONS = {
   utterances: {
     attempts: 3,
     backoff: { type: 'exponential', delay: 5_000 },
-    removeOnComplete: { age: 60 * 60, count: 1000 },
-    removeOnFail: { age: 24 * 60 * 60, count: 1000 },
+    removeOnComplete: { age: 5 * 60, count: 1000 },
+    removeOnFail: { age: 30 * 60, count: 1000 },
   },
   // Retries cover Convex being briefly unreachable, and reuse the stored transcript rather than
   // transcribing again. In the rare case that the Convex mutation succeeded but its response was
@@ -116,14 +116,14 @@ export const JANKBOT_JOB_OPTIONS = {
   transcribedUtterances: {
     attempts: 3,
     backoff: { type: 'exponential', delay: 5_000 },
-    removeOnComplete: { age: 60 * 60, count: 1000 },
-    removeOnFail: { age: 24 * 60 * 60, count: 1000 },
+    removeOnComplete: { age: 5 * 60, count: 1000 },
+    removeOnFail: { age: 30 * 60, count: 1000 },
   },
   // Someone is watching a "thinking..." message, so retry quickly and give up well inside the token's lifetime.
   interactions: {
     attempts: 3,
     backoff: { type: 'exponential', delay: 1_000 },
-    removeOnComplete: { age: 60 * 60, count: 1000 },
-    removeOnFail: { age: 24 * 60 * 60, count: 1000 },
+    removeOnComplete: { age: 5 * 60, count: 1000 },
+    removeOnFail: { age: 30 * 60, count: 1000 },
   },
 } satisfies Record<JankbotQueueKey, JobsOptions>;
