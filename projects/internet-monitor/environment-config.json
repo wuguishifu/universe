@@ -1,0 +1,8 @@
+{
+  "$schema": "../../tools/environment/environment-config.schema.json",
+  "secretsPaths": [
+    "platform/redis",
+    "platform/analytics/client",
+    "projects/internet-monitor/service"
+  ]
+}

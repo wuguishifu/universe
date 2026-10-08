@@ -592,6 +592,9 @@ importers:
       '@libs/nest-common':
         specifier: workspace:*
         version: link:../../../libs/nest-common
+      '@libs/redis-cache':
+        specifier: workspace:*
+        version: link:../../../libs/redis-cache
       '@platform/analytics-client-nest':
         specifier: workspace:*
         version: link:../../../platform/analytics/client-nest

@@ -8,6 +8,9 @@ import {
 export const environmentSchema = baseEnvironmentSchema.extend({
   analyticsServiceBaseUrl: z.string().min(1),
   analyticsServiceApiToken: z.string().min(1),
+  redisUrl: z.string().min(1),
+  gatewayHost: z.string().min(1),
+  gatewayPort: z.coerce.number().int().positive().default(80),
 });
 export type EnvironmentSchema = z.infer<typeof environmentSchema>;
 
