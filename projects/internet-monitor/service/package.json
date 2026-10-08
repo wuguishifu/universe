@@ -5,6 +5,7 @@
   "dependencies": {
     "@libs/nest-common": "workspace:*",
     "@platform/analytics-client-nest": "workspace:*",
-    "@libs/redis-cache": "workspace:*"
+    "@libs/redis-cache": "workspace:*",
+    "tslib": "^2.3.0"
   }
 }

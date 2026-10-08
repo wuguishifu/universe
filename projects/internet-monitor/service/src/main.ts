@@ -23,7 +23,7 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
 
-  const port = process.env.PORT || 3004;
+  const port = process.env.PORT || 3006;
   await app.listen(port, '0.0.0.0');
   Logger.log(
     `📡 internet monitor service is running on: ${await app.getUrl()}`,
