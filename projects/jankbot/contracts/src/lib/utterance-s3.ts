@@ -33,8 +33,5 @@ export function phraseSlug(phrase: string): string {
     .replace(/['‘’ʼ]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
-  return (
-    slug ||
-    `phrase-${createHash('sha256').update(phrase).digest('hex').slice(0, 12)}`
-  );
+  return `${slug || 'phrase'}-${createHash('sha256').update(phrase).digest('hex').slice(0, 12)}`;
 }
