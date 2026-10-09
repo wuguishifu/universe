@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "universe-db": {
+      "command": "tools/mcp/run.sh",
+      "args": [
+        "sh",
+        "-c",
+        "DATABASE_URI=\"$UNIVERSE_DB_CONNECTION_STRING\" exec uvx --with 'mcp<2' postgres-mcp --access-mode=restricted"
+      ]
+    },
+    "universe-s3": {
+      "command": "tools/mcp/run.sh",
+      "args": ["uv", "run", "--script", "tools/mcp/s3_server.py"]
+    }
+  }
+}
