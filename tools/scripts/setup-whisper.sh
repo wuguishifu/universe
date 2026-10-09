@@ -1,23 +1,24 @@
 #!/bin/sh
-# Builds whisper-cli for this machine and downloads whisper models into bin/, for running
-# transcription-service locally (see platform/transcription/service/README.md). bin/ is gitignored.
+# Builds whisper-cli for this machine and downloads whisper models into bin/, for running the
+# transcription worker (platform/transcription/worker) locally. bin/ is gitignored.
 #
-# Usage: tools/scripts/setup-whisper.sh [model...]   (default: base.en)
+# Usage: tools/scripts/setup-whisper.sh [model...]   (default: base.en large-v3-turbo-q8_0)
 #
-# The whisper.cpp version comes from transcription-service's Dockerfile, so local runs match the image.
+# Models are named like WHISPER_MODELS (ggml-<model>.bin), e.g. small.en-q8_0. large-v3-turbo-q8_0
+# is ~874MB, and is what the mini runs for the most accurate transcripts and word timings.
+#
 # Re-running rebuilds whisper-cli and skips models that are already downloaded.
 set -eu
 
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 BIN="$ROOT/bin"
-DOCKERFILE="$ROOT/platform/transcription/service/Dockerfile"
-MODELS_URL=https://huggingface.co/ggerganov/whisper.cpp/resolve/main
-
-VERSION=$(sed -n 's/^ARG WHISPER_CPP_VERSION=//p' "$DOCKERFILE")
-if [ -z "$VERSION" ]; then
-  echo "Couldn't read WHISPER_CPP_VERSION from $DOCKERFILE"
-  exit 1
-fi
+# Production runs Homebrew's whisper.cpp on the mini (see its Brewfile in the homelab repo), so keep
+# this in step with `brew list --versions whisper.cpp` there. WHISPER_CPP_VERSION overrides it.
+VERSION="${WHISPER_CPP_VERSION:-v1.9.5}"
+# The same Hugging Face commit the mini's models.txt checksums belong to (HF_REVISION in its
+# service.env), so local models are the same files as production's.
+HF_REVISION=5359861c739e955e79d9a303bcbc70fb988958b1
+MODELS_URL="https://huggingface.co/ggerganov/whisper.cpp/resolve/$HF_REVISION"
 
 for tool in cmake git curl; do
   if ! command -v "$tool" > /dev/null; then
@@ -44,7 +45,7 @@ cmake --build "$WORK/whisper.cpp/build" --config Release --target whisper-cli -j
 cp "$WORK/whisper.cpp/build/bin/whisper-cli" "$BIN/whisper-cli"
 echo "Wrote $BIN/whisper-cli"
 
-[ "$#" -eq 0 ] && set -- base.en
+[ "$#" -eq 0 ] && set -- base.en large-v3-turbo-q8_0
 for model in "$@"; do
   file="$BIN/ggml-$model.bin"
   if [ -f "$file" ]; then
@@ -59,7 +60,7 @@ done
 
 cat << EOF
 
-Done. Point transcription-service at these in the root .env:
+Done. Point the transcription worker at these in its .env:
   WHISPER_CLI_PATH=bin/whisper-cli
   WHISPER_MODELS_DIR=bin
   WHISPER_MODELS=$(echo "$@" | tr ' ' ',')
