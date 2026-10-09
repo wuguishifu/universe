@@ -21,7 +21,7 @@ import {
 import { EnvironmentService } from '../../environment/environment';
 import {
   joinWithGaps,
-  pcmDurationMs,
+  normalizeLoudness,
   prepareClips,
   readWavPcm,
   slicePcm,
@@ -35,11 +35,13 @@ type Recording = typeof recordings.$inferSelect;
 /** How often to check again while a session's utterances are still being transcribed. */
 const BACKLOG_RECHECK_MS = 60_000;
 /**
- * A little slack around whisper's word timings so the first and last words aren't cut short. Speech
- * runs words together, so much more pulls in the start of the next word.
+ * How far past whisper's word timings to look for where the speech starts and stops. Further back
+ * than forward, since its timings run late. Tuned on real voice chat: further than this and clips
+ * start taking in neighboring words, since people rarely pause between them.
  */
-const CLIP_PADDING = { padBeforeMs: 50, padAfterMs: 50 };
-const CLIP_FADE_MS = 10;
+const CLIP_SNAP = { searchBeforeMs: 300, searchAfterMs: 150 };
+/** Softens cuts that have to land mid-sound, where there was no pause to cut at. */
+const CLIP_FADE_MS = 25;
 const CLIP_GAP_MS = 300;
 const DOWNLOAD_CONCURRENCY = 4;
 
@@ -120,10 +122,12 @@ export class StitchSessionProcessor extends WorkerHost {
               startMs: clipStartMs,
               endMs: clipEndMs,
             })),
-            pcmDurationMs(pcm),
-            CLIP_PADDING,
+            pcm,
+            CLIP_SNAP,
           );
-          return ranges.map((range) => slicePcm(pcm, range, CLIP_FADE_MS));
+          return ranges.map((range) =>
+            normalizeLoudness(slicePcm(pcm, range, CLIP_FADE_MS)),
+          );
         });
         if (clips.length === 0) {
           this.logger.warn(

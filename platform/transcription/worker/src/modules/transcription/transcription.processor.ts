@@ -57,6 +57,7 @@ export class TranscriptionProcessor extends WorkerHost {
         result: { transcription, result },
         whisperProcessingTimeMs,
       } = await this.whisperService.transcribe({
+        model,
         modelPath,
         wavPath,
         outputBase,

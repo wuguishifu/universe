@@ -19,6 +19,8 @@ const whisperJsonSchema = z.object({
           z.object({
             text: z.string(),
             offsets: z.object({ from: z.number(), to: z.number() }),
+            /** With --dtw: when the token starts, in 10ms units; -1 without. */
+            t_dtw: z.number().default(-1),
           }),
         )
         .default([]),
@@ -38,6 +40,7 @@ export class WhisperService implements OnModuleDestroy {
   }
 
   public async transcribe({
+    model,
     modelPath,
     wavPath,
     outputBase,
@@ -45,6 +48,7 @@ export class WhisperService implements OnModuleDestroy {
     timeoutMs,
     beamSize = 1,
   }: {
+    model: string;
     modelPath: string;
     wavPath: string;
     outputBase: string;
@@ -53,6 +57,7 @@ export class WhisperService implements OnModuleDestroy {
     beamSize?: number;
   }): Promise<{ result: WhisperJson; whisperProcessingTimeMs: number }> {
     const startTime = Date.now();
+    const dtwPreset = dtwPresetFor(model);
 
     // prettier-ignore
     await runProcess(
@@ -64,6 +69,9 @@ export class WhisperService implements OnModuleDestroy {
         '--beam-size', String(beamSize), '--best-of', String(beamSize),
         // Full JSON includes each token's timing, which the transcript's words come from.
         '--output-json-full', '-of', outputBase,
+        // DTW times tokens far more accurately than whisper's default guess, which is often a word
+        // off. whisper.cpp silently skips it with flash attention on, so that's turned off (~15% slower).
+        ...(dtwPreset ? ['--dtw', dtwPreset, '--no-flash-attn'] : []),
         '--no-prints',
         ...(prompt ? ['--prompt', prompt] : []),
       ],
@@ -158,4 +166,29 @@ async function readWavDurationMs(wavPath: string): Promise<number> {
   } finally {
     await file.close();
   }
+}
+
+/** whisper.cpp's --dtw presets: the models it knows the alignment heads of. */
+const DTW_PRESETS = new Set([
+  'tiny',
+  'tiny.en',
+  'base',
+  'base.en',
+  'small',
+  'small.en',
+  'medium',
+  'medium.en',
+  'large.v1',
+  'large.v2',
+  'large.v3',
+  'large.v3.turbo',
+]);
+
+/**
+ * The --dtw preset for a model (WHISPER_MODELS names its ggml-<model>.bin file), e.g.
+ * "large-v3-turbo-q5_0" → "large.v3.turbo". Quantizing doesn't move the alignment heads.
+ */
+export function dtwPresetFor(model: string): string | undefined {
+  const preset = model.replace(/-q\d.*$/, '').replaceAll('-', '.');
+  return DTW_PRESETS.has(preset) ? preset : undefined;
 }
