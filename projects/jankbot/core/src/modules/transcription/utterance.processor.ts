@@ -1,6 +1,7 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { S3Service } from '@libs/nest-common';
+import { TrackingService } from '@platform/analytics-client-nest';
 import { TranscriptionClient } from '@platform/transcription-client-nest';
 import {
   createUtteranceS3Key,
@@ -29,6 +30,7 @@ export class UtteranceProcessor extends WorkerHost {
     private readonly trackedWords: TrackedWordsService,
     private readonly environmentService: EnvironmentService,
     private readonly s3: S3Service,
+    private readonly trackingService: TrackingService,
   ) {
     super();
   }
@@ -108,6 +110,16 @@ export class UtteranceProcessor extends WorkerHost {
         contentType: 'audio/wav',
       }),
     ]);
+
+    if (results[1].status === 'rejected') {
+      this.trackingService.trackEvent({
+        name: 'utterance_processor-upload_utterance-failed',
+        extra: {
+          utteranceId,
+          reason: results[1].reason,
+        },
+      });
+    }
 
     if (results[0].status === 'rejected') {
       throw new Error(results[0].reason);
