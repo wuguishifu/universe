@@ -1,4 +1,4 @@
-FROM node:24-slim AS build_image
+FROM mirror.gcr.io/library/node:24-slim AS build_image
 
 LABEL maintainer="Bo Bramer <bramer.bo@gmail.com>"
 LABEL org.opencontainers.image.source=https://github.com/wuguishifu/universe
@@ -18,7 +18,7 @@ RUN pnpm install --frozen-lockfile
 # by esbuild) and the drizzle migrations folder next to it, where migrate.mjs looks by default
 RUN NX_DAEMON=false pnpm nx bundle:migrate postgres-utils
 
-FROM node:24-slim
+FROM mirror.gcr.io/library/node:24-slim
 
 # Runs against the homelab database; without a TTY migrate.mjs skips its confirmation prompt.
 ARG BUILD_ENV=production
