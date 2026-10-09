@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { S3Module, UniverseDbModule } from '@libs/nest-common';
+import { TrackingModule } from '@platform/analytics-client-nest';
 import {
   EnvironmentModule,
   EnvironmentService,
@@ -12,6 +13,17 @@ import { AppController } from './app.controller';
   imports: [
     EnvironmentModule,
     QueueModule,
+    TrackingModule.forRootAsync({
+      inject: [EnvironmentService],
+      useFactory: (environmentService: EnvironmentService) => ({
+        serviceName: 'jankbot/stitcher',
+        enableBatching: true,
+        analyticsServiceBaseUrl:
+          environmentService.environment.analyticsServiceBaseUrl,
+        analyticsServiceApiKey:
+          environmentService.environment.analyticsServiceApiToken,
+      }),
+    }),
     S3Module.forRootAsync({
       inject: [EnvironmentService],
       useFactory: (env: EnvironmentService) => env.environment.s3,

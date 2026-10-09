@@ -699,6 +699,9 @@ importers:
       '@libs/queue':
         specifier: workspace:*
         version: link:../../../libs/queue
+      '@platform/analytics-client-nest':
+        specifier: workspace:*
+        version: link:../../../platform/analytics/client-nest
       '@platform/postgres-db':
         specifier: workspace:*
         version: link:../../../platform/postgres/db

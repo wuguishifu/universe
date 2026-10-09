@@ -5,6 +5,8 @@ export const voiceSessionSchema = z.object({
   channelId: z.string(),
   /** Kept across gateway restarts and rejoins, so the session lasts until the bot actually leaves. */
   sessionId: z.uuid(),
+  /** Epoch ms when the session started. Missing on sessions remembered before it was added. */
+  startedAt: z.number().optional(),
 });
 export type VoiceSession = z.infer<typeof voiceSessionSchema>;
 

@@ -12,6 +12,9 @@ export const environmentSchema = baseEnvironmentSchema
     /** Must be the Redis jankbot's other apps use: stitch jobs come from the gateway. */
     redisUrl: z.string().min(1),
 
+    analyticsServiceBaseUrl: z.string().min(1),
+    analyticsServiceApiToken: z.string().min(1),
+
     // s3 variables
     s3Endpoint: z.string().min(1),
     s3Region: z.string().min(1),
