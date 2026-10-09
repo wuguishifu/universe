@@ -67,7 +67,7 @@ export class TranscribedUtteranceProcessor extends WorkerHost {
 
     const phrases = await this.trackedWords.list(guildId);
     // Words make each clip just the phrase. Segments are often the whole utterance, but are all a
-    // transcript from a worker that predates words has.
+    // transcript has when the worker predates wordTimestamps.
     const { words, segments } = result.transcript;
     const timedMatches = findTimedPhraseMatches(
       words?.length ? words : segments,

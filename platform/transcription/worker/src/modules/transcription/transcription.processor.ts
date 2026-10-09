@@ -63,6 +63,7 @@ export class TranscriptionProcessor extends WorkerHost {
         outputBase,
         prompt: options?.prompt,
         beamSize: options?.beamSize,
+        wordTimestamps: options?.wordTimestamps,
         // if we're transcribing at 3x real time that's a bit wack
         timeoutMs: Math.max(DEFAULT_TIMEOUT_MS, durationMs * 3),
       });
@@ -72,9 +73,9 @@ export class TranscriptionProcessor extends WorkerHost {
         endMs: segment.offsets.to,
         text: segment.text.trim(),
       }));
-      const words = tokensToWords(
-        transcription.flatMap((segment) => segment.tokens),
-      );
+      const words = options?.wordTimestamps
+        ? tokensToWords(transcription.flatMap((segment) => segment.tokens))
+        : undefined;
 
       return {
         transcript: {

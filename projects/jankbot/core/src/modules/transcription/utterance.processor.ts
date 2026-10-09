@@ -77,7 +77,11 @@ export class UtteranceProcessor extends WorkerHost {
         idempotencyKey: utteranceId,
         request: {
           source: { type: 'inline', data: wavData.toString('base64') },
-          options: { prompt: vocabularyPrompt(phrases) },
+          options: {
+            prompt: vocabularyPrompt(phrases),
+            // Where each phrase was said, so the stitcher can cut it out of the audio.
+            wordTimestamps: true,
+          },
         },
         parent: {
           queueConfig: JANKBOT_QUEUE_CONFIG,

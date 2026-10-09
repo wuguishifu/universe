@@ -47,6 +47,7 @@ export class WhisperService implements OnModuleDestroy {
     prompt,
     timeoutMs,
     beamSize = 1,
+    wordTimestamps = false,
   }: {
     model: string;
     modelPath: string;
@@ -55,9 +56,11 @@ export class WhisperService implements OnModuleDestroy {
     prompt?: string;
     timeoutMs: number;
     beamSize?: number;
+    /** Per-token timings in the JSON (`tokens`), which takes extra decoding work. */
+    wordTimestamps?: boolean;
   }): Promise<{ result: WhisperJson; whisperProcessingTimeMs: number }> {
     const startTime = Date.now();
-    const dtwPreset = dtwPresetFor(model);
+    const dtwPreset = wordTimestamps ? dtwPresetFor(model) : undefined;
 
     // prettier-ignore
     await runProcess(
@@ -68,7 +71,7 @@ export class WhisperService implements OnModuleDestroy {
         '-l', 'en',
         '--beam-size', String(beamSize), '--best-of', String(beamSize),
         // Full JSON includes each token's timing, which the transcript's words come from.
-        '--output-json-full', '-of', outputBase,
+        wordTimestamps ? '--output-json-full' : '--output-json', '-of', outputBase,
         // DTW times tokens far more accurately than whisper's default guess, which is often a word
         // off. whisper.cpp silently skips it with flash attention on, so that's turned off (~15% slower).
         ...(dtwPreset ? ['--dtw', dtwPreset, '--no-flash-attn'] : []),
