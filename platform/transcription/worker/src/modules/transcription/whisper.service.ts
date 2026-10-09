@@ -13,6 +13,15 @@ const whisperJsonSchema = z.object({
     z.object({
       offsets: z.object({ from: z.number(), to: z.number() }),
       text: z.string(),
+      /** From --output-json-full. */
+      tokens: z
+        .array(
+          z.object({
+            text: z.string(),
+            offsets: z.object({ from: z.number(), to: z.number() }),
+          }),
+        )
+        .default([]),
     }),
   ),
 });
@@ -53,7 +62,8 @@ export class WhisperService implements OnModuleDestroy {
         '-f', wavPath,
         '-l', 'en',
         '--beam-size', String(beamSize), '--best-of', String(beamSize),
-        '--output-json', '-of', outputBase,
+        // Full JSON includes each token's timing, which the transcript's words come from.
+        '--output-json-full', '-of', outputBase,
         '--no-prints',
         ...(prompt ? ['--prompt', prompt] : []),
       ],

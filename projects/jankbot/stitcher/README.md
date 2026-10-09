@@ -17,7 +17,8 @@ stitcher: StitchSessionProcessor
   5. encodes with ffmpeg to Ogg Opus at compilations/<sessionId>/<phrase>.ogg in the same bucket
 ```
 
-- Clips are as precise as the transcript's segment timings, which are often a whole utterance.
+- Clips come from whisper's word timings, so they're just the phrase. Recordings from before the transcription worker
+  emitted words have segment timings instead, which are often the whole utterance.
 - Utterances missing from S3 (a failed upload in core, or expired by the bucket's lifecycle rule) are skipped. A
   retried job redoes the whole session and overwrites the same files.
 - Compilations only go to S3 for now; nothing posts them anywhere.

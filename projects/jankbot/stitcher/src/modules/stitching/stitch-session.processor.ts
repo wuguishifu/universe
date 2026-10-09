@@ -34,8 +34,11 @@ type Recording = typeof recordings.$inferSelect;
 
 /** How often to check again while a session's utterances are still being transcribed. */
 const BACKLOG_RECHECK_MS = 60_000;
-/** Whisper's segment timings are rough; this keeps the phrase's first and last words whole. */
-const CLIP_PADDING = { padBeforeMs: 150, padAfterMs: 250 };
+/**
+ * A little slack around whisper's word timings so the first and last words aren't cut short. Speech
+ * runs words together, so much more pulls in the start of the next word.
+ */
+const CLIP_PADDING = { padBeforeMs: 50, padAfterMs: 50 };
 const CLIP_FADE_MS = 10;
 const CLIP_GAP_MS = 300;
 const DOWNLOAD_CONCURRENCY = 4;

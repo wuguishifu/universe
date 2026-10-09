@@ -36,7 +36,13 @@ export type TranscriptSegment = z.infer<typeof transcriptSegmentSchema>;
 
 export const transcriptSchema = z.object({
   text: z.string(),
+  /** Usually a sentence or more each; whisper decides where they split. */
   segments: transcriptSegmentSchema.array(),
+  /**
+   * Each word with its timing, for finding where something was said. Missing from transcripts made
+   * before workers produced them.
+   */
+  words: transcriptSegmentSchema.array().optional(),
   language: z.string(),
   model: z.string(),
   audioDurationMs: z.number(),

@@ -12,6 +12,7 @@ import {
 import { FilesService } from './files.service';
 import { ModelsService } from './models.service';
 import { WhisperService } from './whisper.service';
+import { tokensToWords } from './words';
 
 const DEFAULT_TIMEOUT_MS = 3 * 60 * 1000;
 
@@ -70,6 +71,9 @@ export class TranscriptionProcessor extends WorkerHost {
         endMs: segment.offsets.to,
         text: segment.text.trim(),
       }));
+      const words = tokensToWords(
+        transcription.flatMap((segment) => segment.tokens),
+      );
 
       return {
         transcript: {
@@ -78,6 +82,7 @@ export class TranscriptionProcessor extends WorkerHost {
             .filter(Boolean)
             .join(' '),
           segments,
+          words,
           language: result.language,
           model,
           audioDurationMs: durationMs,
