@@ -12,6 +12,7 @@ import {
 import { FilesService } from './files.service';
 import { ModelsService } from './models.service';
 import { WhisperService } from './whisper.service';
+import { tokensToWords } from './words';
 
 const DEFAULT_TIMEOUT_MS = 3 * 60 * 1000;
 
@@ -56,11 +57,13 @@ export class TranscriptionProcessor extends WorkerHost {
         result: { transcription, result },
         whisperProcessingTimeMs,
       } = await this.whisperService.transcribe({
+        model,
         modelPath,
         wavPath,
         outputBase,
         prompt: options?.prompt,
         beamSize: options?.beamSize,
+        wordTimestamps: options?.wordTimestamps,
         // if we're transcribing at 3x real time that's a bit wack
         timeoutMs: Math.max(DEFAULT_TIMEOUT_MS, durationMs * 3),
       });
@@ -70,6 +73,9 @@ export class TranscriptionProcessor extends WorkerHost {
         endMs: segment.offsets.to,
         text: segment.text.trim(),
       }));
+      const words = options?.wordTimestamps
+        ? tokensToWords(transcription.flatMap((segment) => segment.tokens))
+        : undefined;
 
       return {
         transcript: {
@@ -78,6 +84,7 @@ export class TranscriptionProcessor extends WorkerHost {
             .filter(Boolean)
             .join(' '),
           segments,
+          words,
           language: result.language,
           model,
           audioDurationMs: durationMs,

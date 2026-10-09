@@ -1,21 +1,50 @@
-import { DynamicModule, Module } from '@nestjs/common';
+import {
+  DynamicModule,
+  InjectionToken,
+  Module,
+  ModuleMetadata,
+  OptionalFactoryDependency,
+} from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { z } from 'zod';
 
 import { UNIVERSE_DB } from '../../constants';
 import { getDbClient } from '../../utils';
+import { DB_CONFIG, type DbConfig } from './config';
 
 export type UniverseDb = PostgresJsDatabase;
 
-const environmentSchema = z.object({
-  UNIVERSE_DB_CONNECTION_STRING: z.string(),
-});
+export type UniverseDbModuleAsyncOptions = Pick<ModuleMetadata, 'imports'> & {
+  inject?: (InjectionToken | OptionalFactoryDependency)[];
+  useFactory: (...args: never[]) => DbConfig | Promise<DbConfig>;
+};
 
 @Module({})
 export class UniverseDbModule {
-  static register(): DynamicModule {
-    const parsed = environmentSchema.parse(process.env);
+  public static forRootAsync({
+    imports = [],
+    inject = [],
+    useFactory,
+  }: UniverseDbModuleAsyncOptions): DynamicModule {
+    return {
+      module: UniverseDbModule,
+      global: true,
+      imports,
+      providers: [
+        { provide: DB_CONFIG, inject, useFactory },
+        {
+          provide: UNIVERSE_DB,
+          inject: [DB_CONFIG],
+          useFactory: (config: DbConfig) =>
+            getDbClient({
+              connectionString: config.connectionString,
+            }),
+        },
+      ],
+      exports: [UNIVERSE_DB],
+    };
+  }
 
+  static forRoot(config: DbConfig): DynamicModule {
     return {
       global: true,
       module: UniverseDbModule,
@@ -24,7 +53,7 @@ export class UniverseDbModule {
           provide: UNIVERSE_DB,
           useFactory: () =>
             getDbClient({
-              connectionString: parsed.UNIVERSE_DB_CONNECTION_STRING,
+              connectionString: config.connectionString,
             }),
         },
       ],

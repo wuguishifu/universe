@@ -8,6 +8,7 @@ import {
 export type EnvironmentSchema = z.infer<typeof environmentSchema>;
 export const environmentSchema = baseEnvironmentSchema.extend({
   apiToken: z.string().min(1),
+  universeDbConnectionString: z.string().min(1),
 });
 
 export class EnvironmentService extends createEnvironmentService(

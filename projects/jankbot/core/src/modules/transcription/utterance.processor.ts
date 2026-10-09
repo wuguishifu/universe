@@ -1,7 +1,9 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
+import { S3Service } from '@libs/nest-common';
 import { TranscriptionClient } from '@platform/transcription-client-nest';
 import {
+  createUtteranceS3Key,
   JANKBOT_JOB_OPTIONS,
   JANKBOT_QUEUE_CONFIG,
   type JankbotQueueJob,
@@ -26,6 +28,7 @@ export class UtteranceProcessor extends WorkerHost {
     private readonly transcription: TranscriptionClient,
     private readonly trackedWords: TrackedWordsService,
     private readonly environmentService: EnvironmentService,
+    private readonly s3: S3Service,
   ) {
     super();
   }
@@ -36,8 +39,15 @@ export class UtteranceProcessor extends WorkerHost {
   }
 
   override async process(job: JankbotQueueJob<'utterances'>): Promise<void> {
-    const { utteranceId, guildId, channelId, userId, startedAt, opusPackets } =
-      job.data;
+    const {
+      utteranceId,
+      sessionId,
+      guildId,
+      channelId,
+      userId,
+      startedAt,
+      opusPackets,
+    } = job.data;
 
     const pcm = await decodeOpusPackets(
       opusPackets.map((packet) => Buffer.from(packet, 'base64')),
@@ -58,29 +68,49 @@ export class UtteranceProcessor extends WorkerHost {
     // Prompting whisper with the guild's phrases keeps it from mangling made-up words
     // (e.g. "cosclaire" → "cause clair"), which would otherwise never match.
     const phrases = await this.trackedWords.list(guildId);
-    await this.transcription.addFlow({
-      // A retry of this job (e.g. after a crash) won't queue a second transcription.
-      idempotencyKey: utteranceId,
-      request: {
-        source: { type: 'inline', data: pcmToWav(pcm).toString('base64') },
-        options: { prompt: vocabularyPrompt(phrases) },
-      },
-      parent: {
-        queueConfig: JANKBOT_QUEUE_CONFIG,
-        queueKey: 'transcribedUtterances',
-        data: {
-          utteranceId,
-          guildId,
-          channelId,
-          userId,
-          startedAt,
-          queuedAt: Date.now(),
-          loudMs: loud,
+
+    const wavData = pcmToWav(pcm);
+
+    const results = await Promise.allSettled([
+      this.transcription.addFlow({
+        // A retry of this job (e.g. after a crash) won't queue a second transcription.
+        idempotencyKey: utteranceId,
+        request: {
+          source: { type: 'inline', data: wavData.toString('base64') },
+          options: {
+            prompt: vocabularyPrompt(phrases),
+            // Where each phrase was said, so the stitcher can cut it out of the audio.
+            wordTimestamps: true,
+          },
         },
-        opts: JANKBOT_JOB_OPTIONS.transcribedUtterances,
-      },
-      // Still run the parent so failed transcriptions are tracked.
-      jobOptions: { onFailure: 'run-parent' },
-    });
+        parent: {
+          queueConfig: JANKBOT_QUEUE_CONFIG,
+          queueKey: 'transcribedUtterances',
+          data: {
+            utteranceId,
+            sessionId,
+            guildId,
+            channelId,
+            userId,
+            startedAt,
+            queuedAt: Date.now(),
+            loudMs: loud,
+          },
+          opts: JANKBOT_JOB_OPTIONS.transcribedUtterances,
+        },
+        // Still run the parent so failed transcriptions are tracked.
+        jobOptions: { onFailure: 'run-parent' },
+      }),
+      this.s3.putObject({
+        bucket: this.environmentService.environment.recordingsS3Bucket,
+        key: createUtteranceS3Key(utteranceId),
+        data: wavData,
+        contentType: 'audio/wav',
+      }),
+    ]);
+
+    if (results[0].status === 'rejected') {
+      throw new Error(results[0].reason);
+    }
   }
 }

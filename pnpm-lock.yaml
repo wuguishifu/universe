@@ -631,6 +631,9 @@ importers:
       '@platform/convex-contracts':
         specifier: workspace:*
         version: link:../../../platform/convex/contracts
+      '@platform/postgres-db':
+        specifier: workspace:*
+        version: link:../../../platform/postgres/db
       '@platform/transcription-client-nest':
         specifier: workspace:*
         version: link:../../../platform/transcription/client-nest
@@ -658,6 +661,24 @@ importers:
       '@platform/analytics-client-nest':
         specifier: workspace:*
         version: link:../../../platform/analytics/client-nest
+      '@projects/jankbot-contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      tslib:
+        specifier: ^2.3.0
+        version: 2.8.1
+
+  projects/jankbot/stitcher:
+    dependencies:
+      '@libs/nest-common':
+        specifier: workspace:*
+        version: link:../../../libs/nest-common
+      '@libs/queue':
+        specifier: workspace:*
+        version: link:../../../libs/queue
+      '@platform/postgres-db':
+        specifier: workspace:*
+        version: link:../../../platform/postgres/db
       '@projects/jankbot-contracts':
         specifier: workspace:*
         version: link:../contracts

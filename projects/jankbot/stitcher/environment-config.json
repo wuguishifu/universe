@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../tools/environment/environment-config.schema.json",
+  "hasConvex": false,
+  "secretsPaths": [
+    "projects/jankbot/common",
+    "platform/s3",
+    "platform/postgres",
+    "platform/redis"
+  ]
+}

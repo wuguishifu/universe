@@ -24,6 +24,11 @@ export const transcriptionOptionsSchema = z.object({
   model: z.string().min(1).optional(),
   prompt: z.string().max(MAX_PROMPT_LENGTH).optional(),
   beamSize: z.number().max(5).min(0).optional(),
+  /**
+   * Also return each word's timing (`transcript.words`), e.g. to cut a phrase out of the audio.
+   * Costs about 15% more transcription time, so it's off unless asked for.
+   */
+  wordTimestamps: z.boolean().optional(),
 });
 export type TranscriptionOptions = z.infer<typeof transcriptionOptionsSchema>;
 
@@ -36,7 +41,10 @@ export type TranscriptSegment = z.infer<typeof transcriptSegmentSchema>;
 
 export const transcriptSchema = z.object({
   text: z.string(),
+  /** Usually a sentence or more each; whisper decides where they split. */
   segments: transcriptSegmentSchema.array(),
+  /** Each word with its timing. Only there when the request set `wordTimestamps`. */
+  words: transcriptSegmentSchema.array().optional(),
   language: z.string(),
   model: z.string(),
   audioDurationMs: z.number(),
