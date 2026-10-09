@@ -83,12 +83,22 @@ export class TranscribedUtteranceProcessor extends WorkerHost {
     // Recordings first: they're idempotent, so a retry after a leaderboard failure can't duplicate
     // them, whereas a recordings failure after the leaderboard would count the utterance twice.
     const results = await Promise.allSettled([
-      this.recordings.recordMatches(job.data, timedMatches),
       this.leaderboard.recordMatches(guildId, userId, matches),
+      this.recordings.recordMatches(job.data, timedMatches),
     ]);
 
     if (results[1].status === 'rejected') {
-      throw new Error(results[1].reason);
+      this.trackingService.trackEvent({
+        name: 'transcribed_utterance_processor-record_match_db-failed',
+        extra: {
+          utteranceId,
+          reason: results[1].reason,
+        },
+      });
+    }
+
+    if (results[0].status === 'rejected') {
+      throw new Error(results[0].reason);
     }
 
     this.trackingService.trackEvent({
