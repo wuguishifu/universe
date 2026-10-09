@@ -6,7 +6,7 @@ import { VoiceSessionService } from './voice-session.service';
 import { VoiceSessionStore } from './voice-session.store';
 
 @Module({
-  imports: [registerQueue('utterances')],
+  imports: [registerQueue('utterances'), registerQueue('stitchSessions')],
   providers: [
     VoiceSessionStore,
     VoiceSessionService,

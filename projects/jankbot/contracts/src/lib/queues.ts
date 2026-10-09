@@ -86,6 +86,23 @@ export const JANKBOT_QUEUE_CONFIG = {
       options: z.record(z.string(), commandOptionValue),
     }),
   },
+  /**
+   * gateway → stitcher: a voice session that ended, whose recordings of tracked phrases get
+   * compiled into one audio file per phrase. Added with the session ID as its job ID, so ending a
+   * session twice queues it once.
+   */
+  stitchSessions: {
+    queueName: 'stitch-sessions',
+    jobName: 'stitch-session',
+    jobSchema: z.object({
+      sessionId: z.uuid(),
+      guildId: z.string(),
+      /** The channel the session ended in. */
+      channelId: z.string(),
+      /** Epoch ms when the session ended. */
+      endedAt: z.number(),
+    }),
+  },
 } satisfies Record<string, QueueConfig>;
 
 export type JankbotQueueConfig = typeof JANKBOT_QUEUE_CONFIG;
@@ -121,6 +138,16 @@ export const JANKBOT_JOB_OPTIONS = {
     backoff: { type: 'exponential', delay: 5_000 },
     removeOnComplete: { age: 5 * 60, count: 1000 },
     removeOnFail: { age: 30 * 60, count: 1000 },
+  },
+  // The delay lets the session's last utterances reach the queues the stitcher checks for
+  // unfinished work. Retries cover S3 or Postgres being briefly unreachable; a retry redoes the
+  // whole session and overwrites the same files.
+  stitchSessions: {
+    delay: 30_000,
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 30_000 },
+    removeOnComplete: { age: 24 * 60 * 60, count: 1000 },
+    removeOnFail: { age: 7 * 24 * 60 * 60, count: 1000 },
   },
   // Someone is watching a "thinking..." message, so retry quickly and give up well inside the token's lifetime.
   interactions: {

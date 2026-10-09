@@ -22,6 +22,13 @@
       "when": 1791009453709,
       "tag": "0002_cynical_gauntlet",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791514723260,
+      "tag": "0003_supreme_harpoon",
+      "breakpoints": true
     }
   ]
 }
