@@ -1,5 +1,16 @@
 import { createHash } from 'crypto';
 
+/**
+ * The format of utterances/<utteranceId>.wav, which core writes: 16-bit mono PCM after a fixed
+ * header, so the audio from any time in an utterance is a byte range that can be read on its own.
+ */
+export const UTTERANCE_WAV = {
+  sampleRate: 16_000,
+  channels: 1,
+  bytesPerSample: 2,
+  headerBytes: 44,
+} as const;
+
 export function createUtteranceS3Key(utteranceId: string) {
   return `utterances/${utteranceId}.wav`;
 }

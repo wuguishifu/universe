@@ -4,9 +4,9 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
-import { readFile, writeFile } from 'fs/promises';
-import path from 'path';
+import { stat } from 'fs/promises';
 import { runProcess } from '@libs/nest-common';
+import { UTTERANCE_WAV } from '@projects/jankbot-contracts';
 import { EnvironmentService } from '../../environment/environment';
 import { SAMPLE_RATE } from './audio';
 
@@ -47,23 +47,31 @@ export class CompilationEncoderService
     this.abortController.abort();
   }
 
-  /** Encodes PCM from audio.ts as Ogg Opus, which Discord and browsers play inline. */
-  async encodeOggOpus(pcm: Buffer, workDir: string): Promise<Buffer> {
-    const inputPath = path.join(workDir, 'compilation.pcm');
-    const outputPath = path.join(workDir, 'compilation.ogg');
-    await writeFile(inputPath, pcm);
+  /**
+   * Encodes a file of raw PCM from audio.ts as Ogg Opus, which Discord and browsers play inline,
+   * next to it. Returns the new file's path. Both stay on disk, however long the compilation.
+   */
+  async encodeOggOpus(pcmPath: string): Promise<string> {
+    const outputPath = pcmPath.replace(/\.pcm$/, '') + '.ogg';
+    const { size } = await stat(pcmPath);
+    const durationMs =
+      (size / UTTERANCE_WAV.bytesPerSample / SAMPLE_RATE) * 1000;
 
     // prettier-ignore
     await runProcess(
       this.environmentService.environment.ffmpegPath,
       [
         '-hide_banner', '-loglevel', 'error',
-        '-f', 's16le', '-ar', String(SAMPLE_RATE), '-ac', '1', '-i', inputPath,
+        '-f', 's16le', '-ar', String(SAMPLE_RATE), '-ac', '1', '-i', pcmPath,
         '-c:a', 'libopus', '-b:a', '32k',
         '-y', outputPath,
       ],
-      { timeoutMs: ENCODE_TIMEOUT_MS, signal: this.abortController.signal },
+      {
+        // libopus runs far faster than real time; this only catches a stuck ffmpeg.
+        timeoutMs: Math.max(ENCODE_TIMEOUT_MS, durationMs / 4),
+        signal: this.abortController.signal,
+      },
     );
-    return readFile(outputPath);
+    return outputPath;
   }
 }

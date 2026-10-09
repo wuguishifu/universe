@@ -2,7 +2,8 @@ import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Inject, Logger } from '@nestjs/common';
 import { DelayedError, UnrecoverableError } from 'bullmq';
 import { asc, eq } from 'drizzle-orm';
-import { mkdtemp, readFile, rm } from 'fs/promises';
+import { createReadStream } from 'fs';
+import { mkdtemp, open, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import path from 'path';
 import {
@@ -17,14 +18,16 @@ import {
   createUtteranceS3Key,
   JANKBOT_QUEUE_CONFIG,
   type JankbotQueueJob,
+  phraseSlug,
 } from '@projects/jankbot-contracts';
 import { EnvironmentService } from '../../environment/environment';
 import {
-  joinWithGaps,
+  type ClipRange,
   normalizeLoudness,
   prepareClips,
-  readWavPcm,
+  silence,
   slicePcm,
+  utteranceByteRange,
 } from './audio';
 import { CompilationEncoderService } from './compilation-encoder.service';
 import { SessionBacklogService } from './session-backlog.service';
@@ -43,10 +46,21 @@ const CLIP_SNAP = { searchBeforeMs: 300, searchAfterMs: 150 };
 /** Softens cuts that have to land mid-sound, where there was no pause to cut at. */
 const CLIP_FADE_MS = 25;
 const CLIP_GAP_MS = 300;
-const DOWNLOAD_CONCURRENCY = 4;
+/**
+ * How much of the utterance to read around a recording's clips: enough for CLIP_SNAP's search and
+ * for moving a late timing back, plus context to judge how loud the speaker is. A multiple of 20ms.
+ */
+const READ_BEFORE_MS = 1000;
+const READ_AFTER_MS = 500;
+/** Recordings read ahead of the one being written, to hide S3 latency. */
+const READ_AHEAD = 4;
 
-/** Compiles a finished session's recordings into one Ogg Opus file per phrase, in S3. */
-// One at a time: a session can mean hundreds of downloads, and nothing is waiting on the result.
+/**
+ * Compiles a finished session's recordings into one Ogg Opus file per phrase, in S3. Sessions can
+ * last many hours, so it never holds more than READ_AHEAD recordings' audio: each is read from S3
+ * as just the bytes around its clips, and the compilation is built up on disk.
+ */
+// One at a time: a long session means thousands of reads, and nothing is waiting on the result.
 @Processor(JANKBOT_QUEUE_CONFIG.stitchSessions.queueName, { concurrency: 1 })
 export class StitchSessionProcessor extends WorkerHost {
   private readonly logger = new Logger(StitchSessionProcessor.name);
@@ -108,48 +122,29 @@ export class StitchSessionProcessor extends WorkerHost {
 
     const workDir = await mkdtemp(path.join(tmpdir(), 'jankbot-stitcher-'));
     try {
-      const audio = await this.downloadUtterances(
-        rows.map(({ utteranceId }) => utteranceId),
-        workDir,
-      );
-
       for (const [phrase, phraseRows] of groupByPhrase(rows)) {
-        const clips = phraseRows.flatMap((row) => {
-          const pcm = audio.get(row.utteranceId);
-          if (!pcm) return [];
-          const ranges = prepareClips(
-            row.clips.map(({ clipStartMs, clipEndMs }) => ({
-              startMs: clipStartMs,
-              endMs: clipEndMs,
-            })),
-            pcm,
-            CLIP_SNAP,
-          );
-          return ranges.map((range) =>
-            normalizeLoudness(slicePcm(pcm, range, CLIP_FADE_MS)),
-          );
-        });
-        if (clips.length === 0) {
+        const pcmPath = path.join(workDir, `${phraseSlug(phrase)}.pcm`);
+        const clipCount = await this.writeCompilation(phraseRows, pcmPath);
+        if (clipCount === 0) {
           this.logger.warn(
             `[${guildId}] Session ${sessionId}: no audio left for "${phrase}"`,
           );
           continue;
         }
 
-        const ogg = await this.encoder.encodeOggOpus(
-          joinWithGaps(clips, CLIP_GAP_MS),
-          workDir,
-        );
+        const oggPath = await this.encoder.encodeOggOpus(pcmPath);
         const key = createCompilationS3Key(sessionId, phrase);
         await this.s3.putObject({
           bucket: recordingsS3Bucket,
           key,
-          data: ogg,
+          data: createReadStream(oggPath),
           contentType: 'audio/ogg',
         });
         this.logger.log(
-          `[${guildId}] Session ${sessionId}: "${phrase}" x${clips.length} → s3://${recordingsS3Bucket}/${key}`,
+          `[${guildId}] Session ${sessionId}: "${phrase}" x${clipCount} → s3://${recordingsS3Bucket}/${key}`,
         );
+        await rm(pcmPath, { force: true });
+        await rm(oggPath, { force: true });
       }
     } finally {
       await rm(workDir, { recursive: true, force: true });
@@ -157,48 +152,98 @@ export class StitchSessionProcessor extends WorkerHost {
   }
 
   /**
-   * Each utterance's PCM, downloaded once even when it has several phrases. Utterances whose
-   * upload failed in core (or that the bucket's lifecycle rule already expired) are left out.
+   * Writes the rows' clips to `pcmPath`, in order and with gaps between them, and returns how many
+   * there were.
    */
-  private async downloadUtterances(
-    utteranceIds: string[],
-    workDir: string,
-  ): Promise<Map<string, Buffer>> {
-    const { recordingsS3Bucket } = this.environmentService.environment;
-    const unique = [...new Set(utteranceIds)];
-    const audio = new Map<string, Buffer>();
-
-    for (let i = 0; i < unique.length; i += DOWNLOAD_CONCURRENCY) {
-      await Promise.all(
-        unique.slice(i, i + DOWNLOAD_CONCURRENCY).map(async (utteranceId) => {
-          const filePath = path.join(workDir, `${utteranceId}.wav`);
-          try {
-            await this.s3.downloadToFile(
-              recordingsS3Bucket,
-              createUtteranceS3Key(utteranceId),
-              filePath,
-            );
-          } catch (error) {
-            if (!(error instanceof S3ObjectNotFoundError)) throw error;
-            this.logger.warn(
-              `Utterance ${utteranceId} isn't in S3; skipping it`,
-            );
-            return;
-          }
-          try {
-            audio.set(utteranceId, readWavPcm(await readFile(filePath)));
-          } catch (error) {
-            // A retry would read the same file, so one bad upload shouldn't fail the session.
-            this.logger.warn(
-              `Utterance ${utteranceId} isn't usable audio; skipping it: ${error instanceof Error ? error.message : error}`,
-            );
-          } finally {
-            await rm(filePath, { force: true });
-          }
-        }),
-      );
+  private async writeCompilation(
+    rows: Recording[],
+    pcmPath: string,
+  ): Promise<number> {
+    const file = await open(pcmPath, 'w');
+    const gap = silence(CLIP_GAP_MS);
+    let count = 0;
+    try {
+      for await (const clips of mapInOrder(rows, READ_AHEAD, (row) =>
+        this.readClips(row),
+      )) {
+        for (const clip of clips) {
+          if (count > 0) await file.write(gap);
+          await file.write(clip);
+          count++;
+        }
+      }
+    } finally {
+      await file.close();
     }
-    return audio;
+    return count;
+  }
+
+  /**
+   * A recording's clips, cut and leveled, from a ranged read of its utterance. None when the
+   * utterance's upload failed in core, or the bucket's lifecycle rule already expired it.
+   */
+  private async readClips(row: Recording): Promise<Buffer[]> {
+    const clips: ClipRange[] = row.clips.map(({ clipStartMs, clipEndMs }) => ({
+      startMs: clipStartMs,
+      endMs: clipEndMs,
+    }));
+    const offsetMs = Math.max(
+      0,
+      Math.floor(
+        (Math.min(...clips.map(({ startMs }) => startMs)) - READ_BEFORE_MS) /
+          20,
+      ) * 20,
+    );
+    const endMs = Math.max(...clips.map(({ endMs }) => endMs)) + READ_AFTER_MS;
+
+    let pcm: Buffer;
+    try {
+      pcm = await this.s3.getObjectRange({
+        bucket: this.environmentService.environment.recordingsS3Bucket,
+        key: createUtteranceS3Key(row.utteranceId),
+        ...utteranceByteRange(offsetMs, endMs),
+      });
+    } catch (error) {
+      if (!(error instanceof S3ObjectNotFoundError)) throw error;
+      this.logger.warn(`Utterance ${row.utteranceId} isn't in S3; skipping it`);
+      return [];
+    }
+
+    // Times relative to the start of what was read.
+    const relative = clips.map(({ startMs, endMs }) => ({
+      startMs: startMs - offsetMs,
+      endMs: endMs - offsetMs,
+    }));
+    return prepareClips(relative, pcm, CLIP_SNAP).map((range) =>
+      normalizeLoudness(slicePcm(pcm, range, CLIP_FADE_MS)),
+    );
+  }
+}
+
+/**
+ * Maps the items in order, running up to `concurrency` calls at once: the results come out in the
+ * items' order while later calls are already under way.
+ */
+async function* mapInOrder<T, R>(
+  items: readonly T[],
+  concurrency: number,
+  fn: (item: T) => Promise<R>,
+): AsyncGenerator<R> {
+  // Settled up front, so a call that fails while an earlier one is awaited isn't an unhandled
+  // rejection; its error is thrown when its turn comes.
+  const start = (item: T) =>
+    fn(item).then(
+      (value) => ({ ok: true as const, value }),
+      (error: unknown) => ({ ok: false as const, error }),
+    );
+  const pending = items.slice(0, concurrency).map(start);
+  for (let next = pending.length; pending.length > 0; next++) {
+    const result = await pending.shift();
+    const item = items[next];
+    if (item !== undefined) pending.push(start(item));
+    if (!result) continue;
+    if (!result.ok) throw result.error;
+    yield result.value;
   }
 }
 

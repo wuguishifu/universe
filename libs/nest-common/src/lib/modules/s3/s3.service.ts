@@ -5,6 +5,7 @@ import {
   PutObjectCommand,
   PutObjectCommandOutput,
   S3Client,
+  S3ServiceException,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Inject, Injectable } from '@nestjs/common';
@@ -53,6 +54,46 @@ export class S3Service {
     } catch (error) {
       if (error instanceof NoSuchKey) {
         throw new S3ObjectNotFoundError(`s3://${bucket}/${key} does not exist`);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Bytes `start` to `end` (inclusive, like an HTTP Range) of an object, without downloading the
+   * rest. Shorter if the object ends first, and empty if it ends before `start`.
+   */
+  public async getObjectRange({
+    bucket,
+    key,
+    start,
+    end,
+  }: {
+    bucket: string;
+    key: string;
+    start: number;
+    end: number;
+  }): Promise<Buffer> {
+    try {
+      const { Body } = await this.s3Client.send(
+        new GetObjectCommand({
+          Bucket: bucket,
+          Key: key,
+          Range: `bytes=${start}-${end}`,
+        }),
+      );
+      if (!Body) return Buffer.alloc(0);
+      return Buffer.from(await Body.transformToByteArray());
+    } catch (error) {
+      if (error instanceof NoSuchKey) {
+        throw new S3ObjectNotFoundError(`s3://${bucket}/${key} does not exist`);
+      }
+      // 416: the range starts past the end of the object.
+      if (
+        error instanceof S3ServiceException &&
+        error.$metadata.httpStatusCode === 416
+      ) {
+        return Buffer.alloc(0);
       }
       throw error;
     }

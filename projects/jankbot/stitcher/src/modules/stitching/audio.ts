@@ -1,8 +1,8 @@
-/** The format core uploads utterances in (its pcmToWav): 16kHz mono 16-bit PCM. */
-export const SAMPLE_RATE = 16_000;
-const CHANNELS = 1;
-const BITS_PER_SAMPLE = 16;
-const BYTES_PER_SAMPLE = BITS_PER_SAMPLE / 8;
+import { UTTERANCE_WAV } from '@projects/jankbot-contracts';
+
+/** Everything here works on PCM in the format core uploads utterances in (mono). */
+export const SAMPLE_RATE = UTTERANCE_WAV.sampleRate;
+const BYTES_PER_SAMPLE = UTTERANCE_WAV.bytesPerSample;
 
 /** A span of an utterance's audio, in ms from its start. */
 export interface ClipRange {
@@ -11,54 +11,18 @@ export interface ClipRange {
 }
 
 /**
- * The PCM in a WAV that core uploaded. Walks the chunks rather than assuming a 44-byte header, and
- * throws on any other format, since slicing by sample offsets depends on it.
+ * Which bytes of an utterance's WAV hold its audio from `startMs` to `endMs`, for a ranged read
+ * (`end` is inclusive). `startMs` should be a multiple of 20ms, so loudness frames line up with
+ * the whole utterance's.
  */
-export function readWavPcm(wav: Buffer): Buffer {
-  if (
-    wav.length < 12 ||
-    wav.toString('ascii', 0, 4) !== 'RIFF' ||
-    wav.toString('ascii', 8, 12) !== 'WAVE'
-  ) {
-    throw new Error('Not a WAV file');
-  }
-
-  let formatChecked = false;
-  for (let offset = 12; offset + 8 <= wav.length;) {
-    const id = wav.toString('ascii', offset, offset + 4);
-    const size = wav.readUInt32LE(offset + 4);
-    const body = offset + 8;
-
-    if (id === 'fmt ') {
-      const format = wav.readUInt16LE(body);
-      const channels = wav.readUInt16LE(body + 2);
-      const sampleRate = wav.readUInt32LE(body + 4);
-      const bitsPerSample = wav.readUInt16LE(body + 14);
-      if (
-        format !== 1 ||
-        channels !== CHANNELS ||
-        sampleRate !== SAMPLE_RATE ||
-        bitsPerSample !== BITS_PER_SAMPLE
-      ) {
-        throw new Error(
-          `Expected ${SAMPLE_RATE}Hz mono 16-bit PCM, got format ${format}, ${channels}ch, ${sampleRate}Hz, ${bitsPerSample}-bit`,
-        );
-      }
-      formatChecked = true;
-    } else if (id === 'data') {
-      if (!formatChecked) throw new Error('WAV has no fmt chunk before data');
-      // Cap at what's there, in case the header's size is a placeholder.
-      return wav.subarray(body, Math.min(body + size, wav.length));
-    }
-
-    // Chunks are padded to an even size.
-    offset = body + size + (size % 2);
-  }
-  throw new Error('WAV has no data chunk');
-}
-
-export function pcmDurationMs(pcm: Buffer): number {
-  return (pcm.length / BYTES_PER_SAMPLE / SAMPLE_RATE) * 1000;
+export function utteranceByteRange(
+  startMs: number,
+  endMs: number,
+): { start: number; end: number } {
+  return {
+    start: UTTERANCE_WAV.headerBytes + msToByteOffset(startMs),
+    end: UTTERANCE_WAV.headerBytes + msToByteOffset(endMs) - 1,
+  };
 }
 
 /** Loudness is measured over 20ms frames, like core's loudMs. */
@@ -293,14 +257,6 @@ export function slicePcm(
 
 export function silence(ms: number): Buffer {
   return Buffer.alloc(msToByteOffset(ms));
-}
-
-/** Joins the clips with `gapMs` of silence between them. */
-export function joinWithGaps(clips: readonly Buffer[], gapMs: number): Buffer {
-  const gap = silence(gapMs);
-  return Buffer.concat(
-    clips.flatMap((clip, i) => (i === 0 ? [clip] : [gap, clip])),
-  );
 }
 
 /** Rounded down to a whole sample, so slices never split one. */
