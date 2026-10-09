@@ -1,7 +1,7 @@
 # The worker runs natively on the Mac mini (whisper on Metal), not from this image: Deploy Server
 # App builds it so it can copy /app out as the release bundle the mini installs. So there's no
 # ffmpeg or whisper-cli here; the mini installs those with Homebrew.
-FROM node:24-slim AS build_image
+FROM mirror.gcr.io/library/node:24-slim AS build_image
 
 LABEL maintainer="Bo Bramer <bramer.bo@gmail.com>"
 LABEL org.opencontainers.image.source=https://github.com/wuguishifu/universe
@@ -25,7 +25,7 @@ RUN NX_DAEMON=false ENVIRONMENT=$BUILD_ENV pnpm nx build transcription-worker
 
 RUN node tools/scripts/prune-deploy-manifest.mjs dist/platform/transcription/worker/package.json
 
-FROM node:24-slim
+FROM mirror.gcr.io/library/node:24-slim
 
 # CI doesn't pass --build-arg BUILD_ENV; without a default ENVIRONMENT would be "" and fail validation.
 ARG BUILD_ENV=production
