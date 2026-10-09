@@ -631,6 +631,9 @@ importers:
       '@platform/convex-contracts':
         specifier: workspace:*
         version: link:../../../platform/convex/contracts
+      '@platform/postgres-db':
+        specifier: workspace:*
+        version: link:../../../platform/postgres/db
       '@platform/transcription-client-nest':
         specifier: workspace:*
         version: link:../../../platform/transcription/client-nest

@@ -1,6 +1,6 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { findPhraseMatches } from '@libs/phrase-matching';
+import { findTimedPhraseMatches } from '@libs/phrase-matching';
 import { TrackingService } from '@platform/analytics-client-nest';
 import {
   TranscriptionClient,
@@ -13,6 +13,7 @@ import {
   type JankbotQueueJob,
 } from '@projects/jankbot-contracts';
 import { LeaderboardService } from '../leaderboard/leaderboard.service';
+import { RecordingsService } from '../recordings/recordings.service';
 import { TrackedWordsService } from '../tracked-words/tracked-words.service';
 import { logJobFailure } from './log-job-failure';
 
@@ -27,6 +28,7 @@ export class TranscribedUtteranceProcessor extends WorkerHost {
     private readonly transcription: TranscriptionClient,
     private readonly trackedWords: TrackedWordsService,
     private readonly leaderboard: LeaderboardService,
+    private readonly recordings: RecordingsService,
     private readonly trackingService: TrackingService,
   ) {
     super();
@@ -64,9 +66,19 @@ export class TranscribedUtteranceProcessor extends WorkerHost {
     if (!transcript) return;
 
     const phrases = await this.trackedWords.list(guildId);
-    const matches = findPhraseMatches(transcript, phrases);
-    if (matches.length === 0) return;
+    const timedMatches = findTimedPhraseMatches(
+      result.transcript.segments,
+      phrases,
+    );
+    if (timedMatches.length === 0) return;
+    const matches = timedMatches.map(({ phrase, count }) => ({
+      phrase,
+      count,
+    }));
 
+    // Recordings first: they're idempotent, so a retry after a leaderboard failure can't duplicate
+    // them, whereas a recordings failure after the leaderboard would count the utterance twice.
+    await this.recordings.recordMatches(job.data, timedMatches);
     await this.leaderboard.recordMatches(guildId, userId, matches);
     this.trackingService.trackEvent({
       name: 'utterance_processor-phrase-matched',
