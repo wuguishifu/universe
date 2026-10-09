@@ -11,9 +11,10 @@ on:
         type: choice
         options:
           - platform/analytics/service
+          - platform/postgres/utils
           - projects/jankbot/core
           - projects/jankbot/gateway
-          - platform/postgres/utils
+          - projects/internet-monitor/service
       version-bump-type:
         description: 'Version bump type'
         required: true

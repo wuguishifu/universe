@@ -1,5 +1,11 @@
 {
   "$schema": "../../../tools/environment/environment-config.schema.json",
   "hasConvex": true,
-  "secretsPaths": ["projects/jankbot/core"]
+  "secretsPaths": [
+    "projects/jankbot/core",
+    "projects/jankbot/common",
+    "platform/s3",
+    "platform/analytics/client",
+    "platform/postgres"
+  ]
 }

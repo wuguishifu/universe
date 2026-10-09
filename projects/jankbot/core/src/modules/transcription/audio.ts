@@ -1,12 +1,17 @@
 import { opus } from 'prism-media';
 import { Readable } from 'stream';
 import { pipeline } from 'stream/promises';
-import { OPUS_FRAME_MS } from '@projects/jankbot-contracts';
+import { OPUS_FRAME_MS, UTTERANCE_WAV } from '@projects/jankbot-contracts';
 
-/** whisper's input format. Opus can decode straight to it, so no resampling is needed. */
-const SAMPLE_RATE = 16_000;
-const CHANNELS = 1;
-const BYTES_PER_SAMPLE = 2;
+/**
+ * whisper's input format. Opus can decode straight to it, so no resampling is needed. Also what's
+ * uploaded for the stitcher, which reads parts of the WAV directly.
+ */
+const {
+  sampleRate: SAMPLE_RATE,
+  channels: CHANNELS,
+  bytesPerSample: BYTES_PER_SAMPLE,
+} = UTTERANCE_WAV;
 
 /** Samples per OPUS_FRAME_MS frame, the window loudness is measured over. */
 const SAMPLES_PER_FRAME = (SAMPLE_RATE * OPUS_FRAME_MS) / 1000;
@@ -64,7 +69,7 @@ export function loudMs(pcm: Buffer, thresholdDbfs: number): number {
 }
 
 function wavHeader(dataBytes: number): Buffer {
-  const header = Buffer.alloc(44);
+  const header = Buffer.alloc(UTTERANCE_WAV.headerBytes);
   const byteRate = SAMPLE_RATE * CHANNELS * BYTES_PER_SAMPLE;
   header.write('RIFF', 0);
   header.writeUInt32LE(36 + dataBytes, 4);

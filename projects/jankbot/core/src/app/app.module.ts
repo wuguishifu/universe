@@ -1,5 +1,9 @@
 import { Module } from '@nestjs/common';
-import { RedisCacheModule } from '@libs/nest-common';
+import {
+  RedisCacheModule,
+  S3Module,
+  UniverseDbModule,
+} from '@libs/nest-common';
 import { TrackingModule } from '@platform/analytics-client-nest';
 import { TranscriptionClientModule } from '@platform/transcription-client-nest';
 import { JANKBOT_QUEUE_CONFIG } from '@projects/jankbot-contracts';
@@ -35,6 +39,16 @@ import { AppController } from './app.controller';
           environmentService.environment.analyticsServiceBaseUrl,
         analyticsServiceApiKey:
           environmentService.environment.analyticsServiceApiToken,
+      }),
+    }),
+    S3Module.forRootAsync({
+      inject: [EnvironmentService],
+      useFactory: (env: EnvironmentService) => env.environment.s3,
+    }),
+    UniverseDbModule.forRootAsync({
+      inject: [EnvironmentService],
+      useFactory: (env: EnvironmentService) => ({
+        connectionString: env.environment.universeDbConnectionString,
       }),
     }),
     // Reuses QueueModule's Redis connection: the transcription flows' queues must share a Redis.

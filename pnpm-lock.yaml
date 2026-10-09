@@ -196,9 +196,6 @@ importers:
       '@nestjs/core':
         specifier: ^11.1.19
         version: 11.2.7(@nestjs/common@11.2.7(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/platform-express@11.2.7)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/platform-express':
-        specifier: ^11.0.0
-        version: 11.2.7(@nestjs/common@11.2.7(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@11.2.7)(supports-color@8.1.1)
       '@nestjs/platform-fastify':
         specifier: ^11.1.19
         version: 11.2.7(@nestjs/common@11.2.7(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@11.2.7)
@@ -613,6 +610,21 @@ importers:
         specifier: workspace:*
         version: link:../contracts
 
+  projects/internet-monitor/service:
+    dependencies:
+      '@libs/nest-common':
+        specifier: workspace:*
+        version: link:../../../libs/nest-common
+      '@libs/redis-cache':
+        specifier: workspace:*
+        version: link:../../../libs/redis-cache
+      '@platform/analytics-client-nest':
+        specifier: workspace:*
+        version: link:../../../platform/analytics/client-nest
+      tslib:
+        specifier: ^2.3.0
+        version: 2.8.1
+
   projects/jankbot/contracts:
     dependencies:
       '@libs/queue':
@@ -642,6 +654,9 @@ importers:
       '@platform/convex-contracts':
         specifier: workspace:*
         version: link:../../../platform/convex/contracts
+      '@platform/postgres-db':
+        specifier: workspace:*
+        version: link:../../../platform/postgres/db
       '@platform/transcription-client-nest':
         specifier: workspace:*
         version: link:../../../platform/transcription/client-nest
@@ -669,6 +684,24 @@ importers:
       '@platform/analytics-client-nest':
         specifier: workspace:*
         version: link:../../../platform/analytics/client-nest
+      '@projects/jankbot-contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      tslib:
+        specifier: ^2.3.0
+        version: 2.8.1
+
+  projects/jankbot/stitcher:
+    dependencies:
+      '@libs/nest-common':
+        specifier: workspace:*
+        version: link:../../../libs/nest-common
+      '@libs/queue':
+        specifier: workspace:*
+        version: link:../../../libs/queue
+      '@platform/postgres-db':
+        specifier: workspace:*
+        version: link:../../../platform/postgres/db
       '@projects/jankbot-contracts':
         specifier: workspace:*
         version: link:../contracts
@@ -13272,6 +13305,7 @@ snapshots:
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@nestjs/platform-fastify@11.2.7(@nestjs/common@11.2.7(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@11.2.7)':
     dependencies:
@@ -16036,6 +16070,7 @@ snapshots:
     dependencies:
       mime-types: 3.0.2
       negotiator: 1.1.0
+    optional: true
 
   acorn-import-phases@1.0.4(acorn@8.18.0):
     dependencies:
@@ -16128,7 +16163,8 @@ snapshots:
 
   app-module-path@2.2.0: {}
 
-  append-field@1.0.0: {}
+  append-field@1.0.0:
+    optional: true
 
   arg@4.1.3: {}
 
@@ -16453,6 +16489,7 @@ snapshots:
       type-is: 2.1.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   bonjour-service@1.4.4:
     dependencies:
@@ -16531,6 +16568,7 @@ snapshots:
   busboy@1.6.0:
     dependencies:
       streamsearch: 1.1.0
+    optional: true
 
   bytes@3.1.2: {}
 
@@ -16723,11 +16761,13 @@ snapshots:
     dependencies:
       safe-buffer: 5.2.1
 
-  content-disposition@1.1.0: {}
+  content-disposition@1.1.0:
+    optional: true
 
   content-type@1.0.5: {}
 
-  content-type@2.1.0: {}
+  content-type@2.1.0:
+    optional: true
 
   convert-source-map@2.0.0: {}
 
@@ -16754,7 +16794,8 @@ snapshots:
 
   cookie-signature@1.0.7: {}
 
-  cookie-signature@1.2.2: {}
+  cookie-signature@1.2.2:
+    optional: true
 
   cookie@0.7.2: {}
 
@@ -17900,6 +17941,7 @@ snapshots:
       vary: 1.1.2
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   fast-decode-uri-component@1.0.1: {}
 
@@ -18052,6 +18094,7 @@ snapshots:
       statuses: 2.0.2
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   find-cache-dir@4.0.0:
     dependencies:
@@ -18142,7 +18185,8 @@ snapshots:
 
   fresh@0.5.2: {}
 
-  fresh@2.0.0: {}
+  fresh@2.0.0:
+    optional: true
 
   fs-constants@1.0.0: {}
 
@@ -18473,6 +18517,7 @@ snapshots:
   iconv-lite@0.7.3:
     dependencies:
       safer-buffer: 2.1.2
+    optional: true
 
   icss-utils@5.1.0(postcss@8.4.38):
     dependencies:
@@ -18679,7 +18724,8 @@ snapshots:
 
   is-plain-object@5.1.0: {}
 
-  is-promise@4.0.0: {}
+  is-promise@4.0.0:
+    optional: true
 
   is-reference@1.2.1:
     dependencies:
@@ -19461,7 +19507,8 @@ snapshots:
 
   media-typer@0.3.0: {}
 
-  media-typer@1.1.1: {}
+  media-typer@1.1.1:
+    optional: true
 
   memfs@3.5.3:
     dependencies:
@@ -19501,7 +19548,8 @@ snapshots:
 
   merge-descriptors@1.0.3: {}
 
-  merge-descriptors@2.0.0: {}
+  merge-descriptors@2.0.0:
+    optional: true
 
   merge-stream@2.0.0: {}
 
@@ -19631,6 +19679,7 @@ snapshots:
       append-field: 1.0.0
       busboy: 1.6.0
       type-is: 1.6.18
+    optional: true
 
   multicast-dns@7.2.5:
     dependencies:
@@ -19670,6 +19719,7 @@ snapshots:
   negotiator@1.1.0:
     dependencies:
       content-type: 2.1.0
+    optional: true
 
   neo-async@2.6.2: {}
 
@@ -20618,6 +20668,7 @@ snapshots:
       http-errors: 2.0.1
       iconv-lite: 0.7.3
       unpipe: 1.0.0
+    optional: true
 
   rc9@2.1.2:
     dependencies:
@@ -20897,6 +20948,7 @@ snapshots:
       path-to-regexp: 8.4.2
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   run-applescript@7.0.0: {}
 
@@ -21123,6 +21175,7 @@ snapshots:
       statuses: 2.0.2
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   serialize-javascript@7.1.2: {}
 
@@ -21155,6 +21208,7 @@ snapshots:
       send: 1.2.1(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   server-only@0.0.1: {}
 
@@ -21423,7 +21477,8 @@ snapshots:
     dependencies:
       any-promise: 1.3.0
 
-  streamsearch@1.1.0: {}
+  streamsearch@1.1.0:
+    optional: true
 
   string-hash@1.1.3: {}
 
@@ -21816,6 +21871,7 @@ snapshots:
       content-type: 2.1.0
       media-typer: 1.1.1
       mime-types: 3.0.2
+    optional: true
 
   typed-array-buffer@1.0.3:
     dependencies:

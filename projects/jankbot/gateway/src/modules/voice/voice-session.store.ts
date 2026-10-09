@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { RedisCacheService } from '@libs/nest-common';
 import { voiceBotId } from '@projects/jankbot-contracts';
 import { EnvironmentService } from '../../environment/environment';
-import { GATEWAY_REDIS } from '../../redis/redis-keys';
+import { GATEWAY_REDIS, type VoiceSession } from '../../redis/redis-keys';
 
 /**
  * Remembers which voice channels this gateway's bot was asked to join, so a restarted gateway can
@@ -20,23 +20,23 @@ export class VoiceSessionStore {
     this.botId = voiceBotId(environmentService.environment.name);
   }
 
-  async list(): Promise<{ guildId: string; channelId: string }[]> {
+  async list(): Promise<({ guildId: string } & VoiceSession)[]> {
     const sessions = await this.cache.hashGetAll({
       key: GATEWAY_REDIS.voiceSessions,
       id: this.botId,
     });
-    return [...sessions].map(([guildId, channelId]) => ({
+    return [...sessions].map(([guildId, session]) => ({
       guildId,
-      channelId,
+      ...session,
     }));
   }
 
-  async save(guildId: string, channelId: string): Promise<void> {
+  async save(guildId: string, session: VoiceSession): Promise<void> {
     await this.cache.hashSet({
       key: GATEWAY_REDIS.voiceSessions,
       id: this.botId,
       field: guildId,
-      value: channelId,
+      value: session,
     });
   }
 

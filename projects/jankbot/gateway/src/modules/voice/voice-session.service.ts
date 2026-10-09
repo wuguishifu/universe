@@ -24,6 +24,7 @@ import {
   OPUS_FRAME_MS,
 } from '@projects/jankbot-contracts';
 import { EnvironmentService } from '../../environment/environment';
+import { type VoiceSession } from '../../redis/redis-keys';
 import { VoiceSessionStore } from './voice-session.store';
 
 @Injectable()
@@ -33,6 +34,8 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
   private shuttingDown = false;
   /** Per guild: pending auto-leave while the bot is alone in its channel. */
   private readonly idleTimers = new Map<string, NodeJS.Timeout>();
+  /** Per guild: the session of the channel the bot is in. */
+  private readonly sessions = new Map<string, VoiceSession>();
 
   constructor(
     private readonly client: Client,
@@ -40,11 +43,19 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
     private readonly store: VoiceSessionStore,
     @Inject(JANKBOT_QUEUE_CONFIG.utterances.queueName)
     private readonly utterances: JankbotQueue<'utterances'>,
+    @Inject(JANKBOT_QUEUE_CONFIG.stitchSessions.queueName)
+    private readonly stitchSessions: JankbotQueue<'stitchSessions'>,
     private readonly trackingService: TrackingService,
   ) {}
 
-  /** Joins (or moves to) the channel and starts listening to everyone who speaks in it. */
-  async join(channel: VoiceBasedChannel): Promise<void> {
+  /**
+   * Joins (or moves to) the channel and starts listening to everyone who speaks in it. Joining
+   * starts a new session unless sessionId continues one (a rejoin or a restart).
+   */
+  async join(
+    channel: VoiceBasedChannel,
+    sessionId: string = randomUUID(),
+  ): Promise<void> {
     const existing = getVoiceConnection(channel.guild.id);
     if (existing?.joinConfig.channelId === channel.id) return;
     existing?.destroy();
@@ -75,9 +86,16 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
     this.handleDisconnects(connection);
     const health = this.watchReceive(connection);
     connection.receiver.speaking.on('start', (userId) =>
-      this.captureUtterance(connection, health, userId),
+      this.captureUtterance(connection, health, sessionId, userId),
     );
-    await this.remember(channel.guild.id, channel.id);
+    // Moving to another channel with /join starts a new session, which ends the one it left.
+    const previous = this.sessions.get(channel.guild.id);
+    if (previous && previous.sessionId !== sessionId) {
+      await this.endSession(channel.guild.id, previous);
+    }
+    const session = { channelId: channel.id, sessionId };
+    this.sessions.set(channel.guild.id, session);
+    await this.remember(channel.guild.id, session);
     this.updateIdleTimer(channel.guild);
     // The baseline for how often receive stalls happen.
     this.track('voice_session-joined', channel.guild.id, channel.id);
@@ -96,7 +114,7 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
   /** Rejoins the channels the bot was in before the gateway restarted, unless nobody is left in them. */
   @Once('clientReady')
   async restoreSessions() {
-    let sessions: { guildId: string; channelId: string }[];
+    let sessions: ({ guildId: string } & VoiceSession)[];
     try {
       sessions = await this.store.list();
     } catch (error) {
@@ -105,7 +123,7 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
     }
 
     await Promise.all(
-      sessions.map(async ({ guildId, channelId }) => {
+      sessions.map(async ({ guildId, channelId, sessionId }) => {
         const channel = await this.client.channels
           .fetch(channelId)
           .catch(() => null);
@@ -113,7 +131,7 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
           this.logger.warn(
             `[${guildId}] Can't rejoin ${channelId} anymore; forgetting it`,
           );
-          await this.forget(guildId);
+          await this.forget(guildId, { channelId, sessionId });
           return;
         }
         // Same outcome as sitting alone until the idle timeout: the session is over.
@@ -121,11 +139,11 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
           this.logger.log(
             `[${guildId}] Nobody is in #${channel.name} anymore; not rejoining`,
           );
-          await this.forget(guildId);
+          await this.forget(guildId, { channelId, sessionId });
           return;
         }
         try {
-          await this.join(channel);
+          await this.join(channel, sessionId);
         } catch (error) {
           // Kept, so the next restart tries again; /leave forgets it.
           this.logger.error(
@@ -162,8 +180,12 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
         }
         return;
       }
-      if (newState.channelId !== oldState.channelId) {
-        await this.remember(guild.id, newState.channelId);
+      // Being dragged to another channel doesn't end the session.
+      const session = this.sessions.get(guild.id);
+      if (newState.channelId !== oldState.channelId && session) {
+        const moved = { ...session, channelId: newState.channelId };
+        this.sessions.set(guild.id, moved);
+        await this.remember(guild.id, moved);
       }
     }
     this.updateIdleTimer(guild);
@@ -181,6 +203,7 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
   private captureUtterance(
     connection: VoiceConnection,
     health: ReceiveHealth,
+    sessionId: string,
     userId: string,
   ) {
     const { receiver } = connection;
@@ -212,6 +235,7 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
       if (packets.length >= minPackets) {
         void this.enqueue({
           utteranceId: randomUUID(),
+          sessionId,
           guildId,
           channelId,
           userId,
@@ -282,19 +306,46 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
   }
 
   // The voice connection itself doesn't depend on the store, so a Redis failure only costs the rejoin.
-  private async remember(guildId: string, channelId: string) {
+  private async remember(guildId: string, session: VoiceSession) {
     try {
-      await this.store.save(guildId, channelId);
+      await this.store.save(guildId, session);
     } catch (error) {
       this.logger.warn(`[${guildId}] Failed to remember voice session`, error);
     }
   }
 
-  private async forget(guildId: string) {
+  /**
+   * Ends the guild's session: the bot won't rejoin it, and its recordings get stitched. `session`
+   * is for sessions this gateway hasn't joined since starting (see restoreSessions).
+   */
+  private async forget(guildId: string, session = this.sessions.get(guildId)) {
+    this.sessions.delete(guildId);
     try {
       await this.store.remove(guildId);
     } catch (error) {
       this.logger.warn(`[${guildId}] Failed to forget voice session`, error);
+    }
+    if (session) await this.endSession(guildId, session);
+  }
+
+  private async endSession(
+    guildId: string,
+    { channelId, sessionId }: VoiceSession,
+  ) {
+    try {
+      await this.stitchSessions.add(
+        JANKBOT_QUEUE_CONFIG.stitchSessions.jobName,
+        { sessionId, guildId, channelId, endedAt: Date.now() },
+        { jobId: sessionId },
+      );
+      this.logger.log(
+        `[${guildId}] Session ${sessionId} ended; queued stitching`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `[${guildId}] Failed to queue stitching for session ${sessionId}`,
+        error,
+      );
     }
   }
 
@@ -394,13 +445,15 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
       .catch(() => null);
     if (!channel?.isVoiceBased()) return;
 
+    // Recovering from a stall continues the session rather than starting a new one.
+    const sessionId = this.sessions.get(guildId)?.sessionId;
     const startedAt = Date.now();
     connection.destroy();
     // Otherwise the leave's voice state update can arrive after the new connection exists, and
     // onVoiceStateUpdate would take it for being kicked from the channel.
     await this.waitForVoiceLeave(channel.guild);
     try {
-      await this.join(channel);
+      await this.join(channel, sessionId);
       this.track('voice_session-rejoined', guildId, channelId, {
         succeeded: true,
         durationMs: Date.now() - startedAt,

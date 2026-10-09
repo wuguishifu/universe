@@ -64,6 +64,12 @@
       "path": "./platform/transcription/worker"
     },
     {
+      "path": "./projects/internet-monitor/service"
+    },
+    {
+      "path": "./projects/jankbot/stitcher"
+    },
+    {
       "path": "./projects/clipper/contracts"
     },
     {

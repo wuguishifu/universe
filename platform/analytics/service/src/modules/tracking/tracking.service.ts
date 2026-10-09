@@ -8,18 +8,18 @@ import { publicSchema } from '@platform/postgres-db';
 export class TrackingService {
   private readonly logger = new Logger(TrackingService.name);
 
-  constructor(@Inject(UNIVERSE_DB) private readonly pluto: UniverseDb) {}
+  constructor(@Inject(UNIVERSE_DB) private readonly universeDb: UniverseDb) {}
 
   public async trackEvent(event: TrackingEvent) {
     this.logger.debug(`Tracking event received: ${event.name}`);
-    await this.pluto
+    await this.universeDb
       .insert(publicSchema.events)
       .values([this.prepareEvent(event)]);
   }
 
   public async trackEventBatch(events: TrackingEvent[]) {
     this.logger.debug(`Tracking batch of ${events.length} events`);
-    await this.pluto
+    await this.universeDb
       .insert(publicSchema.events)
       .values(events.map(this.prepareEvent));
   }

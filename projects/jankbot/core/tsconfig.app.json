@@ -35,6 +35,12 @@
       "path": "../../../libs/nest-common/tsconfig.lib.json"
     },
     {
+      "path": "../../../platform/postgres/db/tsconfig.lib.json"
+    },
+    {
+      "path": "../../../platform/transcription/client-nest/tsconfig.lib.json"
+    },
+    {
       "path": "../../../platform/analytics/client-nest/tsconfig.lib.json"
     },
     {
@@ -42,9 +48,6 @@
     },
     {
       "path": "../../../platform/transcription/contracts/tsconfig.lib.json"
-    },
-    {
-      "path": "../../../platform/transcription/client-nest/tsconfig.lib.json"
     },
     {
       "path": "../contracts/tsconfig.lib.json"

@@ -28,7 +28,7 @@ checked against that queue's `jobSchema` at compile time and again at runtime.
 await this.transcription.addFlow({
   request: {
     source: { type: 's3', bucket, key }, // or { type: 'inline', data: base64 } for short clips
-    options: { prompt },
+    options: { prompt }, // also model, beamSize, and wordTimestamps for transcript.words
   },
   parent: {
     queueConfig: MY_QUEUE_CONFIG,
