@@ -25,6 +25,8 @@ export const JANKBOT_QUEUE_CONFIG = {
     jobSchema: z.object({
       /** Also the transcription flow's idempotency key, so a retried job never transcribes twice. */
       utteranceId: z.uuid(),
+      /** The voice session it was captured in: from when the bot joins a channel until it leaves. */
+      sessionId: z.uuid(),
       guildId: z.string(),
       channelId: z.string(),
       userId: z.string(),
@@ -46,6 +48,7 @@ export const JANKBOT_QUEUE_CONFIG = {
     jobName: 'process-transcribed-utterance',
     jobSchema: z.object({
       utteranceId: z.uuid(),
+      sessionId: z.uuid(),
       guildId: z.string(),
       channelId: z.string(),
       userId: z.string(),

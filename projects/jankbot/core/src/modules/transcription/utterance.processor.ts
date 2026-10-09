@@ -39,8 +39,15 @@ export class UtteranceProcessor extends WorkerHost {
   }
 
   override async process(job: JankbotQueueJob<'utterances'>): Promise<void> {
-    const { utteranceId, guildId, channelId, userId, startedAt, opusPackets } =
-      job.data;
+    const {
+      utteranceId,
+      sessionId,
+      guildId,
+      channelId,
+      userId,
+      startedAt,
+      opusPackets,
+    } = job.data;
 
     const pcm = await decodeOpusPackets(
       opusPackets.map((packet) => Buffer.from(packet, 'base64')),
@@ -77,6 +84,7 @@ export class UtteranceProcessor extends WorkerHost {
           queueKey: 'transcribedUtterances',
           data: {
             utteranceId,
+            sessionId,
             guildId,
             channelId,
             userId,
