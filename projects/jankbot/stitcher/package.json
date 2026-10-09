@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@projects/jankbot-contracts": "workspace:*",
+    "@platform/analytics-client-nest": "workspace:*",
     "@platform/postgres-db": "workspace:*",
     "@libs/nest-common": "workspace:*",
     "@libs/queue": "workspace:*",

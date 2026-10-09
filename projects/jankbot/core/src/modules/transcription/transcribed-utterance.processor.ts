@@ -45,7 +45,7 @@ export class TranscribedUtteranceProcessor extends WorkerHost {
   override async process(
     job: JankbotQueueJob<'transcribedUtterances'>,
   ): Promise<void> {
-    const { utteranceId, guildId, userId, loudMs } = job.data;
+    const { utteranceId, sessionId, guildId, userId, loudMs } = job.data;
 
     let result: TranscriptionResult;
     try {
@@ -102,7 +102,7 @@ export class TranscribedUtteranceProcessor extends WorkerHost {
 
     this.trackingService.trackEvent({
       name: 'utterance_processor-phrase-matched',
-      properties: { userId, reconciliationId: utteranceId },
+      properties: { userId, sessionId, reconciliationId: utteranceId },
       extra: { transcript, matches },
     });
     this.logger.log(
@@ -114,7 +114,9 @@ export class TranscribedUtteranceProcessor extends WorkerHost {
   private trackTranscription(
     {
       utteranceId,
+      sessionId,
       userId,
+      startedAt,
       queuedAt,
       loudMs,
     }: JankbotJobData<'transcribedUtterances'>,
@@ -122,10 +124,12 @@ export class TranscribedUtteranceProcessor extends WorkerHost {
   ) {
     this.trackingService.trackEvent({
       name: 'external_transcription-finished',
-      properties: { userId, reconciliationId: utteranceId },
+      properties: { userId, sessionId, reconciliationId: utteranceId },
       extra: {
         // From queueing the transcription to its result reaching core.
         durationMs: Date.now() - queuedAt,
+        // From the user starting to speak to here: capture, both queues, and transcription.
+        sinceSpokenMs: Date.now() - startedAt,
         transcription: result?.transcript.text,
         transcriptDurationMs: loudMs,
         ...result?.analytics,

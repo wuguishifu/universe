@@ -3,7 +3,7 @@ import { Inject, Logger } from '@nestjs/common';
 import { DelayedError, UnrecoverableError } from 'bullmq';
 import { asc, eq } from 'drizzle-orm';
 import { createReadStream } from 'fs';
-import { mkdtemp, open, rm } from 'fs/promises';
+import { mkdtemp, open, rm, stat } from 'fs/promises';
 import { tmpdir } from 'os';
 import path from 'path';
 import {
@@ -12,6 +12,7 @@ import {
   UNIVERSE_DB,
   type UniverseDb,
 } from '@libs/nest-common';
+import { TrackingService } from '@platform/analytics-client-nest';
 import { jankbotSchema } from '@platform/postgres-db';
 import {
   createCompilationS3Key,
@@ -19,12 +20,14 @@ import {
   JANKBOT_QUEUE_CONFIG,
   type JankbotQueueJob,
   phraseSlug,
+  UTTERANCE_WAV,
 } from '@projects/jankbot-contracts';
 import { EnvironmentService } from '../../environment/environment';
 import {
   type ClipRange,
   normalizeLoudness,
   prepareClips,
+  SAMPLE_RATE,
   silence,
   slicePcm,
   utteranceByteRange,
@@ -71,6 +74,7 @@ export class StitchSessionProcessor extends WorkerHost {
     private readonly backlog: SessionBacklogService,
     private readonly encoder: CompilationEncoderService,
     private readonly environmentService: EnvironmentService,
+    private readonly trackingService: TrackingService,
   ) {
     super();
   }
@@ -88,6 +92,16 @@ export class StitchSessionProcessor extends WorkerHost {
     this.logger[final ? 'error' : 'warn'](
       `[${guildId}] Session ${sessionId}: attempt ${job.attemptsMade}/${attempts} failed: ${error.message}${final ? ' (giving up)' : ' (will retry)'}`,
     );
+    this.trackingService.trackEvent({
+      name: 'stitch_session-failed',
+      properties: { guildId, sessionId },
+      extra: {
+        attempt: job.attemptsMade,
+        final,
+        sinceEndedMs: Date.now() - job.data.endedAt,
+        error: error.message,
+      },
+    });
   }
 
   override async process(
@@ -95,19 +109,18 @@ export class StitchSessionProcessor extends WorkerHost {
     token?: string,
   ): Promise<void> {
     const { sessionId, guildId, endedAt } = job.data;
-    const { stitchMaxWaitMs, recordingsS3Bucket } =
-      this.environmentService.environment;
+    const { stitchMaxWaitMs } = this.environmentService.environment;
 
-    if (Date.now() - endedAt < stitchMaxWaitMs) {
-      const pending = await this.backlog.pendingUtterances(sessionId);
-      if (pending > 0) {
-        this.logger.log(
-          `[${guildId}] Session ${sessionId}: ${pending} utterances still on the way; checking again in ${BACKLOG_RECHECK_MS / 1000}s`,
-        );
-        // Doesn't use up an attempt.
-        await job.moveToDelayed(Date.now() + BACKLOG_RECHECK_MS, token);
-        throw new DelayedError();
-      }
+    const startedAt = Date.now();
+    // Also checked once the wait is over, to report the utterances it gave up on.
+    const pending = await this.backlog.pendingUtterances(sessionId);
+    if (pending > 0 && startedAt - endedAt < stitchMaxWaitMs) {
+      this.logger.log(
+        `[${guildId}] Session ${sessionId}: ${pending} utterances still on the way; checking again in ${BACKLOG_RECHECK_MS / 1000}s`,
+      );
+      // Doesn't use up an attempt.
+      await job.moveToDelayed(Date.now() + BACKLOG_RECHECK_MS, token);
+      throw new DelayedError();
     }
 
     const rows = await this.universeDb
@@ -117,14 +130,58 @@ export class StitchSessionProcessor extends WorkerHost {
       .orderBy(asc(recordings.phrase), asc(recordings.timestamp));
     if (rows.length === 0) {
       this.logger.log(`[${guildId}] Session ${sessionId}: nothing to stitch`);
-      return;
     }
+    const stats = await this.compileSession(guildId, sessionId, rows);
+
+    const finishedAt = Date.now();
+    this.trackingService.trackEvent({
+      name: 'stitch_session-finished',
+      properties: { guildId, sessionId },
+      extra: {
+        // This attempt's work, from picking up the job to the last upload.
+        durationMs: finishedAt - startedAt,
+        // From the session ending to its compilations being in S3: the gateway's delay, waiting on
+        // transcriptions, the queue, and retries.
+        sinceEndedMs: finishedAt - endedAt,
+        // Utterances still unprocessed when the wait ran out; their phrases are missing.
+        abandonedUtterances: pending,
+        attempt: job.attemptsMade + 1,
+        ...stats,
+      },
+    });
+  }
+
+  /** Compiles and uploads one file per phrase in `rows`. */
+  private async compileSession(
+    guildId: string,
+    sessionId: string,
+    rows: Recording[],
+  ): Promise<StitchStats> {
+    const { recordingsS3Bucket } = this.environmentService.environment;
+    const stats: StitchStats = {
+      recordings: rows.length,
+      phrases: 0,
+      clips: 0,
+      missingUtterances: 0,
+      compiledAudioMs: 0,
+      compiledBytes: 0,
+      compileMs: 0,
+      encodeMs: 0,
+      uploadMs: 0,
+    };
+    if (rows.length === 0) return stats;
 
     const workDir = await mkdtemp(path.join(tmpdir(), 'jankbot-stitcher-'));
     try {
       for (const [phrase, phraseRows] of groupByPhrase(rows)) {
         const pcmPath = path.join(workDir, `${phraseSlug(phrase)}.pcm`);
-        const clipCount = await this.writeCompilation(phraseRows, pcmPath);
+        const compileStartedAt = Date.now();
+        const { clipCount, missingUtterances } = await this.writeCompilation(
+          phraseRows,
+          pcmPath,
+        );
+        stats.compileMs += Date.now() - compileStartedAt;
+        stats.missingUtterances += missingUtterances;
         if (clipCount === 0) {
           this.logger.warn(
             `[${guildId}] Session ${sessionId}: no audio left for "${phrase}"`,
@@ -132,14 +189,28 @@ export class StitchSessionProcessor extends WorkerHost {
           continue;
         }
 
+        const encodeStartedAt = Date.now();
         const oggPath = await this.encoder.encodeOggOpus(pcmPath);
+        stats.encodeMs += Date.now() - encodeStartedAt;
+        const [pcmStat, oggStat] = await Promise.all([
+          stat(pcmPath),
+          stat(oggPath),
+        ]);
+
         const key = createCompilationS3Key(sessionId, phrase);
+        const uploadStartedAt = Date.now();
         await this.s3.putObject({
           bucket: recordingsS3Bucket,
           key,
           data: createReadStream(oggPath),
           contentType: 'audio/ogg',
         });
+        stats.uploadMs += Date.now() - uploadStartedAt;
+
+        stats.phrases++;
+        stats.clips += clipCount;
+        stats.compiledAudioMs += pcmDurationMs(pcmStat.size);
+        stats.compiledBytes += oggStat.size;
         this.logger.log(
           `[${guildId}] Session ${sessionId}: "${phrase}" x${clipCount} → s3://${recordingsS3Bucket}/${key}`,
         );
@@ -149,40 +220,46 @@ export class StitchSessionProcessor extends WorkerHost {
     } finally {
       await rm(workDir, { recursive: true, force: true });
     }
+    return stats;
   }
 
   /**
    * Writes the rows' clips to `pcmPath`, in order and with gaps between them, and returns how many
-   * there were.
+   * there were, and how many rows' utterances weren't in S3.
    */
   private async writeCompilation(
     rows: Recording[],
     pcmPath: string,
-  ): Promise<number> {
+  ): Promise<{ clipCount: number; missingUtterances: number }> {
     const file = await open(pcmPath, 'w');
     const gap = silence(CLIP_GAP_MS);
-    let count = 0;
+    let clipCount = 0;
+    let missingUtterances = 0;
     try {
       for await (const clips of mapInOrder(rows, READ_AHEAD, (row) =>
         this.readClips(row),
       )) {
+        if (!clips) {
+          missingUtterances++;
+          continue;
+        }
         for (const clip of clips) {
-          if (count > 0) await file.write(gap);
+          if (clipCount > 0) await file.write(gap);
           await file.write(clip);
-          count++;
+          clipCount++;
         }
       }
     } finally {
       await file.close();
     }
-    return count;
+    return { clipCount, missingUtterances };
   }
 
   /**
-   * A recording's clips, cut and leveled, from a ranged read of its utterance. None when the
+   * A recording's clips, cut and leveled, from a ranged read of its utterance. Null when the
    * utterance's upload failed in core, or the bucket's lifecycle rule already expired it.
    */
-  private async readClips(row: Recording): Promise<Buffer[]> {
+  private async readClips(row: Recording): Promise<Buffer[] | null> {
     const clips: ClipRange[] = row.clips.map(({ clipStartMs, clipEndMs }) => ({
       startMs: clipStartMs,
       endMs: clipEndMs,
@@ -206,7 +283,7 @@ export class StitchSessionProcessor extends WorkerHost {
     } catch (error) {
       if (!(error instanceof S3ObjectNotFoundError)) throw error;
       this.logger.warn(`Utterance ${row.utteranceId} isn't in S3; skipping it`);
-      return [];
+      return null;
     }
 
     // Times relative to the start of what was read.
@@ -218,6 +295,28 @@ export class StitchSessionProcessor extends WorkerHost {
       normalizeLoudness(slicePcm(pcm, range, CLIP_FADE_MS)),
     );
   }
+}
+
+/** What a stitch produced and where its time went, summed over the session's phrases. */
+interface StitchStats {
+  recordings: number;
+  /** Phrases with a compilation; ones whose utterances are all missing don't count. */
+  phrases: number;
+  clips: number;
+  missingUtterances: number;
+  compiledAudioMs: number;
+  /** Of the Ogg Opus files uploaded. */
+  compiledBytes: number;
+  /** Reading from S3 and cutting clips, which overlap (READ_AHEAD). */
+  compileMs: number;
+  encodeMs: number;
+  uploadMs: number;
+}
+
+function pcmDurationMs(bytes: number): number {
+  return Math.round(
+    (bytes / UTTERANCE_WAV.bytesPerSample / SAMPLE_RATE) * 1000,
+  );
 }
 
 /**

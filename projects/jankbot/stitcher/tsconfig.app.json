@@ -32,6 +32,9 @@
       "path": "../../../platform/postgres/db/tsconfig.lib.json"
     },
     {
+      "path": "../../../platform/analytics/client-nest/tsconfig.lib.json"
+    },
+    {
       "path": "../contracts/tsconfig.lib.json"
     }
   ]

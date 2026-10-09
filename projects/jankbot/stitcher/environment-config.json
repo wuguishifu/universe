@@ -4,6 +4,7 @@
   "secretsPaths": [
     "projects/jankbot/common",
     "platform/s3",
+    "platform/analytics/client",
     "platform/postgres",
     "platform/redis"
   ]

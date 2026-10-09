@@ -51,6 +51,21 @@ export class UtteranceProcessor extends WorkerHost {
       opusPackets,
     } = job.data;
 
+    const processStartedAt = Date.now();
+    const audioMs = opusPackets.length * OPUS_FRAME_MS;
+    const track = (extra: Record<string, unknown>) =>
+      this.trackingService.trackEvent({
+        name: 'utterance_processor-processed',
+        properties: { userId, sessionId, reconciliationId: utteranceId },
+        extra: {
+          audioMs,
+          // From the gateway queueing the utterance to core picking it up.
+          queueWaitMs: processStartedAt - job.timestamp,
+          processMs: Date.now() - processStartedAt,
+          ...extra,
+        },
+      });
+
     const pcm = await decodeOpusPackets(
       opusPackets.map((packet) => Buffer.from(packet, 'base64')),
     );
@@ -62,8 +77,9 @@ export class UtteranceProcessor extends WorkerHost {
     const loud = loudMs(pcm, utteranceLoudnessThresholdDbfs);
     if (loud < utteranceMinLoudMs) {
       this.logger.debug(
-        `[${guildId}] ${userId}: skipped, ${loud}ms loud of ${opusPackets.length * OPUS_FRAME_MS}ms`,
+        `[${guildId}] ${userId}: skipped, ${loud}ms loud of ${audioMs}ms`,
       );
+      track({ loudMs: loud, skipped: true });
       return;
     }
 
@@ -124,5 +140,6 @@ export class UtteranceProcessor extends WorkerHost {
     if (results[0].status === 'rejected') {
       throw new Error(results[0].reason);
     }
+    track({ loudMs: loud, skipped: false });
   }
 }
