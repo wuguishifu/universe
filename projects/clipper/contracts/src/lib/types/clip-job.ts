@@ -1,8 +1,6 @@
 import z from 'zod';
 
-export const clipJobDataSchema = z.object({
-  s3Key: z.string(),
-  s3Bucket: z.string(),
+export const clipMetadata = z.object({
   // ids used for matching the original file on disk
   // these may or may not exist (exist on NTFS but not on FAT32/exFAT)
   fileId: z.string().optional(),
@@ -10,4 +8,10 @@ export const clipJobDataSchema = z.object({
   // fallback if the fid/guid don't exist
   originalPathOnDisk: z.string(),
 });
-export type ClipJobData = z.infer<typeof clipJobDataSchema>;
+export type ClipMetadata = z.infer<typeof clipMetadata>;
+
+export const preprocessClipJobDataSchema = clipMetadata.extend({
+  s3Key: z.string(),
+  s3Bucket: z.string(),
+});
+export type ClipJobData = z.infer<typeof preprocessClipJobDataSchema>;

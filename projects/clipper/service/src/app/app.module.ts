@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ClaudeModule, S3Module } from '@libs/nest-common';
 import { BullRootModule } from '@libs/queue';
+import { TrackingModule } from '@platform/analytics-client-nest';
 import { TranscriptionClientModule } from '@platform/transcription-client-nest';
 import {
   EnvironmentModule,
@@ -35,6 +36,17 @@ import { AppController } from './app.controller';
       inject: [EnvironmentService],
       useFactory: (env: EnvironmentService) => ({
         apiKey: env.environment.claudeApiToken,
+      }),
+    }),
+    TrackingModule.forRootAsync({
+      inject: [EnvironmentService],
+      useFactory: (environmentService: EnvironmentService) => ({
+        serviceName: 'clipper/service',
+        enableBatching: true,
+        analyticsServiceBaseUrl:
+          environmentService.environment.analyticsServiceBaseUrl,
+        analyticsServiceApiKey:
+          environmentService.environment.analyticsServiceApiToken,
       }),
     }),
     UploadsModule,

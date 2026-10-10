@@ -1,7 +1,9 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 
+import path from 'node:path';
 import { runProcess } from '@libs/nest-common';
 import { EnvironmentService } from '../../environment/environment';
+import { FFprobeStream } from './stream-types';
 
 const DEFAULT_FFMPEG_TIMEOUT_MS = 15 * 60 * 1000;
 
@@ -28,33 +30,48 @@ export class FFmpegService implements OnModuleInit, OnModuleDestroy {
     this.abortController.abort();
   }
 
-  public async extractAudio({
+  public async extractStreams({
     inputPath,
-    outputPath,
-    streamIndex,
+    outputDir,
+    streams,
     overrideTimeoutMs,
   }: {
     inputPath: string;
-    outputPath: string;
-    streamIndex?: number;
+    outputDir: string;
+    streams: FFprobeStream[];
     overrideTimeoutMs?: number;
   }) {
-    // prettier-ignore
-    await runProcess(
-      this.environmentService.environment.ffmpegPath,
-      [
-        '-hide_banner', '-loglevel', 'error',
-        '-nostdin', '-y', '-i', inputPath,
-        ...(streamIndex !== undefined ? ['-map', `0:${streamIndex}`] : []),
-        '-vn', '-ar', '16000',
-        '-ac', '1',
-        '-c:a', 'pcm_s16le',
-        outputPath,
-      ],
-      {
-        timeoutMs: overrideTimeoutMs ?? DEFAULT_FFMPEG_TIMEOUT_MS,
-        signal: this.abortController.signal,
-      },
-    );
+    const maps = streams.map((stream) => [
+      '-map',
+      `0:${stream.index}`,
+      '-ar',
+      '16000',
+      '-ac',
+      '1',
+      '-c:a',
+      'pcm_s16le',
+      path.join(outputDir, `${stream.type}.wav`),
+    ]);
+
+    const args = [
+      '-hide_banner',
+      '-loglevel',
+      'error',
+      '-nostdin',
+      '-y',
+      '-i',
+      inputPath,
+      ...maps.flatMap((map) => map),
+    ];
+
+    await runProcess(this.environmentService.environment.ffmpegPath, args, {
+      timeoutMs: overrideTimeoutMs ?? DEFAULT_FFMPEG_TIMEOUT_MS,
+      signal: this.abortController.signal,
+    });
+
+    return streams.map((stream) => ({
+      fileName: `${stream.type}.wav`,
+      filePath: path.join(outputDir, `${stream.type}.wav`),
+    }));
   }
 }

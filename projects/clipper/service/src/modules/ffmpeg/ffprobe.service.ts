@@ -2,6 +2,7 @@ import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import z from 'zod';
 import { runProcess } from '@libs/nest-common';
 import { EnvironmentService } from '../../environment/environment';
+import { detectStreamType, FFprobeStream } from './stream-types';
 
 const DEFAULT_FFPROBE_TIMEOUT_MS = 15 * 1000;
 
@@ -20,6 +21,7 @@ const ffprobeStreamsOutputSchema = z
     data.streams.map((stream) => ({
       index: stream.index,
       name: stream.tags.name,
+      type: detectStreamType(stream.tags.name),
     })),
   );
 
@@ -46,13 +48,13 @@ export class FFprobeService implements OnModuleInit, OnModuleDestroy {
     this.abortController.abort();
   }
 
-  public async identifyTracks({
+  public async identifyStreams({
     inputPath,
     overrideTimeoutMs,
   }: {
     inputPath: string;
     overrideTimeoutMs?: number;
-  }) {
+  }): Promise<FFprobeStream[]> {
     const data = await runProcess(
       this.environmentService.environment.ffprobePath,
       [
@@ -61,7 +63,7 @@ export class FFprobeService implements OnModuleInit, OnModuleDestroy {
         '-select_streams',
         'a',
         '-show_entries',
-        'stream=index:stream_tags',
+        'stream=index:stream_tags=name',
         '-of',
         'json',
         inputPath,
@@ -72,6 +74,6 @@ export class FFprobeService implements OnModuleInit, OnModuleDestroy {
       },
     );
 
-    return ffprobeStreamsOutputSchema.parse(data);
+    return ffprobeStreamsOutputSchema.parse(JSON.parse(data));
   }
 }

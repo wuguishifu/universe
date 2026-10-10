@@ -7,12 +7,14 @@ import {
   CLIPPER_QUEUE_CONFIG,
   ClipperQueueConfig,
   ClipperQueueJob,
-} from '../../queue/queue';
-import { CLIP_TRANSCRIPTION_KEY, ClipsService } from './clips.service';
+} from '../../../queue/queue';
+import { ClipsService } from '../clips.service';
 
 // this processor runs in CPU land
-@Processor(CLIPPER_QUEUE_CONFIG.processTranscript.queueName, { concurrency: 1 })
-export class ClipsQueueProcessor extends WorkerHost {
+@Processor(CLIPPER_QUEUE_CONFIG.processTranscripts.queueName, {
+  concurrency: 1,
+})
+export class ProcessTranscriptProcessor extends WorkerHost {
   constructor(
     private readonly clipsService: ClipsService,
     private readonly transcriptionClient: TranscriptionClient<ClipperQueueConfig>,
@@ -20,13 +22,10 @@ export class ClipsQueueProcessor extends WorkerHost {
     super();
   }
 
-  override async process(job: ClipperQueueJob<'processTranscript'>) {
+  override async process(job: ClipperQueueJob<'processTranscripts'>) {
     try {
-      const result = await this.transcriptionClient.getResult(
-        job,
-        CLIP_TRANSCRIPTION_KEY,
-      );
-      await this.clipsService.processTranscript({ jobData: job.data, result });
+      const results = await this.transcriptionClient.getResults(job);
+      console.log(JSON.stringify(results, null, 2));
     } catch (error) {
       if (!(error instanceof TranscriptionFailedError)) throw error;
       // TODO: tracking

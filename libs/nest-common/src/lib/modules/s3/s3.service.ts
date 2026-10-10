@@ -9,7 +9,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Inject, Injectable } from '@nestjs/common';
-import { createWriteStream } from 'fs';
+import { createWriteStream } from 'node:fs';
 import { Readable } from 'stream';
 import { pipeline } from 'stream/promises';
 import { S3_CONFIG, S3Props } from './s3';
@@ -131,9 +131,11 @@ export class S3Service {
   public getSignedUrl({
     key,
     bucket,
+    expiresInS,
   }: {
     key: string;
     bucket: string;
+    expiresInS?: number;
   }): Promise<string> {
     return getSignedUrl(
       this.s3Client,
@@ -142,7 +144,7 @@ export class S3Service {
         Key: key,
         ResponseContentDisposition: `attachment; filename="${key}"`,
       }),
-      { expiresIn: 60 * 15 },
+      { expiresIn: expiresInS ?? 60 * 15 },
     );
   }
 

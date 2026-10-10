@@ -1,70 +1,44 @@
-import { Injectable } from '@nestjs/common';
-import { Job } from 'bullmq';
-import {
-  TranscriptionClient,
-  TranscriptionResult,
-} from '@platform/transcription-client-nest';
+import { Inject, Injectable } from '@nestjs/common';
+import { TranscriptionResult } from '@platform/transcription-client-nest';
 import { ClipJobData } from '@projects/clipper-contracts';
-import { ClipperQueueConfig } from '../../queue/queue';
+import {
+  CLIPPER_QUEUE_CONFIG,
+  CLIPPER_QUEUE_OPTIONS,
+  type ClipperQueue,
+} from '../../queue/queue';
 import { AnalysisService } from '../analysis/analysis.service';
-
-/** The flow's only transcription: the clip's audio. */
-export const CLIP_TRANSCRIPTION_KEY = 'clip';
-
-const PROCESS_TRANSCRIPTION_OPTS: Job['opts'] = {
-  attempts: 3,
-  backoff: { type: 'exponential', delay: 5_000 },
-  removeOnComplete: { age: 60 * 60, count: 1000 },
-  removeOnFail: { age: 24 * 60 * 60, count: 1000 },
-};
 
 @Injectable()
 export class ClipsService {
   constructor(
-    private readonly transcriptionClient: TranscriptionClient<ClipperQueueConfig>,
+    @Inject(CLIPPER_QUEUE_CONFIG.preprocessClip.queueName)
+    private readonly preprocessClipQueue: ClipperQueue<'preprocessClip'>,
     private readonly analysisService: AnalysisService,
   ) {}
 
   public async processClips(clips: ClipJobData[]) {
-    await this.transcriptionClient.addFlows(
-      clips.map((data) => ({
-        idempotencyKey: `${data.s3Bucket}/${data.s3Key}`,
-        requests: {
-          [CLIP_TRANSCRIPTION_KEY]: {
-            source: { type: 's3', bucket: data.s3Bucket, key: data.s3Key },
-            options: { beamSize: 5 },
-          },
-        },
-        parent: {
-          queueKey: 'processTranscript',
-          data,
-          opts: PROCESS_TRANSCRIPTION_OPTS,
-        },
-        jobOptions: { onFailure: 'fail-parent' },
+    await this.preprocessClipQueue.addBulk(
+      clips.map((clip) => ({
+        name: CLIPPER_QUEUE_CONFIG.preprocessClip.jobName,
+        data: clip,
+        opts: CLIPPER_QUEUE_OPTIONS.preprocessClip,
       })),
     );
   }
 
-  public async processTranscript({
+  public async processTranscripts({
     jobData,
     result,
   }: {
     jobData: ClipJobData;
     result: TranscriptionResult;
   }) {
-    const analysis = await this.analysisService.analyzeTranscript({
-      transcript: JSON.stringify(result.transcript.segments, null, 2),
-    });
-    console.log(
-      JSON.stringify(
-        {
-          analysis,
-          analytics: result.analytics,
-          jobData,
-        },
-        null,
-        2,
-      ),
-    );
+    // TODO:
+    // 1. join transcripts into single transcript
+    // 2. process with claude api
+    // 3. ...
+    // const analysis = await this.analysisService.analyzeTranscript({
+    //   transcript: JSON.stringify(result.transcript.segments, null, 2),
+    // });
   }
 }

@@ -3,7 +3,7 @@ import {
   SharedBullConfigurationFactory,
 } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
-import { Job } from 'bullmq';
+import { Job, JobsOptions } from 'bullmq';
 
 import {
   BullQueueModule,
@@ -12,16 +12,24 @@ import {
   UniverseQueue,
 } from '@libs/queue';
 import { resolveRedisConnection } from '@libs/redis-cache';
-import { clipJobDataSchema } from '@projects/clipper-contracts';
+import {
+  clipMetadata,
+  preprocessClipJobDataSchema,
+} from '@projects/clipper-contracts';
 import { EnvironmentService } from '../environment/environment';
 
 export const CLIPPER_QUEUE_PREFIX = 'clipper-queue';
 
 export const CLIPPER_QUEUE_CONFIG = {
-  processTranscript: {
-    queueName: 'process-transcript',
-    jobName: 'process-transcript',
-    jobSchema: clipJobDataSchema,
+  preprocessClip: {
+    queueName: 'preprocess-clip',
+    jobName: 'preprocess-clip',
+    jobSchema: preprocessClipJobDataSchema,
+  },
+  processTranscripts: {
+    queueName: 'process-transcripts',
+    jobName: 'process-transcripts',
+    jobSchema: clipMetadata.extend({}),
   },
 } satisfies Record<string, QueueConfig>;
 
@@ -36,6 +44,21 @@ export type ClipperQueue<T extends ClipperQueueKey> = UniverseQueue<
   ClipperQueueConfig,
   T
 >;
+
+export const CLIPPER_QUEUE_OPTIONS = {
+  preprocessClip: {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 5_000 },
+    removeOnComplete: { age: 10 * 60, count: 1000 },
+    removeOnFail: { age: 60 * 60, count: 1000 },
+  },
+  processTranscripts: {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 30_000 },
+    removeOnComplete: { age: 10 * 60, count: 1000 },
+    removeOnFail: { age: 60 * 60, count: 1000 },
+  },
+} satisfies Record<ClipperQueueKey, JobsOptions>;
 
 export const registerQueue = (queue: ClipperQueueKey) =>
   BullQueueModule.register(CLIPPER_QUEUE_CONFIG, queue);
