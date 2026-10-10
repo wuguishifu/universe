@@ -1,7 +1,7 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Inject, Logger } from '@nestjs/common';
 import { DelayedError, UnrecoverableError } from 'bullmq';
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq, getTableColumns, sql } from 'drizzle-orm';
 import { createReadStream } from 'fs';
 import { mkdtemp, open, rm, stat } from 'fs/promises';
 import { tmpdir } from 'os';
@@ -35,7 +35,7 @@ import {
 import { CompilationEncoderService } from './compilation-encoder.service';
 import { SessionBacklogService } from './session-backlog.service';
 
-const { recordings, compilationOptOuts } = jankbotSchema;
+const { recordings, userPreferences } = jankbotSchema;
 type Recording = typeof recordings.$inferSelect;
 
 /** How often to check again while a session's utterances are still being transcribed. */
@@ -123,18 +123,18 @@ export class StitchSessionProcessor extends WorkerHost {
       throw new DelayedError();
     }
 
-    const [allRows, optOuts] = await Promise.all([
-      this.universeDb
-        .select()
-        .from(recordings)
-        .where(eq(recordings.sessionId, sessionId))
-        .orderBy(asc(recordings.phrase), asc(recordings.timestamp)),
-      this.universeDb
-        .select({ userId: compilationOptOuts.userId })
-        .from(compilationOptOuts),
-    ]);
-    const optedOut = new Set(optOuts.map(({ userId }) => userId));
-    const rows = allRows.filter(({ userId }) => !optedOut.has(userId));
+    // Leaves out users who opted out of compilations; users without preferences are included.
+    const rows = await this.universeDb
+      .select(getTableColumns(recordings))
+      .from(recordings)
+      .leftJoin(userPreferences, eq(userPreferences.userId, recordings.userId))
+      .where(
+        and(
+          eq(recordings.sessionId, sessionId),
+          sql`${userPreferences.excludeFromCompilations} is not true`,
+        ),
+      )
+      .orderBy(asc(recordings.phrase), asc(recordings.timestamp));
     if (rows.length === 0) {
       this.logger.log(`[${guildId}] Session ${sessionId}: nothing to stitch`);
     }
@@ -152,7 +152,6 @@ export class StitchSessionProcessor extends WorkerHost {
         sinceEndedMs: finishedAt - endedAt,
         // Utterances still unprocessed when the wait ran out; their phrases are missing.
         abandonedUtterances: pending,
-        optedOutRecordings: allRows.length - rows.length,
         attempt: job.attemptsMade + 1,
         ...stats,
       },

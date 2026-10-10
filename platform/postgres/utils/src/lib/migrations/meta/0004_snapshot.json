@@ -1,35 +1,9 @@
 {
-  "id": "682be376-74d0-476e-a28c-9018a1757b3c",
+  "id": "6f901866-ba61-4d13-b93c-eacae55042f4",
   "prevId": "c9073966-0fac-4fc1-b9f1-c9af7a700e20",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "jankbot.compilation_opt_outs": {
-      "name": "compilation_opt_outs",
-      "schema": "jankbot",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "opted_out_at": {
-          "name": "opted_out_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "jankbot.recordings": {
       "name": "recordings",
       "schema": "jankbot",
@@ -133,6 +107,39 @@
           "with": {}
         }
       },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "jankbot.user_preferences": {
+      "name": "user_preferences",
+      "schema": "jankbot",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "exclude_from_compilations": {
+          "name": "exclude_from_compilations",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},

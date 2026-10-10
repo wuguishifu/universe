@@ -4,7 +4,7 @@ import { UNIVERSE_DB, type UniverseDb } from '@libs/nest-common';
 import { TrackingService } from '@platform/analytics-client-nest';
 import { jankbotSchema } from '@platform/postgres-db';
 
-const { compilationOptOuts } = jankbotSchema;
+const { userPreferences } = jankbotSchema;
 
 @Injectable()
 export class CompilationOptOutsService {
@@ -14,12 +14,16 @@ export class CompilationOptOutsService {
   ) {}
 
   async optOut(userId: string): Promise<boolean> {
-    const inserted = await this.universeDb
-      .insert(compilationOptOuts)
-      .values({ userId })
-      .onConflictDoNothing()
-      .returning({ userId: compilationOptOuts.userId });
-    if (inserted.length === 0) return false;
+    const changed = await this.universeDb
+      .insert(userPreferences)
+      .values({ userId, excludeFromCompilations: true })
+      .onConflictDoUpdate({
+        target: userPreferences.userId,
+        set: { excludeFromCompilations: true },
+        setWhere: eq(userPreferences.excludeFromCompilations, false),
+      })
+      .returning({ userId: userPreferences.userId });
+    if (changed.length === 0) return false;
     this.trackingService.trackEvent({
       name: 'compilation_opt_out-added',
       properties: { userId },
@@ -28,11 +32,16 @@ export class CompilationOptOutsService {
   }
 
   async optIn(userId: string): Promise<boolean> {
-    const deleted = await this.universeDb
-      .delete(compilationOptOuts)
-      .where(eq(compilationOptOuts.userId, userId))
-      .returning({ userId: compilationOptOuts.userId });
-    if (deleted.length === 0) return false;
+    const changed = await this.universeDb
+      .insert(userPreferences)
+      .values({ userId, excludeFromCompilations: false })
+      .onConflictDoUpdate({
+        target: userPreferences.userId,
+        set: { excludeFromCompilations: false },
+        setWhere: eq(userPreferences.excludeFromCompilations, true),
+      })
+      .returning({ userId: userPreferences.userId });
+    if (changed.length === 0) return false;
     this.trackingService.trackEvent({
       name: 'compilation_opt_out-removed',
       properties: { userId },
