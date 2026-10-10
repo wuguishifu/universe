@@ -39,6 +39,17 @@ export const recordings = jankbotPgSchema.table(
   ],
 );
 
+export const compilationOptOuts = jankbotPgSchema.table(
+  'compilation_opt_outs',
+  {
+    userId: text('user_id').primaryKey(),
+    optedOutAt: timestamp('opted_out_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+);
+
 export const jankbotSchema = {
   recordings,
+  compilationOptOuts,
 };

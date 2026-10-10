@@ -35,7 +35,7 @@ import {
 import { CompilationEncoderService } from './compilation-encoder.service';
 import { SessionBacklogService } from './session-backlog.service';
 
-const { recordings } = jankbotSchema;
+const { recordings, compilationOptOuts } = jankbotSchema;
 type Recording = typeof recordings.$inferSelect;
 
 /** How often to check again while a session's utterances are still being transcribed. */
@@ -123,11 +123,18 @@ export class StitchSessionProcessor extends WorkerHost {
       throw new DelayedError();
     }
 
-    const rows = await this.universeDb
-      .select()
-      .from(recordings)
-      .where(eq(recordings.sessionId, sessionId))
-      .orderBy(asc(recordings.phrase), asc(recordings.timestamp));
+    const [allRows, optOuts] = await Promise.all([
+      this.universeDb
+        .select()
+        .from(recordings)
+        .where(eq(recordings.sessionId, sessionId))
+        .orderBy(asc(recordings.phrase), asc(recordings.timestamp)),
+      this.universeDb
+        .select({ userId: compilationOptOuts.userId })
+        .from(compilationOptOuts),
+    ]);
+    const optedOut = new Set(optOuts.map(({ userId }) => userId));
+    const rows = allRows.filter(({ userId }) => !optedOut.has(userId));
     if (rows.length === 0) {
       this.logger.log(`[${guildId}] Session ${sessionId}: nothing to stitch`);
     }
@@ -145,6 +152,7 @@ export class StitchSessionProcessor extends WorkerHost {
         sinceEndedMs: finishedAt - endedAt,
         // Utterances still unprocessed when the wait ran out; their phrases are missing.
         abandonedUtterances: pending,
+        optedOutRecordings: allRows.length - rows.length,
         attempt: job.attemptsMade + 1,
         ...stats,
       },
