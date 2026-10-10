@@ -29,6 +29,13 @@
       "when": 1791514723260,
       "tag": "0003_supreme_harpoon",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791601899076,
+      "tag": "0004_redundant_demogoblin",
+      "breakpoints": true
     }
   ]
 }

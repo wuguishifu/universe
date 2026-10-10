@@ -1,4 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import {
+  OptInCommand,
+  OptOutCommand,
+} from '../compilation-opt-outs/compilation-opt-outs.commands';
 import { LeaderboardCommands } from '../leaderboard/leaderboard.commands';
 import { TrackedWordsCommands } from '../tracked-words/tracked-words.commands';
 import { JoinCommand, LeaveCommand } from '../voice/voice.commands';
@@ -15,8 +19,10 @@ export class CommandRegistry {
     leaderboard: LeaderboardCommands,
     join: JoinCommand,
     leave: LeaveCommand,
+    optOut: OptOutCommand,
+    optIn: OptInCommand,
   ) {
-    this.handlers = [join, leave, trackedWords, leaderboard];
+    this.handlers = [join, leave, trackedWords, leaderboard, optOut, optIn];
     this.byName = new Map(
       this.handlers.map((handler) => [handler.definition.name, handler]),
     );

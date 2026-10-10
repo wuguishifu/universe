@@ -71,6 +71,8 @@ Slash command ──► primary gateway: InteractionRouter
 | `/leave [bot]`             | core       | Disconnects the named bot, or the one in your channel |
 | `/words list\|add\|remove` | core       | Manage tracked phrases (50 per server)                |
 | `/leaderboard phrase:<..>` | core       | Top speakers for a phrase                             |
+| `/optout`                  | core       | Leave the caller out of compilations, in every server |
+| `/optin`                   | core       | Undo `/optout`                                        |
 
 ## Voice bots
 
