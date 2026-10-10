@@ -5,7 +5,7 @@ import { FFmpegModule } from '../ffmpeg/ffmpeg.module';
 import { ClipsController } from './clips.controller';
 import { ClipsService } from './clips.service';
 import { PreprocessClipProcessor } from './processors/preprocess-clip.processor';
-import { ProcessTranscriptProcessor } from './processors/process-transcript.processor';
+import { ProcessTranscriptsProcessor } from './processors/process-transcripts.processor';
 
 @Module({
   imports: [
@@ -17,7 +17,7 @@ import { ProcessTranscriptProcessor } from './processors/process-transcript.proc
   controllers: [ClipsController],
   providers: [
     ClipsService,
-    ProcessTranscriptProcessor,
+    ProcessTranscriptsProcessor,
     PreprocessClipProcessor,
   ],
 })

@@ -125,7 +125,7 @@ export class PreprocessClipProcessor extends WorkerHost {
         jobOptions: { onFailure: 'run-parent' },
         requests: Object.fromEntries<TranscriptionRequest>(
           results.map((result) => [
-            result.fileName,
+            result.item,
             {
               source: {
                 type: 's3',

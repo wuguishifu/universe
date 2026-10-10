@@ -70,6 +70,7 @@ export class FFmpegService implements OnModuleInit, OnModuleDestroy {
     });
 
     return streams.map((stream) => ({
+      item: stream.type,
       fileName: `${stream.type}.wav`,
       filePath: path.join(outputDir, `${stream.type}.wav`),
     }));

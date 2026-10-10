@@ -5,6 +5,7 @@ import {
 import { Injectable } from '@nestjs/common';
 import { Job, JobsOptions } from 'bullmq';
 
+import z from 'zod';
 import {
   BullQueueModule,
   QueueConfig,
@@ -20,6 +21,11 @@ import { EnvironmentService } from '../environment/environment';
 
 export const CLIPPER_QUEUE_PREFIX = 'clipper-queue';
 
+export const processTranscriptsJobDataSchema = clipMetadata.extend({});
+export type ProcessTranscriptsJobData = z.infer<
+  typeof processTranscriptsJobDataSchema
+>;
+
 export const CLIPPER_QUEUE_CONFIG = {
   preprocessClip: {
     queueName: 'preprocess-clip',
@@ -29,7 +35,7 @@ export const CLIPPER_QUEUE_CONFIG = {
   processTranscripts: {
     queueName: 'process-transcripts',
     jobName: 'process-transcripts',
-    jobSchema: clipMetadata.extend({}),
+    jobSchema: processTranscriptsJobDataSchema,
   },
 } satisfies Record<string, QueueConfig>;
 

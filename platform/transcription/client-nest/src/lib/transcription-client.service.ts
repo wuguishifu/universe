@@ -40,6 +40,16 @@ export type TranscriptionResult = TranscriptionJobResult<'transcribe'>;
 export type TranscriptionOutcome =
   | { status: 'fulfilled'; value: TranscriptionResult }
   | { status: 'rejected'; reason: TranscriptionFailedError };
+export function isFulfilled(
+  item: TranscriptionOutcome,
+): item is { status: 'fulfilled'; value: TranscriptionResult } {
+  return item.status === 'fulfilled';
+}
+export function isRejected(
+  item: TranscriptionOutcome,
+): item is { status: 'rejected'; reason: TranscriptionFailedError } {
+  return item.status === 'rejected';
+}
 
 /**
  * Options for the transcription jobs themselves. The worker can't set these: in a flow, job

@@ -14,7 +14,7 @@ import { ClipsService } from '../clips.service';
 @Processor(CLIPPER_QUEUE_CONFIG.processTranscripts.queueName, {
   concurrency: 1,
 })
-export class ProcessTranscriptProcessor extends WorkerHost {
+export class ProcessTranscriptsProcessor extends WorkerHost {
   constructor(
     private readonly clipsService: ClipsService,
     private readonly transcriptionClient: TranscriptionClient<ClipperQueueConfig>,
@@ -25,7 +25,10 @@ export class ProcessTranscriptProcessor extends WorkerHost {
   override async process(job: ClipperQueueJob<'processTranscripts'>) {
     try {
       const results = await this.transcriptionClient.getResults(job);
-      console.log(JSON.stringify(results, null, 2));
+      await this.clipsService.processTranscripts({
+        jobData: job.data,
+        results,
+      });
     } catch (error) {
       if (!(error instanceof TranscriptionFailedError)) throw error;
       // TODO: tracking
