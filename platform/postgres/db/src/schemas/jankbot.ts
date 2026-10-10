@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   jsonb,
   pgSchema,
@@ -39,6 +40,20 @@ export const recordings = jankbotPgSchema.table(
   ],
 );
 
+/** Per-user settings, across every server. A user without a row has the defaults. */
+export const userPreferences = jankbotPgSchema.table('user_preferences', {
+  userId: text('user_id').primaryKey(),
+  /** Leaves the user's voice out of compilations (`/optout`). */
+  excludeFromCompilations: boolean('exclude_from_compilations')
+    .notNull()
+    .default(false),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
 export const jankbotSchema = {
   recordings,
+  userPreferences,
 };

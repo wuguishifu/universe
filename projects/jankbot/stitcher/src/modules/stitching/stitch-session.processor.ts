@@ -1,7 +1,7 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Inject, Logger } from '@nestjs/common';
 import { DelayedError, UnrecoverableError } from 'bullmq';
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq, getTableColumns, sql } from 'drizzle-orm';
 import { createReadStream } from 'fs';
 import { mkdtemp, open, rm, stat } from 'fs/promises';
 import { tmpdir } from 'os';
@@ -35,7 +35,7 @@ import {
 import { CompilationEncoderService } from './compilation-encoder.service';
 import { SessionBacklogService } from './session-backlog.service';
 
-const { recordings } = jankbotSchema;
+const { recordings, userPreferences } = jankbotSchema;
 type Recording = typeof recordings.$inferSelect;
 
 /** How often to check again while a session's utterances are still being transcribed. */
@@ -123,10 +123,17 @@ export class StitchSessionProcessor extends WorkerHost {
       throw new DelayedError();
     }
 
+    // Leaves out users who opted out of compilations; users without preferences are included.
     const rows = await this.universeDb
-      .select()
+      .select(getTableColumns(recordings))
       .from(recordings)
-      .where(eq(recordings.sessionId, sessionId))
+      .leftJoin(userPreferences, eq(userPreferences.userId, recordings.userId))
+      .where(
+        and(
+          eq(recordings.sessionId, sessionId),
+          sql`${userPreferences.excludeFromCompilations} is not true`,
+        ),
+      )
       .orderBy(asc(recordings.phrase), asc(recordings.timestamp));
     if (rows.length === 0) {
       this.logger.log(`[${guildId}] Session ${sessionId}: nothing to stitch`);
