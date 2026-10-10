@@ -8,6 +8,9 @@ import { ClipJobData } from '@projects/clipper-contracts';
 import { ClipperQueueConfig } from '../../queue/queue';
 import { AnalysisService } from '../analysis/analysis.service';
 
+/** The flow's only transcription: the clip's audio. */
+export const CLIP_TRANSCRIPTION_KEY = 'clip';
+
 const PROCESS_TRANSCRIPTION_OPTS: Job['opts'] = {
   attempts: 3,
   backoff: { type: 'exponential', delay: 5_000 },
@@ -23,20 +26,23 @@ export class ClipsService {
   ) {}
 
   public async processClips(clips: ClipJobData[]) {
-    await this.transcriptionClient.addFlows({
-      jobs: clips.map((data) => ({
-        data: {
-          idempotencyKey: `${data.s3Bucket}/${data.s3Key}`,
-          request: {
+    await this.transcriptionClient.addFlows(
+      clips.map((data) => ({
+        idempotencyKey: `${data.s3Bucket}/${data.s3Key}`,
+        requests: {
+          [CLIP_TRANSCRIPTION_KEY]: {
             source: { type: 's3', bucket: data.s3Bucket, key: data.s3Key },
             options: { beamSize: 5 },
           },
         },
-        parent: { data, opts: PROCESS_TRANSCRIPTION_OPTS },
+        parent: {
+          queueKey: 'processTranscript',
+          data,
+          opts: PROCESS_TRANSCRIPTION_OPTS,
+        },
+        jobOptions: { onFailure: 'fail-parent' },
       })),
-      queueKey: 'processTranscript',
-      jobOptions: { onFailure: 'fail-parent' },
-    });
+    );
   }
 
   public async processTranscript({

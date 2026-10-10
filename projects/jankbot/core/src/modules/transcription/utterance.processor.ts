@@ -15,6 +15,7 @@ import { EnvironmentService } from '../../environment/environment';
 import { TrackedWordsService } from '../tracked-words/tracked-words.service';
 import { decodeOpusPackets, loudMs, pcmToWav } from './audio';
 import { logJobFailure } from './log-job-failure';
+import { UTTERANCE_TRANSCRIPTION_KEY } from './transcribed-utterance.processor';
 import { vocabularyPrompt } from './vocabulary-prompt';
 
 /**
@@ -94,12 +95,14 @@ export class UtteranceProcessor extends WorkerHost {
       this.transcriptionClient.addFlow({
         // A retry of this job (e.g. after a crash) won't queue a second transcription.
         idempotencyKey: utteranceId,
-        request: {
-          source: { type: 'inline', data: wavData.toString('base64') },
-          options: {
-            prompt: vocabularyPrompt(phrases),
-            // Where each phrase was said, so the stitcher can cut it out of the audio.
-            wordTimestamps: true,
+        requests: {
+          [UTTERANCE_TRANSCRIPTION_KEY]: {
+            source: { type: 'inline', data: wavData.toString('base64') },
+            options: {
+              prompt: vocabularyPrompt(phrases),
+              // Where each phrase was said, so the stitcher can cut it out of the audio.
+              wordTimestamps: true,
+            },
           },
         },
         parent: {

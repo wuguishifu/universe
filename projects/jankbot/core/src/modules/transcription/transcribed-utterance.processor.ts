@@ -18,6 +18,9 @@ import { RecordingsService } from '../recordings/recordings.service';
 import { TrackedWordsService } from '../tracked-words/tracked-words.service';
 import { logJobFailure } from './log-job-failure';
 
+/** The flow's only transcription: the utterance's audio. */
+export const UTTERANCE_TRANSCRIPTION_KEY = 'utterance';
+
 /** Matches tracked phrases in an utterance's transcript, once the transcription worker is done. */
 @Processor(JANKBOT_QUEUE_CONFIG.transcribedUtterances.queueName, {
   concurrency: 4,
@@ -50,7 +53,10 @@ export class TranscribedUtteranceProcessor extends WorkerHost {
 
     let result: TranscriptionResult;
     try {
-      result = await this.transcriptionClient.getResult(job);
+      result = await this.transcriptionClient.getResult(
+        job,
+        UTTERANCE_TRANSCRIPTION_KEY,
+      );
     } catch (error) {
       if (!(error instanceof TranscriptionFailedError)) throw error;
       // The worker gave up on this audio; retrying here would just read the same failure.

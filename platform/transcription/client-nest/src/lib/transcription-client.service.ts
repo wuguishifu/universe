@@ -1,13 +1,14 @@
 import { InjectFlowProducer } from '@nestjs/bullmq';
 import { Inject, Injectable } from '@nestjs/common';
 import type {
-  FlowJob,
   FlowNestedLeafJob,
   FlowProducer,
+  FlowRootParentJob,
   Job,
   JobsOptions,
 } from 'bullmq';
 import { z } from 'zod';
+import { randomUUID } from 'node:crypto';
 import {
   DEFAULT_QUEUE_CONFIG,
   type QueueConfigMap,
@@ -29,31 +30,35 @@ const QUEUE = TRANSCRIPTION_QUEUE_CONFIG.transcribe;
 /** A parent's children values are keyed `<prefix>:<queueName>:<jobId>`. */
 const CHILD_KEY_PREFIX = `${TRANSCRIPTION_QUEUE_PREFIX}:${QUEUE.queueName}:`;
 
+/** Transcription job IDs are `<parentJobId><separator><key>`, so `getResults` can recover the key. */
+const CHILD_ID_SEPARATOR = '.';
+
 export type TranscriptionRequest = TranscriptionJobData<'transcribe'>;
 export type TranscriptionResult = TranscriptionJobResult<'transcribe'>;
 
+/** One transcription's outcome, shaped like `Promise.allSettled`'s results. */
+export type TranscriptionOutcome =
+  | { status: 'fulfilled'; value: TranscriptionResult }
+  | { status: 'rejected'; reason: TranscriptionFailedError };
+
 /**
- * Options for the transcription job itself. The worker can't set these: in a flow, job options
- * come from whoever adds the job, so the defaults live here.
+ * Options for the transcription jobs themselves. The worker can't set these: in a flow, job
+ * options come from whoever adds the job, so the defaults live here.
  */
 export type TranscriptionJobOptions = Pick<
   JobsOptions,
-  | 'jobId'
-  | 'attempts'
-  | 'backoff'
-  | 'priority'
-  | 'removeOnComplete'
-  | 'removeOnFail'
+  'attempts' | 'backoff' | 'priority' | 'removeOnComplete' | 'removeOnFail'
 > & {
   /**
-   * What happens to the parent if transcription still fails after all attempts:
+   * What happens to the parent if a transcription still fails after all attempts:
    * - `fail-parent` (default): the parent fails without running.
-   * - `run-parent`: the parent runs anyway, and `getResult` throws `TranscriptionFailedError`.
+   * - `run-parent`: the parent runs once the other transcriptions finish, and the failed one's
+   *   outcome is `rejected`.
    */
   onFailure?: 'fail-parent' | 'run-parent';
 };
 
-/** The app's own job that runs once the transcription finishes, typed by its queue config. */
+/** The app's own job that runs once every transcription finishes, typed by its queue config. */
 export type TranscriptionParentJob<
   C extends QueueConfigMap,
   K extends keyof C,
@@ -62,12 +67,41 @@ export type TranscriptionParentJob<
   data: UniverseJobData<C, K>;
   /**
    * The queue's registered `defaultJobOptions` don't apply to jobs added through a flow, so pass
-   * them here. Set the parent's ID with `addFlow`'s `idempotencyKey`, which also dedupes the
-   * transcription.
+   * them here. Set the parent's ID with `idempotencyKey`, which also dedupes the transcriptions.
    */
-  opts?: Omit<NonNullable<FlowJob['opts']>, 'jobId'>;
+  opts?: Omit<NonNullable<FlowRootParentJob['opts']>, 'jobId'>;
   /** Defaults to the app's own Bull prefix (from `BullRootModule`). */
   prefix?: string;
+};
+
+export type TranscriptionFlow<C extends QueueConfigMap, K extends keyof C> = {
+  /**
+   * Makes adding the flow again a no-op while its jobs are still in Redis (e.g. when the job that
+   * adds it retries). Becomes the parent's ID, and prefixes the transcriptions' IDs, so it can't
+   * contain ':'.
+   */
+  idempotencyKey?: string;
+  /**
+   * The transcriptions to run before the parent, keyed by a name of your choosing (e.g. a speaker
+   * ID for multi-track audio). Read each one back by its key with `getResult`/`getResults`. Keys
+   * can't contain ':'.
+   */
+  requests: Record<string, TranscriptionRequest>;
+  parent: TranscriptionParentJob<C, K>;
+  /** Applies to every transcription in the flow. */
+  jobOptions?: TranscriptionJobOptions;
+};
+
+/** A flow as `buildFlow` returns it: the parent's ID is always set. */
+export type TranscriptionFlowJob = FlowRootParentJob & {
+  opts: { jobId: string };
+  children: FlowNestedLeafJob[];
+};
+
+export type AddedTranscriptionFlow = {
+  parentJobId: string;
+  /** Keyed like the flow's `requests`. */
+  transcriptionJobIds: Record<string, string>;
 };
 
 /** The transcription failed after all attempts and its parent was set to run anyway. */
@@ -86,115 +120,130 @@ export class TranscriptionClient<C extends QueueConfigMap> {
   ) {}
 
   /**
-   * Transcribes `request`, then runs `parent` in the app's own queue. Read the transcript in the
-   * parent's processor with `getResult(job)`.
+   * Runs every transcription in `requests`, then runs `parent` in the app's own queue. Read the
+   * transcripts in the parent's processor with `getResult(job, key)` or `getResults(job)`.
    *
    * @example
    * await transcription.addFlow({
    *   idempotencyKey: recordingId,
-   *   request: { source: { type: 's3', bucket, key } },
-   *   parent: {
-   *     queueConfig: MY_QUEUE_CONFIG,
-   *     queueKey: 'wordDetection',
-   *     data: { guildId, userId },
+   *   requests: {
+   *     [aliceId]: { source: { type: 's3', bucket, key: aliceTrackKey } },
+   *     [bobId]: { source: { type: 's3', bucket, key: bobTrackKey } },
    *   },
+   *   parent: { queueKey: 'wordDetection', data: { guildId, recordingId } },
    * });
    */
-  public async addFlow<K extends keyof C>({
-    idempotencyKey,
-    request,
-    parent,
-    jobOptions,
-  }: {
-    /**
-     * Makes adding the flow again a no-op while its jobs are still in Redis (e.g. when the job
-     * that adds it retries). Used as both jobs' ID, so it can't contain ':'.
-     */
-    idempotencyKey?: string;
-    request: TranscriptionRequest;
-    parent: TranscriptionParentJob<C, K>;
-    jobOptions?: Omit<TranscriptionJobOptions, 'jobId'>;
-  }): Promise<{ parentJobId: string; transcriptionJobId: string }> {
-    const { queueKey, data, opts, prefix } = parent;
-    const config = this.queueConfig[queueKey];
-    if (!config) {
-      throw new Error(`Unknown queue key: ${String(queueKey)}`);
-    }
-
-    const node = await this.flowProducer.add({
-      name: config.jobName,
-      queueName: config.queueName,
-      data: parseOrThrow(config.jobSchema, data, `${config.queueName} job`),
-      // Both IDs have to be fixed: with only the parent's, BullMQ attaches a second transcription.
-      opts: { ...opts, jobId: idempotencyKey },
-      prefix,
-      children: [this.child(request, { ...jobOptions, jobId: idempotencyKey })],
-    });
-
-    // BullMQ types IDs as optional for jobs not yet added; flow jobs always have one.
-    const parentJobId = node.job.id;
-    const transcriptionJobId = node.children?.[0]?.job.id;
-    if (!parentJobId || !transcriptionJobId) {
-      throw new Error('Flow was added without job IDs');
-    }
-    return { parentJobId, transcriptionJobId };
+  public async addFlow<K extends keyof C>(
+    flow: TranscriptionFlow<C, K>,
+  ): Promise<AddedTranscriptionFlow> {
+    const job = this.buildFlow(flow);
+    await this.flowProducer.add(job);
+    return addedFlow(job);
   }
 
-  public async addFlows<K extends keyof C>({
-    jobs,
-    queueKey,
-    jobOptions,
-  }: {
-    jobs: {
-      data: { idempotencyKey?: string; request: TranscriptionRequest };
-      parent: Omit<TranscriptionParentJob<C, K>, 'queueKey'>;
-    }[];
-    queueKey: keyof C;
-    jobOptions: Omit<TranscriptionJobOptions, 'jobId'>;
-  }): Promise<{ parentJobId?: string; transcriptionJobId?: string }[]> {
-    const config = this.queueConfig[queueKey];
-    if (!config) {
-      throw new Error(`Unknown queue key: ${String(queueKey)}`);
-    }
-
-    const flowJobs: FlowJob[] = jobs.map(
-      ({
-        data: { idempotencyKey, request },
-        parent: { opts, prefix, data },
-      }) => ({
-        name: config.jobName,
-        queueName: config.queueName,
-        data: parseOrThrow(
-          config.jobSchema,
-          data,
-          `${config.queueName} bulk job`,
-        ),
-        opts: {
-          ...opts,
-          jobId: idempotencyKey,
-        },
-        prefix,
-        children: [
-          this.child(request, { ...jobOptions, jobId: idempotencyKey }),
-        ],
-      }),
-    );
-
-    const nodes = await this.flowProducer.addBulk(flowJobs);
-    const results: { parentJobId?: string; transcriptionJobId?: string }[] =
-      nodes.map((node) => ({
-        parentJobId: node.job.id,
-        transcriptionJobId: node.children?.[0]?.job.id,
-      }));
-
-    return results;
+  /** `addFlow` for several flows at once, added atomically. */
+  public async addFlows<K extends keyof C>(
+    flows: TranscriptionFlow<C, K>[],
+  ): Promise<AddedTranscriptionFlow[]> {
+    const jobs = flows.map((flow) => this.buildFlow(flow));
+    await this.flowProducer.addBulk(jobs);
+    return jobs.map(addedFlow);
   }
 
   /**
-   * Builds the transcription job as a flow child, for flows `addFlow` doesn't cover (e.g. a parent
-   * with other children too). A parent can have at most one transcription child.
+   * Builds the flow `addFlow` would add, for flows it doesn't cover (e.g. a parent with other
+   * children too). Add other children alongside `children`, keeping the parent's `opts.jobId`.
    */
-  public child(
+  public buildFlow<K extends keyof C>({
+    idempotencyKey,
+    requests,
+    parent: { queueKey, data, opts, prefix },
+    jobOptions,
+  }: TranscriptionFlow<C, K>): TranscriptionFlowJob {
+    const config = this.queueConfig[queueKey];
+    if (!config) {
+      throw new Error(`Unknown queue key: ${String(queueKey)}`);
+    }
+    const entries = Object.entries(requests);
+    if (entries.length === 0) {
+      throw new Error('A transcription flow needs at least one request');
+    }
+
+    // The transcriptions' IDs are derived from the parent's, so it's always fixed. They have to
+    // be: with only the parent's, BullMQ attaches a second set of transcriptions.
+    const parentJobId = idempotencyKey ?? randomUUID();
+    assertIdPart(parentJobId, 'idempotencyKey');
+
+    return {
+      name: config.jobName,
+      queueName: config.queueName,
+      data: parseOrThrow(config.jobSchema, data, `${config.queueName} job`),
+      opts: { ...opts, jobId: parentJobId },
+      prefix,
+      children: entries.map(([key, request]) => {
+        assertIdPart(key, 'request key');
+        return this.child(childJobId(parentJobId, key), request, jobOptions);
+      }),
+    };
+  }
+
+  /**
+   * Reads one transcription's result from inside the parent's processor.
+   *
+   * @throws TranscriptionFailedError if that transcription failed (only with
+   * `onFailure: 'run-parent'`).
+   */
+  public async getResult(
+    parentJob: Job,
+    key: string,
+  ): Promise<TranscriptionResult> {
+    const outcome = (await this.getResults(parentJob))[key];
+    if (!outcome) {
+      throw new Error(`Job ${parentJob.id} has no transcription '${key}'`);
+    }
+    if (outcome.status === 'rejected') throw outcome.reason;
+    return outcome.value;
+  }
+
+  /**
+   * Reads every transcription's outcome from inside the parent's processor, keyed like the flow's
+   * `requests`. Outcomes are only `rejected` with `onFailure: 'run-parent'`.
+   */
+  public async getResults(
+    parentJob: Job,
+  ): Promise<Record<string, TranscriptionOutcome>> {
+    const keyPrefix = `${CHILD_KEY_PREFIX}${parentJob.id}${CHILD_ID_SEPARATOR}`;
+    const [values, failures] = await Promise.all([
+      parentJob.getChildrenValues(),
+      parentJob.getIgnoredChildrenFailures(),
+    ]);
+
+    const outcomes: Record<string, TranscriptionOutcome> = {};
+    for (const [childKey, value] of Object.entries(values ?? {})) {
+      if (!childKey.startsWith(keyPrefix)) continue;
+      outcomes[childKey.slice(keyPrefix.length)] = {
+        status: 'fulfilled',
+        value: parseOrThrow(QUEUE.resultsSchema, value, 'transcription result'),
+      };
+    }
+    for (const [childKey, reason] of Object.entries(failures ?? {})) {
+      if (!childKey.startsWith(keyPrefix)) continue;
+      outcomes[childKey.slice(keyPrefix.length)] = {
+        status: 'rejected',
+        reason: new TranscriptionFailedError(reason),
+      };
+    }
+
+    if (Object.keys(outcomes).length === 0) {
+      throw new Error(
+        `Job ${parentJob.id} has no transcription results; was it added with TranscriptionClient?`,
+      );
+    }
+    return outcomes;
+  }
+
+  private child(
+    jobId: string,
     request: TranscriptionRequest,
     { onFailure = 'fail-parent', ...jobOptions }: TranscriptionJobOptions = {},
   ): FlowNestedLeafJob {
@@ -206,44 +255,37 @@ export class TranscriptionClient<C extends QueueConfigMap> {
       opts: {
         ...DEFAULT_QUEUE_CONFIG,
         ...jobOptions,
+        jobId,
         ...(onFailure === 'fail-parent'
           ? { failParentOnFailure: true }
           : { ignoreDependencyOnFailure: true }),
       },
     };
   }
+}
 
-  /**
-   * Reads the transcription result from inside the parent's processor.
-   *
-   * @throws TranscriptionFailedError if the transcription failed (only with `onFailure: 'run-parent'`).
-   */
-  public async getResult(parentJob: Job): Promise<TranscriptionResult> {
-    const values = Object.entries((await parentJob.getChildrenValues()) ?? {});
-    const results = values.filter(([key]) => key.startsWith(CHILD_KEY_PREFIX));
-    if (results.length > 1) {
-      throw new Error(
-        `Job ${parentJob.id} has ${results.length} transcription children; expected one`,
-      );
-    }
-    const [result] = results;
-    if (result) {
-      return parseOrThrow(
-        QUEUE.resultsSchema,
-        result[1],
-        'transcription result',
-      );
-    }
+function childJobId(parentJobId: string, key: string): string {
+  return `${parentJobId}${CHILD_ID_SEPARATOR}${key}`;
+}
 
-    const failures = Object.entries(
-      (await parentJob.getIgnoredChildrenFailures()) ?? {},
-    );
-    const failure = failures.find(([key]) => key.startsWith(CHILD_KEY_PREFIX));
-    if (failure) {
-      throw new TranscriptionFailedError(failure[1]);
-    }
+function addedFlow({
+  opts: { jobId: parentJobId },
+  children,
+}: TranscriptionFlowJob): AddedTranscriptionFlow {
+  const prefix = `${parentJobId}${CHILD_ID_SEPARATOR}`;
+  const transcriptionJobIds: Record<string, string> = {};
+  for (const child of children) {
+    const jobId = child.opts?.jobId;
+    if (jobId) transcriptionJobIds[jobId.slice(prefix.length)] = jobId;
+  }
+  return { parentJobId, transcriptionJobIds };
+}
+
+/** BullMQ rejects job IDs containing ':', its key separator. */
+function assertIdPart(value: string, label: string) {
+  if (!value || value.includes(':')) {
     throw new Error(
-      `Job ${parentJob.id} has no transcription result; was it added with TranscriptionClient?`,
+      `Invalid ${label} '${value}': must be non-empty without ':'`,
     );
   }
 }

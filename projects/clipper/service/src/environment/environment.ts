@@ -1,22 +1,22 @@
 import { z } from 'zod';
 
 import {
+  baseEnvironmentSchema,
   createEnvironmentService,
   LocalEnvironmentModule,
   s3EnvAdapter,
 } from '@libs/nest-common';
 
 export type EnvironmentSchema = z.infer<typeof environmentSchema>;
-export const environmentSchema = z
-  .object({
-    debugLogging: z.stringbool().default(false),
-    environment: z.enum(['development', 'production']).default('development'),
+export const environmentSchema = baseEnvironmentSchema
+  .extend({
     redisUrl: z.string().min(1),
-
     claudeApiToken: z.string().min(1),
-
     analyticsServiceBaseUrl: z.string().min(1),
     analyticsServiceApiToken: z.string().min(1),
+
+    ffmpegPath: z.string().default('ffmpeg'),
+    ffprobePath: z.string().default('ffprobe'),
 
     // required s3 variables
     s3Endpoint: z.string(),

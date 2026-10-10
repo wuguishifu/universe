@@ -8,7 +8,7 @@ import {
   ClipperQueueConfig,
   ClipperQueueJob,
 } from '../../queue/queue';
-import { ClipsService } from './clips.service';
+import { CLIP_TRANSCRIPTION_KEY, ClipsService } from './clips.service';
 
 // this processor runs in CPU land
 @Processor(CLIPPER_QUEUE_CONFIG.processTranscript.queueName, { concurrency: 1 })
@@ -22,7 +22,10 @@ export class ClipsQueueProcessor extends WorkerHost {
 
   override async process(job: ClipperQueueJob<'processTranscript'>) {
     try {
-      const result = await this.transcriptionClient.getResult(job);
+      const result = await this.transcriptionClient.getResult(
+        job,
+        CLIP_TRANSCRIPTION_KEY,
+      );
       await this.clipsService.processTranscript({ jobData: job.data, result });
     } catch (error) {
       if (!(error instanceof TranscriptionFailedError)) throw error;
