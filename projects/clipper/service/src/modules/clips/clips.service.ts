@@ -59,9 +59,9 @@ export class ClipsService {
         ] => isFulfilled(item[1]),
       )
       .flatMap(([type, result]) =>
-        result.value.transcript.segments.map((item) => ({
+        result.value.transcript.segments.map(({ speaker, ...item }) => ({
           ...item,
-          speaker: getSpeakerFromType(type),
+          speaker: getSpeakerFromType(type, speaker),
         })),
       )
       .sort((a, b) => {
@@ -72,24 +72,22 @@ export class ClipsService {
     console.log(JSON.stringify({ segments }, null, 2));
 
     // TODO:
-    // 1. diarize
-    // ...
-
-    // 2. process with claude api
+    // 1. process with claude api
     // const analysis = await this.analysisService.analyzeTranscript({
     //   transcript: JSON.stringify(segments, null, 2),
     // });
 
-    // 3. ...
+    // 2. ...
   }
 }
 
-function getSpeakerFromType(type: string) {
+/** `diarizedSpeaker` is the transcript's own label ("A", "B", ...) for streams that were diarized. */
+function getSpeakerFromType(type: string, diarizedSpeaker?: string) {
   switch (type) {
     case 'primary':
       return 'host';
     case 'secondary':
-      return 'others';
+      return diarizedSpeaker ? `friend ${diarizedSpeaker}` : 'others';
     case 'extra':
       return 'game';
     default:

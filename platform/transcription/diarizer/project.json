@@ -1,0 +1,8 @@
+{
+  "name": "transcription-diarizer",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "// project": "A Python CLI (uv project) that ships inside transcription-worker's release bundle. This file only exists so changes to it rebuild the worker (its implicitDependencies).",
+  "sourceRoot": "platform/transcription/diarizer/src",
+  "projectType": "library",
+  "tags": ["scope:server"]
+}

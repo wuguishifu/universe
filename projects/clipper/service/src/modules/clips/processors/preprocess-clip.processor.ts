@@ -22,6 +22,12 @@ import { FFmpegService } from '../../ffmpeg/ffmpeg.service';
 import { FFprobeService } from '../../ffmpeg/ffprobe.service';
 import { FFprobeStream } from '../../ffmpeg/stream-types';
 
+/**
+ * How many people to expect in voice chat (not counting the host). The lower bound is what keeps
+ * friends who sound alike apart; overshooting only splits someone across two labels.
+ */
+const VOICE_CHAT_SPEAKERS = { minSpeakers: 3, maxSpeakers: 6 };
+
 @UniverseProcessor(CLIPPER_QUEUE_CONFIG, 'preprocessClip', { concurrency: 4 })
 export class PreprocessClipProcessor extends WorkerHost {
   constructor(
@@ -77,14 +83,18 @@ export class PreprocessClipProcessor extends WorkerHost {
     }
 
     // legacy versions of medal didn't have a separate discord and game stream
-    // so sometimes the voice chat and game are mixed onto the game stream
-    const secondaryStream =
-      filteredStreams.secondaryStream ?? filteredStreams.extraStream;
+    // so sometimes the voice chat and game are mixed onto the game stream.
+    // it's typed as secondary so it's diarized and labeled as voice chat.
+    const secondaryStream: FFprobeStream | undefined =
+      filteredStreams.secondaryStream ??
+      (filteredStreams.extraStream && {
+        ...filteredStreams.extraStream,
+        type: 'secondary',
+      });
 
-    const extraStream =
-      secondaryStream === filteredStreams.extraStream
-        ? undefined
-        : filteredStreams.extraStream;
+    const extraStream = filteredStreams.secondaryStream
+      ? filteredStreams.extraStream
+      : undefined;
 
     const streams = [
       primaryStream,
@@ -135,6 +145,10 @@ export class PreprocessClipProcessor extends WorkerHost {
               options: {
                 beamSize: 5,
                 prompt: '[laughter], [laughing], lol, haha',
+                // voice chat is everyone else on one stream, so split it by speaker
+                ...(result.item === 'secondary' && {
+                  diarize: VOICE_CHAT_SPEAKERS,
+                }),
               },
             },
           ]),

@@ -28,6 +28,8 @@ export const TRANSCRIPTION_QUEUE_CONFIG = {
         waitTimeMs: z.number(),
         ffmpegProcessingTimeMs: z.number(),
         whisperProcessingTimeMs: z.number(),
+        /** Only when the request set `diarize`. Runs at the same time as whisper. */
+        diarizeProcessingTimeMs: z.number().optional(),
         audioDurationMs: z.number(),
         realtimeFactor: z.number(),
       }),
