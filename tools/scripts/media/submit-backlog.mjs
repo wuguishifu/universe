@@ -28,7 +28,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { forEachConcurrent, formatBytes, proxyS3Key } from './lib.mjs';
 
-config({ path: './.env.local' });
+config({ path: path.join(import.meta.dirname, '.env.local') });
 
 /** clipper-service's MAX_CLIPS_PER_REQUEST. */
 const CHUNK = 500;
@@ -37,8 +37,8 @@ const UPLOAD_CONCURRENCY = 4;
 const { positionals, values } = parseArgs({
   allowPositionals: true,
   options: {
-    'api-url': { type: 'string', default: process.env.API_TOKEN },
-    token: { type: 'string', default: process.env.CLIPPER_API_TOKEN },
+    'api-url': { type: 'string', default: process.env.CLIPPER_API_URL },
+    token: { type: 'string', default: process.env.API_TOKEN },
     options: { type: 'string' },
     label: { type: 'string' },
     sample: { type: 'string' },
