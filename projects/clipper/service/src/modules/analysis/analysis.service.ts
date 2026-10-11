@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { ClaudeService } from '@libs/nest-common';
 import { ClipResult, clipResultSchema } from '@projects/clipper-contracts';
 import {
-  exampleResponse,
-  exampleTranscript,
+  exampleResponses,
+  exampleTranscripts,
   systemPrompt,
   userPrompt,
 } from './prompts';
@@ -23,14 +23,14 @@ export class AnalysisService {
       messages: [
         {
           role: 'user',
-          content: exampleTranscript,
+          content: userPrompt(JSON.stringify(exampleTranscripts[0], null, 2)),
         },
         {
           role: 'assistant',
           content: [
             {
               type: 'text',
-              text: exampleResponse,
+              text: JSON.stringify(exampleResponses[0], null, 2),
               cache_control: {
                 type: 'ephemeral',
                 ttl: '5m',
