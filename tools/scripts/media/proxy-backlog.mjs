@@ -6,7 +6,8 @@
 // Writes <out-dir>/proxies/<sha256>.mp4 (named by the original's hash, so copies of a clip share
 // one) and appends a line per clip to <out-dir>/manifest.jsonl. Safe to stop and rerun: clips
 // already done (same path, size and modified time) are skipped, and failed ones are tried again.
-// Each clip's game is the folder it's in, or the one in its Medal file name.
+// Each clip's game is the top-level folder it's in (<clips-dir>/<game>/...), or for clips straight
+// in <clips-dir>, the one in its Medal file name.
 import { appendFile, mkdir, readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { parseArgs } from 'node:util';

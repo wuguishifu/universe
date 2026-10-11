@@ -140,14 +140,15 @@ export function parseMedalFilename(name) {
 }
 
 /**
- * Medal sorts clips into a folder per game, so the folder a clip is in is its game. Clips straight
- * in the root (a flattened copy) fall back on the game in the file name.
+ * Medal sorts clips into a folder per game (<root>/<game>/*.mp4), so the top-level folder a clip is
+ * in is its game, however deep it is under it. Clips straight in the root (a flattened copy, or
+ * one game's folder passed as the root) fall back on the game in the file name.
  */
 export function clipMetadata(root, file) {
   const fromName = parseMedalFilename(path.basename(file));
-  const folder = path.relative(root, path.dirname(file));
+  const [folder] = path.relative(root, path.dirname(file)).split(path.sep);
   return {
-    game: folder ? path.basename(folder) : fromName.game,
+    game: folder || fromName.game,
     recordedAt: fromName.recordedAt,
   };
 }

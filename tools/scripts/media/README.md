@@ -26,7 +26,8 @@ VideoToolbox; elsewhere libx264.
 node tools/scripts/media/make-proxy.mjs clip.mp4 proxy.mp4
 
 # every clip under a folder: proxies/<sha256>.mp4 and manifest.jsonl in the out dir.
-# Resumable; the folder a clip is in is its game.
+# Resumable. Clips in <clips>/<game>/ get that game; clips straight in <clips> get the one in
+# their Medal file name.
 node tools/scripts/media/proxy-backlog.mjs /Volumes/HDD/Medal/Clips ~/clipper-backlog
 
 # upload them (S3 credentials from tools/scripts/s3/.env.local) and start a run. The API URL and
