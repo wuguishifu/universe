@@ -3,6 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "platform/transcription/worker/src",
   "projectType": "application",
+  "implicitDependencies": ["transcription-diarizer"],
   "tags": ["scope:server"],
   "targets": {
     "build": {
@@ -20,6 +21,13 @@
             "NODE_ENV": "development"
           }
         }
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --test 'src/**/*.spec.ts'",
+        "cwd": "platform/transcription/worker"
       }
     },
     "prune-lockfile": {
