@@ -11,10 +11,10 @@ export interface SpeakerTurn {
 const OVERLAP_SLACK_MS = 100;
 /**
  * With DTW a word lasts until the next one starts, so the last word before a pause spans it.
- * Only this much of a word is matched against turns, so a pause doesn't drag it into the next
- * speaker's turn.
+ * A word is taken to be spoken for at most this long, so a pause doesn't drag it into the next
+ * speaker's turn or hide the pause from segmenting.
  */
-const MAX_MATCHED_WORD_MS = 1000;
+const MAX_WORD_MS = 1000;
 /** A pause this long starts a new segment even when the same person keeps talking. */
 const SEGMENT_GAP_MS = 1500;
 const SENTENCE_END = /[.?!]["')\]]*$/;
@@ -55,8 +55,7 @@ function speakerFor(
   previous: string | undefined,
 ): string {
   const from = word.startMs - OVERLAP_SLACK_MS;
-  const to =
-    Math.min(word.endMs, word.startMs + MAX_MATCHED_WORD_MS) + OVERLAP_SLACK_MS;
+  const to = speechEndMs(word) + OVERLAP_SLACK_MS;
 
   const overlaps = new Map<string, number>();
   for (const turn of turns) {
@@ -78,6 +77,11 @@ function speakerFor(
   return turns.reduce((nearest, turn) =>
     distance(turn) < distance(nearest) ? turn : nearest,
   ).speaker;
+}
+
+/** When a word's speech likely ends, since with DTW its end runs on through any pause after it. */
+function speechEndMs(word: TranscriptSegment): number {
+  return Math.min(word.endMs, word.startMs + MAX_WORD_MS);
 }
 
 /** "A" through "Z", then "AA", "AB", ... */
@@ -104,7 +108,7 @@ export function segmentsBySpeaker(
       !lastWord ||
       current.speaker !== word.speaker ||
       SENTENCE_END.test(lastWord.text) ||
-      word.startMs - lastWord.endMs >= SEGMENT_GAP_MS
+      word.startMs - speechEndMs(lastWord) >= SEGMENT_GAP_MS
     ) {
       segments.push({ ...word });
     } else {

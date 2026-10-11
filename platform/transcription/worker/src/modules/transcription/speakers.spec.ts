@@ -90,4 +90,16 @@ describe('segmentsBySpeaker', () => {
       { text: 'again', startMs: 3000, endMs: 3300, speaker: 'B' },
     ]);
   });
+
+  it('splits on a pause that a DTW word spans', () => {
+    // With DTW a word lasts until the next one starts, so "Okay" runs through the pause.
+    const words = [
+      { ...word('Okay', 0, 3000), speaker: 'A' },
+      { ...word('sure', 3000, 3300), speaker: 'A' },
+    ];
+    assert.deepEqual(
+      segmentsBySpeaker(words).map(({ text }) => text),
+      ['Okay', 'sure'],
+    );
+  });
 });

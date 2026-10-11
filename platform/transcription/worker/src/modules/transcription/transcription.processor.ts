@@ -64,34 +64,49 @@ export class TranscriptionProcessor extends WorkerHost {
 
       // if we're transcribing at 3x real time that's a bit wack
       const timeoutMs = Math.max(DEFAULT_TIMEOUT_MS, durationMs * 3);
-      // Both only read the WAV, so they run at the same time.
-      const [
-        {
-          result: { transcription, result },
-          whisperProcessingTimeMs,
-        },
-        diarization,
-      ] = await Promise.all([
-        this.whisperService.transcribe({
-          model,
-          modelPath,
-          wavPath,
-          outputBase: path.join(workDir, 'transcript'),
-          prompt: options?.prompt,
-          beamSize: options?.beamSize,
-          wordTimestamps,
-          timeoutMs,
-        }),
+      // Both only read the WAV, so they run at the same time. If one fails the other is killed,
+      // and both are waited on so neither outlives the job or its work dir.
+      const abortController = new AbortController();
+      const abortOnFailure = <T>(promise: Promise<T>) =>
+        promise.catch((error: unknown) => {
+          abortController.abort(error);
+          throw error;
+        });
+      const [whisperOutcome, diarizeOutcome] = await Promise.allSettled([
+        abortOnFailure(
+          this.whisperService.transcribe({
+            model,
+            modelPath,
+            wavPath,
+            outputBase: path.join(workDir, 'transcript'),
+            prompt: options?.prompt,
+            beamSize: options?.beamSize,
+            wordTimestamps,
+            timeoutMs,
+            signal: abortController.signal,
+          }),
+        ),
         diarize
-          ? this.diarizerService.diarize({
-              wavPath,
-              outputPath: path.join(workDir, 'speakers.json'),
-              minSpeakers: diarize.minSpeakers,
-              maxSpeakers: diarize.maxSpeakers,
-              timeoutMs,
-            })
+          ? abortOnFailure(
+              this.diarizerService.diarize({
+                wavPath,
+                outputPath: path.join(workDir, 'speakers.json'),
+                minSpeakers: diarize.minSpeakers,
+                maxSpeakers: diarize.maxSpeakers,
+                timeoutMs,
+                signal: abortController.signal,
+              }),
+            )
           : undefined,
       ]);
+      // A killed command rejects with the abort reason, which is the first failure's error.
+      if (whisperOutcome.status === 'rejected') throw whisperOutcome.reason;
+      if (diarizeOutcome.status === 'rejected') throw diarizeOutcome.reason;
+      const {
+        result: { transcription, result },
+        whisperProcessingTimeMs,
+      } = whisperOutcome.value;
+      const diarization = diarizeOutcome.value;
 
       let segments: TranscriptSegment[] = transcription.map((segment) => ({
         startMs: segment.offsets.from,

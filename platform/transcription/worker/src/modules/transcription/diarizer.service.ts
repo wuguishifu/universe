@@ -33,12 +33,15 @@ export class DiarizerService implements OnModuleDestroy {
     minSpeakers,
     maxSpeakers,
     timeoutMs,
+    signal,
   }: {
     wavPath: string;
     outputPath: string;
     minSpeakers?: number;
     maxSpeakers?: number;
     timeoutMs: number;
+    /** Kills the diarizer, e.g. when the job fails elsewhere. */
+    signal?: AbortSignal;
   }): Promise<{ turns: SpeakerTurn[]; diarizeProcessingTimeMs: number }> {
     const { diarizerPath, diarizerModelDir } =
       this.environmentService.environment;
@@ -46,6 +49,9 @@ export class DiarizerService implements OnModuleDestroy {
       throw new Error('This worker has no diarizer (DIARIZER_PATH)');
     }
     const startTime = Date.now();
+    const abortSignal = signal
+      ? AbortSignal.any([this.abortController.signal, signal])
+      : this.abortController.signal;
 
     // prettier-ignore
     await runProcess(
@@ -57,7 +63,7 @@ export class DiarizerService implements OnModuleDestroy {
         ...(minSpeakers ? ['--min-speakers', String(minSpeakers)] : []),
         ...(maxSpeakers ? ['--max-speakers', String(maxSpeakers)] : []),
       ],
-      { timeoutMs, signal: this.abortController.signal },
+      { timeoutMs, signal: abortSignal },
     );
 
     return {
