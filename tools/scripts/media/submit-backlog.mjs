@@ -20,12 +20,15 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
+import { config } from 'dotenv';
 import { createReadStream } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { forEachConcurrent, formatBytes, proxyS3Key } from './lib.mjs';
+
+config({ path: './.env.local' });
 
 /** clipper-service's MAX_CLIPS_PER_REQUEST. */
 const CHUNK = 500;
@@ -34,7 +37,7 @@ const UPLOAD_CONCURRENCY = 4;
 const { positionals, values } = parseArgs({
   allowPositionals: true,
   options: {
-    'api-url': { type: 'string', default: process.env.CLIPPER_API_URL },
+    'api-url': { type: 'string', default: process.env.API_TOKEN },
     token: { type: 'string', default: process.env.CLIPPER_API_TOKEN },
     options: { type: 'string' },
     label: { type: 'string' },
@@ -55,7 +58,7 @@ const outDir = path.resolve(positionals[0]);
 const submitting = !values['upload-only'];
 if (submitting && (!values['api-url'] || !values.token)) {
   console.error(
-    'Set --api-url and --token (or CLIPPER_API_URL and CLIPPER_API_TOKEN), or pass --upload-only',
+    'Set --api-url and --token (or CLIPPER_API_URL and API_TOKEN), or pass --upload-only',
   );
   process.exit(1);
 }
