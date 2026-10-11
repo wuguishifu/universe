@@ -19,18 +19,25 @@ export class S3ObjectNotFoundError extends Error {}
 @Injectable()
 export class S3Service {
   private readonly client: S3Client | null;
+  /**
+   * For presigned uploads. The SDK otherwise signs a checksum of the (still empty) body into the
+   * URL, so the real upload doesn't match it.
+   */
+  private readonly uploadPresignClient: S3Client | null;
 
   constructor(@Inject(S3_CONFIG) s3: S3Props | null) {
-    this.client = s3
-      ? new S3Client({
-          endpoint: s3.endpoint,
-          region: s3.region,
-          credentials: {
-            accessKeyId: s3.accessKeyId,
-            secretAccessKey: s3.secretAccessKey,
-          },
-          forcePathStyle: s3.forcePathStyle,
-        })
+    const config = s3 && {
+      endpoint: s3.endpoint,
+      region: s3.region,
+      credentials: {
+        accessKeyId: s3.accessKeyId,
+        secretAccessKey: s3.secretAccessKey,
+      },
+      forcePathStyle: s3.forcePathStyle,
+    };
+    this.client = config ? new S3Client(config) : null;
+    this.uploadPresignClient = config
+      ? new S3Client({ ...config, requestChecksumCalculation: 'WHEN_REQUIRED' })
       : null;
   }
 
@@ -135,6 +142,36 @@ export class S3Service {
         ResponseContentDisposition: `attachment; filename="${key}"`,
       }),
       { expiresIn: 60 * 15 },
+    );
+  }
+
+  /**
+   * A URL to upload one object with PUT, without credentials. The upload must send this
+   * Content-Type and exactly this many bytes.
+   */
+  public getSignedPutUrl({
+    key,
+    bucket,
+    contentType,
+    contentLength,
+    expiresInSec,
+  }: {
+    key: string;
+    bucket: string;
+    contentType: string;
+    contentLength: number;
+    expiresInSec: number;
+  }): Promise<string> {
+    if (!this.uploadPresignClient) throw new Error('S3 is not configured');
+    return getSignedUrl(
+      this.uploadPresignClient,
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        ContentType: contentType,
+        ContentLength: contentLength,
+      }),
+      { expiresIn: expiresInSec },
     );
   }
 

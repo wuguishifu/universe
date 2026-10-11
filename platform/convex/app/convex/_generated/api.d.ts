@@ -8,6 +8,12 @@
  * @module
  */
 
+import type * as clipper_auth from "../clipper/auth.js";
+import type * as clipper_clipJobs from "../clipper/clipJobs.js";
+import type * as clipper_helpers from "../clipper/helpers.js";
+import type * as clipper_runs from "../clipper/runs.js";
+import type * as clipper_tables from "../clipper/tables.js";
+import type * as clipper_validators from "../clipper/validators.js";
 import type * as common_functions_customFunctions from "../common/functions/customFunctions.js";
 import type * as http from "../http.js";
 import type * as routes from "../routes.js";
@@ -25,6 +31,12 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "clipper/auth": typeof clipper_auth;
+  "clipper/clipJobs": typeof clipper_clipJobs;
+  "clipper/helpers": typeof clipper_helpers;
+  "clipper/runs": typeof clipper_runs;
+  "clipper/tables": typeof clipper_tables;
+  "clipper/validators": typeof clipper_validators;
   "common/functions/customFunctions": typeof common_functions_customFunctions;
   http: typeof http;
   routes: typeof routes;
