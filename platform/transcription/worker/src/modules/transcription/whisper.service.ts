@@ -48,6 +48,7 @@ export class WhisperService implements OnModuleDestroy {
     timeoutMs,
     beamSize = 1,
     wordTimestamps = false,
+    signal,
   }: {
     model: string;
     modelPath: string;
@@ -58,9 +59,14 @@ export class WhisperService implements OnModuleDestroy {
     beamSize?: number;
     /** Per-token timings in the JSON (`tokens`), which takes extra decoding work. */
     wordTimestamps?: boolean;
+    /** Kills whisper, e.g. when the job fails elsewhere. */
+    signal?: AbortSignal;
   }): Promise<{ result: WhisperJson; whisperProcessingTimeMs: number }> {
     const startTime = Date.now();
     const dtwPreset = wordTimestamps ? dtwPresetFor(model) : undefined;
+    const abortSignal = signal
+      ? AbortSignal.any([this.abortController.signal, signal])
+      : this.abortController.signal;
 
     // prettier-ignore
     await runProcess(
@@ -78,7 +84,7 @@ export class WhisperService implements OnModuleDestroy {
         '--no-prints',
         ...(prompt ? ['--prompt', prompt] : []),
       ],
-      { timeoutMs, signal: this.abortController.signal }
+      { timeoutMs, signal: abortSignal },
     );
 
     return {

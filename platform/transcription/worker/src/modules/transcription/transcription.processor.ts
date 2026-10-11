@@ -8,9 +8,12 @@ import {
   TRANSCRIPTION_QUEUE_CONFIG,
   TranscriptionJob,
   TranscriptionJobResult,
+  type TranscriptSegment,
 } from '@platform/transcription-contracts';
+import { DiarizerService } from './diarizer.service';
 import { FilesService } from './files.service';
 import { ModelsService } from './models.service';
+import { assignSpeakers, segmentsBySpeaker } from './speakers';
 import { WhisperService } from './whisper.service';
 import { tokensToWords } from './words';
 
@@ -22,6 +25,7 @@ export class TranscriptionProcessor extends WorkerHost {
     private readonly filesService: FilesService,
     private readonly modelsService: ModelsService,
     private readonly whisperService: WhisperService,
+    private readonly diarizerService: DiarizerService,
   ) {
     super();
   }
@@ -38,6 +42,12 @@ export class TranscriptionProcessor extends WorkerHost {
       );
     }
     const { model, modelPath } = resolvedModel;
+    const diarize = options?.diarize;
+    if (diarize && !this.diarizerService.available) {
+      throw new UnrecoverableError('This worker has no diarizer');
+    }
+    // Speakers are matched to words, so diarizing needs word timings.
+    const wordTimestamps = !!(options?.wordTimestamps || diarize);
 
     const workDir = await mkdtemp(path.join(tmpdir(), 'transcription-worker-'));
     try {
@@ -52,30 +62,64 @@ export class TranscriptionProcessor extends WorkerHost {
           timeoutMs: DEFAULT_TIMEOUT_MS,
         });
 
-      const outputBase = path.join(workDir, 'transcript');
+      // if we're transcribing at 3x real time that's a bit wack
+      const timeoutMs = Math.max(DEFAULT_TIMEOUT_MS, durationMs * 3);
+      // Both only read the WAV, so they run at the same time. If one fails the other is killed,
+      // and both are waited on so neither outlives the job or its work dir.
+      const abortController = new AbortController();
+      const abortOnFailure = <T>(promise: Promise<T>) =>
+        promise.catch((error: unknown) => {
+          abortController.abort(error);
+          throw error;
+        });
+      const [whisperOutcome, diarizeOutcome] = await Promise.allSettled([
+        abortOnFailure(
+          this.whisperService.transcribe({
+            model,
+            modelPath,
+            wavPath,
+            outputBase: path.join(workDir, 'transcript'),
+            prompt: options?.prompt,
+            beamSize: options?.beamSize,
+            wordTimestamps,
+            timeoutMs,
+            signal: abortController.signal,
+          }),
+        ),
+        diarize
+          ? abortOnFailure(
+              this.diarizerService.diarize({
+                wavPath,
+                outputPath: path.join(workDir, 'speakers.json'),
+                minSpeakers: diarize.minSpeakers,
+                maxSpeakers: diarize.maxSpeakers,
+                timeoutMs,
+                signal: abortController.signal,
+              }),
+            )
+          : undefined,
+      ]);
+      // A killed command rejects with the abort reason, which is the first failure's error.
+      if (whisperOutcome.status === 'rejected') throw whisperOutcome.reason;
+      if (diarizeOutcome.status === 'rejected') throw diarizeOutcome.reason;
       const {
         result: { transcription, result },
         whisperProcessingTimeMs,
-      } = await this.whisperService.transcribe({
-        model,
-        modelPath,
-        wavPath,
-        outputBase,
-        prompt: options?.prompt,
-        beamSize: options?.beamSize,
-        wordTimestamps: options?.wordTimestamps,
-        // if we're transcribing at 3x real time that's a bit wack
-        timeoutMs: Math.max(DEFAULT_TIMEOUT_MS, durationMs * 3),
-      });
+      } = whisperOutcome.value;
+      const diarization = diarizeOutcome.value;
 
-      const segments = transcription.map((segment) => ({
+      let segments: TranscriptSegment[] = transcription.map((segment) => ({
         startMs: segment.offsets.from,
         endMs: segment.offsets.to,
         text: segment.text.trim(),
       }));
-      const words = options?.wordTimestamps
+      let words = wordTimestamps
         ? tokensToWords(transcription.flatMap((segment) => segment.tokens))
         : undefined;
+      if (diarization && words) {
+        words = assignSpeakers(words, diarization.turns);
+        segments = segmentsBySpeaker(words);
+      }
 
       return {
         transcript: {
@@ -93,6 +137,7 @@ export class TranscriptionProcessor extends WorkerHost {
           waitTimeMs: (job.processedOn ?? Date.now()) - job.timestamp,
           ffmpegProcessingTimeMs,
           whisperProcessingTimeMs,
+          diarizeProcessingTimeMs: diarization?.diarizeProcessingTimeMs,
           audioDurationMs: durationMs,
           realtimeFactor: whisperProcessingTimeMs / durationMs,
         },
