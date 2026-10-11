@@ -6,8 +6,11 @@ import {
   CLIPPER_PRIORITY,
   CLIPPER_QUEUE_CONFIG,
   type ClipInput,
+  type ClipJob,
+  type ClipJobState,
   type ClipperQueue,
   MAX_CLIPS_PER_REQUEST,
+  type Run,
   type RunOptions,
   runOptionsSchema,
   type RunSource,
@@ -107,6 +110,68 @@ export class RunsService {
       cursor = page.continueCursor;
     }
     return { runId: newRunId, ...total };
+  }
+
+  async get(runId: string): Promise<Run | null> {
+    const run = await this.convex.query(api.clipper.runs.get, { runId });
+    if (!run) return null;
+    return {
+      runId: run._id,
+      label: run.label,
+      source: run.source,
+      options: runOptionsSchema.parse(run.options),
+      promptVersion: run.promptVersion,
+      status: run.status,
+      counts: run.counts,
+      found: run.found,
+      spendUsd: run.spendUsd,
+      createdAt: new Date(run._creationTime).toISOString(),
+      finishedAt:
+        run.finishedAt === undefined
+          ? undefined
+          : new Date(run.finishedAt).toISOString(),
+    };
+  }
+
+  async clipJobs(
+    runId: string,
+    {
+      state,
+      cursor,
+      limit,
+    }: { state?: ClipJobState; cursor?: string; limit: number },
+  ): Promise<{ clipJobs: ClipJob[]; cursor: string | null } | null> {
+    const run = await this.convex.query(api.clipper.runs.get, { runId });
+    if (!run) return null;
+    const page = await this.convex.query(api.clipper.clipJobs.listByRun, {
+      runId: run._id,
+      state,
+      paginationOpts: { numItems: limit, cursor: cursor ?? null },
+    });
+    return {
+      clipJobs: page.page.flatMap(({ clip, ...job }) => {
+        if (!clip) return [];
+        return [
+          {
+            clipJobId: job._id,
+            state: job.state,
+            attempts: job.attempts,
+            outcome: job.outcome,
+            error: job.error,
+            costUsd: job.costUsd,
+            latencyMs: job.latencyMs,
+            clip: {
+              sha256: clip.sha256,
+              durationSec: clip.durationSec,
+              originalPath: clip.originalPath,
+              game: clip.game,
+              recordedAt: clip.recordedAt,
+            },
+          },
+        ];
+      }),
+      cursor: page.isDone ? null : page.continueCursor,
+    };
   }
 
   /**

@@ -225,18 +225,8 @@ export async function makeProxy(input, output, { encoder = 'auto' } = {}) {
 }
 
 function ffmpegArgs({ input, output, encoder, source, videoKbps }) {
-  const video = `[0:v:0]fps=${PROXY.fps},scale=w=${PROXY.maxWidth}:h=${PROXY.maxHeight}:force_original_aspect_ratio=decrease:force_divisible_by=2,format=yuv420p[v]`;
-  // Medal can record the game, the mic and Discord as separate tracks; Gemini needs to hear all of them.
-  const tracks = Array.from(
-    { length: source.audioTracks },
-    (_, i) => `[0:a:${i}]`,
-  ).join('');
-  const audio =
-    source.audioTracks > 1
-      ? `${tracks}amix=inputs=${source.audioTracks}:duration=longest[a]`
-      : source.audioTracks === 1
-        ? '[0:a:0]anull[a]'
-        : null;
+  const video = `[0:v:0]fps=${PROXY.fps},${scaleFilter(PROXY.maxWidth, PROXY.maxHeight)},format=yuv420p[v]`;
+  const audio = audioFilter(source.audioTracks);
   const maxrate = `${Math.round(videoKbps * 1.5)}k`;
   const bufsize = `${videoKbps * 3}k`;
 
@@ -257,6 +247,40 @@ function ffmpegArgs({ input, output, encoder, source, videoKbps }) {
     '-movflags', '+faststart',
     output,
   ];
+}
+
+/** Scales down (never up) to fit in width×height, keeping the aspect ratio. */
+export function scaleFilter(width, height) {
+  return `scale=w='min(iw,${width})':h='min(ih,${height})':force_original_aspect_ratio=decrease:force_divisible_by=2`;
+}
+
+/**
+ * A filtergraph that makes [a] out of every audio track, or null if there are none. Medal can
+ * record the game, the mic and Discord as separate tracks, and all of them matter.
+ */
+export function audioFilter(audioTracks) {
+  if (audioTracks === 0) return null;
+  if (audioTracks === 1) return '[0:a:0]anull[a]';
+  const tracks = Array.from({ length: audioTracks }, (_, i) => `[0:a:${i}]`);
+  return `${tracks.join('')}amix=inputs=${audioTracks}:duration=longest[a]`;
+}
+
+/** Calls clipper-service's API, throwing on anything but a 2xx. */
+export function clipperApi(apiUrl, token) {
+  return async (method, pathname, body) => {
+    const response = await fetch(new URL(pathname, apiUrl), {
+      method,
+      headers: {
+        authorization: `Bearer ${token}`,
+        ...(body !== undefined && { 'content-type': 'application/json' }),
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const text = await response.text();
+    if (!response.ok)
+      throw new Error(`${method} ${pathname}: ${response.status} ${text}`);
+    return JSON.parse(text);
+  };
 }
 
 export function formatBytes(bytes) {

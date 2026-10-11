@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { clipInputSchema, MAX_CLIPS_PER_REQUEST } from '../clips';
 import { c } from '../contract';
 import { runOptionsSchema, runSourceSchema } from '../options';
+import { clipJobSchema, clipJobStateSchema, runSchema } from '../runs';
 
 const errorSchema = z.object({ message: z.string() });
 const clipsSchema = clipInputSchema.array().min(1).max(MAX_CLIPS_PER_REQUEST);
@@ -15,7 +16,8 @@ const queuedSchema = z.object({
 
 /**
  * Runs are written here and read from Convex (api.clipper.runs, api.clipper.clipJobs), which the
- * client can subscribe to for progress and results.
+ * client can subscribe to for progress and results. get and clipJobs are the same reads for
+ * scripts, which don't have the Convex secret.
  */
 export const runsRouter = c.router(
   {
@@ -59,6 +61,36 @@ export const runsRouter = c.router(
       }),
       responses: {
         201: queuedSchema.extend({ runId: z.string() }),
+        404: errorSchema,
+      },
+    },
+    get: {
+      method: 'GET',
+      path: '/:runId',
+      description: 'A run, with how many of its clips are in each state.',
+      pathParams: runParams,
+      responses: {
+        200: runSchema,
+        404: errorSchema,
+      },
+    },
+    clipJobs: {
+      method: 'GET',
+      path: '/:runId/clip-jobs',
+      description:
+        "A page of a run's clip jobs, with their clips and results. Pass the cursor back for the next.",
+      pathParams: runParams,
+      query: z.object({
+        state: clipJobStateSchema.optional(),
+        cursor: z.string().optional(),
+        limit: z.coerce.number().int().min(1).max(500).default(100),
+      }),
+      responses: {
+        200: z.object({
+          clipJobs: clipJobSchema.array(),
+          /** Null on the last page. */
+          cursor: z.string().nullable(),
+        }),
         404: errorSchema,
       },
     },

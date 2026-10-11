@@ -16,9 +16,9 @@ import {
 } from '@projects/clipper-contracts';
 import { GeminiError, GeminiService } from './gemini.service';
 import { MediaService } from './media.service';
-import { clipContext, systemInstruction } from './prompt';
+import { clipContext, retryPrompt, systemInstruction } from './prompt';
 
-/** An invalid answer gets asked for once more, then the clip job fails. */
+/** An invalid answer gets asked for once more (saying what was wrong), then the clip job fails. */
 const MAX_CALLS = 2;
 
 export type Clip = {
@@ -120,6 +120,7 @@ export class AnalysisService {
         offsetSec: media.offsetSec,
         instructions: options.instructions,
       });
+      let retry: { answer: string; prompt: string } | undefined;
       let lastError = '';
       for (let call = 1; call <= MAX_CALLS; call++) {
         let answer: { text: string; usage: TokenUsage };
@@ -129,6 +130,7 @@ export class AnalysisService {
             media: { data, mimeType: media.mimeType },
             systemInstruction: system,
             context,
+            retry,
             signal,
           });
         } catch (error) {
@@ -154,6 +156,7 @@ export class AnalysisService {
           };
         }
         lastError = result.error;
+        retry = { answer: answer.text, prompt: retryPrompt(result.error) };
       }
       throw fail(
         `Gemini's answer was invalid ${MAX_CALLS} times; last: ${lastError}`,

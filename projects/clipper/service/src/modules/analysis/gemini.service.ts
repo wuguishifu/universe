@@ -68,18 +68,23 @@ export class GeminiService {
     });
   }
 
-  /** One call: the media inline, then the clip's details. Returns the raw JSON text. */
+  /**
+   * One call: the media inline, then the clip's details, then (when asking again) the answer that
+   * couldn't be used and what was wrong with it. Returns the raw JSON text.
+   */
   async generate({
     options,
     media,
     systemInstruction,
     context,
+    retry,
     signal,
   }: {
     options: RunOptions;
     media: { data: Buffer; mimeType: string };
     systemInstruction: string;
     context: string;
+    retry?: { answer: string; prompt: string };
     signal: AbortSignal;
   }): Promise<{ text: string; usage: TokenUsage }> {
     const isVideo = media.mimeType.startsWith('video/');
@@ -101,6 +106,12 @@ export class GeminiService {
               { text: context },
             ],
           },
+          ...(retry
+            ? [
+                { role: 'model', parts: [{ text: retry.answer }] },
+                { role: 'user', parts: [{ text: retry.prompt }] },
+              ]
+            : []),
         ],
         config: {
           systemInstruction,

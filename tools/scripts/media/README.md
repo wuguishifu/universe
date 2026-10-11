@@ -29,13 +29,26 @@ node tools/scripts/media/make-proxy.mjs clip.mp4 proxy.mp4
 # Resumable; the folder a clip is in is its game.
 node tools/scripts/media/proxy-backlog.mjs /Volumes/HDD/Medal/Clips ~/clipper-backlog
 
-# upload them (S3 credentials from tools/scripts/s3/.env.local) and start a run
-export CLIPPER_API_URL=http://clipper-service:3008 CLIPPER_API_TOKEN=...
+# upload them (S3 credentials from tools/scripts/s3/.env.local) and start a run. The API URL and
+# token come from this folder's .env.local (nx setup environment), or --api-url/--token.
 node tools/scripts/media/submit-backlog.mjs ~/clipper-backlog --sample 200 --label "defaults"
 node tools/scripts/media/submit-backlog.mjs ~/clipper-backlog --sample 200 \
   --options '{"media":"audio","tailSeconds":45}' --label "audio, last 45s"
+
+# wait for a run, cut what it found out of the originals, and write a page to watch them on
+node tools/scripts/media/render-run.mjs ~/clipper-backlog <runId> --wait
+open ~/clipper-backlog/renders/<runId>/index.html
 ```
 
 Each `--sample` picks a different random set; to compare options on the same clips, start one run
 and use `POST /api/runs/:id/rerun` with the other options. Without `--sample`, every clip in the
 manifest is submitted (copies of a clip once).
+
+## Tuning
+
+`render-run.mjs` cuts each moment out of the original at 1080p (`--pad 1` adds a second either side,
+as the client will) into `renders/<runId>/`, best first, and writes `index.html` with each one's
+title, category, confidence and reasoning. Clips where nothing was found or that failed show their
+proxy, so you can see what Gemini missed. Cuts already made are kept, so it's quick to rerun, e.g.
+on a run that's still going. If the drive with the originals isn't plugged in, it cuts from the
+proxies (480p, 4fps) and says so.

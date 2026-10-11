@@ -35,6 +35,16 @@ export class RunsController {
         if (result === 'not_found') return notFound(runId);
         return { status: 201, body: result };
       },
+      get: async ({ params: { runId } }) => {
+        const run = await this.runsService.get(runId);
+        if (!run) return notFound(runId);
+        return { status: 200, body: run };
+      },
+      clipJobs: async ({ params: { runId }, query }) => {
+        const page = await this.runsService.clipJobs(runId, query);
+        if (!page) return notFound(runId);
+        return { status: 200, body: page };
+      },
       cancel: async ({ params: { runId } }) => {
         const result = await this.runsService.cancel(runId);
         if (result === 'not_found') return notFound(runId);

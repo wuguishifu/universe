@@ -1,5 +1,6 @@
 import {
   CLIP_CATEGORIES,
+  formatTimestamp,
   type RunOptions,
   SEGMENT_LIMITS,
 } from '@projects/clipper-contracts';
@@ -8,7 +9,7 @@ import {
  * Stored on every run. Bump it whenever the prompt or answer schema changes in a way that could
  * change results, so runs before and after aren't compared as if only their options differed.
  */
-export const PROMPT_VERSION = 1;
+export const PROMPT_VERSION = 2;
 
 export function systemInstruction(options: RunOptions): string {
   const sees =
@@ -23,7 +24,7 @@ The clips are recorded with Medal: when something happens, the player presses a 
 The audio is the game, the player's microphone and their friends on Discord, mixed together. Voices are often the best sign of a moment: laughing, yelling, someone saying "clip that", a sudden silence and then screaming. ${sees}
 
 Find up to ${SEGMENT_LIMITS.maxSegments} moments that are funny, impressive, or otherwise worth sharing with friends. For each one:
-- startSec and endSec: seconds from the start of the media you're given. Start a few seconds before the moment, so someone watching gets the setup. End once the payoff and the reaction to it are over, not mid-laugh. Each moment is ${SEGMENT_LIMITS.minSec} to ${SEGMENT_LIMITS.maxSec} seconds long, usually 8 to 30. Moments must not overlap; if two are close together, make them one.
+- start and end: timestamps in M:SS from the start of the media you're given, like "1:05" for 65 seconds in. Start a few seconds before the moment, so someone watching gets the setup. End once the payoff and the reaction to it are over, not mid-laugh. Each moment is ${SEGMENT_LIMITS.minSec} to ${SEGMENT_LIMITS.maxSec} seconds long, usually 8 to 30. Moments must not overlap; if two are close together, make them one.
 - title: a short, casual title the player could post it with, under 60 characters. Write it like a gamer posting a clip, not like a headline. No hashtags.
 - category: one of ${CLIP_CATEGORIES.join(', ')}.
 - confidence: 0 to 1, how sure you are that it's worth posting. 0.8 or more means it clearly is; under 0.4 means it's a stretch.
@@ -50,8 +51,8 @@ export function clipContext({
       ? `Game: ${game} (Medal's name for it, which may have its spaces removed).`
       : "The game isn't known.",
     offsetSec > 0
-      ? `This is the last ${mediaDurationSec.toFixed(0)} seconds of a ${clipDurationSec.toFixed(0)}-second clip. Give timestamps from the start of what you were given.`
-      : `The clip is ${clipDurationSec.toFixed(0)} seconds long.`,
+      ? `This is the last ${formatTimestamp(mediaDurationSec)} of a ${formatTimestamp(clipDurationSec)} clip. Give timestamps from the start of what you were given, from 0:00 to ${formatTimestamp(mediaDurationSec)}.`
+      : `The clip is ${formatTimestamp(clipDurationSec)} long, so timestamps go from 0:00 to ${formatTimestamp(clipDurationSec)}.`,
   ];
   if (instructions) {
     lines.push(
@@ -77,16 +78,16 @@ export const MODEL_OUTPUT_JSON_SCHEMA = {
         type: 'object',
         properties: {
           reasoning: { type: 'string' },
-          startSec: { type: 'number' },
-          endSec: { type: 'number' },
+          start: { type: 'string', description: 'M:SS, e.g. "1:05"' },
+          end: { type: 'string', description: 'M:SS, e.g. "1:22"' },
           title: { type: 'string' },
           category: { type: 'string', enum: [...CLIP_CATEGORIES] },
           confidence: { type: 'number', minimum: 0, maximum: 1 },
         },
         required: [
           'reasoning',
-          'startSec',
-          'endSec',
+          'start',
+          'end',
           'title',
           'category',
           'confidence',
@@ -101,3 +102,8 @@ export const MODEL_OUTPUT_JSON_SCHEMA = {
   },
   required: ['segments', 'found'],
 };
+
+/** Asks again after an answer that couldn't be used, saying what was wrong with it. */
+export function retryPrompt(problem: string): string {
+  return `That answer can't be used: ${problem}. Answer again, fixing that. Timestamps are M:SS from the start of the media, and no later than its end.`;
+}

@@ -52,6 +52,9 @@ export type Outcome = z.infer<typeof outcomeSchema>;
 /**
  * What the model is asked to answer with. Flat rather than a union, since that's what structured
  * output handles best; `toOutcome` turns it into an Outcome.
+ *
+ * Timestamps are "M:SS" strings, not seconds: Gemini places moments in video as MM:SS, and asked
+ * for seconds it often writes 1:47 as 147.
  */
 export const modelOutputSchema = z.object({
   found: z.boolean(),
@@ -59,8 +62,8 @@ export const modelOutputSchema = z.object({
   segments: z
     .object({
       reasoning: z.string(),
-      startSec: z.number(),
-      endSec: z.number(),
+      start: z.string(),
+      end: z.string(),
       title: z.string(),
       category: z.enum(CLIP_CATEGORIES),
       confidence: z.number(),
@@ -72,6 +75,23 @@ export type ModelOutput = z.infer<typeof modelOutputSchema>;
 
 /** How far past the end of the media a timestamp can be and still count as the end. */
 const END_SLACK_SEC = 2;
+
+/** "1:05", "01:05.5" or "1:02:03" in seconds, or null if it isn't a timestamp. */
+export function parseTimestamp(text: string): number | null {
+  const match = /^(?:(\d+):)?(\d{1,2}):(\d{2}(?:\.\d+)?)$/.exec(text.trim());
+  if (!match) return null;
+  const [, hours = '0', minutes = '0', seconds = '0'] = match;
+  // "1:60" is clear enough, but "1:75" isn't.
+  if (Number(seconds) > 60) return null;
+  if (match[1] !== undefined && Number(minutes) >= 60) return null;
+  return Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds);
+}
+
+/** Seconds as "M:SS", the way the model is asked to write timestamps. */
+export function formatTimestamp(seconds: number): string {
+  const whole = Math.round(seconds);
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
+}
 
 /**
  * Checks the model's answer and puts its timestamps on the original clip's timeline. Small slips
@@ -103,18 +123,16 @@ export function toOutcome(
 
   const segments: Segment[] = [];
   for (const raw of output.segments) {
-    let { startSec, endSec } = raw;
-    const span = `${startSec}s-${endSec}s`;
-    if (!Number.isFinite(startSec) || !Number.isFinite(endSec)) {
-      return { ok: false, error: `segment ${span} isn't a number` };
+    const span = `${raw.start}-${raw.end}`;
+    let startSec = parseTimestamp(raw.start);
+    let endSec = parseTimestamp(raw.end);
+    if (startSec === null || endSec === null) {
+      return { ok: false, error: `segment ${span} isn't in M:SS` };
     }
-    if (
-      endSec > mediaDurationSec + END_SLACK_SEC ||
-      startSec < -END_SLACK_SEC
-    ) {
+    if (endSec > mediaDurationSec + END_SLACK_SEC) {
       return {
         ok: false,
-        error: `segment ${span} is outside the ${mediaDurationSec}s of media`,
+        error: `segment ${span} goes past the end of the media, ${formatTimestamp(mediaDurationSec)}`,
       };
     }
     startSec = Math.max(0, startSec);

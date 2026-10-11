@@ -1,7 +1,13 @@
 // Run with `nx test clipper-contracts` (Node's built-in test runner; Node strips the types).
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { type ModelOutput, toOutcome } from './outcome.ts';
+import {
+  formatTimestamp,
+  type ModelOutput,
+  parseTimestamp,
+  type Segment,
+  toOutcome,
+} from './outcome.ts';
 
 const segment = (startSec: number, endSec: number, confidence = 0.8) => ({
   reasoning: 'they all scream',
@@ -11,9 +17,39 @@ const segment = (startSec: number, endSec: number, confidence = 0.8) => ({
   category: 'funny' as const,
   confidence,
 });
-const found = (...segments: ModelOutput['segments']): ModelOutput => ({
+/** The model's version of a segment, with M:SS timestamps. */
+const answer = ({ startSec, endSec, ...rest }: Segment) => ({
+  ...rest,
+  start: timestamp(startSec),
+  end: timestamp(endSec),
+});
+const timestamp = (seconds: number) =>
+  `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+const found = (...segments: Segment[]): ModelOutput => ({
   found: true,
-  segments,
+  segments: segments.map(answer),
+});
+
+describe('parseTimestamp', () => {
+  it('reads M:SS, MM:SS, H:MM:SS and fractions', () => {
+    assert.equal(parseTimestamp('1:47'), 107);
+    assert.equal(parseTimestamp(' 01:05.5 '), 65.5);
+    assert.equal(parseTimestamp('0:00'), 0);
+    assert.equal(parseTimestamp('1:02:03'), 3723);
+    assert.equal(parseTimestamp('1:60'), 120);
+  });
+
+  it("rejects what isn't a timestamp", () => {
+    for (const text of ['147', '1:75', '1:5', 'a:bc', '', '1:60:00']) {
+      assert.equal(parseTimestamp(text), null, text);
+    }
+  });
+
+  it('round-trips with formatTimestamp', () => {
+    assert.equal(formatTimestamp(107), '1:47');
+    assert.equal(formatTimestamp(59.6), '1:00');
+    assert.equal(parseTimestamp(formatTimestamp(754)), 754);
+  });
 });
 const full = { mediaDurationSec: 120, offsetSec: 0 };
 
@@ -48,7 +84,7 @@ describe('toOutcome', () => {
   });
 
   it('pulls an end just past the media back to the end', () => {
-    const result = toOutcome(found(segment(100, 121.5)), full);
+    const result = toOutcome(found(segment(100, 121)), full);
     assert.ok(result.ok && result.outcome.status === 'found');
     assert.equal(result.outcome.segments[0]?.endSec, 120);
   });
@@ -91,7 +127,11 @@ describe('toOutcome', () => {
   it('rejects answers it would have to guess at', () => {
     for (const [output, error] of [
       [found(), /no segments/],
-      [found(segment(100, 130)), /outside/],
+      [found(segment(100, 130)), /past the end/],
+      [
+        { found: true, segments: [{ ...answer(segment(0, 10)), end: '147' }] },
+        /M:SS/,
+      ],
       [found(segment(30, 20)), /ends before/],
       [found(segment(0, 61)), /longer than/],
       [found(segment(10, 30), segment(25, 40)), /overlap/],

@@ -3,7 +3,7 @@
 //
 // Usage: node tools/scripts/media/submit-backlog.mjs <out-dir> [options]
 //   --api-url <url>       clipper-service, e.g. http://clipper-service:3008 (or CLIPPER_API_URL)
-//   --token <token>       its API_TOKEN (or CLIPPER_API_TOKEN)
+//   --token <token>       its API_TOKEN (or API_TOKEN)
 //   --options <json>      run options, e.g. '{"media":"audio","tailSeconds":45}' (defaults otherwise)
 //   --label <text>        shown in the client, e.g. "audio, last 45s"
 //   --sample <n>          a random n of the clips (for trying options out) instead of all of them
@@ -26,7 +26,12 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { forEachConcurrent, formatBytes, proxyS3Key } from './lib.mjs';
+import {
+  clipperApi,
+  forEachConcurrent,
+  formatBytes,
+  proxyS3Key,
+} from './lib.mjs';
 
 config({ path: path.join(import.meta.dirname, '.env.local') });
 
@@ -117,6 +122,7 @@ const toInput = (clip) => ({
   game: clip.game,
   recordedAt: clip.recordedAt,
 });
+const api = clipperApi(values['api-url'], values.token);
 let runId = values.run;
 let queued = 0;
 let alreadyInRun = 0;
@@ -182,21 +188,6 @@ async function exists(key) {
     if (error?.$metadata?.httpStatusCode === 404) return false;
     throw error;
   }
-}
-
-async function api(method, pathname, body) {
-  const response = await fetch(new URL(pathname, values['api-url']), {
-    method,
-    headers: {
-      authorization: `Bearer ${values.token}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-  const text = await response.text();
-  if (!response.ok)
-    throw new Error(`${method} ${pathname}: ${response.status} ${text}`);
-  return JSON.parse(text);
 }
 
 function shuffle(items) {
