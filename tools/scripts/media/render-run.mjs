@@ -10,10 +10,10 @@
 //   --concurrency <n>     cuts at once (default 2, for an external HDD)
 //   --encoder <name>      auto|videotoolbox|libx264
 //
-// <out-dir> is the one proxy-backlog.mjs wrote: its manifest says where each original is. Writes
-// <out-dir>/renders/<runId>/index.html (open it in a browser) with a video per moment, and the
-// proxies of clips where nothing was found or that failed, to check what was missed. Cuts already
-// made are kept, so it's quick to run again. A clip whose original isn't there (the drive isn't
+// <out-dir> is the one proxy-backlog.mjs wrote: its manifest says where each original is. Cuts go
+// in a folder per game, <out-dir>/renders/<runId>/<game>/, and <out-dir>/renders/<runId>/index.html
+// (open it in a browser) has a video per moment, and the proxies of clips where nothing was found
+// or that failed, to check what was missed. Cuts already made are kept, so it's quick to run again. A clip whose original isn't there (the drive isn't
 // plugged in) is cut from its proxy instead, at 4fps.
 import { config } from 'dotenv';
 import {
@@ -117,6 +117,7 @@ const moments = clipJobs
     job.outcome.segments.map((segment, index) => ({
       job,
       segment,
+      dir: slug(job.clip.game ?? '', 'unknown-game'),
       name: `${slug(segment.title)}-${job.clipJobId.slice(-6)}-${index + 1}`,
     })),
   )
@@ -129,15 +130,24 @@ const encoder = await resolveEncoder(values.encoder);
 let made = 0;
 let kept = 0;
 await forEachConcurrent(moments, concurrency, async (moment) => {
-  moment.file = `${moment.name}.mp4`;
+  moment.file = path.join(moment.dir, `${moment.name}.mp4`);
   try {
     const source = await sourceFor(moment.job.clip);
     moment.fromProxy = source.isProxy;
     // Named for how it was cut, so a different --pad, or the original turning up where only the
     // proxy was before, makes a new cut instead of reusing the old one.
-    moment.file = `${moment.name}${pad ? `-pad${pad}` : ''}${source.isProxy ? '-proxy' : ''}.mp4`;
+    const name = `${moment.name}${pad ? `-pad${pad}` : ''}${source.isProxy ? '-proxy' : ''}.mp4`;
+    moment.file = path.join(moment.dir, name);
     const output = path.join(renderDir, moment.file);
     if (await exists(output)) {
+      kept++;
+      return;
+    }
+    await mkdir(path.dirname(output), { recursive: true });
+    // Cuts used to go straight in renderDir: move one made then instead of cutting it again.
+    const flat = path.join(renderDir, name);
+    if (await exists(flat)) {
+      await rename(flat, output);
       kept++;
       return;
     }
@@ -237,13 +247,13 @@ async function exists(file) {
   }
 }
 
-function slug(title) {
+function slug(title, fallback = 'moment') {
   return (
     title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
-      .slice(0, 50) || 'moment'
+      .slice(0, 50) || fallback
   );
 }
 
@@ -253,12 +263,8 @@ function html({ runInfo, clipJobs, moments }) {
     `${Math.floor(seconds / 60)}:${(seconds % 60).toFixed(1).padStart(4, '0')}`;
   const clipName = (clip) =>
     `${clip.game ? `${e(clip.game)} · ` : ''}${e(path.basename(originals.get(clip.sha256) ?? clip.originalPath))}`;
-  const relative = (file) =>
-    path
-      .relative(renderDir, file)
-      .split(path.sep)
-      .map(encodeURIComponent)
-      .join('/');
+  const url = (file) => file.split(path.sep).map(encodeURIComponent).join('/');
+  const relative = (file) => url(path.relative(renderDir, file));
   const video = (src) =>
     `<video controls preload="metadata" src="${src}"></video>`;
 
@@ -279,7 +285,7 @@ function html({ runInfo, clipJobs, moments }) {
       const { confidence, category, title, reasoning, startSec, endSec } =
         segment;
       return `<article class="card">
-  ${error ? `<p class="error">Couldn't cut it: ${e(error)}</p>` : video(encodeURIComponent(file))}
+  ${error ? `<p class="error">Couldn't cut it: ${e(error)}</p>` : video(url(file))}
   <h3>${e(title)}</h3>
   <p class="meta"><span class="tag ${e(category)}">${e(category)}</span> ${Math.round(confidence * 100)}% · ${time(startSec)}–${time(endSec)} (${(endSec - startSec).toFixed(1)}s)${fromProxy ? ' · <b>cut from the proxy</b>' : ''}</p>
   <p>${e(reasoning)}</p>

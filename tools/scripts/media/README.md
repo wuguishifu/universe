@@ -48,7 +48,8 @@ manifest is submitted (copies of a clip once).
 ## Tuning
 
 `render-run.mjs` cuts each moment out of the original at 1080p (`--pad 1` adds a second either side,
-as the client will) into `renders/<runId>/`, best first, and writes `index.html` with each one's
+as the client will) into a folder per game, `renders/<runId>/<game>/` (e.g. `minecraft/`,
+`overwatch-2/`), and writes `renders/<runId>/index.html` with every cut, best first, and each one's
 title, category, confidence and reasoning. Clips where nothing was found or that failed show their
 proxy, so you can see what Gemini missed. Cuts already made are kept, so it's quick to rerun, e.g.
 on a run that's still going. If the drive with the originals isn't plugged in, it cuts from the
