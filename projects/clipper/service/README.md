@@ -58,14 +58,19 @@ A 2-minute clip at the defaults is about 12k input tokens and 1-2k output, so ar
 
 ## Setup
 
-1. Secrets in Infisical at `projects/clipper/service`: `API_TOKEN`, `GEMINI_API_KEY`,
-   `CLIPPER_CONVEX_SECRET` (plus the shared S3, Redis and analytics paths; see
+1. Secrets in Infisical at `projects/clipper/service`: `API_TOKEN`, `CLIPPER_CONVEX_SECRET` (plus
+   the shared Gemini, S3, Redis and analytics paths; see
    [environment-config.json](environment-config.json) and [.env.example](.env.example)).
+   `CONVEX_URL` comes from the dev deployment locally (`hasConvex`), and from
+   `platform/convex/app` in prod.
 2. The same secret on the convex deployment:
    `pnpm nx convex convex-app -- env set CLIPPER_CONVEX_SECRET <value>`.
 3. A Garage bucket `clipper` (or `CLIPPER_S3_BUCKET`) that clipper's S3 key can read and write.
 4. ffmpeg with libx264 and aac at `FFMPEG_PATH` (mounted from the host in k8s, like the stitcher's).
    It's checked on startup.
+
+It runs on sol, in the homelab repo's `manifests/clipper-service` (with a tailnet Ingress at
+`https://clipper.wuguishifu.dev`); its README has the prod checklist.
 
 ## The backlog
 

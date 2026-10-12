@@ -1,5 +1,8 @@
 const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
+const {
+  BundleBuildableLibsPlugin,
+} = require('../../../tools/webpack/bundle-buildable-libs-plugin');
 
 module.exports = {
   output: {
@@ -15,5 +18,6 @@ module.exports = {
       outputHashing: 'none',
       generatePackageJson: true,
     }),
+    new BundleBuildableLibsPlugin(['@platform/convex-contracts']),
   ],
 };
