@@ -1,0 +1,13 @@
+{
+  "name": "@projects/clipper-service",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@projects/clipper-contracts": "workspace:*",
+    "@platform/convex-contracts": "workspace:*",
+    "@platform/analytics-client-nest": "workspace:*",
+    "@libs/nest-common": "workspace:*",
+    "@libs/queue": "workspace:*",
+    "tslib": "^2.3.0"
+  }
+}

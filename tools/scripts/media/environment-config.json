@@ -1,0 +1,4 @@
+{
+  "$schema": "../../environment/environment-config.schema.json",
+  "secretsPaths": ["projects/clipper/service", "platform/s3"]
+}

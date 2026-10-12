@@ -68,6 +68,12 @@
     },
     {
       "path": "./projects/jankbot/stitcher"
+    },
+    {
+      "path": "./projects/clipper/contracts"
+    },
+    {
+      "path": "./projects/clipper/service"
     }
   ],
   "compilerOptions": {
