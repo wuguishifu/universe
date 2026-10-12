@@ -15,6 +15,7 @@ on:
           - projects/jankbot/core
           - projects/jankbot/gateway
           - projects/internet-monitor/service
+          - projects/clipper/service
       version-bump-type:
         description: 'Version bump type'
         required: true
