@@ -52,6 +52,9 @@ export const start = mutation({
     const today = utcDay(Date.now());
     const spentUsd = await dailySpend(ctx, today);
     if (spentUsd >= dailySpendLimitUsd) {
+      // Left processing by an attempt that was lost: it's waiting now, not running, so failStuck
+      // mustn't take it for stuck while it waits for tomorrow.
+      if (job.state === 'processing') await moveClipJob(ctx, job, 'queued');
       return {
         status: 'over_cap' as const,
         spentUsd,
