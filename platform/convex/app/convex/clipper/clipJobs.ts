@@ -1,12 +1,23 @@
 import { paginationOptsValidator } from 'convex/server';
 import { ConvexError, type Infer, v } from 'convex/values';
 import { type Doc } from '../_generated/dataModel';
-import { mutation, type MutationCtx, query } from '../_generated/server';
+import {
+  internalMutation,
+  mutation,
+  type MutationCtx,
+  query,
+} from '../_generated/server';
 import { assertClipperSecret, clipperSecret } from './auth';
 import { addDailySpend, dailySpend, moveClipJob, utcDay } from './helpers';
 import { clipJobState, outcome, tokenUsage } from './validators';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+/**
+ * An attempt takes a few minutes at most (two Gemini calls with a 3-minute timeout each), so a clip
+ * job processing for longer than this has lost its worker: see failStuck.
+ */
+const STUCK_AFTER_MS = 30 * 60 * 1000;
+const STUCK_BATCH = 100;
 
 /**
  * Called by clipper-service as it picks up a clip job. Says whether to go ahead, and if so, with
@@ -113,11 +124,17 @@ export const complete = mutation({
   },
 });
 
-/** An attempt failed. With `willRetry` the clip job goes back to queued for the next one. */
+/**
+ * An attempt failed. With `willRetry` the clip job goes back to queued for the next one. Only the
+ * latest attempt can do that: a stalled attempt that BullMQ already gave to another worker can
+ * still fail late, and mustn't undo the attempt that replaced it.
+ */
 export const fail = mutation({
   args: {
     secret: clipperSecret,
     clipJobId: v.id('clipperClipJobs'),
+    /** The attempt `start` returned. */
+    attempt: v.number(),
     error: v.string(),
     willRetry: v.boolean(),
     /** Gemini calls this attempt made before failing, if any. */
@@ -126,11 +143,11 @@ export const fail = mutation({
   },
   handler: async (
     ctx,
-    { secret, clipJobId, error, willRetry, usage, costUsd },
+    { secret, clipJobId, attempt, error, willRetry, usage, costUsd },
   ) => {
     assertClipperSecret(secret);
     const job = await getJob(ctx, clipJobId);
-    if (job.state !== 'processing') {
+    if (job.state !== 'processing' || job.attempts !== attempt) {
       await addSpendOnly(ctx, job, usage, costUsd);
       return { runFinished: false, run: null };
     }
@@ -154,6 +171,32 @@ export const fail = mutation({
     );
     await addDailySpend(ctx, costUsd);
     return { runFinished: result.finished, run: result.run };
+  },
+});
+
+/**
+ * Fails clip jobs whose worker stopped reporting on them, so their runs can finish: one that died
+ * on its last attempt, or couldn't save the result (Convex unreachable) and ran out of retries.
+ * Runs every few minutes (crons.ts).
+ */
+export const failStuck = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const stuck = await ctx.db
+      .query('clipperClipJobs')
+      .withIndex('by_state_started', (q) =>
+        q
+          .eq('state', 'processing')
+          .lt('startedAt', Date.now() - STUCK_AFTER_MS),
+      )
+      .take(STUCK_BATCH);
+    for (const job of stuck) {
+      await moveClipJob(ctx, job, 'failed', {
+        error: `No result after ${STUCK_AFTER_MS / 60_000} minutes; the worker running it was lost${job.error ? ` (last error: ${job.error})` : ''}`,
+        finishedAt: Date.now(),
+      });
+    }
+    return { failed: stuck.length };
   },
 });
 

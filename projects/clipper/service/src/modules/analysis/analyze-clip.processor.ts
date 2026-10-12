@@ -105,6 +105,7 @@ export class AnalyzeClipProcessor
     const latencyMs = Date.now() - startedAt;
 
     const { outcome, usage, costUsd } = analysis;
+    // If this throws, the attempt fails and BullMQ retries it; after the last, failStuck cleans up.
     const { runFinished, run } = await this.convex.mutation(
       api.clipper.clipJobs.complete,
       { clipJobId: start.clipJobId, outcome, usage, costUsd, latencyMs },
@@ -171,6 +172,7 @@ export class AnalyzeClipProcessor
         api.clipper.clipJobs.fail,
         {
           clipJobId: start.clipJobId,
+          attempt: start.attempt,
           error: message,
           willRetry,
           usage,
@@ -178,7 +180,8 @@ export class AnalyzeClipProcessor
         },
       ));
     } catch (convexError) {
-      // The attempt still fails; if it retries, starting it again puts it right in Convex.
+      // The attempt still fails. If it retries, starting it again puts it right in Convex; if not,
+      // clipJobs.failStuck fails it once it's been processing too long.
       this.logger.error(
         `Couldn't record clip job ${job.data.clipJobId}'s failure: ${describeError(convexError)}`,
       );

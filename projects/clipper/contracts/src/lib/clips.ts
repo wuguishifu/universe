@@ -8,7 +8,10 @@ import { z } from 'zod';
 export const PROXY = {
   /** The proxy's frame rate, so the most `fps` a run can ask for. */
   fps: 4,
-  /** Proxies are sent inline, and the request has to fit in Gemini's 20MB with the prompt. */
+  /**
+   * Proxies are sent inline, as base64 (a third bigger), and Gemini takes up to 100MB of that per
+   * request. 18MB becomes 24MB, so this keeps requests small rather than just under the limit.
+   */
   maxBytes: 18 * 1024 * 1024,
   contentType: 'video/mp4',
 };

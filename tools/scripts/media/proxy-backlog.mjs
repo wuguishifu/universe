@@ -17,6 +17,7 @@ import {
   formatBytes,
   formatDuration,
   makeProxy,
+  positiveIntArg,
   probe,
   sha256File,
   VIDEO_EXTENSIONS,
@@ -38,7 +39,7 @@ if (positionals.length !== 2) {
 }
 const clipsDir = path.resolve(positionals[0]);
 const outDir = path.resolve(positionals[1]);
-const concurrency = Number(values.concurrency);
+const concurrency = positiveIntArg('--concurrency', values.concurrency);
 const manifestPath = path.join(outDir, 'manifest.jsonl');
 
 await mkdir(path.join(outDir, 'proxies'), { recursive: true });

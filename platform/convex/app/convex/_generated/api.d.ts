@@ -15,6 +15,7 @@ import type * as clipper_runs from "../clipper/runs.js";
 import type * as clipper_tables from "../clipper/tables.js";
 import type * as clipper_validators from "../clipper/validators.js";
 import type * as common_functions_customFunctions from "../common/functions/customFunctions.js";
+import type * as crons from "../crons.js";
 import type * as http from "../http.js";
 import type * as routes from "../routes.js";
 import type * as ruby_auth from "../ruby/auth.js";
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   "clipper/tables": typeof clipper_tables;
   "clipper/validators": typeof clipper_validators;
   "common/functions/customFunctions": typeof common_functions_customFunctions;
+  crons: typeof crons;
   http: typeof http;
   routes: typeof routes;
   "ruby/auth": typeof ruby_auth;

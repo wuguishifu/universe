@@ -24,12 +24,12 @@ import { config } from 'dotenv';
 import { createReadStream } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import {
   clipperApi,
   forEachConcurrent,
   formatBytes,
+  positiveIntArg,
   proxyS3Key,
 } from './lib.mjs';
 
@@ -69,13 +69,6 @@ if (submitting && (!values['api-url'] || !values.token)) {
 }
 const runOptions = values.options ? JSON.parse(values.options) : undefined;
 
-const root = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '../../..',
-);
-process.loadEnvFile(
-  process.env.ENV_FILE ?? path.join(root, 'tools/scripts/s3/.env.local'),
-);
 const bucket = process.env.CLIPPER_S3_BUCKET || 'clipper';
 const s3 = new S3Client({
   endpoint: process.env.S3_ENDPOINT,
@@ -89,7 +82,10 @@ const s3 = new S3Client({
 
 let clips = await readClips(path.join(outDir, 'manifest.jsonl'));
 if (values.game) clips = clips.filter((clip) => clip.game === values.game);
-if (values.sample) clips = shuffle(clips).slice(0, Number(values.sample));
+if (values.sample) {
+  const sample = positiveIntArg('--sample', values.sample);
+  clips = shuffle(clips).slice(0, sample);
+}
 const totalBytes = clips.reduce((sum, clip) => sum + clip.proxyBytes, 0);
 console.log(
   `${clips.length} clips (${formatBytes(totalBytes)} of proxies) for s3://${bucket}`,
@@ -128,13 +124,24 @@ let queued = 0;
 let alreadyInRun = 0;
 for (let i = 0; i < clips.length; i += CHUNK) {
   const chunk = clips.slice(i, i + CHUNK).map(toInput);
-  const result = runId
-    ? await api('POST', `/api/runs/${runId}/clips`, { clips: chunk })
-    : await api('POST', '/api/runs', {
-        options: runOptions,
-        label: values.label,
-        clips: chunk,
-      });
+  let result;
+  try {
+    result = runId
+      ? await api('POST', `/api/runs/${runId}/clips`, { clips: chunk })
+      : await api('POST', '/api/runs', {
+          options: runOptions,
+          label: values.label,
+          clips: chunk,
+        });
+  } catch (error) {
+    // A failed create cancels its run, but a failed add leaves the run with the clips before it.
+    if (runId) {
+      console.error(
+        `Run ${runId} has the first ${i} of these clips. --run ${runId} adds to it (skipping clips already in it).`,
+      );
+    }
+    throw error;
+  }
   runId ??= result.runId;
   queued += result.queued;
   alreadyInRun += result.alreadyInRun;

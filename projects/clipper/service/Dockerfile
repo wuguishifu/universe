@@ -44,6 +44,10 @@ RUN pnpm install --prod --ignore-scripts --no-frozen-lockfile \
 
 EXPOSE 3008
 
+# It decodes media it's handed with ffmpeg, so it shouldn't do that as root. Writes only to the
+# system temp dir.
+USER node
+
 # Set last so a new version only changes this layer. CI passes both (see build-server-apps.yml);
 # local builds leave them empty and the app reports "unknown".
 ARG VERSION

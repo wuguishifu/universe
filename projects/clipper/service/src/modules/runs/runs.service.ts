@@ -41,7 +41,17 @@ export class RunsService {
     clips: ClipInput[];
   }): Promise<Queued & { runId: string }> {
     const runId = await this.createRun({ options, source, label });
-    const queued = await this.addClips(runId, clips);
+    let queued;
+    try {
+      queued = await this.addClips(runId, clips);
+    } catch (error) {
+      // The caller never hears of this run, so retrying makes another. Cancel this one rather than
+      // leave clip jobs queued in Convex that never made it into the queue.
+      await this.convex
+        .mutation(api.clipper.runs.cancel, { runId })
+        .catch(() => undefined);
+      throw error;
+    }
     if (queued === 'not_found' || queued === 'cancelled') {
       throw new Error(`Run ${runId} was ${queued} as it was created`);
     }

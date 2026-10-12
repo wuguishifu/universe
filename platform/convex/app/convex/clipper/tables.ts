@@ -70,7 +70,8 @@ export const clipperTables = {
   })
     .index('by_run_state', ['runId', 'state'])
     .index('by_run_clip', ['runId', 'clipId'])
-    .index('by_clip', ['clipId']),
+    .index('by_clip', ['clipId'])
+    .index('by_state_started', ['state', 'startedAt']),
 
   /** Gemini spend per UTC day, for CLIPPER_DAILY_SPEND_LIMIT_USD. */
   clipperDailySpend: defineTable({

@@ -32,6 +32,8 @@ import {
   FFMPEG,
   forEachConcurrent,
   formatDuration,
+  nonNegativeNumberArg,
+  positiveIntArg,
   probe,
   resolveEncoder,
   run,
@@ -68,7 +70,8 @@ if (!values['api-url'] || !values.token) {
 const [outDirArg, runId] = positionals;
 const outDir = path.resolve(outDirArg);
 const renderDir = path.join(outDir, 'renders', runId);
-const pad = Number(values.pad);
+const pad = nonNegativeNumberArg('--pad', values.pad);
+const concurrency = positiveIntArg('--concurrency', values.concurrency);
 const api = clipperApi(values['api-url'], values.token);
 
 let runInfo = await api('GET', `/api/runs/${runId}`);
@@ -114,7 +117,7 @@ const moments = clipJobs
     job.outcome.segments.map((segment, index) => ({
       job,
       segment,
-      file: `${slug(segment.title)}-${job.clipJobId.slice(-6)}-${index + 1}.mp4`,
+      name: `${slug(segment.title)}-${job.clipJobId.slice(-6)}-${index + 1}`,
     })),
   )
   .sort((a, b) => b.segment.confidence - a.segment.confidence);
@@ -125,11 +128,15 @@ console.log(
 const encoder = await resolveEncoder(values.encoder);
 let made = 0;
 let kept = 0;
-await forEachConcurrent(moments, Number(values.concurrency), async (moment) => {
-  const output = path.join(renderDir, moment.file);
+await forEachConcurrent(moments, concurrency, async (moment) => {
+  moment.file = `${moment.name}.mp4`;
   try {
     const source = await sourceFor(moment.job.clip);
     moment.fromProxy = source.isProxy;
+    // Named for how it was cut, so a different --pad, or the original turning up where only the
+    // proxy was before, makes a new cut instead of reusing the old one.
+    moment.file = `${moment.name}${pad ? `-pad${pad}` : ''}${source.isProxy ? '-proxy' : ''}.mp4`;
+    const output = path.join(renderDir, moment.file);
     if (await exists(output)) {
       kept++;
       return;

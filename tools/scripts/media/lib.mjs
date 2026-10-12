@@ -11,8 +11,8 @@ export const FFMPEG = process.env.FFMPEG_PATH || 'ffmpeg';
 export const FFPROBE = process.env.FFPROBE_PATH || 'ffprobe';
 
 /**
- * What Gemini sees. Frame tokens don't depend on resolution, so this is about staying well under
- * the 20MB inline request limit while keeping enough frames to try fps up to 4.
+ * What Gemini sees. Frame tokens don't depend on resolution, so this is about keeping the upload
+ * and the inline request small while keeping enough frames to try fps up to 4.
  */
 export const PROXY = {
   maxWidth: 854,
@@ -22,7 +22,7 @@ export const PROXY = {
   gop: 8,
   videoKbps: 400,
   audioKbps: 64,
-  /** Proxies are sent inline (base64), and the request has to fit in 20MB with the prompt. */
+  /** Proxies are sent inline as base64: 18MB becomes 24MB, well under Gemini's 100MB per request. */
   maxBytes: 18 * 1024 * 1024,
   /** Long clips get a lower video bitrate so they still fit; this is what that aims for. */
   targetBytes: 15 * 1024 * 1024,
@@ -178,26 +178,32 @@ export async function makeProxy(input, output, { encoder = 'auto' } = {}) {
   const partial = output.replace(/\.mp4$/, '') + '.partial.mp4';
   let used = resolved;
   try {
-    await run(
-      FFMPEG,
-      ffmpegArgs({
-        input,
-        output: partial,
-        encoder: resolved,
-        source,
-        videoKbps,
-      }),
-    );
-  } catch (error) {
-    if (resolved !== 'videotoolbox') throw error;
-    used = 'libx264';
-    await run(
-      FFMPEG,
-      ffmpegArgs({ input, output: partial, encoder: used, source, videoKbps }),
-    );
-  }
+    try {
+      await run(
+        FFMPEG,
+        ffmpegArgs({
+          input,
+          output: partial,
+          encoder: resolved,
+          source,
+          videoKbps,
+        }),
+      );
+    } catch (error) {
+      if (resolved !== 'videotoolbox') throw error;
+      used = 'libx264';
+      await run(
+        FFMPEG,
+        ffmpegArgs({
+          input,
+          output: partial,
+          encoder: used,
+          source,
+          videoKbps,
+        }),
+      );
+    }
 
-  try {
     const proxy = await probe(partial);
     const { size } = await stat(partial);
     const drift = Math.abs(proxy.durationSec - source.durationSec);
@@ -219,9 +225,9 @@ export async function makeProxy(input, output, { encoder = 'auto' } = {}) {
       encoder: used,
       videoKbps,
     };
-  } catch (error) {
+  } finally {
+    // Gone already if it was renamed; otherwise whatever a failed encode or check left behind.
     await rm(partial, { force: true });
-    throw error;
   }
 }
 
@@ -297,8 +303,33 @@ export function formatDuration(ms) {
     : `${m}m${String(s % 60).padStart(2, '0')}s`;
 }
 
+/** A command-line option that must be a whole number above 0; exits with a message if not. */
+export function positiveIntArg(name, value) {
+  const number = Number(value);
+  if (!Number.isInteger(number) || number < 1) {
+    console.error(`${name} must be a whole number above 0, not "${value}"`);
+    process.exit(1);
+  }
+  return number;
+}
+
+/** A command-line option that must be a number, 0 or more; exits with a message if not. */
+export function nonNegativeNumberArg(name, value) {
+  const number = Number(value);
+  if (value === '' || !Number.isFinite(number) || number < 0) {
+    console.error(`${name} must be a number, 0 or more, not "${value}"`);
+    process.exit(1);
+  }
+  return number;
+}
+
 /** Calls `fn` on each item with at most `concurrency` running at once. */
 export async function forEachConcurrent(items, concurrency, fn) {
+  if (!Number.isInteger(concurrency) || concurrency < 1) {
+    throw new Error(
+      `concurrency must be a whole number above 0, not ${concurrency}`,
+    );
+  }
   let next = 0;
   const workers = Array.from(
     { length: Math.min(concurrency, items.length) },
