@@ -366,7 +366,7 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
     try {
       await this.stitchSessions.add(
         JANKBOT_QUEUE_CONFIG.stitchSessions.jobName,
-        { sessionId, guildId, channelId, endedAt },
+        { sessionId, guildId, channelId, startedAt, endedAt },
         { jobId: sessionId },
       );
       this.logger.log(

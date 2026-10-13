@@ -15,9 +15,25 @@ export function createUtteranceS3Key(utteranceId: string) {
   return `utterances/${utteranceId}.wav`;
 }
 
-/** One compilation per phrase, e.g. compilations/<sessionId>/i-dont-know.ogg for "I don't know". */
-export function createCompilationS3Key(sessionId: string, phrase: string) {
-  return `compilations/${sessionId}/${phraseSlug(phrase)}.ogg`;
+/**
+ * One compilation per phrase, e.g. compilations/2026-10-13T21-04-05Z-<sessionId>/i-dont-know-<hash>.ogg
+ * for "I don't know" in a session that started at 21:04:05 UTC. The time comes first so sessions
+ * list in order; the session ID keeps sessions that started in the same second apart.
+ */
+export function createCompilationS3Key(
+  sessionId: string,
+  sessionTime: number,
+  phrase: string,
+) {
+  return `compilations/${compilationTimestamp(sessionTime)}-${sessionId}/${phraseSlug(phrase)}.ogg`;
+}
+
+/** UTC to the second, without colons, which some S3 tools escape. */
+function compilationTimestamp(epochMs: number): string {
+  return new Date(epochMs)
+    .toISOString()
+    .replace(/\.\d{3}Z$/, 'Z')
+    .replace(/:/g, '-');
 }
 
 /**

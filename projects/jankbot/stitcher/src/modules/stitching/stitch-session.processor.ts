@@ -108,7 +108,12 @@ export class StitchSessionProcessor extends WorkerHost {
     job: JankbotQueueJob<'stitchSessions'>,
     token?: string,
   ): Promise<void> {
-    const { sessionId, guildId, endedAt } = job.data;
+    const {
+      sessionId,
+      guildId,
+      startedAt: sessionStartedAt,
+      endedAt,
+    } = job.data;
     const { stitchMaxWaitMs } = this.environmentService.environment;
 
     const startedAt = Date.now();
@@ -138,7 +143,12 @@ export class StitchSessionProcessor extends WorkerHost {
     if (rows.length === 0) {
       this.logger.log(`[${guildId}] Session ${sessionId}: nothing to stitch`);
     }
-    const stats = await this.compileSession(guildId, sessionId, rows);
+    const stats = await this.compileSession(
+      guildId,
+      sessionId,
+      sessionStartedAt ?? endedAt,
+      rows,
+    );
 
     const finishedAt = Date.now();
     this.trackingService.trackEvent({
@@ -162,6 +172,8 @@ export class StitchSessionProcessor extends WorkerHost {
   private async compileSession(
     guildId: string,
     sessionId: string,
+    /** When the session started (or ended, if that isn't known), for the S3 keys. */
+    sessionTime: number,
     rows: Recording[],
   ): Promise<StitchStats> {
     const { recordingsS3Bucket } = this.environmentService.environment;
@@ -204,7 +216,7 @@ export class StitchSessionProcessor extends WorkerHost {
           stat(oggPath),
         ]);
 
-        const key = createCompilationS3Key(sessionId, phrase);
+        const key = createCompilationS3Key(sessionId, sessionTime, phrase);
         const uploadStartedAt = Date.now();
         await this.s3.putObject({
           bucket: recordingsS3Bucket,

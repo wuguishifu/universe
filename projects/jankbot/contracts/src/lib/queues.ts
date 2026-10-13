@@ -99,6 +99,11 @@ export const JANKBOT_QUEUE_CONFIG = {
       guildId: z.string(),
       /** The channel the session ended in. */
       channelId: z.string(),
+      /**
+       * Epoch ms when the session started. Missing for sessions the gateway stored before it
+       * recorded start times, and for jobs queued before this field existed.
+       */
+      startedAt: z.number().optional(),
       /** Epoch ms when the session ended. */
       endedAt: z.number(),
     }),
