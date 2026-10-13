@@ -13,13 +13,18 @@ stitcher: StitchSessionProcessor
   2. reads the session's rows from jankbot.recordings (written by core's TranscribedUtteranceProcessor)
   3. per phrase, in the order it was said, a few recordings ahead:
      a. reads just the part of the utterance's WAV around its clips (an S3 ranged read of
-        utterances/<utteranceId>.wav, uploaded by core)
+        utterances/<session start>-<sessionId>/<utterance start>-<utteranceId>.wav, uploaded by core; falls back to
+        the older utterances/<utteranceId>.wav)
      b. snaps each clip's edges to the speech around it, merges overlaps, evens out the loudness and fades the
         edges (audio.ts, in JS)
      c. appends it to a PCM file on disk, with a short gap between clips
-  4. encodes that file with ffmpeg to Ogg Opus, and streams it to compilations/<sessionId>/<phrase>.ogg in the same
-     bucket
+  4. encodes that file with ffmpeg to Ogg Opus, and streams it to
+     compilations/<session start>-<sessionId>/<phrase>.ogg in the same bucket
 ```
+
+Times in S3 keys are UTC to the second, like `2026-10-13T21-04-05Z`, so sessions and utterances list in order. A
+session the gateway stored before it recorded start times has its utterances at the older utterances/<utteranceId>.wav,
+and its compilations under the time it ended.
 
 - Clips come from whisper's word timings, so they're just the phrase. Recordings from before the transcription worker
   emitted words have segment timings instead, which are often the whole utterance.

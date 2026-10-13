@@ -4,6 +4,7 @@ import { S3Service } from '@libs/nest-common';
 import { TrackingService } from '@platform/analytics-client-nest';
 import { TranscriptionClient } from '@platform/transcription-client-nest';
 import {
+  createLegacyUtteranceS3Key,
   createUtteranceS3Key,
   JANKBOT_JOB_OPTIONS,
   JANKBOT_QUEUE_CONFIG,
@@ -44,6 +45,7 @@ export class UtteranceProcessor extends WorkerHost {
     const {
       utteranceId,
       sessionId,
+      sessionStartedAt,
       guildId,
       channelId,
       userId,
@@ -121,7 +123,16 @@ export class UtteranceProcessor extends WorkerHost {
       }),
       this.s3.putObject({
         bucket: this.environmentService.environment.recordingsS3Bucket,
-        key: createUtteranceS3Key(utteranceId),
+        // The stitcher looks in the same places.
+        key:
+          sessionStartedAt === undefined
+            ? createLegacyUtteranceS3Key(utteranceId)
+            : createUtteranceS3Key({
+                sessionId,
+                sessionStartedAt,
+                utteranceId,
+                utteranceStartedAt: startedAt,
+              }),
         data: wavData,
         contentType: 'audio/wav',
       }),
