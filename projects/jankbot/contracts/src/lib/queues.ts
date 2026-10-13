@@ -27,6 +27,11 @@ export const JANKBOT_QUEUE_CONFIG = {
       utteranceId: z.uuid(),
       /** The voice session it was captured in: from when the bot joins a channel until it leaves. */
       sessionId: z.uuid(),
+      /**
+       * Epoch ms when the session started, which files the utterance in S3. Missing for sessions
+       * the gateway stored before it recorded start times.
+       */
+      sessionStartedAt: z.number().optional(),
       guildId: z.string(),
       channelId: z.string(),
       userId: z.string(),
@@ -99,6 +104,11 @@ export const JANKBOT_QUEUE_CONFIG = {
       guildId: z.string(),
       /** The channel the session ended in. */
       channelId: z.string(),
+      /**
+       * Epoch ms when the session started. Missing for sessions the gateway stored before it
+       * recorded start times, and for jobs queued before this field existed.
+       */
+      startedAt: z.number().optional(),
       /** Epoch ms when the session ended. */
       endedAt: z.number(),
     }),

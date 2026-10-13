@@ -90,7 +90,12 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
     this.handleDisconnects(connection);
     const health = this.watchReceive(connection);
     connection.receiver.speaking.on('start', (userId) =>
-      this.captureUtterance(connection, health, sessionId, userId),
+      this.captureUtterance(
+        connection,
+        health,
+        { sessionId, sessionStartedAt: startedAt },
+        userId,
+      ),
     );
     // Moving to another channel with /join starts a new session, which ends the one it left.
     const previous = this.sessions.get(channel.guild.id);
@@ -217,7 +222,10 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
   private captureUtterance(
     connection: VoiceConnection,
     health: ReceiveHealth,
-    sessionId: string,
+    {
+      sessionId,
+      sessionStartedAt,
+    }: { sessionId: string; sessionStartedAt: number | undefined },
     userId: string,
   ) {
     const { receiver } = connection;
@@ -250,6 +258,7 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
         void this.enqueue({
           utteranceId: randomUUID(),
           sessionId,
+          sessionStartedAt,
           guildId,
           channelId,
           userId,
@@ -366,7 +375,7 @@ export class VoiceSessionService implements BeforeApplicationShutdown {
     try {
       await this.stitchSessions.add(
         JANKBOT_QUEUE_CONFIG.stitchSessions.jobName,
-        { sessionId, guildId, channelId, endedAt },
+        { sessionId, guildId, channelId, startedAt, endedAt },
         { jobId: sessionId },
       );
       this.logger.log(

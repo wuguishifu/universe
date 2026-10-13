@@ -16,6 +16,7 @@ import { TrackingService } from '@platform/analytics-client-nest';
 import { jankbotSchema } from '@platform/postgres-db';
 import {
   createCompilationS3Key,
+  createLegacyUtteranceS3Key,
   createUtteranceS3Key,
   JANKBOT_QUEUE_CONFIG,
   type JankbotQueueJob,
@@ -108,7 +109,12 @@ export class StitchSessionProcessor extends WorkerHost {
     job: JankbotQueueJob<'stitchSessions'>,
     token?: string,
   ): Promise<void> {
-    const { sessionId, guildId, endedAt } = job.data;
+    const {
+      sessionId,
+      guildId,
+      startedAt: sessionStartedAt,
+      endedAt,
+    } = job.data;
     const { stitchMaxWaitMs } = this.environmentService.environment;
 
     const startedAt = Date.now();
@@ -138,7 +144,11 @@ export class StitchSessionProcessor extends WorkerHost {
     if (rows.length === 0) {
       this.logger.log(`[${guildId}] Session ${sessionId}: nothing to stitch`);
     }
-    const stats = await this.compileSession(guildId, sessionId, rows);
+    const stats = await this.compileSession(
+      guildId,
+      { sessionId, sessionStartedAt, endedAt },
+      rows,
+    );
 
     const finishedAt = Date.now();
     this.trackingService.trackEvent({
@@ -161,9 +171,10 @@ export class StitchSessionProcessor extends WorkerHost {
   /** Compiles and uploads one file per phrase in `rows`. */
   private async compileSession(
     guildId: string,
-    sessionId: string,
+    session: StitchedSession,
     rows: Recording[],
   ): Promise<StitchStats> {
+    const { sessionId, sessionStartedAt, endedAt } = session;
     const { recordingsS3Bucket } = this.environmentService.environment;
     const stats: StitchStats = {
       recordings: rows.length,
@@ -184,6 +195,7 @@ export class StitchSessionProcessor extends WorkerHost {
         const pcmPath = path.join(workDir, `${phraseSlug(phrase)}.pcm`);
         const compileStartedAt = Date.now();
         const { clipCount, missingUtterances } = await this.writeCompilation(
+          session,
           phraseRows,
           pcmPath,
         );
@@ -204,7 +216,11 @@ export class StitchSessionProcessor extends WorkerHost {
           stat(oggPath),
         ]);
 
-        const key = createCompilationS3Key(sessionId, phrase);
+        const key = createCompilationS3Key(
+          sessionId,
+          sessionStartedAt ?? endedAt,
+          phrase,
+        );
         const uploadStartedAt = Date.now();
         await this.s3.putObject({
           bucket: recordingsS3Bucket,
@@ -235,6 +251,7 @@ export class StitchSessionProcessor extends WorkerHost {
    * there were, and how many rows' utterances weren't in S3.
    */
   private async writeCompilation(
+    session: StitchedSession,
     rows: Recording[],
     pcmPath: string,
   ): Promise<{ clipCount: number; missingUtterances: number }> {
@@ -244,7 +261,7 @@ export class StitchSessionProcessor extends WorkerHost {
     let missingUtterances = 0;
     try {
       for await (const clips of mapInOrder(rows, READ_AHEAD, (row) =>
-        this.readClips(row),
+        this.readClips(session, row),
       )) {
         if (!clips) {
           missingUtterances++;
@@ -266,7 +283,10 @@ export class StitchSessionProcessor extends WorkerHost {
    * A recording's clips, cut and leveled, from a ranged read of its utterance. Null when the
    * utterance's upload failed in core, or the bucket's lifecycle rule already expired it.
    */
-  private async readClips(row: Recording): Promise<Buffer[] | null> {
+  private async readClips(
+    { sessionId, sessionStartedAt }: StitchedSession,
+    row: Recording,
+  ): Promise<Buffer[] | null> {
     const clips: ClipRange[] = row.clips.map(({ clipStartMs, clipEndMs }) => ({
       startMs: clipStartMs,
       endMs: clipEndMs,
@@ -280,15 +300,21 @@ export class StitchSessionProcessor extends WorkerHost {
     );
     const endMs = Math.max(...clips.map(({ endMs }) => endMs)) + READ_AFTER_MS;
 
-    let pcm: Buffer;
-    try {
-      pcm = await this.s3.getObjectRange({
-        bucket: this.environmentService.environment.recordingsS3Bucket,
-        key: createUtteranceS3Key(row.utteranceId),
-        ...utteranceByteRange(offsetMs, endMs),
-      });
-    } catch (error) {
-      if (!(error instanceof S3ObjectNotFoundError)) throw error;
+    // Where core files it (see UtteranceProcessor), then the legacy key, for utterances uploaded
+    // before core filed them by session.
+    const keys = [createLegacyUtteranceS3Key(row.utteranceId)];
+    if (sessionStartedAt !== undefined) {
+      keys.unshift(
+        createUtteranceS3Key({
+          sessionId,
+          sessionStartedAt,
+          utteranceId: row.utteranceId,
+          utteranceStartedAt: row.timestamp.getTime(),
+        }),
+      );
+    }
+    const pcm = await this.readUtteranceRange(keys, offsetMs, endMs);
+    if (!pcm) {
       this.logger.warn(`Utterance ${row.utteranceId} isn't in S3; skipping it`);
       return null;
     }
@@ -302,6 +328,34 @@ export class StitchSessionProcessor extends WorkerHost {
       normalizeLoudness(slicePcm(pcm, range, CLIP_FADE_MS)),
     );
   }
+
+  /** The PCM between the times from the first of `keys` that's in S3, or null if none are. */
+  private async readUtteranceRange(
+    keys: string[],
+    offsetMs: number,
+    endMs: number,
+  ): Promise<Buffer | null> {
+    for (const key of keys) {
+      try {
+        return await this.s3.getObjectRange({
+          bucket: this.environmentService.environment.recordingsS3Bucket,
+          key,
+          ...utteranceByteRange(offsetMs, endMs),
+        });
+      } catch (error) {
+        if (!(error instanceof S3ObjectNotFoundError)) throw error;
+      }
+    }
+    return null;
+  }
+}
+
+/** The stitch job's session. */
+interface StitchedSession {
+  sessionId: string;
+  /** Missing for sessions the gateway stored before it recorded start times. */
+  sessionStartedAt: number | undefined;
+  endedAt: number;
 }
 
 /** What a stitch produced and where its time went, summed over the session's phrases. */

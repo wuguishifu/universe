@@ -2,7 +2,8 @@
 
 Overlays every recording of a phrase so the phrase itself lands at the same instant (lead-ins play before it).
 
-One folder per phrase: `wav/` (`utterances/<id>.wav` from the jankbot-recordings bucket), `jdtw/` (whisper output),
+One folder per phrase: `wav/` (`utterances/<session>/<time>-<id>.wav`, or `utterances/<id>.wav` for
+older ones, from the jankbot-recordings bucket), `jdtw/` (whisper output),
 `hits.json` (onsets), `chorus-{full,tight}.{wav,mp3}`.
 
 ```sh
