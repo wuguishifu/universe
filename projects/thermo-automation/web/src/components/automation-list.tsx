@@ -9,7 +9,7 @@ import type {
 } from '@projects/thermo-automation-contracts';
 import { api, expect } from '../lib/api';
 import { describeDays } from '../lib/days';
-import { formatDelta, formatTemperature } from '../lib/temperature';
+import { formatBound, formatDelta } from '../lib/temperature';
 import { useApiMutation } from '../lib/use-api-mutation';
 import { AutomationDialog } from './automation-dialog';
 
@@ -31,10 +31,10 @@ export const describeRange = (
   unit: DisplayUnit,
 ) => {
   if (min != null && max != null) {
-    return `${formatTemperature(min, unit, { withUnit: false })}–${formatTemperature(max, unit)}`;
+    return `${formatBound(min, unit, { withUnit: false })}–${formatBound(max, unit)}`;
   }
-  if (min != null) return `at least ${formatTemperature(min, unit)}`;
-  if (max != null) return `at most ${formatTemperature(max, unit)}`;
+  if (min != null) return `at least ${formatBound(min, unit)}`;
+  if (max != null) return `at most ${formatBound(max, unit)}`;
   return 'no limits';
 };
 

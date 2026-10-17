@@ -136,6 +136,27 @@ describe('fitSetpoints', () => {
     );
   });
 
+  it("rounds the bounds to the thermostat's step, toward the inside of the range", () => {
+    assert.deepEqual(
+      // 62 °F and 68.5 °F.
+      fitSetpoints(
+        { minTemperatureC: 16.666667, maxTemperatureC: 20.277779 },
+        reading(),
+      ),
+      { heatSetpointC: 17, coolSetpointC: 20 },
+    );
+  });
+
+  it('leaves bounds already on a step alone', () => {
+    assert.deepEqual(
+      fitSetpoints(
+        { minTemperatureC: 18.000001, maxTemperatureC: 23.499999 },
+        reading(),
+      ),
+      { heatSetpointC: 18, coolSetpointC: 23.5 },
+    );
+  });
+
   it('lowers the heat setpoint when the bounds cross or are too close', () => {
     assert.deepEqual(
       fitSetpoints({ minTemperatureC: 24, maxTemperatureC: 23 }, reading()),

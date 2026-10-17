@@ -5,7 +5,10 @@ import { c } from '../contract';
 const errorSchema = z.object({ message: z.string() });
 const idParams = z.object({ id: z.coerce.number().int() });
 
-/** Automations for the selected location. Temperatures are rounded to 0.5 °C on save. */
+/**
+ * Automations for the selected location. Temperatures are kept as entered and only rounded to the
+ * thermostat's step when applied.
+ */
 export const automationsRouter = c.router(
   {
     list: {

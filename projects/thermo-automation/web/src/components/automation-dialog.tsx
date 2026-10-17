@@ -30,7 +30,7 @@ import {
   deltaFromDisplay,
   deltaToDisplay,
   fromDisplay,
-  roundForDisplay,
+  roundBound,
   toDisplay,
 } from '../lib/temperature';
 import { useApiMutation } from '../lib/use-api-mutation';
@@ -51,9 +51,7 @@ const toDraft = (
   unit: DisplayUnit,
 ): Draft => {
   const temperature = (celsius: number | null) =>
-    celsius == null
-      ? ''
-      : String(roundForDisplay(toDisplay(celsius, unit), unit));
+    celsius == null ? '' : String(roundBound(toDisplay(celsius, unit)));
   if (!automation) {
     return {
       daysMask: EVERY_DAY,
@@ -275,7 +273,7 @@ export function AutomationDialog({
                   id={ids.min}
                   type="number"
                   inputMode="decimal"
-                  step={unit === 'F' ? 1 : 0.5}
+                  step={unit === 'F' ? 0.5 : 0.1}
                   value={draft.min}
                   onChange={(event) => set('min', event.target.value)}
                   placeholder="None"
@@ -287,7 +285,7 @@ export function AutomationDialog({
                   id={ids.max}
                   type="number"
                   inputMode="decimal"
-                  step={unit === 'F' ? 1 : 0.5}
+                  step={unit === 'F' ? 0.5 : 0.1}
                   value={draft.max}
                   onChange={(event) => set('max', event.target.value)}
                   placeholder="None"
@@ -307,8 +305,8 @@ export function AutomationDialog({
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              Leave a side blank for no limit. Saved to the nearest 0.5 °C, the
-              thermostat's step.
+              Leave a side blank for no limit. The thermostat only takes 0.5 °C
+              steps, so its setpoint is rounded toward the middle of the range.
             </p>
           </div>
 

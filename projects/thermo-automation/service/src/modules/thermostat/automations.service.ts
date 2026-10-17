@@ -25,16 +25,6 @@ const toAutomation = (row: AutomationRow): Automation => ({
   updatedAt: row.updatedAt.toISOString(),
 });
 
-/** Thermostats take setpoints in 0.5 °C steps, and °F entries rarely land on one. */
-const toHalfDegree = (value: number | null) =>
-  value == null ? null : Math.round(value * 2) / 2;
-
-const toValues = (input: AutomationInput) => ({
-  ...input,
-  minTemperatureC: toHalfDegree(input.minTemperatureC),
-  maxTemperatureC: toHalfDegree(input.maxTemperatureC),
-});
-
 /** Every query is scoped to a location, so other houses' automations stay out of the way. */
 @Injectable()
 export class AutomationsService {
@@ -59,7 +49,7 @@ export class AutomationsService {
   ): Promise<Automation> {
     const [row] = await this.db
       .insert(thermoAutomations)
-      .values({ locationId, ...toValues(input) })
+      .values({ locationId, ...input })
       .returning();
     if (!row) throw new Error('Creating an automation returned no row');
     return toAutomation(row);
@@ -73,7 +63,7 @@ export class AutomationsService {
   ): Promise<Automation | null> {
     const [row] = await this.db
       .update(thermoAutomations)
-      .set(toValues(input))
+      .set(input)
       .where(
         and(
           eq(thermoAutomations.id, id),

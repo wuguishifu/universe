@@ -24,5 +24,14 @@ export const formatTemperature = (
 ) =>
   `${roundForDisplay(toDisplay(celsius, unit), unit)}°${withUnit ? unit : ''}`;
 
+/** Automation bounds are kept as entered, so they show to a tenth, not the thermostat's step. */
+export const roundBound = (value: number) => Math.round(value * 10) / 10;
+
+export const formatBound = (
+  celsius: number,
+  unit: DisplayUnit,
+  { withUnit = true }: { withUnit?: boolean } = {},
+) => `${roundBound(toDisplay(celsius, unit))}°${withUnit ? unit : ''}`;
+
 export const formatDelta = (celsius: number, unit: DisplayUnit) =>
   `${Math.round(deltaToDisplay(celsius, unit) * 10) / 10}°${unit}`;

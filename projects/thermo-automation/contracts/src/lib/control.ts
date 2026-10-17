@@ -103,6 +103,12 @@ export type ControlDecision = {
 /** Setpoints closer than this to the target aren't re-applied. */
 const SETPOINT_TOLERANCE_C = 0.25;
 
+/** Thermostats take setpoints in 0.5 °C steps. */
+const SETPOINT_STEP_C = 0.5;
+
+/** Bounds within this of a step count as on it, so float noise doesn't push them a whole step. */
+const STEP_EPSILON_C = 0.01;
+
 export function parseTimeOfDay(time: string): number {
   const [hours = 0, minutes = 0] = time.split(':').map(Number);
   return hours * 60 + minutes;
@@ -158,7 +164,9 @@ export function mergeRules(rules: ControlRule[]) {
 /**
  * AUTO needs both setpoints. A missing bound is pushed to the thermostat's limit so AUTO never
  * acts on that side, and the heat setpoint gives way when the two are closer than the thermostat
- * allows.
+ * allows. Bounds are kept as entered, so they're rounded to the thermostat's step here, toward the
+ * inside of the range: a setpoint past the bound would leave AUTO running without the thermostat
+ * ever bringing the temperature back.
  */
 export function fitSetpoints(
   bounds: { minTemperatureC: number | null; maxTemperatureC: number | null },
@@ -166,9 +174,17 @@ export function fitSetpoints(
 ) {
   const { setpointMinimumC: lowest, setpointMaximumC: highest } = reading;
   const clamp = (value: number) => Math.min(highest, Math.max(lowest, value));
+  const stepUp = (value: number) =>
+    Math.ceil((value - STEP_EPSILON_C) / SETPOINT_STEP_C) * SETPOINT_STEP_C;
+  const stepDown = (value: number) =>
+    Math.floor((value + STEP_EPSILON_C) / SETPOINT_STEP_C) * SETPOINT_STEP_C;
 
-  const coolSetpointC = clamp(bounds.maxTemperatureC ?? highest);
-  let heatSetpointC = clamp(bounds.minTemperatureC ?? lowest);
+  const coolSetpointC = clamp(
+    bounds.maxTemperatureC == null ? highest : stepDown(bounds.maxTemperatureC),
+  );
+  let heatSetpointC = clamp(
+    bounds.minTemperatureC == null ? lowest : stepUp(bounds.minTemperatureC),
+  );
   if (heatSetpointC > coolSetpointC - reading.setpointDeltaC) {
     heatSetpointC = coolSetpointC - reading.setpointDeltaC;
   }
