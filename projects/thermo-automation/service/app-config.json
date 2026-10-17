@@ -1,0 +1,4 @@
+{
+  "$schema": "../../../.github/config/app-config.schema.json",
+  "imageName": "thermo-automation-service"
+}

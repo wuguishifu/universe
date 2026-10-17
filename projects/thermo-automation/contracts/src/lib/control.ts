@@ -1,0 +1,290 @@
+// No imports, so `nx test thermo-automation-contracts` can load this with Node's type stripping.
+
+/** Thermostat modes, as the Daikin API reports and accepts them. */
+export const Mode = {
+  Off: 0,
+  Heat: 1,
+  Cool: 2,
+  Auto: 3,
+  EmergencyHeat: 4,
+} as const;
+export type Mode = (typeof Mode)[keyof typeof Mode];
+
+/** Which modes the equipment allows. `None` means there's no limit. */
+export const ModeLimit = {
+  None: 0,
+  All: 1,
+  HeatOnly: 2,
+  CoolOnly: 3,
+} as const;
+
+/** 0 is Sunday, like `Date.getDay()`. */
+export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+/** An enabled automation, as the decision needs it. */
+export type ControlRule = {
+  id: number;
+  /** Bit `1 << weekday` is set for each day the window starts on. */
+  daysMask: number;
+  /** "HH:MM" (or "HH:MM:SS") in the house's timezone. Equal to `endsAt` means all day. */
+  startsAt: string;
+  endsAt: string;
+  minTemperatureC: number | null;
+  maxTemperatureC: number | null;
+  bufferC: number;
+};
+
+export type ControlReading = {
+  mode: number;
+  modeLimit: number;
+  heatSetpointC: number;
+  coolSetpointC: number;
+  /** The smallest gap the thermostat allows between the heat and cool setpoints. */
+  setpointDeltaC: number;
+  setpointMinimumC: number;
+  setpointMaximumC: number;
+  indoorTemperatureC: number;
+};
+
+/** The house's local time. */
+export type HouseClock = { weekday: Weekday; minuteOfDay: number };
+
+export type ControlInput = {
+  reading: ControlReading;
+  /** The device's enabled automations. */
+  rules: ControlRule[];
+  clock: HouseClock;
+  paused: boolean;
+  /** Whether the last successful tick was inside a window. */
+  wasInWindow: boolean;
+};
+
+export type ControlState =
+  /** The equipment can't run AUTO, so the device is only monitored. */
+  | 'unsupported'
+  | 'paused'
+  /** In HEAT, COOL or emergency heat: someone is driving it by hand. */
+  | 'manual'
+  /** In a window and running AUTO. */
+  | 'automating'
+  /** In a window and off, because it's in range. */
+  | 'idle'
+  /** Outside every window. */
+  | 'inactive';
+
+export type ControlActionKind = 'start' | 'stop' | 'reapply' | 'window_end';
+
+export type ControlAction = {
+  kind: ControlActionKind;
+  mode: Mode;
+  heatSetpointC: number;
+  coolSetpointC: number;
+};
+
+export type ControlTarget = {
+  /** The merged bounds of the active automations. Null is unbounded. */
+  minTemperatureC: number | null;
+  maxTemperatureC: number | null;
+  bufferC: number;
+  /** What AUTO is set to, after fitting the bounds to the thermostat's limits. */
+  heatSetpointC: number;
+  coolSetpointC: number;
+};
+
+export type ControlDecision = {
+  inWindow: boolean;
+  activeRuleIds: number[];
+  target: ControlTarget | null;
+  action: ControlAction | null;
+  /** The device's state once `action` (if any) is applied. */
+  state: ControlState;
+};
+
+/** Setpoints closer than this to the target aren't re-applied. */
+const SETPOINT_TOLERANCE_C = 0.25;
+
+export function parseTimeOfDay(time: string): number {
+  const [hours = 0, minutes = 0] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+export function isDayInMask(mask: number, day: number): boolean {
+  return (mask & (1 << day)) !== 0;
+}
+
+/**
+ * Overnight windows (start after end) belong to the day they start on, so a Friday 22:00–06:00
+ * window covers Saturday morning.
+ */
+export function isRuleActive(rule: ControlRule, clock: HouseClock): boolean {
+  const start = parseTimeOfDay(rule.startsAt);
+  const end = parseTimeOfDay(rule.endsAt);
+  const today = isDayInMask(rule.daysMask, clock.weekday);
+  const minute = clock.minuteOfDay;
+
+  if (start === end) {
+    return today;
+  }
+  if (start < end) {
+    return today && minute >= start && minute < end;
+  }
+  const yesterday = isDayInMask(rule.daysMask, (clock.weekday + 6) % 7);
+  return (today && minute >= start) || (yesterday && minute < end);
+}
+
+/** The tightest bounds win. The buffer is the largest, so the order of the rules doesn't matter. */
+export function mergeRules(rules: ControlRule[]) {
+  let minTemperatureC: number | null = null;
+  let maxTemperatureC: number | null = null;
+  let bufferC = 0;
+  for (const rule of rules) {
+    if (rule.minTemperatureC != null) {
+      minTemperatureC = Math.max(
+        minTemperatureC ?? -Infinity,
+        rule.minTemperatureC,
+      );
+    }
+    if (rule.maxTemperatureC != null) {
+      maxTemperatureC = Math.min(
+        maxTemperatureC ?? Infinity,
+        rule.maxTemperatureC,
+      );
+    }
+    bufferC = Math.max(bufferC, rule.bufferC);
+  }
+  return { minTemperatureC, maxTemperatureC, bufferC };
+}
+
+/**
+ * AUTO needs both setpoints. A missing bound is pushed to the thermostat's limit so AUTO never
+ * acts on that side, and the heat setpoint gives way when the two are closer than the thermostat
+ * allows.
+ */
+export function fitSetpoints(
+  bounds: { minTemperatureC: number | null; maxTemperatureC: number | null },
+  reading: ControlReading,
+) {
+  const { setpointMinimumC: lowest, setpointMaximumC: highest } = reading;
+  const clamp = (value: number) => Math.min(highest, Math.max(lowest, value));
+
+  const coolSetpointC = clamp(bounds.maxTemperatureC ?? highest);
+  let heatSetpointC = clamp(bounds.minTemperatureC ?? lowest);
+  if (heatSetpointC > coolSetpointC - reading.setpointDeltaC) {
+    heatSetpointC = coolSetpointC - reading.setpointDeltaC;
+  }
+  return { heatSetpointC, coolSetpointC };
+}
+
+export function isAutoSupported(modeLimit: number): boolean {
+  return modeLimit !== ModeLimit.HeatOnly && modeLimit !== ModeLimit.CoolOnly;
+}
+
+export function decide({
+  reading,
+  rules,
+  clock,
+  paused,
+  wasInWindow,
+}: ControlInput): ControlDecision {
+  const active = rules.filter((rule) => isRuleActive(rule, clock));
+  const inWindow = active.length > 0;
+  const activeRuleIds = active.map(({ id }) => id);
+
+  let target: ControlTarget | null = null;
+  if (inWindow) {
+    const bounds = mergeRules(active);
+    target = { ...bounds, ...fitSetpoints(bounds, reading) };
+  }
+
+  const result = (
+    state: ControlState,
+    action: ControlAction | null = null,
+  ): ControlDecision => ({ inWindow, activeRuleIds, target, action, state });
+
+  if (!isAutoSupported(reading.modeLimit)) {
+    return result('unsupported');
+  }
+  if (paused) {
+    return result('paused');
+  }
+  if (reading.mode !== Mode.Off && reading.mode !== Mode.Auto) {
+    return result('manual');
+  }
+
+  // Only the moment a window ends: after that, a device left in AUTO is the user's business.
+  if (!target) {
+    if (wasInWindow && reading.mode === Mode.Auto) {
+      return result('inactive', {
+        kind: 'window_end',
+        mode: Mode.Off,
+        heatSetpointC: reading.heatSetpointC,
+        coolSetpointC: reading.coolSetpointC,
+      });
+    }
+    return result('inactive');
+  }
+
+  const temperature = reading.indoorTemperatureC;
+  const { minTemperatureC: min, maxTemperatureC: max, bufferC } = target;
+  const outOfRange =
+    (min != null && temperature < min) || (max != null && temperature > max);
+  const comfortable =
+    (min == null || temperature >= min + bufferC) &&
+    (max == null || temperature <= max - bufferC);
+
+  const runAuto = (kind: ControlActionKind): ControlAction => ({
+    kind,
+    mode: Mode.Auto,
+    heatSetpointC: target.heatSetpointC,
+    coolSetpointC: target.coolSetpointC,
+  });
+
+  if (reading.mode === Mode.Off) {
+    return outOfRange ? result('automating', runAuto('start')) : result('idle');
+  }
+
+  if (comfortable) {
+    return result('idle', {
+      kind: 'stop',
+      mode: Mode.Off,
+      heatSetpointC: reading.heatSetpointC,
+      coolSetpointC: reading.coolSetpointC,
+    });
+  }
+
+  const drifted =
+    Math.abs(reading.heatSetpointC - target.heatSetpointC) >=
+      SETPOINT_TOLERANCE_C ||
+    Math.abs(reading.coolSetpointC - target.coolSetpointC) >=
+      SETPOINT_TOLERANCE_C;
+  return drifted
+    ? result('automating', runAuto('reapply'))
+    : result('automating');
+}
+
+const WEEKDAYS: Record<string, Weekday> = {
+  Sun: 0,
+  Mon: 1,
+  Tue: 2,
+  Wed: 3,
+  Thu: 4,
+  Fri: 5,
+  Sat: 6,
+};
+
+/** The weekday and minute of the day at `instant` in `timeZone` (IANA, e.g. "America/Chicago"). */
+export function houseClock(instant: Date, timeZone: string): HouseClock {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(instant);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? '';
+  return {
+    weekday: WEEKDAYS[part('weekday')] ?? 0,
+    minuteOfDay: Number(part('hour')) * 60 + Number(part('minute')),
+  };
+}
