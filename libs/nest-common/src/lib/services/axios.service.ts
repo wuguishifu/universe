@@ -35,6 +35,14 @@ export class AxiosService {
     return this.instance.post<Response>(url, data, config);
   };
 
+  public put = <Response, Data>(
+    url: string,
+    data?: Data,
+    config?: AxiosRequestConfig,
+  ) => {
+    return this.instance.put<Response>(url, data, config);
+  };
+
   public patch = <Response, Data>(
     url: string,
     data?: Data,

@@ -36,6 +36,13 @@
       "when": 1791601899076,
       "tag": "0004_redundant_demogoblin",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792260822301,
+      "tag": "0005_thermo_automation",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,8 @@
+{
+  "$schema": "../../../tools/environment/environment-config.schema.json",
+  "secretsPaths": [
+    "platform/analytics/client",
+    "platform/postgres",
+    "projects/thermo-automation/service"
+  ]
+}
