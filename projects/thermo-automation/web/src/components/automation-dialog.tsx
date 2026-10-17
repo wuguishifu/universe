@@ -273,7 +273,7 @@ export function AutomationDialog({
                   id={ids.min}
                   type="number"
                   inputMode="decimal"
-                  step={unit === 'F' ? 0.5 : 0.1}
+                  step="any"
                   value={draft.min}
                   onChange={(event) => set('min', event.target.value)}
                   placeholder="None"
@@ -285,7 +285,7 @@ export function AutomationDialog({
                   id={ids.max}
                   type="number"
                   inputMode="decimal"
-                  step={unit === 'F' ? 0.5 : 0.1}
+                  step="any"
                   value={draft.max}
                   onChange={(event) => set('max', event.target.value)}
                   placeholder="None"
@@ -298,7 +298,7 @@ export function AutomationDialog({
                   type="number"
                   inputMode="decimal"
                   min={0}
-                  step={unit === 'F' ? 0.5 : 0.1}
+                  step="any"
                   value={draft.buffer}
                   onChange={(event) => set('buffer', event.target.value)}
                 />

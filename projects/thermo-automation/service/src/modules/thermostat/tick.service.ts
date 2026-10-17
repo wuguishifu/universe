@@ -146,11 +146,19 @@ export class TickService implements OnApplicationBootstrap {
             model,
             reading: toReading(info, now),
             readError: null,
+            actionError: null,
           };
         } catch (error) {
           const message = `${name}: ${describeError(error)}`;
           errors.push(message);
-          return { id, name, model, reading: null, readError: message };
+          return {
+            id,
+            name,
+            model,
+            reading: null,
+            readError: message,
+            actionError: null,
+          };
         }
       }),
     );
@@ -186,13 +194,20 @@ export class TickService implements OnApplicationBootstrap {
           wasInWindow: state?.wasInWindow ?? false,
         });
 
-        try {
-          if (decision.action) {
+        if (decision.action) {
+          try {
             await this.apply(locationId, device, reading, decision.action, {
               automationIds: decision.activeRuleIds,
             });
+          } catch (error) {
+            device.actionError = describeError(error);
+            errors.push(`${device.name}: ${device.actionError}`);
+            // wasInWindow stays as it was, so a missed window end is retried next tick.
+            return;
           }
-          // Not reached if the action failed, so a missed window end is retried next tick.
+        }
+
+        try {
           if ((state?.wasInWindow ?? false) !== decision.inWindow) {
             await this.deviceStatesService.setWasInWindow(
               locationId,

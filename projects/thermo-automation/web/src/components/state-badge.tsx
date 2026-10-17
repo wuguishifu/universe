@@ -6,10 +6,12 @@ import {
   type LucideIcon,
   Moon,
   Pause,
+  TriangleAlert,
   Zap,
 } from 'lucide-react';
 import { cn } from '@libs/ui-web';
 import {
+  type ControlActionKind,
   type DeviceSnapshot,
   modeLabels,
 } from '@projects/thermo-automation-contracts';
@@ -21,12 +23,38 @@ const tones = {
   muted: 'bg-muted text-muted-foreground',
 } as const;
 
+const actionLabels: Record<
+  ControlActionKind,
+  { pending: string; failed: string }
+> = {
+  start: { pending: 'Starting next run', failed: "Couldn't start" },
+  stop: { pending: 'Turning off next run', failed: "Couldn't turn off" },
+  reapply: {
+    pending: 'Resetting setpoints next run',
+    failed: "Couldn't reset setpoints",
+  },
+  window_end: { pending: 'Turning off next run', failed: "Couldn't turn off" },
+};
+
 function describe(device: DeviceSnapshot): {
   label: string;
   icon: LucideIcon;
   tone: keyof typeof tones;
   title?: string;
 } {
+  // `state` is where the device ends up once this happens, so it'd be wrong to show it yet.
+  if (device.pendingAction) {
+    const labels = actionLabels[device.pendingAction];
+    return device.actionError
+      ? {
+          label: labels.failed,
+          icon: TriangleAlert,
+          tone: 'warning',
+          title: `${device.actionError}\nIt'll be tried again next run.`,
+        }
+      : { label: labels.pending, icon: Hourglass, tone: 'muted' };
+  }
+
   switch (device.state) {
     case 'automating':
       return { label: 'Automating', icon: Zap, tone: 'primary' };

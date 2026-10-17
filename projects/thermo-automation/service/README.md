@@ -22,13 +22,14 @@ temperature and a buffer. Per thermostat, on each tick (see `decide` in
 - **HEAT, COOL or emergency heat** means someone's driving it by hand: it's never touched.
   **AUTO or OFF** means it can be automated. Equipment that can't run AUTO is only monitored.
 - **Paused** thermostats are never touched (readings are still recorded).
-- **Inside a window**: out of range while OFF ─► AUTO with the setpoints from the window's bounds
-  (a missing bound goes to the thermostat's limit). Back inside the range by the buffer ─► OFF.
+- **Inside a window**: out of range while OFF ─► AUTO with its setpoints aimed inside the range by
+  the buffer (a missing bound goes to the thermostat's limit). Once it reaches them ─► OFF.
   Setpoints changed while in AUTO are set back. Overlapping windows: the tightest bounds and the
-  largest buffer win.
+  largest buffer win, with the buffer shrunk if the range is too narrow for it.
 - **When a window ends**: AUTO ─► OFF, once. `thermo.device_states.was_in_window` catches the moment
   (adjacent windows have none), so a window ending while the service is down is still handled.
 - **Outside every window**: never touched, so a thermostat put in AUTO by hand stays that way.
+- A write that fails shows on the device ("Couldn't start") and is tried again next tick.
 
 Every write to a thermostat is tracked as `thermo_automation-action`, and failed ticks as
 `thermo_automation-tick_failed`. The SPA shows the last tick's status from `/api/status` (also in

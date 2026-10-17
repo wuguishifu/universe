@@ -113,7 +113,7 @@ export function parsePauseInput(
 
   const minutes = parseDurationMinutes(input);
   if (minutes !== null) {
-    return new Date(now.getTime() + minutes * 60_000);
+    return inFuture(new Date(now.getTime() + minutes * 60_000), now);
   }
 
   const [result] = chrono.parse(
@@ -126,18 +126,33 @@ export function parsePauseInput(
     return null;
   }
 
-  let until = result.start.date();
-  // chrono gives a bare day ("tomorrow", "friday") some time of its own choosing. "tonight" and
-  // the like imply a time, which is kept.
-  if (!result.start.isCertain('hour') && !TIME_OF_DAY.test(input)) {
-    until = zonedTimeToUtc(
-      { ...zonedParts(until, timeZone), hour: DEFAULT_HOUR, minute: 0 },
-      timeZone,
-    );
+  // "in 2 hours" is elapsed time, which chrono already has right.
+  if (result.tags().has('result/relativeDate')) {
+    return inFuture(result.start.date(), now);
   }
 
-  return until > now ? until : null;
+  // Anything else is a wall-clock time. chrono read it with today's UTC offset, which is wrong
+  // across a DST change, so it's resolved again in the house's timezone on its own date.
+  const { start } = result;
+  const wallClock = {
+    year: start.get('year') ?? 0,
+    month: start.get('month') ?? 1,
+    day: start.get('day') ?? 1,
+    hour: start.get('hour') ?? 0,
+    minute: start.get('minute') ?? 0,
+  };
+  // chrono gives a bare day ("tomorrow", "friday") some time of its own choosing. "tonight" and
+  // the like imply a time, which is kept.
+  if (!start.isCertain('hour') && !TIME_OF_DAY.test(input)) {
+    wallClock.hour = DEFAULT_HOUR;
+    wallClock.minute = 0;
+  }
+  return inFuture(zonedTimeToUtc(wallClock, timeZone), now);
 }
+
+/** Null for times in the past, and for ones too far out to be a date (e.g. "999999999999h"). */
+const inFuture = (until: Date, now: Date) =>
+  Number.isFinite(until.getTime()) && until > now ? until : null;
 
 /** e.g. "Sat, Oct 18, 5:00 PM", in the house's timezone. */
 export function formatHouseTime(

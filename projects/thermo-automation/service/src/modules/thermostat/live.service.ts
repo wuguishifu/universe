@@ -20,6 +20,8 @@ export type HouseDevice = {
   /** The last successful read, with any action the app took since applied to it. */
   reading: Reading | null;
   readError: string | null;
+  /** Why the last tick's write to the thermostat failed, if it did. */
+  actionError: string | null;
 };
 
 /**
@@ -105,7 +107,7 @@ export class LiveService {
     const clock = houseClock(now, settings.timezone);
 
     const devices = (house?.devices ?? []).map(
-      ({ id, name, model, reading, readError }): DeviceSnapshot => {
+      ({ id, name, model, reading, readError, actionError }): DeviceSnapshot => {
         const pausedUntil = deviceStates.get(id)?.pausedUntil ?? null;
         const paused = pausedUntil !== null && pausedUntil > now;
         const decision = reading
@@ -128,6 +130,10 @@ export class LiveService {
           readError,
           pausedUntil: paused ? pausedUntil.toISOString() : null,
           state: decision?.state ?? null,
+          // Successful actions are applied to the cached reading, so one that's still called for
+          // failed, or is new since the last tick.
+          pendingAction: decision?.action?.kind ?? null,
+          actionError: decision?.action ? actionError : null,
           inWindow: decision?.inWindow ?? false,
           activeAutomationIds: decision?.activeRuleIds ?? [],
           target: decision?.target ?? null,

@@ -71,6 +71,16 @@ describe('parsePauseInput', () => {
     assert.equal(parse('   '), null);
   });
 
+  it("uses the house's offset on the date asked for, not today's", () => {
+    // Chicago is on CST (UTC-6) after 2026-11-01.
+    assert.equal(parse('nov 2 6am'), '2026-11-02T12:00:00.000Z');
+    assert.equal(parse('until 2026-11-02 06:00'), '2026-11-02T12:00:00.000Z');
+  });
+
+  it('rejects durations too long to be a date', () => {
+    assert.equal(parse('999999999999h'), null);
+  });
+
   it('rejects times in the past', () => {
     assert.equal(parse('2026-10-16 18:00'), null);
   });

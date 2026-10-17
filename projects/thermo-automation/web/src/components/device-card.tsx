@@ -121,11 +121,17 @@ export function DeviceCard({
         </p>
       )}
 
-      {device.readError && (
-        <p className="flex gap-2 text-xs text-warning">
-          <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-          <span className="break-words">{device.readError}</span>
-        </p>
+      {[device.readError, device.actionError].map(
+        (error) =>
+          error && (
+            <p key={error} className="flex gap-2 text-xs text-warning">
+              <TriangleAlert
+                className="mt-0.5 h-3.5 w-3.5 shrink-0"
+                aria-hidden
+              />
+              <span className="break-words">{error}</span>
+            </p>
+          ),
       )}
 
       {target && device.state !== 'unsupported' && (

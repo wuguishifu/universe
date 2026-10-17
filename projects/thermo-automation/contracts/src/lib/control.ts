@@ -85,6 +85,7 @@ export type ControlTarget = {
   /** The merged bounds of the active automations. Null is unbounded. */
   minTemperatureC: number | null;
   maxTemperatureC: number | null;
+  /** The largest of their buffers, shrunk if the range is too narrow for it (see fitSetpoints). */
   bufferC: number;
   /** What AUTO is set to, after fitting the bounds to the thermostat's limits. */
   heatSetpointC: number;
@@ -102,6 +103,9 @@ export type ControlDecision = {
 
 /** Setpoints closer than this to the target aren't re-applied. */
 const SETPOINT_TOLERANCE_C = 0.25;
+
+/** A satisfied thermostat can report a hair short of its setpoint, which counts as reaching it. */
+const REACHED_TOLERANCE_C = 0.25;
 
 /** Thermostats take setpoints in 0.5 °C steps. */
 const SETPOINT_STEP_C = 0.5;
@@ -162,33 +166,46 @@ export function mergeRules(rules: ControlRule[]) {
 }
 
 /**
- * AUTO needs both setpoints. A missing bound is pushed to the thermostat's limit so AUTO never
- * acts on that side, and the heat setpoint gives way when the two are closer than the thermostat
- * allows. Bounds are kept as entered, so they're rounded to the thermostat's step here, toward the
- * inside of the range: a setpoint past the bound would leave AUTO running without the thermostat
- * ever bringing the temperature back.
+ * AUTO needs both setpoints. They're aimed inside the range by the buffer, so a thermostat holding
+ * them has reached the temperature where AUTO turns off. A missing bound is pushed to the
+ * thermostat's limit so AUTO never acts on that side.
+ *
+ * The buffer shrinks (possibly to 0) when the setpoints would otherwise end up closer than the
+ * thermostat allows, as when one window's minimum and another's maximum overlap. Setpoints are
+ * rounded to the thermostat's step toward the inside of the range, and the heat setpoint gives way
+ * if they're still too close.
  */
 export function fitSetpoints(
-  bounds: { minTemperatureC: number | null; maxTemperatureC: number | null },
+  bounds: {
+    minTemperatureC: number | null;
+    maxTemperatureC: number | null;
+    bufferC: number;
+  },
   reading: ControlReading,
 ) {
-  const { setpointMinimumC: lowest, setpointMaximumC: highest } = reading;
+  const { minTemperatureC: min, maxTemperatureC: max } = bounds;
+  const {
+    setpointMinimumC: lowest,
+    setpointMaximumC: highest,
+    setpointDeltaC: delta,
+  } = reading;
   const clamp = (value: number) => Math.min(highest, Math.max(lowest, value));
   const stepUp = (value: number) =>
     Math.ceil((value - STEP_EPSILON_C) / SETPOINT_STEP_C) * SETPOINT_STEP_C;
   const stepDown = (value: number) =>
     Math.floor((value + STEP_EPSILON_C) / SETPOINT_STEP_C) * SETPOINT_STEP_C;
 
-  const coolSetpointC = clamp(
-    bounds.maxTemperatureC == null ? highest : stepDown(bounds.maxTemperatureC),
-  );
-  let heatSetpointC = clamp(
-    bounds.minTemperatureC == null ? lowest : stepUp(bounds.minTemperatureC),
-  );
-  if (heatSetpointC > coolSetpointC - reading.setpointDeltaC) {
-    heatSetpointC = coolSetpointC - reading.setpointDeltaC;
+  const bufferC =
+    min != null && max != null
+      ? Math.min(bounds.bufferC, Math.max(0, (max - min - delta) / 2))
+      : bounds.bufferC;
+
+  const coolSetpointC = clamp(max == null ? highest : stepDown(max - bufferC));
+  let heatSetpointC = clamp(min == null ? lowest : stepUp(min + bufferC));
+  if (heatSetpointC > coolSetpointC - delta) {
+    heatSetpointC = coolSetpointC - delta;
   }
-  return { heatSetpointC, coolSetpointC };
+  return { heatSetpointC, coolSetpointC, bufferC };
 }
 
 export function isAutoSupported(modeLimit: number): boolean {
@@ -241,12 +258,17 @@ export function decide({
   }
 
   const temperature = reading.indoorTemperatureC;
-  const { minTemperatureC: min, maxTemperatureC: max, bufferC } = target;
+  const { minTemperatureC: min, maxTemperatureC: max } = target;
   const outOfRange =
     (min != null && temperature < min) || (max != null && temperature > max);
+  // Reached the setpoints AUTO is aimed at (and inside the range, in case the heat setpoint had to
+  // give way below the minimum, where turning off would only start AUTO again).
   const comfortable =
-    (min == null || temperature >= min + bufferC) &&
-    (max == null || temperature <= max - bufferC);
+    (min == null ||
+      temperature >=
+        Math.max(min, target.heatSetpointC - REACHED_TOLERANCE_C)) &&
+    (max == null ||
+      temperature <= Math.min(max, target.coolSetpointC + REACHED_TOLERANCE_C));
 
   const runAuto = (kind: ControlActionKind): ControlAction => ({
     kind,

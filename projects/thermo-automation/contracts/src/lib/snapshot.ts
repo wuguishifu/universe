@@ -2,6 +2,13 @@ import { z } from 'zod';
 import { automationSchema } from './automations';
 import { settingsSchema } from './settings';
 
+export const controlActionKindSchema = z.enum([
+  'start',
+  'stop',
+  'reapply',
+  'window_end',
+]);
+
 export const controlStateSchema = z.enum([
   'unsupported',
   'paused',
@@ -37,7 +44,15 @@ export const deviceSnapshotSchema = z.object({
   /** Why the last read failed, if it did. */
   readError: z.string().nullable(),
   pausedUntil: z.iso.datetime().nullable(),
+  /** What the device will be in once `pendingAction` (if any) is done. */
   state: controlStateSchema.nullable(),
+  /**
+   * An action the automations call for that hasn't happened yet: either the last attempt failed
+   * (see `actionError`), or something changed since the last tick and the next one will do it.
+   */
+  pendingAction: controlActionKindSchema.nullable(),
+  /** Why the last attempt at `pendingAction` failed. */
+  actionError: z.string().nullable(),
   inWindow: z.boolean(),
   activeAutomationIds: z.number().array(),
   target: z
