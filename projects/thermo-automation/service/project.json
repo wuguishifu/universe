@@ -1,0 +1,27 @@
+{
+  "name": "thermo-automation-service",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/thermo-automation/service/src",
+  "projectType": "application",
+  "tags": ["scope:server"],
+  "targets": {
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "thermo-automation-service:build"
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning",
+        "cwd": "projects/thermo-automation/service"
+      }
+    }
+  }
+}

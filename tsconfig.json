@@ -74,6 +74,15 @@
     },
     {
       "path": "./projects/clipper/service"
+    },
+    {
+      "path": "./projects/thermo-automation/contracts"
+    },
+    {
+      "path": "./projects/thermo-automation/service"
+    },
+    {
+      "path": "./projects/thermo-automation/web"
     }
   ],
   "compilerOptions": {

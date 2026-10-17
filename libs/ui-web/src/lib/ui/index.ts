@@ -1,5 +1,6 @@
 export * from './button';
 export * from './carousel';
+export * from './dialog';
 export * from './drawer';
 export * from './dropdown-menu';
 export * from './form';
@@ -7,4 +8,5 @@ export * from './input';
 export * from './label';
 export * from './navigation-menu';
 export * from './spinner';
+export * from './switch';
 export * from './tooltip';

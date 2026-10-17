@@ -1,0 +1,10 @@
+{
+  "name": "@projects/thermo-automation-web",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@projects/thermo-automation-contracts": "workspace:*",
+    "@libs/ui-web": "workspace:*"
+  }
+}
