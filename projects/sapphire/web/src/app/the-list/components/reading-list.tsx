@@ -3,7 +3,7 @@
 import { Spinner } from '@libs/ui-web';
 import { api } from '@platform/convex-contracts';
 import { useQuery } from '../../../modules/convex/use-query';
-import { Section } from '../../../modules/layout/section';
+import { Section } from '../../../components/section';
 
 export function ReadingList() {
   const { data: items, isPending } = useQuery(api.sapphire.v1.readingList.list);

@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { Section } from '../modules/layout/section';
+import { Section } from '../components/section';
 
 export default function Index() {
   return (
