@@ -5,10 +5,9 @@ import { Jersey_15, Source_Code_Pro } from 'next/font/google';
 import localFont from 'next/font/local';
 import { cn } from '@libs/ui-web';
 
+import { ParallaxBackground } from '../components/bg/parallax-background';
+import { RainCanvas } from '../components/bg/rain-canvas';
 import { ConvexClientProvider } from '../modules/convex/components/convex-client-provider';
-import { RainCanvas } from '../modules/rain/rain-canvas';
-import { ParallaxBackground } from './components/parallax-background';
-import { SideColumn } from './components/side-column';
 
 const vga = localFont({
   src: [
@@ -58,11 +57,8 @@ export default function RootLayout({
           <ParallaxBackground />
           <RainCanvas />
           <div className="crt-container" />
-          <div className="flex max-w-4xl mx-auto h-full mt-20 gap-2">
-            <div className="flex-3 space-y-2">{children}</div>
-            <div className="flex-1 space-y-2">
-              <SideColumn />
-            </div>
+          <div className="flex max-w-3xl mx-auto h-full mt-20 gap-2">
+            <div className="space-y-2 w-full">{children}</div>
           </div>
         </ConvexClientProvider>
       </body>

@@ -1,5 +1,6 @@
 import Image from 'next/image';
-import { Section } from '../modules/layout/section';
+import { Section } from '../components/section';
+import { DashboardList } from '../modules/dashboard/list';
 
 export default function Index() {
   return (
@@ -18,6 +19,7 @@ export default function Index() {
           </h2>
         </div>
       </Section>
+      <DashboardList />
     </main>
   );
 }

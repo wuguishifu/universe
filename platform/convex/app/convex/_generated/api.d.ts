@@ -22,6 +22,7 @@ import type * as ruby_auth from "../ruby/auth.js";
 import type * as ruby_counts from "../ruby/counts.js";
 import type * as ruby_phrases from "../ruby/phrases.js";
 import type * as ruby_tables from "../ruby/tables.js";
+import type * as sapphire_dashboard from "../sapphire/dashboard.js";
 import type * as sapphire_tables from "../sapphire/tables.js";
 import type * as sapphire_v1_readingList from "../sapphire/v1/readingList.js";
 
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   "ruby/counts": typeof ruby_counts;
   "ruby/phrases": typeof ruby_phrases;
   "ruby/tables": typeof ruby_tables;
+  "sapphire/dashboard": typeof sapphire_dashboard;
   "sapphire/tables": typeof sapphire_tables;
   "sapphire/v1/readingList": typeof sapphire_v1_readingList;
 }>;

@@ -1,4 +1,4 @@
-import { Section } from '../../modules/layout/section';
+import { Section } from '../../components/section';
 import { AppItem, AppItemProps } from './components/app-item';
 
 const apps: AppItemProps[] = [
