@@ -9,4 +9,9 @@ export const sapphireTables = {
     notes: v.optional(v.string()),
     recommendedBy: v.optional(v.string()),
   }),
+  dashboardItems: defineTable({
+    name: v.string(),
+    iconUrl: v.string(),
+    url: v.string(),
+  }),
 } as const;
