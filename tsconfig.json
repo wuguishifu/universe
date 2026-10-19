@@ -83,6 +83,15 @@
     },
     {
       "path": "./projects/thermo-automation/web"
+    },
+    {
+      "path": "./projects/youtube-music/contracts"
+    },
+    {
+      "path": "./projects/youtube-music/service"
+    },
+    {
+      "path": "./projects/youtube-music/mobile"
     }
   ],
   "compilerOptions": {

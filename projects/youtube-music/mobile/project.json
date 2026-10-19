@@ -1,0 +1,52 @@
+{
+  "name": "youtube-music-mobile",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/youtube-music/mobile/src",
+  "projectType": "application",
+  "tags": ["scope:client"],
+  "targets": {
+    "start": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "expo start --dev-client",
+        "cwd": "projects/youtube-music/mobile"
+      }
+    },
+    "run-ios": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "expo run:ios",
+        "cwd": "projects/youtube-music/mobile"
+      }
+    },
+    "run-ios-device": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "expo run:ios --device --configuration Release",
+        "cwd": "projects/youtube-music/mobile"
+      }
+    },
+    "prebuild": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "expo prebuild --clean",
+        "cwd": "projects/youtube-music/mobile"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --test 'src/**/*.spec.ts'",
+        "cwd": "projects/youtube-music/mobile"
+      }
+    },
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude '(^|/)(ios|android)(/|$)'",
+        "cwd": "projects/youtube-music/mobile"
+      }
+    }
+  }
+}

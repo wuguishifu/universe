@@ -43,6 +43,13 @@
       "when": 1792260822301,
       "tag": "0005_thermo_automation",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792353168553,
+      "tag": "0006_youtube_music",
+      "breakpoints": true
     }
   ]
 }

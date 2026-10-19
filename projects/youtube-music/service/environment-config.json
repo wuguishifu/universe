@@ -1,0 +1,9 @@
+{
+  "$schema": "../../../tools/environment/environment-config.schema.json",
+  "secretsPaths": [
+    "platform/s3",
+    "platform/redis",
+    "platform/postgres",
+    "projects/youtube-music/service"
+  ]
+}

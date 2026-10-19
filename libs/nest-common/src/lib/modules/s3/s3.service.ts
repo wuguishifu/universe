@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
   NoSuchKey,
@@ -15,6 +16,18 @@ import { pipeline } from 'stream/promises';
 import { S3_CONFIG, S3Props } from './s3';
 
 export class S3ObjectNotFoundError extends Error {}
+
+/** The requested range starts past the end of the object (HTTP 416). */
+export class S3RangeNotSatisfiableError extends Error {}
+
+export type S3ObjectStream = {
+  body: Readable;
+  /** Of `body`, so of the range when there is one. */
+  contentLength: number | undefined;
+  /** Set when a range was requested, e.g. `bytes 0-99/1234`. */
+  contentRange: string | undefined;
+  contentType: string | undefined;
+};
 
 @Injectable()
 export class S3Service {
@@ -104,6 +117,61 @@ export class S3Service {
       }
       throw error;
     }
+  }
+
+  /**
+   * Streams an object, or the part of it in `range` (an HTTP Range header value, passed on to S3 as
+   * is), so it can be piped into a response without buffering it.
+   */
+  public async getObjectStream({
+    bucket,
+    key,
+    range,
+  }: {
+    bucket: string;
+    key: string;
+    range?: string;
+  }): Promise<S3ObjectStream> {
+    try {
+      const { Body, ContentLength, ContentRange, ContentType } =
+        await this.s3Client.send(
+          new GetObjectCommand({ Bucket: bucket, Key: key, Range: range }),
+        );
+      if (!(Body instanceof Readable))
+        throw new Error('Unexpected S3 body type');
+      return {
+        body: Body,
+        contentLength: ContentLength,
+        contentRange: ContentRange,
+        contentType: ContentType,
+      };
+    } catch (error) {
+      if (error instanceof NoSuchKey) {
+        throw new S3ObjectNotFoundError(`s3://${bucket}/${key} does not exist`);
+      }
+      if (
+        error instanceof S3ServiceException &&
+        error.$metadata.httpStatusCode === 416
+      ) {
+        throw new S3RangeNotSatisfiableError(
+          `${range} is outside s3://${bucket}/${key}`,
+        );
+      }
+      throw error;
+    }
+  }
+
+  /** Deletes an object. Deleting one that doesn't exist does nothing. */
+  public async deleteObject({
+    bucket,
+    key,
+  }: {
+    bucket: string;
+    key: string;
+  }): Promise<void> {
+    await this.s3Client.send(
+      new DeleteObjectCommand({ Bucket: bucket, Key: key }),
+    );
   }
 
   public putObject({
