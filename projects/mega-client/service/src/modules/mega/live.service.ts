@@ -40,9 +40,12 @@ export class LiveService {
   private readonly logger = new Logger(LiveService.name);
   private readonly snapshots = new BehaviorSubject<Snapshot | null>(null);
 
-  /** A poll and a change can build at the same time: the older build mustn't land last. */
+  /**
+   * Polls, changes and /api/snapshot can all build at once: an older build mustn't land last, or
+   * it'd put back what a newer one already replaced.
+   */
   private buildsStarted = 0;
-  private latestPublished = 0;
+  private latestBuilt = 0;
 
   /** What a failed read falls back on. */
   private account: Account = { loggedIn: false, email: null };
@@ -75,42 +78,60 @@ export class LiveService {
   ) {}
 
   public async publish(): Promise<Snapshot> {
-    const build = ++this.buildsStarted;
-    const snapshot = await this.build();
-    if (build > this.latestPublished) {
-      this.latestPublished = build;
-      this.snapshots.next(snapshot);
-    }
+    const { snapshot, latest } = await this.read();
+    if (latest) this.snapshots.next(snapshot);
     return snapshot;
   }
 
   public async build(): Promise<Snapshot> {
+    return (await this.read()).snapshot;
+  }
+
+  /** The snapshot, and whether it's from the newest build to finish so far. */
+  private async read(): Promise<{ snapshot: Snapshot; latest: boolean }> {
+    const build = ++this.buildsStarted;
+    // When the reads started, so snapshots order the same way builds do, wherever they end up.
+    const generatedAt = new Date().toISOString();
     const [account, transfers] = await Promise.allSettled([
       this.accountService.get(),
       this.transfersService.list(),
     ]);
-    if (account.status === 'fulfilled') this.account = account.value;
-    if (transfers.status === 'fulfilled') {
-      this.transfers = transfers.value.transfers;
-      this.queuePaused = transfers.value.queuePaused;
-    }
 
     const errors = [account, transfers].flatMap((result) =>
       result.status === 'rejected' ? [messageOf(result.reason)] : [],
     );
     const error = errors.length ? [...new Set(errors)].join('\n') : null;
-    // Once per change, not every poll.
-    if (error && error !== this.lastError) {
-      this.logger.warn(`Couldn't read MEGAcmd: ${error}`);
+
+    const latest = build > this.latestBuilt;
+    if (latest) {
+      this.latestBuilt = build;
+      if (account.status === 'fulfilled') this.account = account.value;
+      if (transfers.status === 'fulfilled') {
+        this.transfers = transfers.value.transfers;
+        this.queuePaused = transfers.value.queuePaused;
+      }
+      // Once per change, not every poll.
+      if (error && error !== this.lastError) {
+        this.logger.warn(`Couldn't read MEGAcmd: ${error}`);
+      }
+      this.lastError = error;
     }
-    this.lastError = error;
 
     return {
-      account: this.account,
-      transfers: this.transfers,
-      queuePaused: this.queuePaused,
-      error,
-      generatedAt: new Date().toISOString(),
+      snapshot: {
+        account: account.status === 'fulfilled' ? account.value : this.account,
+        transfers:
+          transfers.status === 'fulfilled'
+            ? transfers.value.transfers
+            : this.transfers,
+        queuePaused:
+          transfers.status === 'fulfilled'
+            ? transfers.value.queuePaused
+            : this.queuePaused,
+        error,
+        generatedAt,
+      },
+      latest,
     };
   }
 

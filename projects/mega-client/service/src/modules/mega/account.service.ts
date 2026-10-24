@@ -14,6 +14,8 @@ const LOGIN_TIMEOUT_MS = 120_000;
 @Injectable()
 export class AccountService {
   private cached: { account: Account; readAt: number } | null = null;
+  /** Bumped on login and logout, so a whoami that started before one doesn't get cached. */
+  private generation = 0;
 
   constructor(private readonly megaCli: MegaCliService) {}
 
@@ -21,8 +23,11 @@ export class AccountService {
     if (this.cached && Date.now() - this.cached.readAt < ACCOUNT_TTL_MS) {
       return this.cached.account;
     }
+    const generation = this.generation;
     const account = await this.read();
-    this.cached = { account, readAt: Date.now() };
+    if (generation === this.generation) {
+      this.cached = { account, readAt: Date.now() };
+    }
     return account;
   }
 
@@ -40,13 +45,15 @@ export class AccountService {
         [
           'login',
           ...(authCode ? [`--auth-code=${authCode}`] : []),
+          // Ends the options, so a password starting with "-" isn't read as one.
+          '--',
           email,
           password,
         ],
         { timeoutMs: LOGIN_TIMEOUT_MS },
       );
     } finally {
-      this.cached = null;
+      this.forget();
     }
   }
 
@@ -54,8 +61,13 @@ export class AccountService {
     try {
       await this.megaCli.run(['logout']);
     } finally {
-      this.cached = null;
+      this.forget();
     }
+  }
+
+  private forget() {
+    this.generation++;
+    this.cached = null;
   }
 
   private async read(): Promise<Account> {

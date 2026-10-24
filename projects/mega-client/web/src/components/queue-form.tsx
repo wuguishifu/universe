@@ -18,8 +18,9 @@ export function QueueForm() {
   const queue = useApiMutation(
     (link: string) => expect(api.transfers.queue({ body: { url: link } }), 200),
     {
-      onSuccess: () => {
-        setUrl('');
+      onSuccess: (link) => {
+        // The next link may already be in there.
+        setUrl((current) => (current.trim() === link ? '' : current));
         toast.success('Queued');
       },
     },

@@ -128,6 +128,23 @@ describe('parseTransfers', () => {
     assert.equal(transfer.destinationPath, '/downloads/a  b   c.zip');
   });
 
+  it('keeps transfers whose paths contain the column separator', () => {
+    const name = `a${COLUMN_SEPARATOR}b.zip`;
+    const [download] = parseTransfers(
+      row('⇓', '8', name, `/downloads/${name}`, '5.00% of 1.00 GB', 'ACTIVE'),
+    );
+    assert.equal(download.tag, '8');
+    assert.equal(download.sourcePath, name);
+    assert.equal(download.destinationPath, `/downloads/${name}`);
+    assert.equal(download.state, 'ACTIVE');
+
+    const [renamed] = parseTransfers(
+      row('⇓', '9', name, '/downloads/other.zip', '5.00% of 1.00 GB', 'QUEUED'),
+    );
+    assert.equal(renamed.sourcePath, name);
+    assert.equal(renamed.destinationPath, '/downloads/other.zip');
+  });
+
   it("skips the header, MEGAcmd's notices and blank lines", () => {
     assert.deepEqual(
       parseTransfers(

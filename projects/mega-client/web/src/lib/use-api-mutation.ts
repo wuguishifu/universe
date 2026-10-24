@@ -9,14 +9,14 @@ import { setSnapshot } from './use-live-snapshot';
  */
 export function useApiMutation<Variables>(
   mutationFn: (variables: Variables) => Promise<Snapshot>,
-  { onSuccess }: { onSuccess?: () => void } = {},
+  { onSuccess }: { onSuccess?: (variables: Variables) => void } = {},
 ) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn,
-    onSuccess: (snapshot) => {
+    onSuccess: (snapshot, variables) => {
       setSnapshot(queryClient, snapshot);
-      onSuccess?.();
+      onSuccess?.(variables);
     },
     onError: (error) => toast.error(error.message),
   });

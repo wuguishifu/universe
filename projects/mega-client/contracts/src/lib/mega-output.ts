@@ -96,26 +96,52 @@ export function parseProgress(
   };
 }
 
+const basename = (path: string) => path.slice(path.lastIndexOf('/') + 1);
+
+/**
+ * SOURCEPATH and DESTINYPATH, from the cells between TAG and PROGRESS. Filenames can contain
+ * COLUMN_SEPARATOR, and then there are more than two cells to choose a split between: the paths
+ * usually end in the same name (a download's destination is the source's name in the download
+ * folder), and failing that the destination is usually absolute.
+ */
+function splitPaths(cells: string[]): [string, string] {
+  const splits = cells.slice(1).map((_, index): [string, string] => [
+    cells
+      .slice(0, index + 1)
+      .join(COLUMN_SEPARATOR)
+      .trim(),
+    cells
+      .slice(index + 1)
+      .join(COLUMN_SEPARATOR)
+      .trim(),
+  ]);
+  return (
+    splits.find(
+      ([source, destination]) => basename(source) === basename(destination),
+    ) ??
+    splits.find(([, destination]) => destination.startsWith('/')) ??
+    splits[0] ?? ['', '']
+  );
+}
+
 /**
  * Reads `mega-exec transfers` run with COLUMN_SEPARATOR and TRANSFER_COLUMNS. The header row and
- * any line that isn't a transfer (MEGAcmd's own notices) are skipped.
+ * any line that isn't a transfer (MEGAcmd's own notices) are skipped. The columns either side of
+ * the paths are read from each end, so a path with COLUMN_SEPARATOR in it doesn't hide its transfer.
  */
 export function parseTransfers(stdout: string): ParsedTransfer[] {
   return stdout.split(/\r?\n/).flatMap((line): ParsedTransfer[] => {
-    const cells = line.split(COLUMN_SEPARATOR).map((cell) => cell.trim());
-    if (cells.length !== TRANSFER_COLUMNS.length) return [];
+    const cells = line.split(COLUMN_SEPARATOR);
+    if (cells.length < TRANSFER_COLUMNS.length) return [];
 
-    const [
-      type = '',
-      tag = '',
-      sourcePath = '',
-      destinationPath = '',
-      progressText = '',
-      state = '',
-    ] = cells;
+    const type = cells[0]?.trim() ?? '';
+    const tag = cells[1]?.trim() ?? '';
+    const progressText = cells.at(-2) ?? '';
+    const state = cells.at(-1)?.trim() ?? '';
     if (!/^\d+$/.test(tag)) return [];
     const progress = parseProgress(progressText);
     if (!progress) return [];
+    const [sourcePath, destinationPath] = splitPaths(cells.slice(2, -2));
 
     return [
       {
