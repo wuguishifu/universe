@@ -19,7 +19,7 @@ import { type HouseDevice, LiveService } from './live.service';
 import { SettingsService } from './settings.service';
 import { StatusRecordsService } from './status-records.service';
 
-const toReading = (info: DaikinDeviceInfo, readAt: Date): Reading => ({
+export const toReading = (info: DaikinDeviceInfo, readAt: Date): Reading => ({
   mode: info.mode,
   modeLimit: info.modeLimit,
   equipmentStatus: info.equipmentStatus,
@@ -42,8 +42,9 @@ const toReading = (info: DaikinDeviceInfo, readAt: Date): Reading => ({
 @Injectable()
 export class TickService implements OnApplicationBootstrap {
   private readonly logger = new Logger(TickService.name);
-  private inFlight: Promise<void> | null = null;
-  private rerunRequested = false;
+  /** Settles when the last queued task (a tick or a manual write) is done. */
+  private queue: Promise<void> = Promise.resolve();
+  private queuedTick: Promise<void> | null = null;
 
   constructor(
     private readonly environmentService: EnvironmentService,
@@ -69,22 +70,28 @@ export class TickService implements OnApplicationBootstrap {
   }
 
   /**
-   * Runs a tick now. Ticks never overlap: a call during one queues another for when it ends,
-   * so a settings change mid-tick is still picked up.
+   * Runs a tick as soon as nothing else is running. A call during a tick queues another for when
+   * it ends, so a settings change mid-tick is still picked up. Calls while one is queued share it.
    */
   public run(): Promise<void> {
-    if (this.inFlight) {
-      this.rerunRequested = true;
-      return this.inFlight;
-    }
-    this.inFlight = this.tick().finally(() => {
-      this.inFlight = null;
-      if (this.rerunRequested) {
-        this.rerunRequested = false;
-        void this.run();
-      }
+    this.queuedTick ??= this.exclusive(() => {
+      this.queuedTick = null;
+      return this.tick();
     });
-    return this.inFlight;
+    return this.queuedTick;
+  }
+
+  /**
+   * Runs `task` once the running tick or task is done, and holds off ticks until it is. A tick
+   * acting on a reading taken before a manual write would undo it.
+   */
+  public exclusive<T>(task: () => Promise<T>): Promise<T> {
+    const result = this.queue.then(task);
+    this.queue = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
   }
 
   private async tick(): Promise<void> {

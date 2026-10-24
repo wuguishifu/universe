@@ -1,13 +1,42 @@
 import { z } from 'zod';
 
 import { c } from '../contract';
+import { type ManualControl, Mode } from '../control';
 import { historyPointSchema } from '../snapshot';
 
 const errorSchema = z.object({ message: z.string() });
 const deviceParams = z.object({ deviceId: z.string().min(1) });
 
+const manualControlSchema = z
+  .object({
+    mode: z
+      .literal([Mode.Off, Mode.Heat, Mode.Cool, Mode.Auto, Mode.EmergencyHeat])
+      .optional(),
+    heatSetpointC: z.number().optional(),
+    coolSetpointC: z.number().optional(),
+  })
+  .refine(
+    (body) => Object.values(body).some((value) => value !== undefined),
+    'Change the mode or a setpoint',
+  ) satisfies z.ZodType<ManualControl>;
+
 export const devicesRouter = c.router(
   {
+    control: {
+      method: 'POST',
+      path: '/:deviceId/control',
+      description:
+        "Set the mode and/or setpoints by hand. Fields left out keep the thermostat's current " +
+        "value, read fresh, and nothing is adjusted to fit. Automations aren't paused.",
+      pathParams: deviceParams,
+      body: manualControlSchema,
+      responses: {
+        204: c.noBody(),
+        400: errorSchema,
+        /** Daikin's API failed. */
+        502: errorSchema,
+      },
+    },
     pause: {
       method: 'POST',
       path: '/:deviceId/pause',

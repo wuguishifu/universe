@@ -10,9 +10,13 @@ import {
   fitSetpoints,
   houseClock,
   isRuleActive,
+  manualControlProblem,
+  manualModes,
   mergeRules,
   Mode,
   ModeLimit,
+  setpointsInUse,
+  stepSetpoint,
 } from './control.ts';
 
 const EVERY_DAY = 0b1111111;
@@ -529,6 +533,154 @@ describe('houseClock', () => {
     assert.equal(
       houseClock(new Date('2026-10-17T00:00:00Z'), 'UTC').minuteOfDay,
       0,
+    );
+  });
+});
+
+describe('manualModes', () => {
+  it('offers everything but emergency heat when there is no limit', () => {
+    assert.deepEqual(manualModes(ModeLimit.All, Mode.Off), [
+      Mode.Off,
+      Mode.Heat,
+      Mode.Cool,
+      Mode.Auto,
+    ]);
+    assert.deepEqual(manualModes(ModeLimit.None, Mode.Off), [
+      Mode.Off,
+      Mode.Heat,
+      Mode.Cool,
+      Mode.Auto,
+    ]);
+  });
+
+  it('follows the equipment limit', () => {
+    assert.deepEqual(manualModes(ModeLimit.HeatOnly, Mode.Off), [
+      Mode.Off,
+      Mode.Heat,
+    ]);
+    assert.deepEqual(manualModes(ModeLimit.CoolOnly, Mode.Off), [
+      Mode.Off,
+      Mode.Cool,
+    ]);
+  });
+
+  it('offers emergency heat only while it is on', () => {
+    assert.ok(
+      manualModes(ModeLimit.All, Mode.EmergencyHeat).includes(
+        Mode.EmergencyHeat,
+      ),
+    );
+  });
+});
+
+describe('setpointsInUse', () => {
+  it('maps each mode to the setpoints it acts on', () => {
+    assert.deepEqual(setpointsInUse(Mode.Off), []);
+    assert.deepEqual(setpointsInUse(Mode.Heat), ['heatSetpointC']);
+    assert.deepEqual(setpointsInUse(Mode.EmergencyHeat), ['heatSetpointC']);
+    assert.deepEqual(setpointsInUse(Mode.Cool), ['coolSetpointC']);
+    assert.deepEqual(setpointsInUse(Mode.Auto), [
+      'heatSetpointC',
+      'coolSetpointC',
+    ]);
+  });
+});
+
+describe('stepSetpoint', () => {
+  const limits = reading();
+  const step = (
+    setpoints: [number, number],
+    which: 'heatSetpointC' | 'coolSetpointC',
+    direction: 1 | -1,
+    mode: number = Mode.Auto,
+  ) => {
+    const next = stepSetpoint(
+      { heatSetpointC: setpoints[0], coolSetpointC: setpoints[1] },
+      which,
+      direction,
+      mode,
+      limits,
+    );
+    return next && [next.heatSetpointC, next.coolSetpointC];
+  };
+
+  it('moves by half a degree', () => {
+    assert.deepEqual(step([20, 25], 'heatSetpointC', 1), [20.5, 25]);
+    assert.deepEqual(step([20, 25], 'coolSetpointC', -1), [20, 24.5]);
+  });
+
+  it('snaps an off-grid setpoint onto the grid in the direction of the step', () => {
+    assert.deepEqual(step([22.2, 28], 'heatSetpointC', 1), [22.5, 28]);
+    assert.deepEqual(step([22.2, 28], 'heatSetpointC', -1), [22, 28]);
+  });
+
+  it('pushes the other setpoint along in AUTO', () => {
+    assert.deepEqual(step([20, 22], 'heatSetpointC', 1), [20.5, 22.5]);
+    assert.deepEqual(step([20, 22], 'coolSetpointC', -1), [19.5, 21.5]);
+  });
+
+  it('pushes onto the grid when the delta is off it', () => {
+    const next = stepSetpoint(
+      { heatSetpointC: 20, coolSetpointC: 21.5 },
+      'heatSetpointC',
+      1,
+      Mode.Auto,
+      { ...limits, setpointDeltaC: 5 / 3 },
+    );
+    assert.deepEqual(next, { heatSetpointC: 20.5, coolSetpointC: 22.5 });
+  });
+
+  it("doesn't push outside AUTO", () => {
+    assert.deepEqual(step([20, 20], 'heatSetpointC', 1, Mode.Heat), [20.5, 20]);
+  });
+
+  it('refuses to leave the limits, including by pushing', () => {
+    assert.equal(step([10, 25], 'heatSetpointC', -1), null);
+    assert.equal(step([20, 32], 'coolSetpointC', 1), null);
+    assert.equal(step([30, 32], 'heatSetpointC', 1), null);
+  });
+});
+
+describe('manualControlProblem', () => {
+  const format = (celsius: number) => `${celsius}°C`;
+  const problem = (
+    change: Parameters<typeof manualControlProblem>[1],
+    overrides: Partial<ControlReading> = {},
+  ) => manualControlProblem(reading(overrides), change, format);
+
+  it('accepts a change that fits', () => {
+    assert.equal(problem({ mode: Mode.Auto, heatSetpointC: 20 }), null);
+    assert.equal(problem({ mode: Mode.Heat, heatSetpointC: 27.5 }), null);
+  });
+
+  it('refuses a mode the equipment or the panel does not allow', () => {
+    assert.match(
+      problem({ mode: Mode.Auto }, { modeLimit: ModeLimit.HeatOnly }) ?? '',
+      /mode/,
+    );
+    assert.match(problem({ mode: Mode.EmergencyHeat }) ?? '', /mode/);
+    assert.equal(
+      problem({ heatSetpointC: 20 }, { mode: Mode.EmergencyHeat }),
+      null,
+    );
+  });
+
+  it('refuses setpoints outside the limits', () => {
+    assert.equal(
+      problem({ coolSetpointC: 33 }),
+      'Setpoints have to be between 10°C and 32°C',
+    );
+  });
+
+  it('checks the gap in AUTO against the current value of a field left out', () => {
+    assert.match(
+      problem({ heatSetpointC: 25 }, { mode: Mode.Auto, coolSetpointC: 26 }) ??
+        '',
+      /further apart\. The thermostat is at 18°C–26°C now/,
+    );
+    assert.equal(
+      problem({ heatSetpointC: 25 }, { mode: Mode.Heat, coolSetpointC: 26 }),
+      null,
     );
   });
 });

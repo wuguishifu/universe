@@ -62,6 +62,18 @@ export class LiveService {
     this.house = { locationId, devices };
   }
 
+  /**
+   * After a manual write, so snapshots show it before the next tick reads it back. The last tick's
+   * action error was about a different attempt, so it's dropped.
+   */
+  public recordManualChange(deviceId: string, reading: Reading): void {
+    const device = this.house?.devices.find(({ id }) => id === deviceId);
+    if (device) {
+      device.reading = reading;
+      device.actionError = null;
+    }
+  }
+
   /** After switching location, until the next tick reads the new house. */
   public clearHouse(): void {
     this.house = null;

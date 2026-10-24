@@ -113,6 +113,11 @@ const SETPOINT_STEP_C = 0.5;
 /** Bounds within this of a step count as on it, so float noise doesn't push them a whole step. */
 const STEP_EPSILON_C = 0.01;
 
+const snapUp = (value: number) =>
+  Math.ceil((value - STEP_EPSILON_C) / SETPOINT_STEP_C) * SETPOINT_STEP_C;
+const snapDown = (value: number) =>
+  Math.floor((value + STEP_EPSILON_C) / SETPOINT_STEP_C) * SETPOINT_STEP_C;
+
 export function parseTimeOfDay(time: string): number {
   const [hours = 0, minutes = 0] = time.split(':').map(Number);
   return hours * 60 + minutes;
@@ -190,18 +195,14 @@ export function fitSetpoints(
     setpointDeltaC: delta,
   } = reading;
   const clamp = (value: number) => Math.min(highest, Math.max(lowest, value));
-  const stepUp = (value: number) =>
-    Math.ceil((value - STEP_EPSILON_C) / SETPOINT_STEP_C) * SETPOINT_STEP_C;
-  const stepDown = (value: number) =>
-    Math.floor((value + STEP_EPSILON_C) / SETPOINT_STEP_C) * SETPOINT_STEP_C;
 
   const bufferC =
     min != null && max != null
       ? Math.min(bounds.bufferC, Math.max(0, (max - min - delta) / 2))
       : bounds.bufferC;
 
-  const coolSetpointC = clamp(max == null ? highest : stepDown(max - bufferC));
-  let heatSetpointC = clamp(min == null ? lowest : stepUp(min + bufferC));
+  const coolSetpointC = clamp(max == null ? highest : snapDown(max - bufferC));
+  let heatSetpointC = clamp(min == null ? lowest : snapUp(min + bufferC));
   if (heatSetpointC > coolSetpointC - delta) {
     heatSetpointC = coolSetpointC - delta;
   }
@@ -210,6 +211,124 @@ export function fitSetpoints(
 
 export function isAutoSupported(modeLimit: number): boolean {
   return modeLimit !== ModeLimit.HeatOnly && modeLimit !== ModeLimit.CoolOnly;
+}
+
+/** A change made by hand from the page. Fields left out keep the thermostat's current value. */
+export type ManualControl = {
+  mode?: Mode;
+  heatSetpointC?: number;
+  coolSetpointC?: number;
+};
+
+export type Setpoints = { heatSetpointC: number; coolSetpointC: number };
+
+type SetpointLimits = Pick<
+  ControlReading,
+  'setpointDeltaC' | 'setpointMinimumC' | 'setpointMaximumC'
+>;
+
+/** The modes offered by hand. Emergency heat only while it's already on, so it can be left. */
+export function manualModes(modeLimit: number, currentMode: number): Mode[] {
+  const modes: Mode[] = [Mode.Off];
+  if (modeLimit !== ModeLimit.CoolOnly) modes.push(Mode.Heat);
+  if (modeLimit !== ModeLimit.HeatOnly) modes.push(Mode.Cool);
+  if (isAutoSupported(modeLimit)) modes.push(Mode.Auto);
+  if (currentMode === Mode.EmergencyHeat) modes.push(Mode.EmergencyHeat);
+  return modes;
+}
+
+/** The setpoints a mode acts on. The others are kept as they are. */
+export function setpointsInUse(mode: number): (keyof Setpoints)[] {
+  switch (mode) {
+    case Mode.Heat:
+    case Mode.EmergencyHeat:
+      return ['heatSetpointC'];
+    case Mode.Cool:
+      return ['coolSetpointC'];
+    case Mode.Auto:
+      return ['heatSetpointC', 'coolSetpointC'];
+    default:
+      return [];
+  }
+}
+
+/**
+ * Moves one setpoint a step, snapping an off-grid value onto the grid in that direction. In AUTO
+ * the other is pushed along to keep them `setpointDeltaC` apart, as the thermostat does. Null when
+ * that would leave the thermostat's limits.
+ */
+export function stepSetpoint(
+  setpoints: Setpoints,
+  which: keyof Setpoints,
+  direction: 1 | -1,
+  mode: number,
+  limits: SetpointLimits,
+): Setpoints | null {
+  const step = (value: number) =>
+    direction > 0
+      ? snapDown(value) + SETPOINT_STEP_C
+      : snapUp(value) - SETPOINT_STEP_C;
+  let { heatSetpointC: heat, coolSetpointC: cool } = setpoints;
+  const tooClose = () =>
+    mode === Mode.Auto && cool - heat < limits.setpointDeltaC - STEP_EPSILON_C;
+
+  if (which === 'heatSetpointC') {
+    heat = step(heat);
+    if (tooClose()) cool = snapUp(heat + limits.setpointDeltaC);
+  } else {
+    cool = step(cool);
+    if (tooClose()) heat = snapDown(cool - limits.setpointDeltaC);
+  }
+
+  const inLimits = (value: number) =>
+    value >= limits.setpointMinimumC - STEP_EPSILON_C &&
+    value <= limits.setpointMaximumC + STEP_EPSILON_C;
+  return inLimits(heat) && inLimits(cool)
+    ? { heatSetpointC: heat, coolSetpointC: cool }
+    : null;
+}
+
+/**
+ * Why the thermostat can't take `change` on top of `reading`, or null if it can. Nothing is
+ * adjusted to make it fit: only what was asked for is ever written.
+ */
+export function manualControlProblem(
+  reading: Pick<ControlReading, 'mode' | 'modeLimit'> &
+    Setpoints &
+    SetpointLimits,
+  change: ManualControl,
+  formatTemperature: (celsius: number) => string,
+): string | null {
+  if (
+    change.mode !== undefined &&
+    !manualModes(reading.modeLimit, reading.mode).includes(change.mode)
+  ) {
+    return "This thermostat can't be set to that mode";
+  }
+
+  const { setpointMinimumC: lowest, setpointMaximumC: highest } = reading;
+  for (const setpoint of [change.heatSetpointC, change.coolSetpointC]) {
+    if (
+      setpoint !== undefined &&
+      (setpoint < lowest - STEP_EPSILON_C ||
+        setpoint > highest + STEP_EPSILON_C)
+    ) {
+      return `Setpoints have to be between ${formatTemperature(lowest)} and ${formatTemperature(highest)}`;
+    }
+  }
+
+  const heat = change.heatSetpointC ?? reading.heatSetpointC;
+  const cool = change.coolSetpointC ?? reading.coolSetpointC;
+  if (
+    (change.mode ?? reading.mode) === Mode.Auto &&
+    cool - heat < reading.setpointDeltaC - STEP_EPSILON_C
+  ) {
+    return (
+      'The heat and cool setpoints need to be further apart. The thermostat is at ' +
+      `${formatTemperature(reading.heatSetpointC)}–${formatTemperature(reading.coolSetpointC)} now.`
+    );
+  }
+  return null;
 }
 
 export function decide({
