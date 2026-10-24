@@ -9,7 +9,8 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "dev.wuguishifu.notifications",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "appleTeamId": "7C3LJCLXTY"
     },
     "android": {
       "package": "dev.wuguishifu.notifications",
