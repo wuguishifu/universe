@@ -1,0 +1,12 @@
+{
+  "name": "notifications-service",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@libs/nest-core": "workspace:*",
+    "@libs/queue": "workspace:*",
+    "@platform/convex-contracts": "workspace:*",
+    "@platform/notifications-contracts": "workspace:*",
+    "tslib": "^2.3.0"
+  }
+}
