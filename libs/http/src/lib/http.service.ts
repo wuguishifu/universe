@@ -4,7 +4,7 @@ import axiosRetry, {
   isRetryableError,
 } from 'axios-retry';
 
-export class AxiosService {
+export class HttpService {
   private readonly instance: AxiosInstance;
 
   constructor(config?: AxiosRequestConfig) {

@@ -101,6 +101,9 @@
     },
     {
       "path": "./libs/nest/universe-db"
+    },
+    {
+      "path": "./libs/http"
     }
   ],
   "compilerOptions": {

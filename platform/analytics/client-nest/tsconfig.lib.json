@@ -14,7 +14,7 @@
   "include": ["src/**/*.ts"],
   "references": [
     {
-      "path": "../../../libs/nest-common/tsconfig.lib.json"
+      "path": "../../../libs/http/tsconfig.lib.json"
     },
     {
       "path": "../contracts/tsconfig.lib.json"

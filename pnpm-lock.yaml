@@ -516,7 +516,7 @@ importers:
         specifier: ^5.2.1
         version: 5.2.6(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)(webpack-cli@7.2.3)(webpack@5.111.1)
 
-  libs/nest-common:
+  libs/http:
     dependencies:
       axios:
         specifier: '*'
@@ -524,6 +524,8 @@ importers:
       axios-retry:
         specifier: '*'
         version: 4.5.0(axios@1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))
+
+  libs/nest-common: {}
 
   libs/nest/redis-cache:
     dependencies:
@@ -566,9 +568,9 @@ importers:
 
   platform/analytics/client-nest:
     dependencies:
-      '@libs/nest-common':
+      '@libs/http':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/http
       '@platform/analytics-contracts':
         specifier: workspace:*
         version: link:../contracts
@@ -839,6 +841,9 @@ importers:
 
   projects/thermo-automation/service:
     dependencies:
+      '@libs/http':
+        specifier: workspace:*
+        version: link:../../../libs/http
       '@libs/nest-common':
         specifier: workspace:*
         version: link:../../../libs/nest-common
