@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 
-import { UniverseDbModule } from '@libs/nest-common';
+import { UniverseDbModule } from '@libs/nest-universe-db';
 import { TrackingModule } from '@platform/analytics-client-nest';
 
 import { EnvironmentModule, EnvironmentService } from '../config/environment';

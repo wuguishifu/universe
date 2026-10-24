@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 
-import { UNIVERSE_DB, type UniverseDb } from '@libs/nest-common';
+import { UNIVERSE_DB, type UniverseDb } from '@libs/nest-universe-db';
 import { thermoDeviceStates } from '@platform/postgres-db';
 
 export type DeviceState = {

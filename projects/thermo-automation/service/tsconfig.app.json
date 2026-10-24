@@ -21,13 +21,16 @@
   "exclude": ["eslint.config.js", "eslint.config.cjs", "eslint.config.mjs"],
   "references": [
     {
+      "path": "../../../libs/nest/universe-db/tsconfig.lib.json"
+    },
+    {
       "path": "../../../libs/nest-common/tsconfig.lib.json"
     },
     {
-      "path": "../../../platform/analytics/client-nest/tsconfig.lib.json"
+      "path": "../../../platform/postgres/db/tsconfig.lib.json"
     },
     {
-      "path": "../../../platform/postgres/db/tsconfig.lib.json"
+      "path": "../../../platform/analytics/client-nest/tsconfig.lib.json"
     },
     {
       "path": "../contracts/tsconfig.lib.json"

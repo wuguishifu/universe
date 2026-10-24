@@ -543,6 +543,15 @@ importers:
         specifier: '*'
         version: 3.1146.0
 
+  libs/nest/universe-db:
+    dependencies:
+      drizzle-orm:
+        specifier: '*'
+        version: 0.45.3(@types/pg@8.23.1)(pg@8.23.1)(postgres@3.4.9)
+      postgres:
+        specifier: '*'
+        version: 3.4.9
+
   libs/phrase-matching: {}
 
   libs/queue:
@@ -571,6 +580,9 @@ importers:
       '@libs/nest-common':
         specifier: workspace:*
         version: link:../../../libs/nest-common
+      '@libs/nest-universe-db':
+        specifier: workspace:*
+        version: link:../../../libs/nest/universe-db
       '@platform/analytics-contracts':
         specifier: workspace:*
         version: link:../contracts
@@ -700,6 +712,9 @@ importers:
       '@libs/nest-s3':
         specifier: workspace:*
         version: link:../../../libs/nest/s3
+      '@libs/nest-universe-db':
+        specifier: workspace:*
+        version: link:../../../libs/nest/universe-db
       '@libs/phrase-matching':
         specifier: workspace:*
         version: link:../../../libs/phrase-matching
@@ -763,6 +778,9 @@ importers:
       '@libs/nest-s3':
         specifier: workspace:*
         version: link:../../../libs/nest/s3
+      '@libs/nest-universe-db':
+        specifier: workspace:*
+        version: link:../../../libs/nest/universe-db
       '@libs/queue':
         specifier: workspace:*
         version: link:../../../libs/queue
@@ -824,6 +842,9 @@ importers:
       '@libs/nest-common':
         specifier: workspace:*
         version: link:../../../libs/nest-common
+      '@libs/nest-universe-db':
+        specifier: workspace:*
+        version: link:../../../libs/nest/universe-db
       '@platform/analytics-client-nest':
         specifier: workspace:*
         version: link:../../../platform/analytics/client-nest

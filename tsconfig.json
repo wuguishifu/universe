@@ -98,6 +98,9 @@
     },
     {
       "path": "./libs/nest/redis-cache"
+    },
+    {
+      "path": "./libs/nest/universe-db"
     }
   ],
   "compilerOptions": {

@@ -7,10 +7,10 @@ import {
 } from '@nestjs/common';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
-import { UNIVERSE_DB } from '../../constants';
-import { getDbClient } from '../../utils';
-
 import { DB_CONFIG, type DbConfig } from './config';
+import { UNIVERSE_DB } from './constants';
+import { getDbClient } from './get-db-client';
+
 
 export type UniverseDb = PostgresJsDatabase;
 
