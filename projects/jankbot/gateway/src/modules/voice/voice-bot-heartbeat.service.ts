@@ -1,6 +1,7 @@
 import { BeforeApplicationShutdown, Injectable, Logger } from '@nestjs/common';
 import { Client } from 'discord.js';
 import { Once } from 'necord';
+
 import { RedisCacheService } from '@libs/nest-common';
 import {
   JANKBOT_REDIS,
@@ -8,6 +9,7 @@ import {
   VOICE_BOT_HEARTBEAT_TTL_SECONDS,
   voiceBotId,
 } from '@projects/jankbot-contracts';
+
 import { EnvironmentService } from '../../config/environment';
 
 /**

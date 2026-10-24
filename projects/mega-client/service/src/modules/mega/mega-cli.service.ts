@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
+
 import { execFile } from 'node:child_process';
+
 import { cleanErrorOutput } from '@projects/mega-client-contracts';
+
 import { EnvironmentService } from '../../config/environment';
 
 /** A MEGAcmd command that failed, with what MEGAcmd said about it. */

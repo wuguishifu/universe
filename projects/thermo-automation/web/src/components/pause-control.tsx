@@ -1,7 +1,9 @@
 import { Pause, Play } from 'lucide-react';
 import { useId, useState } from 'react';
+
 import { Button, Input } from '@libs/ui-web';
 import type { DeviceSnapshot } from '@projects/thermo-automation-contracts';
+
 import { api, expect } from '../lib/api';
 import { formatHouseTime, parsePauseInput } from '../lib/house-time';
 import { useApiMutation } from '../lib/use-api-mutation';

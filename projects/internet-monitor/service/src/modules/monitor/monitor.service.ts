@@ -1,7 +1,10 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+
 import { RedisCacheService } from '@libs/nest-common';
 import { TrackingService } from '@platform/analytics-client-nest';
+
 import { EnvironmentService } from '../../config/environment';
+
 import { OutageTracker } from './outage-tracker';
 import { type Endpoint, isReachable } from './probe';
 

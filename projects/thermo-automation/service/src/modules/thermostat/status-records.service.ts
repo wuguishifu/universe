@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, eq, gte } from 'drizzle-orm';
+
 import { UNIVERSE_DB, type UniverseDb } from '@libs/nest-common';
 import { thermoDeviceStatusRecords } from '@platform/postgres-db';
 import type { HistoryPoint } from '@projects/thermo-automation-contracts';

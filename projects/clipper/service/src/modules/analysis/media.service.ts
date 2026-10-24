@@ -1,7 +1,10 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+
 import path from 'path';
+
 import { runProcess } from '@libs/nest-common';
 import { PROXY } from '@projects/clipper-contracts';
+
 import { EnvironmentService } from '../../config/environment';
 
 /** Proxies are a few MB and at most a few minutes; this only catches a stuck ffmpeg. */

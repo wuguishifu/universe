@@ -1,6 +1,7 @@
 import { BullModule, getQueueToken } from '@nestjs/bullmq';
 import { DynamicModule, Module } from '@nestjs/common';
 import { type JobsOptions } from 'bullmq';
+
 import { DEFAULT_QUEUE_CONFIG, QueueConfigMap, UniverseQueue } from './common';
 
 @Module({})

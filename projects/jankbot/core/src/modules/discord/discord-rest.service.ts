@@ -7,7 +7,9 @@ import {
   Routes,
 } from 'discord.js';
 import { z } from 'zod';
+
 import { type JankbotJobData } from '@projects/jankbot-contracts';
+
 import { EnvironmentService } from '../../config/environment';
 
 const applicationSchema = z.object({ id: z.string() });

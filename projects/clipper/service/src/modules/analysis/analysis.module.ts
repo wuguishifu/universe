@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+
 import { AnalysisService } from './analysis.service';
 import { AnalyzeClipProcessor } from './analyze-clip.processor';
 import { GeminiService } from './gemini.service';

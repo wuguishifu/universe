@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+
 import { mkdtemp, readFile, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import path from 'path';
+
 import { S3ObjectNotFoundError, S3Service } from '@libs/nest-common';
 import {
   addUsage,
@@ -14,6 +16,7 @@ import {
   type TokenUsage,
   toOutcome,
 } from '@projects/clipper-contracts';
+
 import { GeminiError, GeminiService } from './gemini.service';
 import { MediaService } from './media.service';
 import { clipContext, retryPrompt, systemInstruction } from './prompt';

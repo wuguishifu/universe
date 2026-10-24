@@ -1,5 +1,6 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
+
 import { findTimedPhraseMatches } from '@libs/phrase-matching';
 import { TrackingService } from '@platform/analytics-client-nest';
 import {
@@ -12,9 +13,11 @@ import {
   type JankbotJobData,
   type JankbotQueueJob,
 } from '@projects/jankbot-contracts';
+
 import { LeaderboardService } from '../leaderboard/leaderboard.service';
 import { RecordingsService } from '../recordings/recordings.service';
 import { TrackedWordsService } from '../tracked-words/tracked-words.service';
+
 import { logJobFailure } from './log-job-failure';
 
 /** Matches tracked phrases in an utterance's transcript, once the transcription worker is done. */

@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
+
 import { RedisCacheModule } from '@libs/nest-common';
 import { TrackingModule } from '@platform/analytics-client-nest';
+
 import { EnvironmentModule, EnvironmentService } from '../config/environment';
 import { MonitorModule } from '../modules/monitor/monitor.module';
+
 import { AppController } from './app.controller';
 
 @Module({

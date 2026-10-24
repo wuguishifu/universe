@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+
 import type { Snapshot } from '@projects/mega-client-contracts';
+
 import { setSnapshot } from './use-live-snapshot';
 
 /**

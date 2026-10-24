@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useId, useMemo, useState } from 'react';
+
 import {
   Button,
   cn,
@@ -17,6 +18,7 @@ import type {
   Settings,
   UpdateSettings,
 } from '@projects/thermo-automation-contracts';
+
 import { api, expect } from '../lib/api';
 import { useApiMutation } from '../lib/use-api-mutation';
 

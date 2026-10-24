@@ -1,13 +1,16 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { UnrecoverableError } from 'bullmq';
+
 import { TrackingService } from '@platform/analytics-client-nest';
 import {
   INTERACTION_TOKEN_TTL_MS,
   JANKBOT_QUEUE_CONFIG,
   type JankbotQueueJob,
 } from '@projects/jankbot-contracts';
+
 import { DiscordRestService } from '../discord/discord-rest.service';
+
 import { type CommandInteraction } from './command-handler';
 import { CommandRegistry } from './command-registry';
 

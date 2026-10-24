@@ -5,7 +5,9 @@ import {
   userMention,
 } from 'discord.js';
 import { z } from 'zod';
+
 import { MAX_PHRASE_LENGTH } from '@libs/phrase-matching';
+
 import { type InteractionReply } from '../discord/discord-rest.service';
 import {
   type CommandHandler,
@@ -13,6 +15,7 @@ import {
   GUILD_ONLY_REPLY,
   parseOptions,
 } from '../interactions/command-handler';
+
 import { LeaderboardService } from './leaderboard.service';
 
 const leaderboardOptions = z.object({ phrase: z.string() });

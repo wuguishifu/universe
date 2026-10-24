@@ -3,6 +3,7 @@ import './globals.css';
 import { Metadata } from 'next';
 import { Jersey_15, Source_Code_Pro } from 'next/font/google';
 import localFont from 'next/font/local';
+
 import { cn } from '@libs/ui-web';
 
 import { ParallaxBackground } from '../components/bg/parallax-background';

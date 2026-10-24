@@ -8,6 +8,7 @@ import type {
   JobsOptions,
 } from 'bullmq';
 import { z } from 'zod';
+
 import {
   DEFAULT_QUEUE_CONFIG,
   type QueueConfigMap,
@@ -19,6 +20,7 @@ import {
   type TranscriptionJobData,
   type TranscriptionJobResult,
 } from '@platform/transcription-contracts';
+
 import { TRANSCRIPTION_FLOW_PRODUCER } from './constants';
 
 const QUEUE = TRANSCRIPTION_QUEUE_CONFIG.transcribe;

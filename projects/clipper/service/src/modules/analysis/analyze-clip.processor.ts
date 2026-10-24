@@ -2,6 +2,7 @@ import { WorkerHost } from '@nestjs/bullmq';
 import { Logger, OnModuleDestroy } from '@nestjs/common';
 import { DelayedError, UnrecoverableError } from 'bullmq';
 import { type FunctionReturnType } from 'convex/server';
+
 import { UniverseProcessor } from '@libs/queue';
 import { TrackingService } from '@platform/analytics-client-nest';
 import { api, type Doc } from '@platform/convex-contracts';
@@ -11,8 +12,10 @@ import {
   NO_USAGE,
   runOptionsSchema,
 } from '@projects/clipper-contracts';
+
 import { EnvironmentService } from '../../config/environment';
 import { ConvexService } from '../common/convex.service';
+
 import { AnalysisError, AnalysisService } from './analysis.service';
 
 /**

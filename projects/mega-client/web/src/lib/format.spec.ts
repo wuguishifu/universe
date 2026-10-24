@@ -1,6 +1,7 @@
 // Run with `nx test mega-client-web` (Node's built-in test runner; Node strips the types).
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+
 import { formatBytes, formatEta, formatSpeed } from './format.ts';
 
 describe('formatBytes', () => {

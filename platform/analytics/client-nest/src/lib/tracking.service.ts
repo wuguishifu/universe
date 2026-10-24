@@ -8,6 +8,7 @@ import {
 
 import { AxiosService } from '@libs/nest-common';
 import { TrackingEvent } from '@platform/analytics-contracts';
+
 import { type TrackingConfig } from './config';
 import { TRACKING_CONFIG } from './constants';
 

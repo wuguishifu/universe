@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 
 import { extractAuthTokenFromHeader } from '@libs/nest-common';
+
 import {
   type EnvironmentSchema,
   EnvironmentService,

@@ -2,6 +2,7 @@
 
 import { Check, Copy, ExternalLink } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+
 import { cn } from '@libs/ui-web';
 
 export type AppItemProps = {

@@ -1,7 +1,10 @@
 import { Controller } from '@nestjs/common';
 import { tsRestHandler, TsRestHandler } from '@ts-rest/nest';
+
 import { thermoRootRouter } from '@projects/thermo-automation-contracts';
+
 import { DaikinService } from '../daikin/daikin.service';
+
 import { LiveService } from './live.service';
 import { SettingsService } from './settings.service';
 import { TickService } from './tick.service';

@@ -1,7 +1,10 @@
 import { Logger } from '@nestjs/common';
+
 import { randomUUID } from 'node:crypto';
+
 import { RedisCacheService } from '@libs/nest-common';
 import { TrackingService } from '@platform/analytics-client-nest';
+
 import { type Incident, MONITOR_REDIS } from '../../config/redis-keys';
 
 const FAILURES_BEFORE_OUTAGE = 2;

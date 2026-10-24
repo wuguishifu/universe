@@ -12,11 +12,13 @@ import {
   share,
   startWith,
 } from 'rxjs';
+
 import type {
   Account,
   Snapshot,
   Transfer,
 } from '@projects/mega-client-contracts';
+
 import { AccountService } from './account.service';
 import { MegaCliError } from './mega-cli.service';
 import { TransfersService } from './transfers.service';

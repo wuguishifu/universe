@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
+
 import { DaikinModule } from '../daikin/daikin.module';
+
 import { AutomationsController } from './automations.controller';
 import { AutomationsService } from './automations.service';
 import { DeviceStatesService } from './device-states.service';

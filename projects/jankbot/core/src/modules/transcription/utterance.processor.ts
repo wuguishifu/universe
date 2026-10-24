@@ -1,5 +1,6 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
+
 import { S3Service } from '@libs/nest-common';
 import { TrackingService } from '@platform/analytics-client-nest';
 import { TranscriptionClient } from '@platform/transcription-client-nest';
@@ -11,8 +12,10 @@ import {
   type JankbotQueueJob,
   OPUS_FRAME_MS,
 } from '@projects/jankbot-contracts';
+
 import { EnvironmentService } from '../../config/environment';
 import { TrackedWordsService } from '../tracked-words/tracked-words.service';
+
 import { decodeOpusPackets, loudMs, pcmToWav } from './audio';
 import { logJobFailure } from './log-job-failure';
 import { vocabularyPrompt } from './vocabulary-prompt';

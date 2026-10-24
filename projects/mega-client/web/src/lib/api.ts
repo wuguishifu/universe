@@ -1,4 +1,5 @@
 import { initClient } from '@ts-rest/core';
+
 import { megaRootRouter } from '@projects/mega-client-contracts';
 
 /** Same origin: the service serves this page, and the Vite dev server proxies /api to it. */

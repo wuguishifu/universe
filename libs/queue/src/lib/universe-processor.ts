@@ -1,4 +1,5 @@
 import { Processor } from '@nestjs/bullmq';
+
 import { QueueConfigMap, UniverseJob, UniverseJobResult } from './common';
 
 type WorkerOptions = Parameters<typeof Processor>[1];

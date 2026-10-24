@@ -1,4 +1,5 @@
 import { QueueEvents } from 'bullmq';
+
 import { QueueConfigMap, UniverseJob, UniverseJobResult } from './common';
 
 export async function waitForJobResult<

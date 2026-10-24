@@ -6,6 +6,7 @@ import {
   ModuleMetadata,
   OptionalFactoryDependency,
 } from '@nestjs/common';
+
 import { createBullRootOptions } from './bull-root-options';
 
 export type BullRootOptions = {

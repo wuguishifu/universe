@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+
 import {
   OptInCommand,
   OptOutCommand,
@@ -6,6 +7,7 @@ import {
 import { LeaderboardCommands } from '../leaderboard/leaderboard.commands';
 import { TrackedWordsCommands } from '../tracked-words/tracked-words.commands';
 import { JoinCommand, LeaveCommand } from '../voice/voice.commands';
+
 import { type CommandHandler } from './command-handler';
 
 /** Every jankbot command. Adding one here registers it with Discord and routes it to its handler. */

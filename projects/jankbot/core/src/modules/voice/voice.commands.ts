@@ -6,11 +6,13 @@ import {
   type SlashCommandStringOption,
 } from 'discord.js';
 import { z } from 'zod';
+
 import { RedisCacheService } from '@libs/nest-common';
 import {
   type VoiceCommandResult,
   voiceBotId,
 } from '@projects/jankbot-contracts';
+
 import { CORE_REDIS } from '../../config/redis-keys';
 import { type InteractionReply } from '../discord/discord-rest.service';
 import {
@@ -19,6 +21,7 @@ import {
   GUILD_ONLY_REPLY,
   parseOptions,
 } from '../interactions/command-handler';
+
 import { VoiceBotsService, type VoiceBotStatus } from './voice-bots.service';
 import { VoiceCommandClient } from './voice-command.client';
 

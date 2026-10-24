@@ -1,5 +1,7 @@
 const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+
 const { join } = require('path');
+
 const {
   BundleBuildableLibsPlugin,
 } = require('../../../tools/webpack/bundle-buildable-libs-plugin');

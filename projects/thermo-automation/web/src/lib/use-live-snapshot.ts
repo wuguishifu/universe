@@ -1,10 +1,12 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+
 import {
   type Snapshot,
   snapshotSchema,
   StreamEvent,
 } from '@projects/thermo-automation-contracts';
+
 import { api, expect } from './api';
 
 export const SNAPSHOT_KEY = ['snapshot'] as const;

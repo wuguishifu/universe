@@ -1,7 +1,9 @@
 // Run with `nx test redis-cache` (Node's built-in test runner; Node strips the types).
 import { z } from 'zod';
+
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+
 import {
   defineRedisKeys,
   redisHash,

@@ -3,6 +3,7 @@ import {
   SharedBullConfigurationFactory,
 } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
+
 import { BullQueueModule, createBullRootOptions } from '@libs/queue';
 import {
   CLIPPER_JOB_OPTIONS,
@@ -10,6 +11,7 @@ import {
   CLIPPER_QUEUE_PREFIX,
   type ClipperQueueKey,
 } from '@projects/clipper-contracts';
+
 import { EnvironmentService } from '../config/environment';
 
 export const registerQueue = (queueKey: ClipperQueueKey) =>

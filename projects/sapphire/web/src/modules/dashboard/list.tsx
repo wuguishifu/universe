@@ -1,8 +1,10 @@
 'use client';
 
 import { ExternalLink } from 'lucide-react';
+
 import { Spinner } from '@libs/ui-web';
 import { api } from '@platform/convex-contracts';
+
 import { Section } from '../../components/section';
 import { useQuery } from '../convex/use-query';
 

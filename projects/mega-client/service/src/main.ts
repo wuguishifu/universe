@@ -6,9 +6,11 @@ import {
   FastifyAdapter,
   type NestFastifyApplication,
 } from '@nestjs/platform-fastify';
+
 import { existsSync } from 'node:fs';
 
 import { withLoggerOptions } from '@libs/nest-common';
+
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {

@@ -55,6 +55,7 @@ export default [
             },
           ],
           pathGroupsExcludedImportTypes: ['internal'],
+          'newlines-between': 'always',
           alphabetize: {
             order: 'asc',
             caseInsensitive: true,

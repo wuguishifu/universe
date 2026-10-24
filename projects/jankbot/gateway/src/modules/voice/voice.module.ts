@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
+
 import { registerQueue } from '../../queues/queue';
+
 import { VoiceBotHeartbeatService } from './voice-bot-heartbeat.service';
 import { VoiceCommandWorker } from './voice-command.worker';
 import { VoiceSessionService } from './voice-session.service';

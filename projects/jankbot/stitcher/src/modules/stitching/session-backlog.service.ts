@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+
 import {
   JANKBOT_QUEUE_CONFIG,
   type JankbotQueue,

@@ -8,6 +8,7 @@ import {
 } from '@nestjs/platform-fastify';
 
 import { withLoggerOptions } from '@libs/nest-common';
+
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {

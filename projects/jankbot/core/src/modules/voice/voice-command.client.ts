@@ -5,6 +5,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { Queue, QueueEvents } from 'bullmq';
+
 import { createBullRootOptions } from '@libs/queue';
 import {
   JANKBOT_QUEUE_PREFIX,
@@ -13,6 +14,7 @@ import {
   type VoiceCommandResult,
   voiceBotId,
 } from '@projects/jankbot-contracts';
+
 import { EnvironmentService } from '../../config/environment';
 
 /** Joining waits up to 20s for the voice connection, so give the gateway a bit longer than that. */

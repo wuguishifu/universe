@@ -1,6 +1,7 @@
 // Run with `nx test clipper-contracts` (Node's built-in test runner; Node strips the types).
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+
 import { costUsd } from './pricing.ts';
 
 describe('costUsd', () => {

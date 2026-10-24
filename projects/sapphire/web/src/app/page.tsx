@@ -1,4 +1,5 @@
 import Image from 'next/image';
+
 import { Section } from '../components/section';
 import { DashboardList } from '../modules/dashboard/list';
 
