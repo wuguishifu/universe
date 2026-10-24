@@ -1,0 +1,41 @@
+{
+  "name": "mega-client-web",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/mega-client/web/src",
+  "projectType": "application",
+  "tags": ["scope:client"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["production", "^production"],
+      "outputs": ["{workspaceRoot}/dist/projects/mega-client/web"],
+      "options": {
+        "command": "vite build",
+        "cwd": "projects/mega-client/web"
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "vite",
+        "cwd": "projects/mega-client/web"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --test 'src/**/*.spec.ts'",
+        "cwd": "projects/mega-client/web"
+      }
+    },
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning",
+        "cwd": "projects/mega-client/web"
+      }
+    }
+  }
+}

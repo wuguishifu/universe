@@ -1,0 +1,23 @@
+{
+  "name": "mega-client-contracts",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/mega-client/contracts/src",
+  "projectType": "library",
+  "tags": ["scope:shared"],
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --test 'src/**/*.spec.ts'",
+        "cwd": "projects/mega-client/contracts"
+      }
+    },
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning",
+        "cwd": "projects/mega-client/contracts"
+      }
+    }
+  }
+}
