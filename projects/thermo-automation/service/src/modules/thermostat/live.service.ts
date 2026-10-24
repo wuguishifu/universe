@@ -79,6 +79,17 @@ export class LiveService {
     this.house = null;
   }
 
+  /**
+   * Whether the last tick saw this device at this location. Unlike `knowsDevice`, an empty cache is
+   * a no.
+   */
+  public hasDevice(locationId: string, deviceId: string): boolean {
+    return (
+      this.house?.locationId === locationId &&
+      this.house.devices.some(({ id }) => id === deviceId)
+    );
+  }
+
   /** Whether the last tick saw this device. Before the first tick, any device is accepted. */
   public knowsDevice(deviceId: string): boolean {
     return !this.house || this.house.devices.some(({ id }) => id === deviceId);

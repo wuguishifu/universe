@@ -34,17 +34,23 @@ export class ManualControlService {
   /**
    * Merges `change` into a fresh read of the thermostat, so a field the page didn't change can't
    * undo one made elsewhere since the last tick. Returns why it was refused, or null once written.
+   *
+   * The thermostat has to be one the last tick saw at the selected location. That's checked in the
+   * queue, where a location switch's tick has already filled the cache, so a page still showing the
+   * old house can't change it.
    */
   public apply(
-    locationId: string,
     deviceId: string,
     change: ManualControl,
   ): Promise<string | null> {
     return this.tickService.exclusive(async () => {
-      const [{ displayUnit }, info] = await Promise.all([
-        this.settingsService.get(),
-        this.daikinService.getDeviceInfo(deviceId),
-      ]);
+      const { locationId, displayUnit } = await this.settingsService.get();
+      if (!locationId) return 'Pick a location in the settings first';
+      if (!this.liveService.hasDevice(locationId, deviceId)) {
+        return "That thermostat isn't at this location";
+      }
+
+      const info = await this.daikinService.getDeviceInfo(deviceId);
       const before = toReading(info, new Date());
       const problem = manualControlProblem(before, change, (celsius) =>
         formatTemperature(celsius, displayUnit),

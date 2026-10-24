@@ -25,26 +25,9 @@ export class DevicesController {
   public handler() {
     return tsRestHandler(thermoRootRouter.devices, {
       control: async ({ params: { deviceId }, body }) => {
-        const { locationId } = await this.settingsService.get();
-        if (!locationId) {
-          return {
-            status: 400,
-            body: { message: 'Pick a location in the settings first' },
-          };
-        }
-        if (!this.liveService.knowsDevice(deviceId)) {
-          return {
-            status: 400,
-            body: { message: "That thermostat isn't at this location" },
-          };
-        }
         let problem: string | null;
         try {
-          problem = await this.manualControlService.apply(
-            locationId,
-            deviceId,
-            body,
-          );
+          problem = await this.manualControlService.apply(deviceId, body);
         } catch (error) {
           return { status: 502, body: { message: describeError(error) } };
         }
