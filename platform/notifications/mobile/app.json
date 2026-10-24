@@ -30,6 +30,13 @@
           "backgroundColor": "#ffffff"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "8af92921-a9e6-4cf7-8f34-112239da0313"
+      }
+    },
+    "owner": "wuguishifu"
   }
 }
