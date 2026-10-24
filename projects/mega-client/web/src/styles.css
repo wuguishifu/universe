@@ -1,0 +1,115 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@source "../../../../libs/ui-web/";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  /* Status colors: always shown with an icon and a label, never alone. */
+  --color-good: hsl(var(--good));
+  --color-warning: hsl(var(--warning));
+  --color-critical: hsl(var(--critical));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+@layer base {
+  :root {
+    --background: 220 20% 97%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 211 90% 42%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 214 32% 93%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 214 32% 93%;
+    --muted-foreground: 215 16% 40%;
+    --accent: 214 32% 93%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 72% 46%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 88%;
+    --input: 214 32% 85%;
+    --ring: 211 90% 42%;
+    --radius: 0.75rem;
+
+    --good: 152 62% 32%;
+    --warning: 35 92% 38%;
+    --critical: 0 72% 46%;
+  }
+
+  .dark {
+    --background: 224 24% 6%;
+    --foreground: 210 30% 96%;
+    --card: 224 20% 10%;
+    --card-foreground: 210 30% 96%;
+    --popover: 224 20% 10%;
+    --popover-foreground: 210 30% 96%;
+    --primary: 208 90% 64%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 222 18% 17%;
+    --secondary-foreground: 210 30% 96%;
+    --muted: 222 18% 17%;
+    --muted-foreground: 215 18% 66%;
+    --accent: 222 18% 17%;
+    --accent-foreground: 210 30% 96%;
+    --destructive: 0 70% 52%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 222 18% 18%;
+    --input: 222 18% 22%;
+    --ring: 208 90% 64%;
+
+    --good: 150 55% 52%;
+    --warning: 38 92% 58%;
+    --critical: 0 85% 66%;
+  }
+
+  html {
+    font-family:
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      Roboto,
+      sans-serif;
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  * {
+    @apply border-border;
+  }
+}

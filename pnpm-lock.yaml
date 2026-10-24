@@ -746,6 +746,29 @@ importers:
         specifier: ^2.3.0
         version: 2.8.1
 
+  projects/mega-client/contracts: {}
+
+  projects/mega-client/service:
+    dependencies:
+      '@libs/nest-common':
+        specifier: workspace:*
+        version: link:../../../libs/nest-common
+      '@projects/mega-client-contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      tslib:
+        specifier: ^2.3.0
+        version: 2.8.1
+
+  projects/mega-client/web:
+    dependencies:
+      '@libs/ui-web':
+        specifier: workspace:*
+        version: link:../../../libs/ui-web
+      '@projects/mega-client-contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
   projects/portfolio/web:
     dependencies:
       '@libs/ui-web':

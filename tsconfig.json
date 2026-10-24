@@ -83,6 +83,15 @@
     },
     {
       "path": "./projects/thermo-automation/web"
+    },
+    {
+      "path": "./projects/mega-client/contracts"
+    },
+    {
+      "path": "./projects/mega-client/service"
+    },
+    {
+      "path": "./projects/mega-client/web"
     }
   ],
   "compilerOptions": {

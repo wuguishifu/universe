@@ -1,0 +1,23 @@
+# No login of its own: anyone who can reach the port can queue downloads to your disk and log the
+# server in or out of MEGA. Keep it on the LAN / tailnet.
+services:
+  mega-client:
+    image: ghcr.io/wuguishifu/universe/mega-client-service:latest
+    container_name: mega-client
+    # 1000:1000 is the image's `node` user. On TrueNAS use 568:568 (apps) or any uid that
+    # owns the mounted datasets below.
+    user: 1000:1000
+    ports:
+      - 3000:3010
+    volumes:
+      # Must be writable by `user`
+      - /mnt/tank/downloads:/downloads
+      # MEGAcmd login session, so you stay logged in across restarts. Must be writable by `user`
+      - ./mega-config:/config
+    environment:
+      DOWNLOAD_PATH: /downloads
+      HOME: /config
+      # Optional: log in on start if there's no saved session. The app's account sheet works too.
+      # MEGA_EMAIL: you@example.com
+      # MEGA_PASSWORD_FILE: /run/secrets/mega_password
+    restart: unless-stopped

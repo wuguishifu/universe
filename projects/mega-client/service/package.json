@@ -1,0 +1,10 @@
+{
+  "name": "@projects/mega-client-service",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@projects/mega-client-contracts": "workspace:*",
+    "@libs/nest-common": "workspace:*",
+    "tslib": "^2.3.0"
+  }
+}
