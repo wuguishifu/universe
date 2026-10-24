@@ -11,7 +11,7 @@ import { extractAuthTokenFromHeader } from '@libs/nest-common';
 import {
   type EnvironmentSchema,
   EnvironmentService,
-} from '../../environment/environment';
+} from '../../config/environment';
 
 export function TokenAuthGuard(
   envKey: keyof EnvironmentSchema,

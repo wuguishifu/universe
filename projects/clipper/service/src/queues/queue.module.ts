@@ -1,6 +1,6 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
-import { EnvironmentModule } from '../environment/environment';
+import { EnvironmentModule } from '../config/environment';
 import { BullOptionsFactory, registerQueue } from './queue';
 
 @Module({
@@ -9,7 +9,6 @@ import { BullOptionsFactory, registerQueue } from './queue';
       imports: [EnvironmentModule],
       useClass: BullOptionsFactory,
     }),
-    // Global: the API adds to it and the worker processes it.
     registerQueue('analyze'),
   ],
 })

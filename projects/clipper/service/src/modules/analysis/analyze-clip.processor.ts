@@ -11,7 +11,7 @@ import {
   NO_USAGE,
   runOptionsSchema,
 } from '@projects/clipper-contracts';
-import { EnvironmentService } from '../../environment/environment';
+import { EnvironmentService } from '../../config/environment';
 import { ConvexService } from '../common/convex.service';
 import { AnalysisError, AnalysisService } from './analysis.service';
 

@@ -10,7 +10,7 @@ import {
   CLIPPER_QUEUE_PREFIX,
   type ClipperQueueKey,
 } from '@projects/clipper-contracts';
-import { EnvironmentService } from '../environment/environment';
+import { EnvironmentService } from '../config/environment';
 
 export const registerQueue = (queueKey: ClipperQueueKey) =>
   BullQueueModule.register(

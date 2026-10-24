@@ -11,7 +11,7 @@ import {
   type VoiceCommandResult,
   voiceBotId,
 } from '@projects/jankbot-contracts';
-import { CORE_REDIS } from '../../redis/redis-keys';
+import { CORE_REDIS } from '../../config/redis-keys';
 import { type InteractionReply } from '../discord/discord-rest.service';
 import {
   type CommandHandler,

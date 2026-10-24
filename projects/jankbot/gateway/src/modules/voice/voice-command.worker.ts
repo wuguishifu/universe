@@ -9,7 +9,7 @@ import {
   type VoiceCommandJobData,
   type VoiceCommandResult,
 } from '@projects/jankbot-contracts';
-import { EnvironmentService } from '../../environment/environment';
+import { EnvironmentService } from '../../config/environment';
 import { VoiceSessionService } from './voice-session.service';
 
 /**

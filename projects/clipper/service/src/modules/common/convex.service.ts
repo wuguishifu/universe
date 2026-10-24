@@ -6,7 +6,7 @@ import type {
   FunctionReturnType,
 } from 'convex/server';
 import { ConvexError } from 'convex/values';
-import { EnvironmentService } from '../../environment/environment';
+import { EnvironmentService } from '../../config/environment';
 
 /** A convex clipper function guarded by CLIPPER_CONVEX_SECRET (platform/convex/app/convex/clipper/auth.ts). */
 type ClipperFunction<Type extends 'query' | 'mutation'> = FunctionReference<

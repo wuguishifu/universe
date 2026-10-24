@@ -7,22 +7,16 @@ import {
   type NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 
+import { withLoggerOptions } from '@libs/nest-common';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
-  // The HTTP server only serves health checks; work arrives on the stitch-sessions queue from jankbot-gateway.
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
-    {
-      logger:
-        process.env.DEBUG_LOGGING === 'true'
-          ? ['verbose', 'debug', 'log', 'warn', 'error', 'fatal']
-          : ['log', 'warn', 'error', 'fatal'],
-    },
+    withLoggerOptions(),
   );
 
-  // On SIGTERM: let an in-flight stitch finish, and kill ffmpeg if it doesn't.
   app.enableShutdownHooks();
 
   const port = process.env.PORT || 3007;

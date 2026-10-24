@@ -1,10 +1,7 @@
 import { Module } from '@nestjs/common';
 import { S3Module, UniverseDbModule } from '@libs/nest-common';
 import { TrackingModule } from '@platform/analytics-client-nest';
-import {
-  EnvironmentModule,
-  EnvironmentService,
-} from '../environment/environment';
+import { EnvironmentModule, EnvironmentService } from '../config/environment';
 import { StitchingModule } from '../modules/stitching/stitching.module';
 import { QueueModule } from '../queues/queue.module';
 import { AppController } from './app.controller';

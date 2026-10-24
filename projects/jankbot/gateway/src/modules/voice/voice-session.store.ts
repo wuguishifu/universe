@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { RedisCacheService } from '@libs/nest-common';
 import { voiceBotId } from '@projects/jankbot-contracts';
-import { EnvironmentService } from '../../environment/environment';
-import { GATEWAY_REDIS, type VoiceSession } from '../../redis/redis-keys';
+import { EnvironmentService } from '../../config/environment';
+import { GATEWAY_REDIS, type VoiceSession } from '../../config/redis-keys';
 
 /**
  * Remembers which voice channels this gateway's bot was asked to join, so a restarted gateway can

@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { RedisCacheService } from '@libs/nest-common';
 import { JANKBOT_REDIS } from '@projects/jankbot-contracts';
-import { EnvironmentService } from '../../environment/environment';
+import { EnvironmentService } from '../../config/environment';
 import { DiscordRestService } from '../discord/discord-rest.service';
 import { CommandRegistry } from './command-registry';
 

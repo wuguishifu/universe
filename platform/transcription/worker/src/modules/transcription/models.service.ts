@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { existsSync } from 'fs';
 import path from 'path';
-import { EnvironmentService } from '../../environment';
+import { EnvironmentService } from '../../config/environment';
 
 @Injectable()
 export class ModelsService {

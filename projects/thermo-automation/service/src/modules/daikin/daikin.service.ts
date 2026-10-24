@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { isAxiosError, type AxiosRequestConfig } from 'axios';
 import { AxiosService } from '@libs/nest-common';
-import { EnvironmentService } from '../../environment/environment';
+import { EnvironmentService } from '../../config/environment';
 import {
   type DaikinDeviceInfo,
   daikinDeviceInfoSchema,

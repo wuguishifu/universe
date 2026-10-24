@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { S3Service } from '@libs/nest-common';
 import { createProxyS3Key, PROXY } from '@projects/clipper-contracts';
-import { EnvironmentService } from '../../environment/environment';
+import { EnvironmentService } from '../../config/environment';
 
 /** Long enough to upload a backlog's worth of URLs from one request, one after another. */
 const UPLOAD_URL_TTL_SEC = 60 * 60;

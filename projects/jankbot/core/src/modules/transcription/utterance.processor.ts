@@ -11,7 +11,7 @@ import {
   type JankbotQueueJob,
   OPUS_FRAME_MS,
 } from '@projects/jankbot-contracts';
-import { EnvironmentService } from '../../environment/environment';
+import { EnvironmentService } from '../../config/environment';
 import { TrackedWordsService } from '../tracked-words/tracked-words.service';
 import { decodeOpusPackets, loudMs, pcmToWav } from './audio';
 import { logJobFailure } from './log-job-failure';

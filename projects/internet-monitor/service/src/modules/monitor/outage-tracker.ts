@@ -2,10 +2,8 @@ import { Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { RedisCacheService } from '@libs/nest-common';
 import { TrackingService } from '@platform/analytics-client-nest';
-import { type Incident, MONITOR_REDIS } from '../../redis/redis-keys';
+import { type Incident, MONITOR_REDIS } from '../../config/redis-keys';
 
-// Require consecutive failed checks before opening an incident so a single
-// dropped connection doesn't count as an outage.
 const FAILURES_BEFORE_OUTAGE = 2;
 
 export type OutageTarget = 'internet' | 'gateway';
@@ -17,8 +15,6 @@ export class OutageTracker {
   private consecutiveFailures = 0;
   private firstFailureAt?: number;
   private incident?: Incident;
-  // The incident was opened before a restart, so its end time is only known to
-  // be somewhere between the restart and the first successful check.
   private restoredIncident = false;
 
   constructor(

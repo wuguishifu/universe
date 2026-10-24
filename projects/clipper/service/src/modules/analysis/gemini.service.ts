@@ -9,7 +9,7 @@ import {
 } from '@google/genai';
 import { Injectable } from '@nestjs/common';
 import { type RunOptions, type TokenUsage } from '@projects/clipper-contracts';
-import { EnvironmentService } from '../../environment/environment';
+import { EnvironmentService } from '../../config/environment';
 import { MODEL_OUTPUT_JSON_SCHEMA } from './prompt';
 
 /** A 2-minute clip at low thinking takes well under a minute; this catches a hung request. */

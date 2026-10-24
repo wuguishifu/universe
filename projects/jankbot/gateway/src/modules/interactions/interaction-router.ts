@@ -13,7 +13,7 @@ import {
   type JankbotJobData,
   type JankbotQueue,
 } from '@projects/jankbot-contracts';
-import { EnvironmentService } from '../../environment/environment';
+import { EnvironmentService } from '../../config/environment';
 
 type OptionValue = JankbotJobData<'interactions'>['options'][string];
 

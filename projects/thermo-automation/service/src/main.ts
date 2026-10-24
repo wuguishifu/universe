@@ -8,18 +8,14 @@ import {
 } from '@nestjs/platform-fastify';
 import { existsSync } from 'node:fs';
 
+import { withLoggerOptions } from '@libs/nest-common';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
-    {
-      logger:
-        process.env.DEBUG_LOGGING === 'true'
-          ? ['verbose', 'debug', 'log', 'warn', 'error', 'fatal']
-          : ['log', 'warn', 'error', 'fatal'],
-    },
+    withLoggerOptions(),
   );
 
   // The SPA is a single page, so serving index.html at / is enough: no fallback route needed.

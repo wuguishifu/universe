@@ -23,8 +23,8 @@ import {
   type JankbotQueue,
   OPUS_FRAME_MS,
 } from '@projects/jankbot-contracts';
-import { EnvironmentService } from '../../environment/environment';
-import { type VoiceSession } from '../../redis/redis-keys';
+import { EnvironmentService } from '../../config/environment';
+import { type VoiceSession } from '../../config/redis-keys';
 import { VoiceSessionStore } from './voice-session.store';
 
 @Injectable()

@@ -1,11 +1,10 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { RedisCacheService } from '@libs/nest-common';
 import { TrackingService } from '@platform/analytics-client-nest';
-import { EnvironmentService } from '../../environment';
+import { EnvironmentService } from '../../config/environment';
 import { OutageTracker } from './outage-tracker';
 import { type Endpoint, isReachable } from './probe';
 
-// These resolvers all accept connections on 443 (DNS-over-HTTPS).
 const internetEndpoints: Endpoint[] = [
   { host: '1.1.1.1', port: 443 },
   { host: '8.8.8.8', port: 443 },
@@ -14,8 +13,6 @@ const internetEndpoints: Endpoint[] = [
 
 const CHECK_INTERVAL_MS = 15_000;
 const CHECK_TIMEOUT_MS = 5_000;
-// Proves the monitor was running, so a gap without outage events means the
-// connection was up rather than that nothing was watching.
 const HEARTBEAT_INTERVAL_MS = 5 * 60_000;
 
 @Injectable()

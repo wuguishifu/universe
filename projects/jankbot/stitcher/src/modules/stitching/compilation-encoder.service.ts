@@ -7,7 +7,7 @@ import {
 import { stat } from 'fs/promises';
 import { runProcess } from '@libs/nest-common';
 import { UTTERANCE_WAV } from '@projects/jankbot-contracts';
-import { EnvironmentService } from '../../environment/environment';
+import { EnvironmentService } from '../../config/environment';
 import { SAMPLE_RATE } from './audio';
 
 const ENCODE_TIMEOUT_MS = 5 * 60 * 1000;

@@ -23,7 +23,7 @@ import {
   phraseSlug,
   UTTERANCE_WAV,
 } from '@projects/jankbot-contracts';
-import { EnvironmentService } from '../../environment/environment';
+import { EnvironmentService } from '../../config/environment';
 import {
   type ClipRange,
   normalizeLoudness,

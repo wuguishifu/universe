@@ -2,10 +2,7 @@ import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { UniverseDbModule } from '@libs/nest-common';
 import { TrackingModule } from '@platform/analytics-client-nest';
-import {
-  EnvironmentModule,
-  EnvironmentService,
-} from '../environment/environment';
+import { EnvironmentModule, EnvironmentService } from '../config/environment';
 import { DaikinModule } from '../modules/daikin/daikin.module';
 import { ThermostatModule } from '../modules/thermostat/thermostat.module';
 import { AppController } from './app.controller';

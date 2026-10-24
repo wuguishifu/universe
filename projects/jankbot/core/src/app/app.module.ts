@@ -6,10 +6,7 @@ import {
 } from '@libs/nest-common';
 import { TrackingModule } from '@platform/analytics-client-nest';
 import { TranscriptionClientModule } from '@platform/transcription-client-nest';
-import {
-  EnvironmentModule,
-  EnvironmentService,
-} from '../environment/environment';
+import { EnvironmentModule, EnvironmentService } from '../config/environment';
 import { CommonModule } from '../modules/common/common.module';
 import { DiscordModule } from '../modules/discord/discord.module';
 import { InteractionsModule } from '../modules/interactions/interactions.module';
