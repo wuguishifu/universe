@@ -1,4 +1,5 @@
 import { initClient } from '@ts-rest/core';
+
 import { thermoRootRouter } from '@projects/thermo-automation-contracts';
 
 /** Same origin: the service serves this page, and the Vite dev server proxies /api to it. */

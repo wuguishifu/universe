@@ -1,8 +1,12 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import z from 'zod';
+
 import { readFile } from 'fs/promises';
+
 import { runProcess } from '@libs/nest-common';
-import { EnvironmentService } from '../../environment';
+
+import { EnvironmentService } from '../../config/environment';
+
 import { type SpeakerTurn } from './speakers';
 
 const diarizerJsonSchema = z.object({

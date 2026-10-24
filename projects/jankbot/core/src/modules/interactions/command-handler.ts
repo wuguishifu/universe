@@ -1,7 +1,9 @@
 import { UnrecoverableError } from 'bullmq';
 import { type RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
 import { type z } from 'zod';
+
 import { type JankbotJobData } from '@projects/jankbot-contracts';
+
 import { type InteractionReply } from '../discord/discord-rest.service';
 
 export type CommandInteraction = JankbotJobData<'interactions'>;

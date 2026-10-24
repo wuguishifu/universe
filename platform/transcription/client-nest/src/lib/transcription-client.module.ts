@@ -1,5 +1,6 @@
 import { BullModule } from '@nestjs/bullmq';
 import { DynamicModule, Module } from '@nestjs/common';
+
 import { TRANSCRIPTION_FLOW_PRODUCER } from './constants';
 import { TranscriptionClient } from './transcription-client.service';
 

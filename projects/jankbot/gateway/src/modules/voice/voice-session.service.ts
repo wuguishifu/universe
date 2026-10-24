@@ -15,7 +15,9 @@ import {
 } from '@nestjs/common';
 import { Client, Guild, VoiceBasedChannel, VoiceState } from 'discord.js';
 import { Context, type ContextOf, On, Once } from 'necord';
+
 import { randomUUID } from 'crypto';
+
 import { TrackingService } from '@platform/analytics-client-nest';
 import {
   JANKBOT_QUEUE_CONFIG,
@@ -23,8 +25,10 @@ import {
   type JankbotQueue,
   OPUS_FRAME_MS,
 } from '@projects/jankbot-contracts';
-import { EnvironmentService } from '../../environment/environment';
-import { type VoiceSession } from '../../redis/redis-keys';
+
+import { EnvironmentService } from '../../config/environment';
+import { type VoiceSession } from '../../config/redis-keys';
+
 import { VoiceSessionStore } from './voice-session.store';
 
 @Injectable()

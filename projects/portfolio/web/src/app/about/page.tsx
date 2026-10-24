@@ -13,8 +13,10 @@ import {
 import { isFilled } from '@prismicio/client';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+
 import { RichText } from '../../components/text/text';
 import { createClient } from '../../prismicio';
+
 import { SocialMediaButton } from './components/social-media-button';
 import { TechStackItem } from './components/tech-stack-item';
 

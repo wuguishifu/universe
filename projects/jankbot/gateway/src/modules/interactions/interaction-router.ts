@@ -6,6 +6,7 @@ import {
   MessageFlags,
 } from 'discord.js';
 import { Context, type ContextOf, On } from 'necord';
+
 import { RedisCacheService } from '@libs/nest-common';
 import {
   JANKBOT_QUEUE_CONFIG,
@@ -13,7 +14,8 @@ import {
   type JankbotJobData,
   type JankbotQueue,
 } from '@projects/jankbot-contracts';
-import { EnvironmentService } from '../../environment/environment';
+
+import { EnvironmentService } from '../../config/environment';
 
 type OptionValue = JankbotJobData<'interactions'>['options'][string];
 

@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+
 import { type Account, parseWhoAmI } from '@projects/mega-client-contracts';
+
 import { MegaCliError, MegaCliService } from './mega-cli.service';
 
 /**

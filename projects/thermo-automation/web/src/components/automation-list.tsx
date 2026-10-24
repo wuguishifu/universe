@@ -1,5 +1,6 @@
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+
 import { Button, Switch } from '@libs/ui-web';
 import type {
   Automation,
@@ -7,10 +8,12 @@ import type {
   DeviceSnapshot,
   DisplayUnit,
 } from '@projects/thermo-automation-contracts';
+
 import { api, expect } from '../lib/api';
 import { describeDays } from '../lib/days';
 import { formatBound, formatDelta } from '../lib/temperature';
 import { useApiMutation } from '../lib/use-api-mutation';
+
 import { AutomationDialog } from './automation-dialog';
 
 /** "08:00" → "8:00 AM", in the reader's locale. */

@@ -9,6 +9,7 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import { UNIVERSE_DB } from '../../constants';
 import { getDbClient } from '../../utils';
+
 import { DB_CONFIG, type DbConfig } from './config';
 
 export type UniverseDb = PostgresJsDatabase;

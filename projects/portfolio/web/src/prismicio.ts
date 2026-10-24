@@ -5,6 +5,7 @@ import {
 import { enableAutoPreviews } from '@prismicio/next';
 
 import sm from '../slicemachine.config.json';
+
 import { routes } from './routes';
 
 const repositoryName = sm.repositoryName;

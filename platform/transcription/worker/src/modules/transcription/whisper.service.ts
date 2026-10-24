@@ -1,9 +1,12 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { UnrecoverableError } from 'bullmq';
 import z from 'zod';
+
 import { open, readFile } from 'fs/promises';
+
 import { ProcessError, runProcess } from '@libs/nest-common';
-import { EnvironmentService } from '../../environment';
+
+import { EnvironmentService } from '../../config/environment';
 
 const WHISPER_SAMPLE_RATE = 16_000;
 

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BehaviorSubject, filter, type Observable } from 'rxjs';
+
 import {
   decide,
   type DeviceSnapshot,
@@ -8,7 +9,9 @@ import {
   type Snapshot,
   type TickStatus,
 } from '@projects/thermo-automation-contracts';
-import { EnvironmentService } from '../../environment/environment';
+
+import { EnvironmentService } from '../../config/environment';
+
 import { AutomationsService } from './automations.service';
 import { type DeviceState, DeviceStatesService } from './device-states.service';
 import { SettingsService } from './settings.service';
@@ -107,7 +110,14 @@ export class LiveService {
     const clock = houseClock(now, settings.timezone);
 
     const devices = (house?.devices ?? []).map(
-      ({ id, name, model, reading, readError, actionError }): DeviceSnapshot => {
+      ({
+        id,
+        name,
+        model,
+        reading,
+        readError,
+        actionError,
+      }): DeviceSnapshot => {
         const pausedUntil = deviceStates.get(id)?.pausedUntil ?? null;
         const paused = pausedUntil !== null && pausedUntil > now;
         const decision = reading

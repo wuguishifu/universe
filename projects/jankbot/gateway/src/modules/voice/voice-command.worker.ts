@@ -2,6 +2,7 @@ import { BeforeApplicationShutdown, Injectable, Logger } from '@nestjs/common';
 import { type Job, Worker } from 'bullmq';
 import { Client } from 'discord.js';
 import { Once } from 'necord';
+
 import { createBullRootOptions } from '@libs/queue';
 import {
   JANKBOT_QUEUE_PREFIX,
@@ -9,7 +10,9 @@ import {
   type VoiceCommandJobData,
   type VoiceCommandResult,
 } from '@projects/jankbot-contracts';
-import { EnvironmentService } from '../../environment/environment';
+
+import { EnvironmentService } from '../../config/environment';
+
 import { VoiceSessionService } from './voice-session.service';
 
 /**

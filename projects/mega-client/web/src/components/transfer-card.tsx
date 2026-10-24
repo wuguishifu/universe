@@ -9,6 +9,7 @@ import {
   X,
 } from 'lucide-react';
 import { useState } from 'react';
+
 import { Button, cn } from '@libs/ui-web';
 import {
   isFinished,
@@ -16,9 +17,11 @@ import {
   TransferState,
   TransferType,
 } from '@projects/mega-client-contracts';
+
 import { api, expect } from '../lib/api';
 import { formatBytes, formatEta, formatSpeed } from '../lib/format';
 import { useApiMutation } from '../lib/use-api-mutation';
+
 import { ConfirmCancelDialog } from './confirm-cancel-dialog';
 
 const typeIcons = {

@@ -1,8 +1,10 @@
 import { WorkerHost } from '@nestjs/bullmq';
 import { UnrecoverableError } from 'bullmq';
+
 import { mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import path from 'path';
+
 import { UniverseProcessor } from '@libs/queue';
 import {
   TRANSCRIPTION_QUEUE_CONFIG,
@@ -10,6 +12,7 @@ import {
   TranscriptionJobResult,
   type TranscriptSegment,
 } from '@platform/transcription-contracts';
+
 import { DiarizerService } from './diarizer.service';
 import { FilesService } from './files.service';
 import { ModelsService } from './models.service';

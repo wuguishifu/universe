@@ -1,9 +1,11 @@
 import { Controller } from '@nestjs/common';
 import { tsRestHandler, TsRestHandler } from '@ts-rest/nest';
+
 import {
   type AutomationInput,
   thermoRootRouter,
 } from '@projects/thermo-automation-contracts';
+
 import { AutomationsService } from './automations.service';
 import { LiveService } from './live.service';
 import { SettingsService } from './settings.service';

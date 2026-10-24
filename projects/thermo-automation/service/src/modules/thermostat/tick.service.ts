@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
+
 import { TrackingService } from '@platform/analytics-client-nest';
 import {
   type ControlAction,
@@ -7,9 +8,11 @@ import {
   houseClock,
   type Reading,
 } from '@projects/thermo-automation-contracts';
-import { EnvironmentService } from '../../environment/environment';
+
+import { EnvironmentService } from '../../config/environment';
 import { DaikinService, describeError } from '../daikin/daikin.service';
 import type { DaikinDeviceInfo, DaikinLocation } from '../daikin/daikin.types';
+
 import { AutomationsService } from './automations.service';
 import { DeviceStatesService } from './device-states.service';
 import { type HouseDevice, LiveService } from './live.service';

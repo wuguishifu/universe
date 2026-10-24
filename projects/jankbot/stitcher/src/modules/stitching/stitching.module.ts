@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
+
 import { registerQueue } from '../../queues/queue';
+
 import { CompilationEncoderService } from './compilation-encoder.service';
 import { SessionBacklogService } from './session-backlog.service';
 import { StitchSessionProcessor } from './stitch-session.processor';

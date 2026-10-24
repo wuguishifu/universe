@@ -2,6 +2,7 @@
 
 import { Spinner } from '@libs/ui-web';
 import { api } from '@platform/convex-contracts';
+
 import { Section } from '../../../components/section';
 import { useQuery } from '../../../modules/convex/use-query';
 

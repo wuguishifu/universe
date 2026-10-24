@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { automationInputSchema, automationSchema } from '../automations';
 import { c } from '../contract';
 

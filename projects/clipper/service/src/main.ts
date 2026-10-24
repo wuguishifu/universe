@@ -7,21 +7,17 @@ import {
   type NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 
+import { withLoggerOptions } from '@libs/nest-common';
+
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
-    {
-      logger:
-        process.env.DEBUG_LOGGING === 'true'
-          ? ['verbose', 'debug', 'log', 'warn', 'error', 'fatal']
-          : ['log', 'warn', 'error', 'fatal'],
-    },
+    withLoggerOptions(),
   );
 
-  // On SIGTERM: in-flight Gemini calls are aborted and their clip jobs retried by the next worker.
   app.enableShutdownHooks();
 
   const port = process.env.PORT || 3008;

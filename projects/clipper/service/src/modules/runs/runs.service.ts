@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { type FunctionReturnType } from 'convex/server';
+
 import { TrackingService } from '@platform/analytics-client-nest';
 import { api } from '@platform/convex-contracts';
 import {
@@ -15,6 +16,7 @@ import {
   runOptionsSchema,
   type RunSource,
 } from '@projects/clipper-contracts';
+
 import { PROMPT_VERSION } from '../analysis/prompt';
 import { ConvexService, convexErrorCode } from '../common/convex.service';
 

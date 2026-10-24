@@ -1,5 +1,6 @@
 import { paginationOptsValidator } from 'convex/server';
 import { ConvexError, type Infer, v } from 'convex/values';
+
 import { type Doc } from '../_generated/dataModel';
 import {
   internalMutation,
@@ -7,6 +8,7 @@ import {
   type MutationCtx,
   query,
 } from '../_generated/server';
+
 import { assertClipperSecret, clipperSecret } from './auth';
 import { addDailySpend, dailySpend, moveClipJob, utcDay } from './helpers';
 import { clipJobState, outcome, tokenUsage } from './validators';

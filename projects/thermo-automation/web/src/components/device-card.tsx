@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Fan, Flame, Snowflake, TriangleAlert } from 'lucide-react';
+
 import {
   type Automation,
   type DeviceSnapshot,
@@ -9,8 +10,10 @@ import {
   modeLabels,
   type Settings,
 } from '@projects/thermo-automation-contracts';
+
 import { api, expect } from '../lib/api';
 import { formatDelta, formatTemperature } from '../lib/temperature';
+
 import { AutomationList, describeRange } from './automation-list';
 import { PauseControl } from './pause-control';
 import { Sparkline } from './sparkline';

@@ -4,11 +4,13 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+
 import {
   type Snapshot,
   snapshotSchema,
   StreamEvent,
 } from '@projects/mega-client-contracts';
+
 import { api, expect } from './api';
 
 export const SNAPSHOT_KEY = ['snapshot'] as const;

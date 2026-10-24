@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InteractionContextType, SlashCommandBuilder } from 'discord.js';
+
 import { type InteractionReply } from '../discord/discord-rest.service';
 import {
   type CommandHandler,
   type CommandInteraction,
 } from '../interactions/command-handler';
+
 import { CompilationOptOutsService } from './compilation-opt-outs.service';
 
 /** `/optout` */

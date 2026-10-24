@@ -4,12 +4,14 @@ import {
   useMemo,
   useState,
 } from 'react';
+
 import {
   type DisplayUnit,
   type HistoryPoint,
   Mode,
   modeLabels,
 } from '@projects/thermo-automation-contracts';
+
 import { formatHouseTime } from '../lib/house-time';
 import { formatTemperature, toDisplay } from '../lib/temperature';
 

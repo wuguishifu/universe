@@ -1,4 +1,5 @@
 import { type BullRootModuleOptions } from '@nestjs/bullmq';
+
 import { resolveRedisConnection } from '@libs/redis-cache';
 
 export function createBullRootOptions(

@@ -7,22 +7,17 @@ import {
   type NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 
+import { withLoggerOptions } from '@libs/nest-common';
+
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
-  // The HTTP server only serves health checks; the bot itself is driven by the Discord gateway.
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
-    {
-      logger:
-        process.env.DEBUG_LOGGING === 'true'
-          ? ['verbose', 'debug', 'log', 'warn', 'error', 'fatal']
-          : ['log', 'warn', 'error', 'fatal'],
-    },
+    withLoggerOptions(),
   );
 
-  // On SIGTERM: drop voice connections but remember them, so the next start rejoins.
   app.enableShutdownHooks();
 
   const port = process.env.PORT || 3004;

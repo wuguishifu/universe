@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { MAX_CLIPS_PER_REQUEST, PROXY, sha256Schema } from '../clips';
 import { c } from '../contract';
 

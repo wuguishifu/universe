@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from 'react';
+
 import {
   Button,
   cn,
@@ -18,6 +19,7 @@ import {
   automationInputSchema,
   type DisplayUnit,
 } from '@projects/thermo-automation-contracts';
+
 import { api, expect } from '../lib/api';
 import {
   DAY_LABELS,

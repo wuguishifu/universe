@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
+
 import { S3Module } from '@libs/nest-common';
 import { BullRootModule } from '@libs/queue';
 import { TRANSCRIPTION_QUEUE_PREFIX } from '@platform/transcription-contracts';
-import { EnvironmentModule, EnvironmentService } from '../environment';
+
+import { EnvironmentModule, EnvironmentService } from '../config/environment';
 import { TranscriptionModule } from '../modules/transcription/transcription.module';
 
 @Module({

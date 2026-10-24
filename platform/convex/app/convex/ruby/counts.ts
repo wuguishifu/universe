@@ -1,6 +1,9 @@
 import { v } from 'convex/values';
+
 import { normalizeText } from '@libs/phrase-matching';
+
 import { mutation, query } from '../_generated/server';
+
 import { assertRubySecret, rubySecret } from './auth';
 
 /** Adds one utterance's matches to the speaker's running totals. */

@@ -1,10 +1,12 @@
 import { Controller, type MessageEvent, Sse } from '@nestjs/common';
 import { tsRestHandler, TsRestHandler } from '@ts-rest/nest';
 import { interval, map, merge, type Observable } from 'rxjs';
+
 import {
   StreamEvent,
   thermoRootRouter,
 } from '@projects/thermo-automation-contracts';
+
 import { LiveService } from './live.service';
 
 /** Proxies tend to drop connections idle for a minute; snapshots only come every few minutes. */

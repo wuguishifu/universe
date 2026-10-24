@@ -1,6 +1,7 @@
 // Run with `nx test transcription-worker` (Node's built-in test runner; Node strips the types).
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+
 import { assignSpeakers, segmentsBySpeaker } from './speakers.ts';
 
 const word = (text: string, startMs: number, endMs: number) => ({

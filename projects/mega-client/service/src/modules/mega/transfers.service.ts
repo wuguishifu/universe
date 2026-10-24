@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+
 import { posix } from 'node:path';
+
 import {
   COLUMN_SEPARATOR,
   etaSeconds,
@@ -13,7 +15,9 @@ import {
   TransferState,
   TransferType,
 } from '@projects/mega-client-contracts';
-import { EnvironmentService } from '../../environment/environment';
+
+import { EnvironmentService } from '../../config/environment';
+
 import { MegaCliService } from './mega-cli.service';
 
 /** How many finished transfers stay in the list, newest first. */

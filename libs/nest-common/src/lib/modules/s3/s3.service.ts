@@ -9,9 +9,11 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Inject, Injectable } from '@nestjs/common';
+
 import { createWriteStream } from 'fs';
 import { Readable } from 'stream';
 import { pipeline } from 'stream/promises';
+
 import { S3_CONFIG, S3Props } from './s3';
 
 export class S3ObjectNotFoundError extends Error {}

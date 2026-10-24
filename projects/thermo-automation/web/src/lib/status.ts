@@ -1,4 +1,5 @@
 import type { TickStatus } from '@projects/thermo-automation-contracts';
+
 import type { Connection } from './use-live-snapshot';
 
 export type Health =

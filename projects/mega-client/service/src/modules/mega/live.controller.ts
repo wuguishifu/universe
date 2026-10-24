@@ -1,7 +1,9 @@
 import { Controller, type MessageEvent, Sse } from '@nestjs/common';
 import { tsRestHandler, TsRestHandler } from '@ts-rest/nest';
 import { interval, map, merge, type Observable } from 'rxjs';
+
 import { megaRootRouter, StreamEvent } from '@projects/mega-client-contracts';
+
 import { LiveService } from './live.service';
 
 /** Proxies tend to drop connections idle for a minute; nothing changes while nothing transfers. */

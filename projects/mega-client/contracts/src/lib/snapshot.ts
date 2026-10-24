@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { TransferType } from './mega-output';
 
 export const transferSchema = z.object({
