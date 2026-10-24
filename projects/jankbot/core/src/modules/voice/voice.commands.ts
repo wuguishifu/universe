@@ -7,7 +7,7 @@ import {
 } from 'discord.js';
 import { z } from 'zod';
 
-import { RedisCacheService } from '@libs/nest-common';
+import { RedisCacheService } from '@libs/nest-redis-cache';
 import {
   type VoiceCommandResult,
   voiceBotId,

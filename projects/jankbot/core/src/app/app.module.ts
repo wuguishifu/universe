@@ -1,10 +1,8 @@
 import { Module } from '@nestjs/common';
 
-import {
-  RedisCacheModule,
-  S3Module,
-  UniverseDbModule,
-} from '@libs/nest-common';
+import { RedisCacheModule } from '@libs/nest-redis-cache';
+import { S3Module } from '@libs/nest-s3';
+import { UniverseDbModule } from '@libs/nest-universe-db';
 import { TrackingModule } from '@platform/analytics-client-nest';
 import { TranscriptionClientModule } from '@platform/transcription-client-nest';
 

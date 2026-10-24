@@ -3,7 +3,7 @@ import z from 'zod';
 
 import { readFile } from 'fs/promises';
 
-import { runProcess } from '@libs/nest-common';
+import { runProcess } from '@libs/nest-core';
 
 import { EnvironmentService } from '../../config/environment';
 

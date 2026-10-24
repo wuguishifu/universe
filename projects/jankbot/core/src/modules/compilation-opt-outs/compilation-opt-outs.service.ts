@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 
-import { UNIVERSE_DB, type UniverseDb } from '@libs/nest-common';
+import { UNIVERSE_DB, type UniverseDb } from '@libs/nest-universe-db';
 import { TrackingService } from '@platform/analytics-client-nest';
 import { jankbotSchema } from '@platform/postgres-db';
 

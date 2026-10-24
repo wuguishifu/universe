@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
-import { UNIVERSE_DB, type UniverseDb } from '@libs/nest-common';
+import { UNIVERSE_DB, type UniverseDb } from '@libs/nest-universe-db';
 import { TrackingEvent } from '@platform/analytics-contracts';
 import { publicSchema } from '@platform/postgres-db';
 

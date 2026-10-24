@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { isAxiosError, type AxiosRequestConfig } from 'axios';
 
-import { AxiosService } from '@libs/nest-common';
+import { HttpService } from '@libs/http';
 
 import { EnvironmentService } from '../../config/environment';
 
@@ -20,12 +20,12 @@ const TOKEN_REFRESH_MARGIN_MS = 60_000;
 @Injectable()
 export class DaikinService {
   private readonly logger = new Logger(DaikinService.name);
-  private readonly http: AxiosService;
+  private readonly http: HttpService;
   private token: { value: string; expiresAt: number } | null = null;
   private pendingToken: Promise<string> | null = null;
 
   constructor(private readonly environmentService: EnvironmentService) {
-    this.http = new AxiosService({
+    this.http = new HttpService({
       baseURL: environmentService.environment.daikinBaseUrl,
       timeout: 10_000,
       headers: {

@@ -4,7 +4,7 @@ import z from 'zod';
 
 import { open, readFile } from 'fs/promises';
 
-import { ProcessError, runProcess } from '@libs/nest-common';
+import { ProcessError, runProcess } from '@libs/nest-core';
 
 import { EnvironmentService } from '../../config/environment';
 

@@ -4,7 +4,7 @@ import { mkdtemp, readFile, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import path from 'path';
 
-import { S3ObjectNotFoundError, S3Service } from '@libs/nest-common';
+import { S3ObjectNotFoundError, S3Service } from '@libs/nest-s3';
 import {
   addUsage,
   costUsd,

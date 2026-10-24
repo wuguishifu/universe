@@ -10,7 +10,7 @@
       "path": "./platform/convex/contracts"
     },
     {
-      "path": "./libs/nest-common"
+      "path": "./libs/nest/core"
     },
     {
       "path": "./platform/transcription/contracts"
@@ -92,6 +92,18 @@
     },
     {
       "path": "./projects/mega-client/web"
+    },
+    {
+      "path": "./libs/nest/s3"
+    },
+    {
+      "path": "./libs/nest/redis-cache"
+    },
+    {
+      "path": "./libs/nest/universe-db"
+    },
+    {
+      "path": "./libs/http"
     }
   ],
   "compilerOptions": {

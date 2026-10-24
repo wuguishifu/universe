@@ -516,20 +516,43 @@ importers:
         specifier: ^5.2.1
         version: 5.2.6(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)(webpack-cli@7.2.3)(webpack@5.111.1)
 
-  libs/nest-common:
+  libs/http:
     dependencies:
-      '@libs/redis-cache':
-        specifier: workspace:*
-        version: link:../redis-cache
       axios:
         specifier: '*'
         version: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       axios-retry:
         specifier: '*'
         version: 4.5.0(axios@1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))
+
+  libs/nest/core: {}
+
+  libs/nest/redis-cache:
+    dependencies:
+      '@libs/redis-cache':
+        specifier: workspace:*
+        version: link:../../redis-cache
       ioredis:
         specifier: '*'
         version: 6.0.0(supports-color@8.1.1)
+
+  libs/nest/s3:
+    dependencies:
+      '@aws-sdk/client-s3':
+        specifier: '*'
+        version: 3.1146.0
+      '@aws-sdk/s3-request-presigner':
+        specifier: '*'
+        version: 3.1146.0
+
+  libs/nest/universe-db:
+    dependencies:
+      drizzle-orm:
+        specifier: '*'
+        version: 0.45.3(@types/pg@8.23.1)(pg@8.23.1)(postgres@3.4.9)
+      postgres:
+        specifier: '*'
+        version: 3.4.9
 
   libs/phrase-matching: {}
 
@@ -545,9 +568,9 @@ importers:
 
   platform/analytics/client-nest:
     dependencies:
-      '@libs/nest-common':
+      '@libs/http':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/http
       '@platform/analytics-contracts':
         specifier: workspace:*
         version: link:../contracts
@@ -556,9 +579,12 @@ importers:
 
   platform/analytics/service:
     dependencies:
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
+      '@libs/nest-universe-db':
+        specifier: workspace:*
+        version: link:../../../libs/nest/universe-db
       '@platform/analytics-contracts':
         specifier: workspace:*
         version: link:../contracts
@@ -604,9 +630,12 @@ importers:
 
   platform/transcription/worker:
     dependencies:
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
+      '@libs/nest-s3':
+        specifier: workspace:*
+        version: link:../../../libs/nest/s3
       '@libs/queue':
         specifier: workspace:*
         version: link:../../../libs/queue
@@ -625,9 +654,12 @@ importers:
 
   projects/clipper/service:
     dependencies:
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
+      '@libs/nest-s3':
+        specifier: workspace:*
+        version: link:../../../libs/nest/s3
       '@libs/queue':
         specifier: workspace:*
         version: link:../../../libs/queue
@@ -646,9 +678,12 @@ importers:
 
   projects/internet-monitor/service:
     dependencies:
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
+      '@libs/nest-redis-cache':
+        specifier: workspace:*
+        version: link:../../../libs/nest/redis-cache
       '@libs/redis-cache':
         specifier: workspace:*
         version: link:../../../libs/redis-cache
@@ -670,9 +705,18 @@ importers:
 
   projects/jankbot/core:
     dependencies:
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
+      '@libs/nest-redis-cache':
+        specifier: workspace:*
+        version: link:../../../libs/nest/redis-cache
+      '@libs/nest-s3':
+        specifier: workspace:*
+        version: link:../../../libs/nest/s3
+      '@libs/nest-universe-db':
+        specifier: workspace:*
+        version: link:../../../libs/nest/universe-db
       '@libs/phrase-matching':
         specifier: workspace:*
         version: link:../../../libs/phrase-matching
@@ -706,9 +750,12 @@ importers:
 
   projects/jankbot/gateway:
     dependencies:
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
+      '@libs/nest-redis-cache':
+        specifier: workspace:*
+        version: link:../../../libs/nest/redis-cache
       '@libs/queue':
         specifier: workspace:*
         version: link:../../../libs/queue
@@ -727,9 +774,15 @@ importers:
 
   projects/jankbot/stitcher:
     dependencies:
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
+      '@libs/nest-s3':
+        specifier: workspace:*
+        version: link:../../../libs/nest/s3
+      '@libs/nest-universe-db':
+        specifier: workspace:*
+        version: link:../../../libs/nest/universe-db
       '@libs/queue':
         specifier: workspace:*
         version: link:../../../libs/queue
@@ -750,9 +803,9 @@ importers:
 
   projects/mega-client/service:
     dependencies:
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
       '@projects/mega-client-contracts':
         specifier: workspace:*
         version: link:../contracts
@@ -788,9 +841,15 @@ importers:
 
   projects/thermo-automation/service:
     dependencies:
-      '@libs/nest-common':
+      '@libs/http':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/http
+      '@libs/nest-core':
+        specifier: workspace:*
+        version: link:../../../libs/nest/core
+      '@libs/nest-universe-db':
+        specifier: workspace:*
+        version: link:../../../libs/nest/universe-db
       '@platform/analytics-client-nest':
         specifier: workspace:*
         version: link:../../../platform/analytics/client-nest

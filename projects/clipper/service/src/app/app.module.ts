@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 
-import { S3Module } from '@libs/nest-common';
+import { S3Module } from '@libs/nest-s3';
 import { TrackingModule } from '@platform/analytics-client-nest';
 
 import { EnvironmentModule, EnvironmentService } from '../config/environment';

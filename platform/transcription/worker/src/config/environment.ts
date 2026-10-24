@@ -4,8 +4,8 @@ import {
   commaSeparated,
   createEnvironmentService,
   LocalEnvironmentModule,
-  s3EnvAdapter,
-} from '@libs/nest-common';
+} from '@libs/nest-core';
+import { s3EnvAdapter } from '@libs/nest-s3';
 
 export const environmentSchema = z
   .object({

@@ -4,8 +4,8 @@ import {
   baseEnvironmentSchema,
   createEnvironmentService,
   LocalEnvironmentModule,
-  s3EnvAdapter,
-} from '@libs/nest-common';
+} from '@libs/nest-core';
+import { s3EnvAdapter } from '@libs/nest-s3';
 
 export type EnvironmentSchema = z.infer<typeof environmentSchema>;
 export const environmentSchema = baseEnvironmentSchema

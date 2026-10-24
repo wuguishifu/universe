@@ -26,7 +26,10 @@
       "path": "../../../platform/analytics/client-nest/tsconfig.lib.json"
     },
     {
-      "path": "../../../libs/nest-common/tsconfig.lib.json"
+      "path": "../../../libs/nest/redis-cache/tsconfig.lib.json"
+    },
+    {
+      "path": "../../../libs/nest/core/tsconfig.lib.json"
     }
   ]
 }

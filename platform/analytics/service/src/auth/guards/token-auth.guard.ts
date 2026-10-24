@@ -7,7 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
-import { extractAuthTokenFromHeader } from '@libs/nest-common';
+import { extractAuthTokenFromHeader } from '@libs/nest-core';
 
 import {
   type EnvironmentSchema,

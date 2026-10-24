@@ -6,7 +6,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 
-import { AxiosService } from '@libs/nest-common';
+import { HttpService } from '@libs/http';
 import { TrackingEvent } from '@platform/analytics-contracts';
 
 import { type TrackingConfig } from './config';
@@ -20,7 +20,7 @@ type QueuedEvent = TrackingEvent & { _retries: number };
 @Injectable()
 export class TrackingService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(TrackingService.name);
-  private readonly httpService: AxiosService;
+  private readonly httpService: HttpService;
 
   private eventsQueue: QueuedEvent[] = [];
   private eventQueueInterval: NodeJS.Timeout | null = null;
@@ -28,7 +28,7 @@ export class TrackingService implements OnModuleInit, OnModuleDestroy {
   constructor(
     @Inject(TRACKING_CONFIG) private readonly config: TrackingConfig,
   ) {
-    this.httpService = new AxiosService({
+    this.httpService = new HttpService({
       baseURL: `${this.config.analyticsServiceBaseUrl}/api/tracking`,
       headers: {
         Authorization: `Bearer ${this.config.analyticsServiceApiKey}`,

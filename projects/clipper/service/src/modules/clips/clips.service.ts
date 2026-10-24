@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { S3Service } from '@libs/nest-common';
+import { S3Service } from '@libs/nest-s3';
 import { createProxyS3Key, PROXY } from '@projects/clipper-contracts';
 
 import { EnvironmentService } from '../../config/environment';

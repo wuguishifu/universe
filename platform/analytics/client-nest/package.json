@@ -15,6 +15,6 @@
   },
   "dependencies": {
     "@platform/analytics-contracts": "workspace:*",
-    "@libs/nest-common": "workspace:*"
+    "@libs/http": "workspace:*"
   }
 }

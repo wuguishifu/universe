@@ -7,7 +7,7 @@ import {
 } from 'discord.js';
 import { Context, type ContextOf, On } from 'necord';
 
-import { RedisCacheService } from '@libs/nest-common';
+import { RedisCacheService } from '@libs/nest-redis-cache';
 import {
   JANKBOT_QUEUE_CONFIG,
   JANKBOT_REDIS,

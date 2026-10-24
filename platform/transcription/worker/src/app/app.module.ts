@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 
-import { S3Module } from '@libs/nest-common';
+import { S3Module } from '@libs/nest-s3';
 import { BullRootModule } from '@libs/queue';
 import { TRANSCRIPTION_QUEUE_PREFIX } from '@platform/transcription-contracts';
 

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { UNIVERSE_DB, type UniverseDb } from '@libs/nest-common';
+import { UNIVERSE_DB, type UniverseDb } from '@libs/nest-universe-db';
 import type { TimedPhraseMatch } from '@libs/phrase-matching';
 import { jankbotSchema } from '@platform/postgres-db';
 

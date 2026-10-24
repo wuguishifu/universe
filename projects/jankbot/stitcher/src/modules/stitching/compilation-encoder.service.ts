@@ -7,7 +7,7 @@ import {
 
 import { stat } from 'fs/promises';
 
-import { runProcess } from '@libs/nest-common';
+import { runProcess } from '@libs/nest-core';
 import { UTTERANCE_WAV } from '@projects/jankbot-contracts';
 
 import { EnvironmentService } from '../../config/environment';

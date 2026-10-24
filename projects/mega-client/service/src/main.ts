@@ -9,7 +9,7 @@ import {
 
 import { existsSync } from 'node:fs';
 
-import { withLoggerOptions } from '@libs/nest-common';
+import { withLoggerOptions } from '@libs/nest-core';
 
 import { AppModule } from './app/app.module';
 

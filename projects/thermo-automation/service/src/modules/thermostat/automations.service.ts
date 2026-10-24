@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, eq } from 'drizzle-orm';
 
-import { UNIVERSE_DB, type UniverseDb } from '@libs/nest-common';
+import { UNIVERSE_DB, type UniverseDb } from '@libs/nest-universe-db';
 import { thermoAutomations } from '@platform/postgres-db';
 import type {
   Automation,
