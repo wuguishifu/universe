@@ -6,7 +6,7 @@
     "@projects/jankbot-contracts": "workspace:*",
     "@platform/analytics-client-nest": "workspace:*",
     "@platform/postgres-db": "workspace:*",
-    "@libs/nest-common": "workspace:*",
+    "@libs/nest-core": "workspace:*",
     "@libs/nest-universe-db": "workspace:*",
     "@libs/nest-s3": "workspace:*",
     "@libs/queue": "workspace:*",

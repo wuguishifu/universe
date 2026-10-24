@@ -5,7 +5,7 @@
   "dependencies": {
     "@projects/jankbot-contracts": "workspace:*",
     "@platform/analytics-client-nest": "workspace:*",
-    "@libs/nest-common": "workspace:*",
+    "@libs/nest-core": "workspace:*",
     "@libs/nest-redis-cache": "workspace:*",
     "@libs/queue": "workspace:*",
     "@libs/redis-cache": "workspace:*",

@@ -4,7 +4,7 @@ import {
   baseEnvironmentSchema,
   createEnvironmentService,
   LocalEnvironmentModule,
-} from '@libs/nest-common';
+} from '@libs/nest-core';
 
 export type EnvironmentSchema = z.infer<typeof environmentSchema>;
 export const environmentSchema = baseEnvironmentSchema.extend({

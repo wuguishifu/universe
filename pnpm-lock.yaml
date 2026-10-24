@@ -525,7 +525,7 @@ importers:
         specifier: '*'
         version: 4.5.0(axios@1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))
 
-  libs/nest-common: {}
+  libs/nest/core: {}
 
   libs/nest/redis-cache:
     dependencies:
@@ -579,9 +579,9 @@ importers:
 
   platform/analytics/service:
     dependencies:
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
       '@libs/nest-universe-db':
         specifier: workspace:*
         version: link:../../../libs/nest/universe-db
@@ -630,9 +630,9 @@ importers:
 
   platform/transcription/worker:
     dependencies:
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
       '@libs/nest-s3':
         specifier: workspace:*
         version: link:../../../libs/nest/s3
@@ -654,9 +654,9 @@ importers:
 
   projects/clipper/service:
     dependencies:
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
       '@libs/nest-s3':
         specifier: workspace:*
         version: link:../../../libs/nest/s3
@@ -678,9 +678,9 @@ importers:
 
   projects/internet-monitor/service:
     dependencies:
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
       '@libs/nest-redis-cache':
         specifier: workspace:*
         version: link:../../../libs/nest/redis-cache
@@ -705,9 +705,9 @@ importers:
 
   projects/jankbot/core:
     dependencies:
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
       '@libs/nest-redis-cache':
         specifier: workspace:*
         version: link:../../../libs/nest/redis-cache
@@ -750,9 +750,9 @@ importers:
 
   projects/jankbot/gateway:
     dependencies:
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
       '@libs/nest-redis-cache':
         specifier: workspace:*
         version: link:../../../libs/nest/redis-cache
@@ -774,9 +774,9 @@ importers:
 
   projects/jankbot/stitcher:
     dependencies:
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
       '@libs/nest-s3':
         specifier: workspace:*
         version: link:../../../libs/nest/s3
@@ -803,9 +803,9 @@ importers:
 
   projects/mega-client/service:
     dependencies:
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
       '@projects/mega-client-contracts':
         specifier: workspace:*
         version: link:../contracts
@@ -844,9 +844,9 @@ importers:
       '@libs/http':
         specifier: workspace:*
         version: link:../../../libs/http
-      '@libs/nest-common':
+      '@libs/nest-core':
         specifier: workspace:*
-        version: link:../../../libs/nest-common
+        version: link:../../../libs/nest/core
       '@libs/nest-universe-db':
         specifier: workspace:*
         version: link:../../../libs/nest/universe-db

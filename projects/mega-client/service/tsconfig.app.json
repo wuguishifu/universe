@@ -21,7 +21,7 @@
   "exclude": ["eslint.config.js", "eslint.config.cjs", "eslint.config.mjs"],
   "references": [
     {
-      "path": "../../../libs/nest-common/tsconfig.lib.json"
+      "path": "../../../libs/nest/core/tsconfig.lib.json"
     },
     {
       "path": "../contracts/tsconfig.lib.json"

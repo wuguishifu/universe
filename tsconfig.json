@@ -10,7 +10,7 @@
       "path": "./platform/convex/contracts"
     },
     {
-      "path": "./libs/nest-common"
+      "path": "./libs/nest/core"
     },
     {
       "path": "./platform/transcription/contracts"

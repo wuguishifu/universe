@@ -7,7 +7,7 @@ import {
   type NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 
-import { withLoggerOptions } from '@libs/nest-common';
+import { withLoggerOptions } from '@libs/nest-core';
 
 import { AppModule } from './app/app.module';
 

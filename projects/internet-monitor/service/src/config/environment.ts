@@ -4,7 +4,7 @@ import {
   baseEnvironmentSchema,
   createEnvironmentService,
   LocalEnvironmentModule,
-} from '@libs/nest-common';
+} from '@libs/nest-core';
 
 export const environmentSchema = baseEnvironmentSchema.extend({
   analyticsServiceBaseUrl: z.string().min(1),

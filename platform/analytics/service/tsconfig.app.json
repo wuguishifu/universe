@@ -29,7 +29,7 @@
       "path": "../../../libs/nest/universe-db/tsconfig.lib.json"
     },
     {
-      "path": "../../../libs/nest-common/tsconfig.lib.json"
+      "path": "../../../libs/nest/core/tsconfig.lib.json"
     }
   ]
 }

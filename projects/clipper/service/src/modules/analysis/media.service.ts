@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import path from 'path';
 
-import { runProcess } from '@libs/nest-common';
+import { runProcess } from '@libs/nest-core';
 import { PROXY } from '@projects/clipper-contracts';
 
 import { EnvironmentService } from '../../config/environment';
