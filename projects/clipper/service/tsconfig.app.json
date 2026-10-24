@@ -21,19 +21,22 @@
   "exclude": ["eslint.config.js", "eslint.config.cjs", "eslint.config.mjs"],
   "references": [
     {
-      "path": "../../../libs/queue/tsconfig.lib.json"
-    },
-    {
-      "path": "../../../libs/nest-common/tsconfig.lib.json"
-    },
-    {
-      "path": "../../../platform/analytics/client-nest/tsconfig.lib.json"
+      "path": "../contracts/tsconfig.lib.json"
     },
     {
       "path": "../../../platform/convex/contracts/tsconfig.lib.json"
     },
     {
-      "path": "../contracts/tsconfig.lib.json"
+      "path": "../../../platform/analytics/client-nest/tsconfig.lib.json"
+    },
+    {
+      "path": "../../../libs/queue/tsconfig.lib.json"
+    },
+    {
+      "path": "../../../libs/nest/s3/tsconfig.lib.json"
+    },
+    {
+      "path": "../../../libs/nest-common/tsconfig.lib.json"
     }
   ]
 }

@@ -92,6 +92,9 @@
     },
     {
       "path": "./projects/mega-client/web"
+    },
+    {
+      "path": "./libs/nest/s3"
     }
   ],
   "compilerOptions": {

@@ -7,6 +7,7 @@
     "@platform/analytics-client-nest": "workspace:*",
     "@platform/postgres-db": "workspace:*",
     "@libs/nest-common": "workspace:*",
+    "@libs/nest-s3": "workspace:*",
     "@libs/queue": "workspace:*",
     "tslib": "^2.3.0"
   }

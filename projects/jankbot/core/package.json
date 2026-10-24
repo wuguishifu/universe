@@ -10,6 +10,7 @@
     "@platform/transcription-client-nest": "workspace:*",
     "@platform/postgres-db": "workspace:*",
     "@libs/nest-common": "workspace:*",
+    "@libs/nest-s3": "workspace:*",
     "@libs/phrase-matching": "workspace:*",
     "@libs/queue": "workspace:*",
     "@libs/redis-cache": "workspace:*",

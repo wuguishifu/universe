@@ -3,7 +3,7 @@ import { UnrecoverableError } from 'bullmq';
 
 import { writeFile } from 'fs/promises';
 
-import { S3ObjectNotFoundError, S3Service } from '@libs/nest-common';
+import { S3ObjectNotFoundError, S3Service } from '@libs/nest-s3';
 import { AudioSource } from '@platform/transcription-contracts';
 
 @Injectable()

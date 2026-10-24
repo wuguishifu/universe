@@ -8,12 +8,8 @@ import { mkdtemp, open, rm, stat } from 'fs/promises';
 import { tmpdir } from 'os';
 import path from 'path';
 
-import {
-  S3ObjectNotFoundError,
-  S3Service,
-  UNIVERSE_DB,
-  type UniverseDb,
-} from '@libs/nest-common';
+import { UNIVERSE_DB, type UniverseDb } from '@libs/nest-common';
+import { S3ObjectNotFoundError, S3Service } from '@libs/nest-s3';
 import { TrackingService } from '@platform/analytics-client-nest';
 import { jankbotSchema } from '@platform/postgres-db';
 import {

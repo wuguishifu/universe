@@ -1,4 +1,4 @@
-import { S3Props } from '../../s3/s3';
+import { S3Props } from './s3';
 
 type S3Params = {
   s3Endpoint?: string;

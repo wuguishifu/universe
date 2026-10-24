@@ -5,8 +5,8 @@ import {
   commaSeparated,
   createEnvironmentService,
   LocalEnvironmentModule,
-  s3EnvAdapter,
 } from '@libs/nest-common';
+import { s3EnvAdapter } from '@libs/nest-s3';
 import { voiceBotId } from '@projects/jankbot-contracts';
 
 /** Like commaSeparated, but missing means empty. */

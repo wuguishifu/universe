@@ -1,7 +1,7 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 
-import { S3Service } from '@libs/nest-common';
+import { S3Service } from '@libs/nest-s3';
 import { TrackingService } from '@platform/analytics-client-nest';
 import { TranscriptionClient } from '@platform/transcription-client-nest';
 import {
