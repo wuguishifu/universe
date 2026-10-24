@@ -31,8 +31,13 @@ temperature and a buffer. Per thermostat, on each tick (see `decide` in
 - **Outside every window**: never touched, so a thermostat put in AUTO by hand stays that way.
 - A write that fails shows on the device ("Couldn't start") and is tried again next tick.
 
-Every write to a thermostat is tracked as `thermo_automation-action`, and failed ticks as
-`thermo_automation-tick_failed`. The SPA shows the last tick's status from `/api/status` (also in
+The SPA can also set a thermostat's mode and setpoints by hand (`POST /api/devices/:id/control`).
+Only the fields that changed are sent. They're merged into a fresh read of the thermostat, checked
+against its limits, and written in the same queue as ticks, so the two never overlap. Nothing is
+paused: during a window, the next tick treats a hand-set OFF or AUTO like any other.
+
+Every write to a thermostat is tracked as `thermo_automation-action` (hand-made ones as
+`thermo_automation-manual_change`), and failed ticks as `thermo_automation-tick_failed`. The SPA shows the last tick's status from `/api/status` (also in
 every snapshot), which resets on restart.
 
 Settings (location, timezone, °F/°C) are a single row. Automations, records and device states are

@@ -6,8 +6,6 @@ import {
   type DeviceSnapshot,
   EquipmentStatus,
   equipmentStatusLabels,
-  Mode,
-  modeLabels,
   type Settings,
 } from '@projects/thermo-automation-contracts';
 
@@ -15,6 +13,7 @@ import { api, expect } from '../lib/api';
 import { formatDelta, formatTemperature } from '../lib/temperature';
 
 import { AutomationList, describeRange } from './automation-list';
+import { ControlPanel } from './control-panel';
 import { PauseControl } from './pause-control';
 import { Sparkline } from './sparkline';
 import { StateBadge } from './state-badge';
@@ -91,23 +90,11 @@ export function DeviceCard({
             </p>
           </div>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-            <dt className="text-muted-foreground">Mode</dt>
+            <dt className="text-muted-foreground">Equipment</dt>
             <dd className="flex items-center gap-1.5">
-              {modeLabels[reading.mode] ?? `Mode ${reading.mode}`}
-              {reading.mode !== Mode.Off && (
-                <>
-                  <span className="text-muted-foreground">·</span>
-                  <EquipmentIcon status={reading.equipmentStatus} />
-                  {equipmentStatusLabels[reading.equipmentStatus] ?? ''}
-                </>
-              )}
-            </dd>
-            <dt className="text-muted-foreground">Setpoints</dt>
-            <dd className="tabular-nums">
-              {formatTemperature(reading.heatSetpointC, unit, {
-                withUnit: false,
-              })}
-              –{formatTemperature(reading.coolSetpointC, unit)}
+              <EquipmentIcon status={reading.equipmentStatus} />
+              {equipmentStatusLabels[reading.equipmentStatus] ??
+                `Status ${reading.equipmentStatus}`}
             </dd>
             <dt className="text-muted-foreground">Outdoor</dt>
             <dd className="tabular-nums">
@@ -122,6 +109,10 @@ export function DeviceCard({
             ? "Couldn't read this thermostat."
             : 'Waiting for the first reading…'}
         </p>
+      )}
+
+      {reading && (
+        <ControlPanel device={device} reading={reading} unit={unit} />
       )}
 
       {[device.readError, device.actionError].map(

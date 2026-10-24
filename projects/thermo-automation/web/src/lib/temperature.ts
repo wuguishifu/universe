@@ -33,5 +33,13 @@ export const formatBound = (
   { withUnit = true }: { withUnit?: boolean } = {},
 ) => `${roundBound(toDisplay(celsius, unit))}°${withUnit ? unit : ''}`;
 
+/** To a tenth, so the thermostat's 0.5 °C steps stay apart in °F (68, 68.9, 69.8…). */
+export const formatSetpoint = (
+  celsius: number,
+  unit: DisplayUnit,
+  { withUnit = true }: { withUnit?: boolean } = {},
+) =>
+  `${Math.round(toDisplay(celsius, unit) * 10) / 10}°${withUnit ? unit : ''}`;
+
 export const formatDelta = (celsius: number, unit: DisplayUnit) =>
   `${Math.round(deltaToDisplay(celsius, unit) * 10) / 10}°${unit}`;

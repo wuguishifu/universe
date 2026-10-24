@@ -8,6 +8,7 @@ import { DeviceStatesService } from './device-states.service';
 import { DevicesController } from './devices.controller';
 import { LiveController } from './live.controller';
 import { LiveService } from './live.service';
+import { ManualControlService } from './manual-control.service';
 import { SettingsController } from './settings.controller';
 import { SettingsService } from './settings.service';
 import { StatusRecordsService } from './status-records.service';
@@ -22,6 +23,7 @@ import { TickService } from './tick.service';
     StatusRecordsService,
     LiveService,
     TickService,
+    ManualControlService,
   ],
   controllers: [
     SettingsController,
