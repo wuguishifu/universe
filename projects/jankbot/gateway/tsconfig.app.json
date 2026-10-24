@@ -29,6 +29,9 @@
       "path": "../../../libs/queue/tsconfig.lib.json"
     },
     {
+      "path": "../../../libs/nest/redis-cache/tsconfig.lib.json"
+    },
+    {
       "path": "../../../libs/nest-common/tsconfig.lib.json"
     },
     {

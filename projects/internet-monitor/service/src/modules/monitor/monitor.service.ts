@@ -1,6 +1,6 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 
-import { RedisCacheService } from '@libs/nest-common';
+import { RedisCacheService } from '@libs/nest-redis-cache';
 import { TrackingService } from '@platform/analytics-client-nest';
 
 import { EnvironmentService } from '../../config/environment';

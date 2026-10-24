@@ -2,7 +2,7 @@ import { Logger } from '@nestjs/common';
 
 import { randomUUID } from 'node:crypto';
 
-import { RedisCacheService } from '@libs/nest-common';
+import { RedisCacheService } from '@libs/nest-redis-cache';
 import { TrackingService } from '@platform/analytics-client-nest';
 
 import { type Incident, MONITOR_REDIS } from '../../config/redis-keys';

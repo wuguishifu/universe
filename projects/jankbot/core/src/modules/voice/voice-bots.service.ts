@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { RedisCacheService } from '@libs/nest-common';
+import { RedisCacheService } from '@libs/nest-redis-cache';
 import { JANKBOT_REDIS, voiceBotId } from '@projects/jankbot-contracts';
 
 import { EnvironmentService } from '../../config/environment';

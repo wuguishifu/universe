@@ -95,6 +95,9 @@
     },
     {
       "path": "./libs/nest/s3"
+    },
+    {
+      "path": "./libs/nest/redis-cache"
     }
   ],
   "compilerOptions": {

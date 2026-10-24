@@ -518,15 +518,18 @@ importers:
 
   libs/nest-common:
     dependencies:
-      '@libs/redis-cache':
-        specifier: workspace:*
-        version: link:../redis-cache
       axios:
         specifier: '*'
         version: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       axios-retry:
         specifier: '*'
         version: 4.5.0(axios@1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))
+
+  libs/nest/redis-cache:
+    dependencies:
+      '@libs/redis-cache':
+        specifier: workspace:*
+        version: link:../../redis-cache
       ioredis:
         specifier: '*'
         version: 6.0.0(supports-color@8.1.1)
@@ -664,6 +667,9 @@ importers:
       '@libs/nest-common':
         specifier: workspace:*
         version: link:../../../libs/nest-common
+      '@libs/nest-redis-cache':
+        specifier: workspace:*
+        version: link:../../../libs/nest/redis-cache
       '@libs/redis-cache':
         specifier: workspace:*
         version: link:../../../libs/redis-cache
@@ -688,6 +694,9 @@ importers:
       '@libs/nest-common':
         specifier: workspace:*
         version: link:../../../libs/nest-common
+      '@libs/nest-redis-cache':
+        specifier: workspace:*
+        version: link:../../../libs/nest/redis-cache
       '@libs/nest-s3':
         specifier: workspace:*
         version: link:../../../libs/nest/s3
@@ -727,6 +736,9 @@ importers:
       '@libs/nest-common':
         specifier: workspace:*
         version: link:../../../libs/nest-common
+      '@libs/nest-redis-cache':
+        specifier: workspace:*
+        version: link:../../../libs/nest/redis-cache
       '@libs/queue':
         specifier: workspace:*
         version: link:../../../libs/queue

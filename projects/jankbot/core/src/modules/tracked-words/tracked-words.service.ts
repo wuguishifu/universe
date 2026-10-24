@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { RedisCacheService } from '@libs/nest-common';
+import { RedisCacheService } from '@libs/nest-redis-cache';
 import { TrackingService } from '@platform/analytics-client-nest';
 import { api } from '@platform/convex-contracts';
 
