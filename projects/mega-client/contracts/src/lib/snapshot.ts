@@ -10,6 +10,11 @@ export const transferSchema = z.object({
   destinationPath: z.string(),
   /** A TransferState, or whatever else MEGAcmd printed. */
   state: z.string(),
+  /**
+   * Unfinished and not paused itself, but held by "pause all" (see parsePausedQueues): it won't
+   * move until the queue is resumed, whatever its state says.
+   */
+  heldByQueue: z.boolean(),
   percent: z.number(),
   totalBytes: z.number().nullable(),
   /** Only while it's moving, and once there are a few polls to go on. */
@@ -28,6 +33,8 @@ export const snapshotSchema = z.object({
   account: accountSchema,
   /** Unfinished ones in queue order, then the most recently finished. */
   transfers: transferSchema.array(),
+  /** "Pause all" is on. MEGAcmd only says so while there's a transfer listed. */
+  queuePaused: z.boolean(),
   /** Why the last read of MEGAcmd failed, if it did. The rest is then from the read before. */
   error: z.string().nullable(),
   generatedAt: z.iso.datetime(),

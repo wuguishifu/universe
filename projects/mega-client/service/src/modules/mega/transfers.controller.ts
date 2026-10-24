@@ -27,6 +27,7 @@ export class TransfersController {
         after(() => this.transfersService.cancel(tag)),
       pauseAll: () => after(() => this.transfersService.pauseAll()),
       resumeAll: () => after(() => this.transfersService.resumeAll()),
+      cancelAll: () => after(() => this.transfersService.cancelAll()),
     });
   }
 }

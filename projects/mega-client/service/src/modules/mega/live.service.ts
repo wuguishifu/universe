@@ -47,6 +47,7 @@ export class LiveService {
   /** What a failed read falls back on. */
   private account: Account = { loggedIn: false, email: null };
   private transfers: Transfer[] = [];
+  private queuePaused = false;
   private lastError: string | null = null;
 
   /** Shared, so polling starts with the first client and stops when the last one leaves. */
@@ -89,7 +90,10 @@ export class LiveService {
       this.transfersService.list(),
     ]);
     if (account.status === 'fulfilled') this.account = account.value;
-    if (transfers.status === 'fulfilled') this.transfers = transfers.value;
+    if (transfers.status === 'fulfilled') {
+      this.transfers = transfers.value.transfers;
+      this.queuePaused = transfers.value.queuePaused;
+    }
 
     const errors = [account, transfers].flatMap((result) =>
       result.status === 'rejected' ? [messageOf(result.reason)] : [],
@@ -104,6 +108,7 @@ export class LiveService {
     return {
       account: this.account,
       transfers: this.transfers,
+      queuePaused: this.queuePaused,
       error,
       generatedAt: new Date().toISOString(),
     };

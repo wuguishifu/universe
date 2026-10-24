@@ -24,6 +24,11 @@ MEGAcmd has no events, so the service still polls, but once for everyone and onl
 is watching. The parser and the speed estimate live in
 [mega-client-contracts](../contracts/src/lib), with tests.
 
+"Pause all" (`transfers -p -a`) pauses MEGA's whole queue rather than each transfer: their states
+stay ACTIVE/QUEUED, and the only sign of it is a "DOWNLOADS ARE PAUSED" line above the list, which
+is where `queuePaused` and each transfer's `heldByQueue` come from. "Resume all" lifts that and also
+resumes transfers paused on their own, which `-r -a` alone doesn't touch.
+
 The list shows unfinished transfers in queue order, then the 10 most recently finished. Downloads go
 into `DOWNLOAD_PATH`. The MEGA session lives in MEGAcmd's `$HOME/.megaCmd`, so mount `HOME` to
 keep it across restarts.

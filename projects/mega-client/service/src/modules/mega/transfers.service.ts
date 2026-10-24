@@ -5,11 +5,13 @@ import {
   etaSeconds,
   isFinished,
   type ParsedTransfer,
+  parsePausedQueues,
   parseTransfers,
   type Transfer,
   TRANSFER_COLUMNS,
   TransferRates,
   TransferState,
+  TransferType,
 } from '@projects/mega-client-contracts';
 import { EnvironmentService } from '../../environment/environment';
 import { MegaCliService } from './mega-cli.service';
@@ -42,9 +44,26 @@ export class TransfersService {
     private readonly environmentService: EnvironmentService,
   ) {}
 
-  /** Unfinished transfers in queue order (tags only go up), then the newest finished ones. */
-  public async list(): Promise<Transfer[]> {
-    const parsed = parseTransfers(await this.megaCli.run(listArgs));
+  /**
+   * Unfinished transfers in queue order (tags only go up), then the newest finished ones, and
+   * whether "pause all" is on.
+   */
+  public async list(): Promise<{
+    transfers: Transfer[];
+    queuePaused: boolean;
+  }> {
+    const stdout = await this.megaCli.run(listArgs);
+    const parsed = parseTransfers(stdout);
+    const pausedQueues = parsePausedQueues(stdout);
+
+    const heldByQueue = ({ type, state }: ParsedTransfer) =>
+      !isFinished(state) &&
+      state !== TransferState.Paused &&
+      ((type === TransferType.Download && pausedQueues.downloads) ||
+        (type === TransferType.Upload && pausedQueues.uploads));
+    // A held transfer still says ACTIVE, but it isn't moving.
+    const moving = (transfer: ParsedTransfer) =>
+      transfer.state === TransferState.Active && !heldByQueue(transfer);
 
     this.rates.record(
       Date.now(),
@@ -52,13 +71,7 @@ export class TransfersService {
         const bytes = bytesDone(transfer);
         return bytes === null
           ? []
-          : [
-              {
-                tag: transfer.tag,
-                bytes,
-                moving: transfer.state === TransferState.Active,
-              },
-            ];
+          : [{ tag: transfer.tag, bytes, moving: moving(transfer) }];
       }),
     );
 
@@ -70,17 +83,17 @@ export class TransfersService {
       .sort((a, b) => byTag(b, a))
       .slice(0, FINISHED_SHOWN);
 
-    return [...unfinished, ...finished].map((transfer) => {
-      const bytesPerSecond =
-        transfer.state === TransferState.Active
-          ? this.rates.bytesPerSecond(transfer.tag)
-          : null;
+    const transfers = [...unfinished, ...finished].map((transfer) => {
+      const bytesPerSecond = moving(transfer)
+        ? this.rates.bytesPerSecond(transfer.tag)
+        : null;
       const bytes = bytesDone(transfer);
       return {
         ...transfer,
         name:
           posix.basename(transfer.destinationPath || transfer.sourcePath) ||
           transfer.sourcePath,
+        heldByQueue: heldByQueue(transfer),
         bytesPerSecond,
         etaSeconds:
           bytes === null || transfer.totalBytes === null
@@ -88,6 +101,11 @@ export class TransfersService {
             : etaSeconds(transfer.totalBytes - bytes, bytesPerSecond),
       };
     });
+
+    return {
+      transfers,
+      queuePaused: pausedQueues.downloads || pausedQueues.uploads,
+    };
   }
 
   /** `url` has to be a MEGA link (see the contract): anything starting with "-" is an option. */
@@ -112,11 +130,26 @@ export class TransfersService {
     await this.megaCli.run(['transfers', '-c', tag]);
   }
 
+  /** Pauses the queue (see parsePausedQueues), not each transfer. */
   public async pauseAll(): Promise<void> {
     await this.megaCli.run(['transfers', '-p', '-a']);
   }
 
+  /**
+   * `-r -a` only lifts the queue's pause, so transfers paused on their own are resumed too:
+   * otherwise "resume all" would leave them where they were.
+   */
   public async resumeAll(): Promise<void> {
     await this.megaCli.run(['transfers', '-r', '-a']);
+    const paused = (await this.list()).transfers
+      .filter(({ state }) => state === TransferState.Paused)
+      .map(({ tag }) => tag);
+    if (paused.length > 0) {
+      await this.megaCli.run(['transfers', '-r', ...paused]);
+    }
+  }
+
+  public async cancelAll(): Promise<void> {
+    await this.megaCli.run(['transfers', '-c', '-a']);
   }
 }

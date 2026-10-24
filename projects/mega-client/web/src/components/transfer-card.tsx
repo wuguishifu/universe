@@ -70,10 +70,11 @@ export function TransferCard({ transfer }: { transfer: Transfer }) {
 
   const finished = isFinished(state);
   const Icon = typeIcons[transfer.type];
-  const { label, className } = states[state] ?? {
-    label: state,
-    className: 'text-muted-foreground',
-  };
+  const { heldByQueue } = transfer;
+  // MEGAcmd still says ACTIVE or QUEUED for these: "pause all" holds the queue, not each transfer.
+  const { label, className } = heldByQueue
+    ? { label: 'Paused with all', className: 'text-warning' }
+    : (states[state] ?? { label: state, className: 'text-muted-foreground' });
 
   const details = [
     `${percent.toFixed(percent < 10 ? 2 : 1)}%`,
@@ -108,7 +109,8 @@ export function TransferCard({ transfer }: { transfer: Transfer }) {
         </div>
         {!finished && !confirmingCancel && (
           <div className="-my-1 -mr-1 flex shrink-0 gap-1">
-            {state === TransferState.Paused ? (
+            {/* Held ones only move again with "resume all", so there's nothing to toggle here. */}
+            {heldByQueue ? null : state === TransferState.Paused ? (
               <Button
                 variant="ghost"
                 size="icon"
@@ -155,7 +157,7 @@ export function TransferCard({ transfer }: { transfer: Transfer }) {
           <div
             className={cn(
               'h-full rounded-full transition-[width] duration-500',
-              state === TransferState.Active
+              state === TransferState.Active && !heldByQueue
                 ? 'bg-primary'
                 : 'bg-muted-foreground/50',
             )}

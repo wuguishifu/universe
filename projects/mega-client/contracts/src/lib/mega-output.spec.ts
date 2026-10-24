@@ -5,6 +5,7 @@ import {
   cleanErrorOutput,
   COLUMN_SEPARATOR,
   isMegaLink,
+  parsePausedQueues,
   parseProgress,
   parseSize,
   parseTransfers,
@@ -147,6 +148,48 @@ describe('parseTransfers', () => {
     );
     assert.equal(transfer.type, 'unknown');
     assert.equal(transfer.state, 'ACTIVE');
+  });
+});
+
+describe('parsePausedQueues', () => {
+  const list = (notice: string) =>
+    [
+      notice,
+      row('TYPE', 'TAG', 'SOURCEPATH', 'DESTINYPATH', 'PROGRESS', 'STATE'),
+      row('⇓', '23', 'a.mkv', '/downloads/a.mkv', '1.17% of 4.75 GB', 'ACTIVE'),
+    ].join('\n');
+
+  for (const [notice, expected] of [
+    ['            DOWNLOADS ARE PAUSED ', { downloads: true, uploads: false }],
+    ['            UPLOADS ARE PAUSED ', { downloads: false, uploads: true }],
+    [
+      '            DOWNLOADS AND UPLOADS ARE PAUSED ',
+      { downloads: true, uploads: true },
+    ],
+    ['', { downloads: false, uploads: false }],
+  ] as const) {
+    it(`reads "${notice.trim() || 'no notice'}"`, () =>
+      assert.deepEqual(parsePausedQueues(list(notice)), expected));
+  }
+
+  it("isn't fooled by a file named like the notice", () => {
+    assert.deepEqual(
+      parsePausedQueues(
+        row(
+          '⇓',
+          '1',
+          'DOWNLOADS ARE PAUSED',
+          '/downloads/DOWNLOADS ARE PAUSED',
+          '1.00% of 1.00 MB',
+          'ACTIVE',
+        ),
+      ),
+      { downloads: false, uploads: false },
+    );
+  });
+
+  it("doesn't count the notice as a transfer", () => {
+    assert.equal(parseTransfers(list('  DOWNLOADS ARE PAUSED ')).length, 1);
   });
 });
 

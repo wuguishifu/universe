@@ -131,6 +131,25 @@ export function parseTransfers(stdout: string): ParsedTransfer[] {
   });
 }
 
+/**
+ * `transfers -p -a` pauses the whole queue rather than each transfer, so their STATE stays ACTIVE or
+ * QUEUED. The only sign of it is a "DOWNLOADS AND UPLOADS ARE PAUSED" line above the list, which
+ * MEGAcmd prints only when there's at least one transfer to list.
+ */
+export function parsePausedQueues(stdout: string): {
+  downloads: boolean;
+  uploads: boolean;
+} {
+  const line =
+    stdout.match(
+      /^\s*((?:DOWNLOADS|UPLOADS)(?: AND UPLOADS)?) ARE PAUSED\s*$/m,
+    )?.[1] ?? '';
+  return {
+    downloads: line.includes('DOWNLOADS'),
+    uploads: line.includes('UPLOADS'),
+  };
+}
+
 /** `mega-exec whoami` prints "Account e-mail: someone@example.com". */
 export function parseWhoAmI(stdout: string): string | null {
   return stdout.match(/e-?mail:\s*(\S+@\S+)/i)?.[1] ?? null;

@@ -1,5 +1,6 @@
 import {
   CircleUser,
+  CircleX,
   CloudDownload,
   Pause,
   Play,
@@ -9,7 +10,7 @@ import {
 import { type ReactNode, useState } from 'react';
 import { Toaster } from 'sonner';
 import { Button, cn, Spinner } from '@libs/ui-web';
-import { TransferState } from '@projects/mega-client-contracts';
+import { isFinished, TransferState } from '@projects/mega-client-contracts';
 import { AccountDrawer } from './components/account-drawer';
 import { QueueForm } from './components/queue-form';
 import { TransferCard } from './components/transfer-card';
@@ -27,11 +28,14 @@ export function App() {
   const { snapshot, connection, error } = useLiveSnapshot();
   const [accountOpen, setAccountOpen] = useState(false);
 
-  const pauseAll = useApiMutation(() =>
-    expect(api.transfers.pauseAll(), 200),
-  );
+  const pauseAll = useApiMutation(() => expect(api.transfers.pauseAll(), 200));
   const resumeAll = useApiMutation(() =>
     expect(api.transfers.resumeAll(), 200),
+  );
+  const [confirmingCancelAll, setConfirmingCancelAll] = useState(false);
+  const cancelAll = useApiMutation(
+    () => expect(api.transfers.cancelAll(), 200),
+    { onSuccess: () => setConfirmingCancelAll(false) },
   );
 
   if (!snapshot) {
@@ -49,12 +53,25 @@ export function App() {
     );
   }
 
-  const { account, transfers } = snapshot;
-  const anyMoving = transfers.some(({ state }) => movingStates.has(state));
-  const anyPaused = transfers.some(
+  const { account, transfers, queuePaused } = snapshot;
+  const unfinished = transfers.filter(({ state }) => !isFinished(state));
+  const anyMoving = unfinished.some(
+    ({ state, heldByQueue }) => movingStates.has(state) && !heldByQueue,
+  );
+  const anyPaused = unfinished.some(
     ({ state }) => state === TransferState.Paused,
   );
-  const bulkPending = pauseAll.isPending || resumeAll.isPending;
+  // Resume wins while the queue is paused, even if something's still moving: it's the one that
+  // undoes "pause all". Resume all also resumes the ones paused on their own.
+  const bulkAction = queuePaused
+    ? 'resume'
+    : anyMoving
+      ? 'pause'
+      : anyPaused
+        ? 'resume'
+        : null;
+  const bulkPending =
+    pauseAll.isPending || resumeAll.isPending || cancelAll.isPending;
 
   return (
     <main className="mx-auto grid max-w-2xl grid-cols-1 gap-4 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] sm:gap-6 sm:py-8">
@@ -64,7 +81,7 @@ export function App() {
           Mega Client
         </h1>
         <div className="flex min-w-0 items-center gap-1">
-          {anyMoving ? (
+          {bulkAction === 'pause' && (
             <Button
               variant="ghost"
               size="icon"
@@ -74,18 +91,28 @@ export function App() {
             >
               <Pause className="h-5 w-5" />
             </Button>
-          ) : (
-            anyPaused && (
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Resume all"
-                disabled={bulkPending}
-                onClick={() => resumeAll.mutate(undefined)}
-              >
-                <Play className="h-5 w-5" />
-              </Button>
-            )
+          )}
+          {bulkAction === 'resume' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Resume all"
+              disabled={bulkPending}
+              onClick={() => resumeAll.mutate(undefined)}
+            >
+              <Play className="h-5 w-5" />
+            </Button>
+          )}
+          {unfinished.length > 0 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Cancel all"
+              disabled={bulkPending || confirmingCancelAll}
+              onClick={() => setConfirmingCancelAll(true)}
+            >
+              <CircleX className="h-5 w-5" />
+            </Button>
           )}
           <Button
             variant="ghost"
@@ -105,6 +132,34 @@ export function App() {
           </Button>
         </div>
       </header>
+
+      {confirmingCancelAll && unfinished.length > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-destructive/10 p-2 pl-4 text-sm">
+          <span>
+            Cancel{' '}
+            {unfinished.length === 1 ? 'the' : `all ${unfinished.length}`}{' '}
+            unfinished transfer{unfinished.length === 1 ? '' : 's'}?
+          </span>
+          <div className="flex shrink-0 gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={cancelAll.isPending}
+              onClick={() => setConfirmingCancelAll(false)}
+            >
+              Keep
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={cancelAll.isPending}
+              onClick={() => cancelAll.mutate(undefined)}
+            >
+              Cancel all
+            </Button>
+          </div>
+        </div>
+      )}
 
       {connection === 'disconnected' && (
         <Banner icon={<WifiOff className="h-4 w-4" aria-hidden />}>

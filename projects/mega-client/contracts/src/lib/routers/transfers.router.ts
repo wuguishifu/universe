@@ -44,13 +44,23 @@ export const transfersRouter = c.router(
     pauseAll: {
       method: 'POST',
       path: '/pause-all',
+      description:
+        'Pauses the whole queue, which also holds anything queued after it.',
       body: c.noBody(),
       responses,
     },
     resumeAll: {
       method: 'POST',
       path: '/resume-all',
+      description:
+        'Resumes the queue and every transfer that was paused on its own.',
       body: c.noBody(),
+      responses,
+    },
+    cancelAll: {
+      method: 'DELETE',
+      path: '',
+      description: 'Cancels every download and upload. Syncs are left alone.',
       responses,
     },
   },

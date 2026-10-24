@@ -52,10 +52,9 @@ function LoggedIn({
   account: Account;
   onDone: () => void;
 }) {
-  const logout = useApiMutation(
-    () => expect(api.account.logout(), 200),
-    { onSuccess: onDone },
-  );
+  const logout = useApiMutation(() => expect(api.account.logout(), 200), {
+    onSuccess: onDone,
+  });
   return (
     <div className="grid gap-4 p-4">
       <p className="break-all rounded-md border px-3 py-2 text-sm">
