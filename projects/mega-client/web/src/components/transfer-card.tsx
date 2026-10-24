@@ -19,6 +19,7 @@ import {
 import { api, expect } from '../lib/api';
 import { formatBytes, formatEta, formatSpeed } from '../lib/format';
 import { useApiMutation } from '../lib/use-api-mutation';
+import { ConfirmCancelDialog } from './confirm-cancel-dialog';
 
 const typeIcons = {
   [TransferType.Download]: ArrowDownToLine,
@@ -73,7 +74,7 @@ export function TransferCard({ transfer }: { transfer: Transfer }) {
   const { heldByQueue } = transfer;
   // MEGAcmd still says ACTIVE or QUEUED for these: "pause all" holds the queue, not each transfer.
   const { label, className } = heldByQueue
-    ? { label: 'Paused with all', className: 'text-warning' }
+    ? { label: 'Globally paused', className: 'text-warning' }
     : (states[state] ?? { label: state, className: 'text-muted-foreground' });
 
   const details = [
@@ -100,14 +101,14 @@ export function TransferCard({ transfer }: { transfer: Transfer }) {
         />
         <div className="min-w-0 flex-1">
           <p
-            className="break-words text-sm font-medium"
+            className="wrap-break-word text-sm font-medium"
             title={transfer.destinationPath}
           >
             {transfer.name}
           </p>
           <p className={cn('mt-0.5 text-xs font-medium', className)}>{label}</p>
         </div>
-        {!finished && !confirmingCancel && (
+        {!finished && (
           <div className="-my-1 -mr-1 flex shrink-0 gap-1">
             {/* Held ones only move again with "resume all", so there's nothing to toggle here. */}
             {heldByQueue ? null : state === TransferState.Paused ? (
@@ -170,29 +171,15 @@ export function TransferCard({ transfer }: { transfer: Transfer }) {
         {details.join(' · ')}
       </p>
 
-      {confirmingCancel && (
-        <div className="flex items-center justify-between gap-3 rounded-md bg-destructive/10 p-2 pl-3 text-sm">
-          <span>Cancel this transfer?</span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={cancel.isPending}
-              onClick={() => setConfirmingCancel(false)}
-            >
-              Keep
-            </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              disabled={cancel.isPending}
-              onClick={() => cancel.mutate(undefined)}
-            >
-              Cancel it
-            </Button>
-          </div>
-        </div>
-      )}
+      <ConfirmCancelDialog
+        open={confirmingCancel && !finished}
+        onOpenChange={setConfirmingCancel}
+        title="Cancel transfer?"
+        description={transfer.name}
+        confirmLabel="Cancel it"
+        pending={cancel.isPending}
+        onConfirm={() => cancel.mutate(undefined)}
+      />
     </li>
   );
 }

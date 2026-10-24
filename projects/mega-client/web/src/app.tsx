@@ -12,6 +12,7 @@ import { Toaster } from 'sonner';
 import { Button, cn, Spinner } from '@libs/ui-web';
 import { isFinished, TransferState } from '@projects/mega-client-contracts';
 import { AccountDrawer } from './components/account-drawer';
+import { ConfirmCancelDialog } from './components/confirm-cancel-dialog';
 import { QueueForm } from './components/queue-form';
 import { TransferCard } from './components/transfer-card';
 import { api, expect } from './lib/api';
@@ -108,7 +109,7 @@ export function App() {
               variant="ghost"
               size="icon"
               aria-label="Cancel all"
-              disabled={bulkPending || confirmingCancelAll}
+              disabled={bulkPending}
               onClick={() => setConfirmingCancelAll(true)}
             >
               <CircleX className="h-5 w-5" />
@@ -133,33 +134,17 @@ export function App() {
         </div>
       </header>
 
-      {confirmingCancelAll && unfinished.length > 0 && (
-        <div className="flex items-center justify-between gap-3 rounded-lg bg-destructive/10 p-2 pl-4 text-sm">
-          <span>
-            Cancel{' '}
-            {unfinished.length === 1 ? 'the' : `all ${unfinished.length}`}{' '}
-            unfinished transfer{unfinished.length === 1 ? '' : 's'}?
-          </span>
-          <div className="flex shrink-0 gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={cancelAll.isPending}
-              onClick={() => setConfirmingCancelAll(false)}
-            >
-              Keep
-            </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              disabled={cancelAll.isPending}
-              onClick={() => cancelAll.mutate(undefined)}
-            >
-              Cancel all
-            </Button>
-          </div>
-        </div>
-      )}
+      <ConfirmCancelDialog
+        open={confirmingCancelAll && unfinished.length > 0}
+        onOpenChange={setConfirmingCancelAll}
+        title={
+          unfinished.length === 1 ? 'Cancel transfer?' : 'Cancel all transfers?'
+        }
+        description={`This cancels ${unfinished.length === 1 ? 'the' : `all ${unfinished.length}`} unfinished transfer${unfinished.length === 1 ? '' : 's'}.`}
+        confirmLabel="Cancel all"
+        pending={cancelAll.isPending}
+        onConfirm={() => cancelAll.mutate(undefined)}
+      />
 
       {connection === 'disconnected' && (
         <Banner icon={<WifiOff className="h-4 w-4" aria-hidden />}>
@@ -170,7 +155,7 @@ export function App() {
       {snapshot.error && (
         <Banner icon={<TriangleAlert className="h-4 w-4" aria-hidden />}>
           <p className="font-medium">Couldn't read MEGAcmd</p>
-          <p className="mt-1 whitespace-pre-wrap break-words text-foreground/80">
+          <p className="mt-1 whitespace-pre-wrap wrap-break-word text-foreground/80">
             {snapshot.error}
           </p>
         </Banner>
