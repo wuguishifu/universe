@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # usage: transcribe.sh <phrase-dir>   — runs whisper (with DTW token timestamps) on <dir>/wav/*.wav into <dir>/jdtw/*.json
 set -euo pipefail
-DIR=$1; B="$(cd "$(dirname "$0")/../../bin" && pwd)"
+DIR=$1; B="$(cd "$(dirname "$0")/../../../bin" && pwd)"
 mkdir -p "$DIR/jdtw"
 for f in "$DIR"/wav/*.wav; do
   n=$(basename "$f" .wav)
