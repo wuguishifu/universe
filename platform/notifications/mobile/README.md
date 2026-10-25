@@ -63,6 +63,7 @@ Ad hoc builds stop launching when their provisioning profile expires (after a ye
 device only gets builds made after it's registered with `eas device:create`.
 
 Push notifications don't work in a simulator or in Expo Go, so test on a phone with a dev client.
+To send one, use [`tools/scripts/notifications/send.mjs`](../../../tools/scripts/notifications).
 
 ## TODO: Android
 
