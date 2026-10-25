@@ -2,7 +2,7 @@
 # Builds whisper-cli for this machine and downloads whisper models into bin/, for running the
 # transcription worker (platform/transcription/worker) locally. bin/ is gitignored.
 #
-# Usage: tools/scripts/setup-whisper.sh [model...]   (default: base.en large-v3-turbo-q8_0)
+# Usage: tools/scripts/transcription/setup-whisper.sh [model...]   (default: base.en large-v3-turbo-q8_0)
 #
 # Models are named like WHISPER_MODELS (ggml-<model>.bin), e.g. small.en-q8_0. large-v3-turbo-q8_0
 # is ~874MB, and is what the mini runs for the most accurate transcripts and word timings.
@@ -10,7 +10,7 @@
 # Re-running rebuilds whisper-cli and skips models that are already downloaded.
 set -eu
 
-ROOT=$(cd "$(dirname "$0")/../.." && pwd)
+ROOT=$(cd "$(dirname "$0")/../../.." && pwd)
 BIN="$ROOT/bin"
 # Production runs Homebrew's whisper.cpp on the mini (see its Brewfile in the homelab repo), so keep
 # this in step with `brew list --versions whisper.cpp` there. WHISPER_CPP_VERSION overrides it.

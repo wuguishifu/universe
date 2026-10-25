@@ -2,7 +2,7 @@
 # Installs the speaker diarizer (platform/transcription/diarizer) and pyannote's model into bin/, for
 # running the transcription worker's `diarize` option locally. bin/ is gitignored.
 #
-# Usage: tools/scripts/setup-diarizer.sh
+# Usage: tools/scripts/transcription/setup-diarizer.sh
 #
 # Needs uv (`brew install uv`), which brings its own Python, so the system's Python doesn't matter.
 # The model is gated: accept its terms on https://huggingface.co/pyannote/speaker-diarization-community-1
@@ -13,7 +13,7 @@
 # it when its dependencies (uv.lock) change. The model is skipped once it's at REVISION.
 set -eu
 
-ROOT=$(cd "$(dirname "$0")/../.." && pwd)
+ROOT=$(cd "$(dirname "$0")/../../.." && pwd)
 BIN="$ROOT/bin"
 VENV="$BIN/diarizer-venv"
 MODEL_DIR="$BIN/speaker-diarization-community-1"
