@@ -38,7 +38,7 @@ function Root() {
   return (
     <PushRegistrationProvider channels={channels}>
       <StatusBar style="auto" />
-      <Stack>
+      <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" options={{ title: 'Notifications' }} />
       </Stack>
     </PushRegistrationProvider>

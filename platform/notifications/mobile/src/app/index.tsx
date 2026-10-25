@@ -11,6 +11,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { api } from '@platform/convex-contracts';
 
@@ -25,29 +26,30 @@ export default function HomeScreen() {
   const { registration, register } = usePushRegistration();
 
   return (
-    <ScrollView
-      style={{ backgroundColor: colors.background }}
-      contentContainerStyle={styles.content}
-      contentInsetAdjustmentBehavior="automatic"
+    <SafeAreaView
+      edges={['top', 'bottom']}
+      style={{ flex: 1, backgroundColor: colors.background }}
     >
-      <Text style={[styles.sectionTitle, { color: colors.muted }]}>
-        THIS DEVICE
-      </Text>
-      <View style={[styles.card, { backgroundColor: colors.card }]}>
-        <RegistrationStatus registration={registration} onRetry={register} />
-      </View>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={[styles.sectionTitle, { color: colors.muted }]}>
+          THIS DEVICE
+        </Text>
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <RegistrationStatus registration={registration} onRetry={register} />
+        </View>
 
-      {registration.status === 'registered' && (
-        <>
-          <Text style={[styles.sectionTitle, { color: colors.muted }]}>
-            CHANNELS
-          </Text>
-          <View style={[styles.card, { backgroundColor: colors.card }]}>
-            <Channels expoPushToken={registration.expoPushToken} />
-          </View>
-        </>
-      )}
-    </ScrollView>
+        {registration.status === 'registered' && (
+          <>
+            <Text style={[styles.sectionTitle, { color: colors.muted }]}>
+              CHANNELS
+            </Text>
+            <View style={[styles.card, { backgroundColor: colors.card }]}>
+              <Channels expoPushToken={registration.expoPushToken} />
+            </View>
+          </>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -143,18 +145,20 @@ function Channels({ expoPushToken }: { expoPushToken: string }) {
             {channel.description}
           </Text>
         </View>
-        <Switch
-          value={!muted}
-          onValueChange={async (enabled) => {
-            await setMutedChannels({
-              deviceSecret,
-              expoPushToken,
-              mutedChannels: enabled
-                ? device.mutedChannels.filter((id) => id !== channel.id)
-                : [...device.mutedChannels, channel.id],
-            });
-          }}
-        />
+        <View>
+          <Switch
+            value={!muted}
+            onValueChange={async (enabled) => {
+              await setMutedChannels({
+                deviceSecret,
+                expoPushToken,
+                mutedChannels: enabled
+                  ? device.mutedChannels.filter((id) => id !== channel.id)
+                  : [...device.mutedChannels, channel.id],
+              });
+            }}
+          />
+        </View>
       </View>
     );
   });
@@ -196,6 +200,7 @@ const darkColors: typeof lightColors = {
 const styles = StyleSheet.create({
   content: {
     padding: 16,
+    flexGrow: 1,
   },
   sectionTitle: {
     fontSize: 13,
