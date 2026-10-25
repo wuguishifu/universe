@@ -19,8 +19,8 @@ export class TransfersController {
       this.liveService.afterChange(change);
 
     return tsRestHandler(megaRootRouter.transfers, {
-      queue: ({ body: { url } }) =>
-        after(() => this.transfersService.queue(url)),
+      queue: ({ body: { urls } }) =>
+        after(() => this.transfersService.queue(urls)),
       pause: ({ params: { tag } }) =>
         after(() => this.transfersService.pause(tag)),
       resume: ({ params: { tag } }) =>

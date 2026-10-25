@@ -6,6 +6,7 @@ import {
   cleanErrorOutput,
   COLUMN_SEPARATOR,
   isMegaLink,
+  parseMegaLinks,
   parsePausedQueues,
   parseProgress,
   parseSize,
@@ -258,4 +259,65 @@ describe('isMegaLink', () => {
   ]) {
     it(`rejects ${link}`, () => assert.equal(isMegaLink(link), false));
   }
+});
+
+describe('parseMegaLinks', () => {
+  const links = [
+    'https://mega.nz/file/1#1',
+    'https://mega.nz/file/2#2',
+    'https://mega.nz/file/3#3',
+  ];
+
+  it('reads one link per line', () => {
+    assert.deepEqual(
+      parseMegaLinks(
+        [
+          '01 https://mega.nz/file/1#1 hello world',
+          '02 https://mega.nz/file/2#2 hello',
+          '03 https://mega.nz/file/3#3 hello',
+        ].join('\n'),
+      ),
+      links,
+    );
+  });
+
+  it('reads commas and line breaks alike', () => {
+    assert.deepEqual(
+      parseMegaLinks(
+        '01 https://mega.nz/file/1#1 hello world, 02 https://mega.nz/file/2#2 hello\r\n03 https://mega.nz/file/3#3 hello',
+      ),
+      links,
+    );
+  });
+
+  it('drops items with no link', () => {
+    assert.deepEqual(
+      parseMegaLinks(
+        [
+          '01 https://mega.nz/file/1#1 hello, world, 02 https://mega.nz/file/2#2 hello',
+          'aljekajgleka',
+          '',
+          '03 https://mega.nz/file/3#3 hello',
+        ].join('\n'),
+      ),
+      links,
+    );
+  });
+
+  it('takes a bare link', () => {
+    assert.deepEqual(parseMegaLinks('  https://mega.nz/file/1#1  '), [
+      links[0],
+    ]);
+  });
+
+  it('keeps each link once', () => {
+    assert.deepEqual(
+      parseMegaLinks('https://mega.nz/file/1#1, https://mega.nz/file/1#1'),
+      [links[0]],
+    );
+  });
+
+  it('finds nothing in text without links', () => {
+    assert.deepEqual(parseMegaLinks('hello, http://mega.nz/file/1#1 -a'), []);
+  });
 });

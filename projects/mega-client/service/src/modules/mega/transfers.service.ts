@@ -112,14 +112,19 @@ export class TransfersService {
     };
   }
 
-  /** `url` has to be a MEGA link (see the contract): anything starting with "-" is an option. */
-  public async queue(url: string): Promise<void> {
-    await this.megaCli.run([
-      'get',
-      '-q',
-      url,
-      this.environmentService.environment.downloadPath,
-    ]);
+  /**
+   * Each of `urls` has to be a MEGA link (see the contract): anything starting with "-" is an option.
+   * One at a time, so they queue in order. A link MEGAcmd refuses stops the rest.
+   */
+  public async queue(urls: string[]): Promise<void> {
+    for (const url of urls) {
+      await this.megaCli.run([
+        'get',
+        '-q',
+        url,
+        this.environmentService.environment.downloadPath,
+      ]);
+    }
   }
 
   public async pause(tag: string): Promise<void> {

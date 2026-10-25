@@ -2,8 +2,8 @@ import { ClipboardPaste } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { Button, Input } from '@libs/ui-web';
-import { isMegaLink } from '@projects/mega-client-contracts';
+import { Button, Textarea } from '@libs/ui-web';
+import { parseMegaLinks } from '@projects/mega-client-contracts';
 
 import { api, expect } from '../lib/api';
 import { useApiMutation } from '../lib/use-api-mutation';
@@ -13,24 +13,33 @@ const canPaste = () =>
   window.isSecureContext && typeof navigator.clipboard?.readText === 'function';
 
 export function QueueForm() {
-  const [url, setUrl] = useState('');
-  const trimmed = url.trim();
-  const valid = isMegaLink(trimmed);
+  const [text, setText] = useState('');
+  const links = parseMegaLinks(text);
 
   const queue = useApiMutation(
-    (link: string) => expect(api.transfers.queue({ body: { url: link } }), 200),
+    ({ urls }: { text: string; urls: string[] }) =>
+      expect(api.transfers.queue({ body: { urls } }), 200),
     {
-      onSuccess: (link) => {
-        // The next link may already be in there.
-        setUrl((current) => (current.trim() === link ? '' : current));
-        toast.success('Queued');
+      onSuccess: ({ text: queued, urls }) => {
+        // More links may already be in there.
+        setText((current) => (current === queued ? '' : current));
+        toast.success(urls.length === 1 ? 'Queued' : `Queued ${urls.length}`);
       },
     },
   );
 
+  const submit = () => {
+    if (links.length > 0 && !queue.isPending) {
+      queue.mutate({ text, urls: links });
+    }
+  };
+
   const paste = async () => {
     try {
-      setUrl((await navigator.clipboard.readText()).trim());
+      const pasted = (await navigator.clipboard.readText()).trim();
+      setText((current) =>
+        current.trim() ? `${current.trimEnd()}\n${pasted}` : pasted,
+      );
     } catch {
       toast.error("Couldn't read the clipboard");
     }
@@ -41,22 +50,27 @@ export function QueueForm() {
       className="flex flex-col gap-2"
       onSubmit={(event) => {
         event.preventDefault();
-        if (valid) queue.mutate(trimmed);
+        submit();
       }}
     >
       <div className="flex gap-2">
-        <Input
-          type="url"
-          inputMode="url"
+        <Textarea
+          rows={3}
           autoComplete="off"
           autoCapitalize="off"
           spellCheck={false}
-          placeholder="https://mega.nz/file/…"
-          aria-label="MEGA link"
-          value={url}
-          onChange={(event) => setUrl(event.target.value)}
+          placeholder="https://mega.nz/file/…, one or more"
+          aria-label="MEGA links"
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+              event.preventDefault();
+              submit();
+            }
+          }}
           // 16px keeps iOS Safari from zooming in on focus.
-          className="h-11 text-base"
+          className="text-base"
         />
         {canPaste() && (
           <Button
@@ -70,15 +84,19 @@ export function QueueForm() {
           </Button>
         )}
       </div>
-      {trimmed && !valid && (
-        <p className="text-xs text-critical">That isn't a MEGA link.</p>
+      {text.trim() && links.length === 0 && (
+        <p className="text-xs text-critical">There's no MEGA link in that.</p>
       )}
       <Button
         type="submit"
         className="h-11"
-        disabled={!valid || queue.isPending}
+        disabled={links.length === 0 || queue.isPending}
       >
-        {queue.isPending ? 'Queueing…' : 'Download'}
+        {queue.isPending
+          ? 'Queueing…'
+          : links.length > 1
+            ? `Download ${links.length}`
+            : 'Download'}
       </Button>
     </form>
   );
