@@ -116,6 +116,12 @@ export class SendNotificationProcessor extends WorkerHost {
         );
       }
     }
+    this.logger.log(
+      `Sent "${title}" to ${result.sent}/${validTokens.length} device(s)` +
+        (receipts.length > 0
+          ? `, tickets: ${receipts.map(({ ticketId }) => ticketId).join(', ')}`
+          : ''),
+    );
 
     // Neither of these throws: a failure here would retry the job and send it again. A device that
     // isn't pruned now is pruned on the next notification that hits it.
