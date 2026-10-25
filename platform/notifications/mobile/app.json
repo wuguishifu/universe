@@ -16,7 +16,7 @@
       "package": "dev.wuguishifu.notifications",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0b121b"
       }
     },
     "plugins": [
@@ -26,9 +26,9 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "imageWidth": 240,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#0b121b"
         }
       ]
     ],
