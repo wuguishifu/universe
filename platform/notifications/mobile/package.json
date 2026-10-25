@@ -4,7 +4,7 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
-    "eas-build-post-install": "cd ../../../ && node tools/scripts/eas-build-post-install.mjs . platform/notifications/mobile"
+    "eas-build-post-install": "cd ../../../ && node tools/scripts/eas-build-post-install.mjs . platform/notifications/mobile && NX_DAEMON=false pnpm nx build convex-contracts"
   },
   "dependencies": {
     "@expo/metro": "*",

@@ -59,6 +59,11 @@ eas build --profile development --platform ios
 eas build --profile production-internal --platform ios
 ```
 
+EAS only uploads what git tracks, so `@platform/convex-contracts` (a buildable lib whose `dist/`
+is gitignored) isn't there on the build machine. `eas-build-post-install` in `package.json` builds
+it after EAS installs dependencies. Any other buildable lib the app starts importing needs adding
+there too.
+
 Ad hoc builds stop launching when their provisioning profile expires (after a year), and a new
 device only gets builds made after it's registered with `eas device:create`.
 
