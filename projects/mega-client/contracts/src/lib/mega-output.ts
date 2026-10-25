@@ -208,3 +208,15 @@ export function isMegaLink(text: string): boolean {
     return false;
   }
 }
+
+/**
+ * Every MEGA link in pasted text, in order and without repeats. Items are split at commas and line
+ * breaks, then each keeps only its words that are MEGA links, so "01 https://mega.nz/file/… name"
+ * gives the link and an item with no link is dropped.
+ */
+export function parseMegaLinks(text: string): string[] {
+  const links = text
+    .split(/[,\r\n]/)
+    .flatMap((item) => item.split(/\s+/).filter(isMegaLink));
+  return [...new Set(links)];
+}

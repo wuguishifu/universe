@@ -16,9 +16,11 @@ export const transfersRouter = c.router(
     queue: {
       method: 'POST',
       path: '',
-      description: 'Downloads a MEGA link into DOWNLOAD_PATH.',
+      description: 'Downloads MEGA links into DOWNLOAD_PATH, in order.',
       body: z.object({
-        url: z.string().trim().refine(isMegaLink, 'Not a MEGA link'),
+        urls: z
+          .array(z.string().trim().refine(isMegaLink, 'Not a MEGA link'))
+          .min(1, 'No MEGA links'),
       }),
       responses,
     },
