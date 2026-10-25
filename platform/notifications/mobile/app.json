@@ -10,7 +10,10 @@
     "ios": {
       "bundleIdentifier": "dev.wuguishifu.notifications",
       "supportsTablet": false,
-      "appleTeamId": "7C3LJCLXTY"
+      "appleTeamId": "7C3LJCLXTY",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "dev.wuguishifu.notifications",
