@@ -104,6 +104,18 @@
     },
     {
       "path": "./libs/http"
+    },
+    {
+      "path": "./platform/notifications/mobile"
+    },
+    {
+      "path": "./platform/notifications/client-nest"
+    },
+    {
+      "path": "./platform/notifications/contracts"
+    },
+    {
+      "path": "./platform/notifications/service"
     }
   ],
   "compilerOptions": {

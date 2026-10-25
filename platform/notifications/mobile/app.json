@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Notifications",
+    "slug": "notifications-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "notifications",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "dev.wuguishifu.notifications",
+      "supportsTablet": false,
+      "appleTeamId": "7C3LJCLXTY",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "dev.wuguishifu.notifications",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0b121b"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-notifications",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 240,
+          "resizeMode": "contain",
+          "backgroundColor": "#0b121b"
+        }
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "8af92921-a9e6-4cf7-8f34-112239da0313"
+      }
+    },
+    "owner": "wuguishifu"
+  }
+}
