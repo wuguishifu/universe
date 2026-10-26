@@ -1,0 +1,51 @@
+# sapphire-mobile
+
+A gateway app for services on the tailnet, without running the Tailscale VPN on the phone. The app
+embeds its own Tailscale node (`tsnet`, from [`sapphire-proxy`](../proxy)) and routes every WebView
+in the app through it, so MagicDNS names (`http://sol:8080`, `https://truenas.<tailnet>.ts.net`)
+and `100.x` IPs load as if the phone were on the tailnet.
+
+**Status: rough POC.**
+
+## How it fits together
+
+```
+WebView ──(proxy override)──▶ 127.0.0.1:<port> HTTP proxy ──┬─ tailnet host? ─▶ tsnet ─▶ WireGuard/DERP ─▶ sol, truenas, …
+                                                            └─ otherwise ────▶ regular network (CDNs, fonts)
+```
+
+- `modules/sapphire-proxy` is a local Expo module wrapping the gomobile bindings
+  (`Sapphireproxy.xcframework` / `sapphireproxy.aar`). `start()` brings up the node, starts the
+  proxy, and points WebViews at it:
+  - iOS 17+: `WKWebsiteDataStore.default().proxyConfigurations` (HTTP CONNECT). `react-native-webview`
+    uses the default data store unless `incognito`.
+  - Android: `androidx.webkit.ProxyController.setProxyOverride`, process-wide.
+- A host counts as a tailnet host if it's a `100.64.0.0/10` or `fd7a:115c:a1e0::/48` IP, ends in
+  `.ts.net`, or is a bare name with no dots (a MagicDNS short name).
+- Android 11+ won't let Go enumerate network interfaces, so the Kotlin side hands the list over from
+  `java.net.NetworkInterface` first (`SetInterfaces`), the same workaround as Tailscale's own app.
+- Node state lives in Application Support (iOS) / `filesDir` (Android) under `tailscale/`, so login
+  persists across launches. The node shows up as `sapphire-mobile` in the admin console.
+
+## Running it
+
+Needs Go, Xcode, and the Android SDK + NDK. The bindings are gitignored; `prebuild` / `run-*` build
+them first.
+
+```sh
+pnpm nx run sapphire-proxy:build   # gomobile bind → modules/sapphire-proxy/{ios/Frameworks,android/libs}
+pnpm nx run sapphire-mobile:run-ios
+pnpm nx run sapphire-mobile:run-android
+```
+
+On first launch, tap **Log in to Tailscale** and approve the node. Then tap a peer to fill in its
+URL (add a port if needed) and hit **Go**.
+
+Suggested ACL: tag the node (`tag:sapphire-mobile`) and only allow it the service ports you want
+reachable from the phone.
+
+## Known gaps
+
+- No EAS config yet; EAS builds would need Go + gomobile in the build image (or prebuilt bindings).
+- iOS suspends the node in the background; it reconnects on foreground in a second or two.
+- No saved services list, tabs, or URL bar inside the browser screen.

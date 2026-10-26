@@ -1,0 +1,56 @@
+{
+  "name": "sapphire-proxy",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/sapphire/proxy",
+  "projectType": "library",
+  "tags": ["scope:client"],
+  "targets": {
+    "build-ios": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/**/*.go",
+        "{projectRoot}/go.mod",
+        "{projectRoot}/go.sum"
+      ],
+      "outputs": [
+        "{workspaceRoot}/projects/sapphire/mobile/modules/sapphire-proxy/ios/Frameworks"
+      ],
+      "options": {
+        "command": "./build.sh ios",
+        "cwd": "projects/sapphire/proxy"
+      }
+    },
+    "build-android": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/**/*.go",
+        "{projectRoot}/go.mod",
+        "{projectRoot}/go.sum"
+      ],
+      "outputs": [
+        "{workspaceRoot}/projects/sapphire/mobile/modules/sapphire-proxy/android/libs"
+      ],
+      "options": {
+        "command": "./build.sh android",
+        "cwd": "projects/sapphire/proxy"
+      }
+    },
+    "build": {
+      "executor": "nx:noop",
+      "dependsOn": ["build-ios", "build-android"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go test ./...",
+        "cwd": "projects/sapphire/proxy"
+      }
+    },
+    "vet": {
+      "executor": "nx:run-commands",
+      "options": { "command": "go vet ./...", "cwd": "projects/sapphire/proxy" }
+    }
+  }
+}

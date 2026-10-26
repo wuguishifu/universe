@@ -1,0 +1,28 @@
+{
+  "name": "sapphire-mobile",
+  "version": "0.0.1",
+  "private": true,
+  "main": "expo-router/entry",
+  "dependencies": {
+    "@expo/metro": "*",
+    "@expo/metro-runtime": "*",
+    "expo": "*",
+    "expo-build-properties": "*",
+    "expo-constants": "*",
+    "expo-dev-client": "*",
+    "expo-linking": "*",
+    "expo-router": "*",
+    "expo-splash-screen": "*",
+    "expo-status-bar": "*",
+    "expo-system-ui": "*",
+    "expo-web-browser": "*",
+    "react": "19.2.3",
+    "react-native": "*",
+    "react-native-gesture-handler": "*",
+    "react-native-reanimated": "*",
+    "react-native-safe-area-context": "*",
+    "react-native-screens": "*",
+    "react-native-webview": "*",
+    "react-native-worklets": "*"
+  }
+}

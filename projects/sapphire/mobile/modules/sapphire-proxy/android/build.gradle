@@ -1,0 +1,21 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'dev.wuguishifu.sapphire'
+version = '0.0.1'
+
+android {
+  namespace "dev.wuguishifu.sapphire.proxy"
+  defaultConfig {
+    versionCode 1
+    versionName "0.0.1"
+  }
+}
+
+dependencies {
+  // Built by `nx build-android sapphire-proxy` (gomobile bind).
+  implementation files('libs/sapphireproxy.aar')
+  implementation "androidx.webkit:webkit:1.14.0"
+}
