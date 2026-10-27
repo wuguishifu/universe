@@ -6,6 +6,7 @@
   "dependencies": {
     "@expo/metro": "*",
     "@expo/metro-runtime": "*",
+    "@projects/sapphire-proxy": "workspace:*",
     "expo": "*",
     "expo-build-properties": "*",
     "expo-constants": "*",

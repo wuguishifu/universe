@@ -4,7 +4,6 @@
   "sourceRoot": "projects/sapphire/mobile/src",
   "projectType": "application",
   "tags": ["scope:client"],
-  "implicitDependencies": ["sapphire-proxy"],
   "// targets": "to see all targets run: nx show project sapphire-mobile --web",
   "targets": {
     "prebuild": { "dependsOn": ["sapphire-proxy:build"] },

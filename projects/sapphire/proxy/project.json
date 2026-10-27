@@ -14,7 +14,7 @@
         "{projectRoot}/go.sum"
       ],
       "outputs": [
-        "{workspaceRoot}/projects/sapphire/mobile/modules/sapphire-proxy/ios/Frameworks"
+        "{projectRoot}/ios/Frameworks"
       ],
       "options": {
         "command": "./build.sh ios",
@@ -30,7 +30,7 @@
         "{projectRoot}/go.sum"
       ],
       "outputs": [
-        "{workspaceRoot}/projects/sapphire/mobile/modules/sapphire-proxy/android/libs"
+        "{projectRoot}/android/libs"
       ],
       "options": {
         "command": "./build.sh android",

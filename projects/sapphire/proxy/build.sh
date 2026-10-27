@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# Builds the gomobile bindings into the sapphire-mobile native module.
+# Builds the gomobile bindings into this package's native module dirs.
 #   ./build.sh ios|android|all
 set -euo pipefail
 
 cd "$(dirname "$0")"
-MODULE_DIR=../mobile/modules/sapphire-proxy
 export PATH="$(go env GOPATH)/bin:$PATH"
 
 if ! command -v gomobile >/dev/null; then
@@ -13,10 +12,10 @@ if ! command -v gomobile >/dev/null; then
 fi
 
 build_ios() {
-  mkdir -p "$MODULE_DIR/ios/Frameworks"
-  rm -rf "$MODULE_DIR/ios/Frameworks/Sapphireproxy.xcframework"
+  mkdir -p "ios/Frameworks"
+  rm -rf "ios/Frameworks/Sapphireproxy.xcframework"
   gomobile bind -target=ios,iossimulator -iosversion=15.1 -ldflags="-s -w" \
-    -o "$MODULE_DIR/ios/Frameworks/Sapphireproxy.xcframework" .
+    -o "ios/Frameworks/Sapphireproxy.xcframework" .
 }
 
 build_android() {
@@ -25,11 +24,11 @@ build_android() {
     ANDROID_NDK_HOME="$ANDROID_HOME/ndk/$(ls "$ANDROID_HOME/ndk" | sort -V | tail -1)"
     export ANDROID_NDK_HOME
   fi
-  mkdir -p "$MODULE_DIR/android/libs"
+  mkdir -p "android/libs"
   gomobile bind -target=android/arm64,android/amd64 -androidapi 24 \
     -javapkg dev.wuguishifu.sapphire -ldflags="-s -w" \
-    -o "$MODULE_DIR/android/libs/sapphireproxy.aar" .
-  rm -f "$MODULE_DIR/android/libs/sapphireproxy-sources.jar"
+    -o "android/libs/sapphireproxy.aar" .
+  rm -f "android/libs/sapphireproxy-sources.jar"
 }
 
 case "${1:-all}" in

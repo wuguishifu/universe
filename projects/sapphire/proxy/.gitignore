@@ -1,0 +1,4 @@
+# gomobile output, built by `nx build sapphire-proxy`
+ios/Frameworks
+android/libs
+android/build

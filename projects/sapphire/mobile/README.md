@@ -14,7 +14,7 @@ WebView ──(proxy override)──▶ 127.0.0.1:<port> HTTP proxy ──┬─
                                                             └─ otherwise ────▶ regular network (CDNs, fonts)
 ```
 
-- `modules/sapphire-proxy` is a local Expo module wrapping the gomobile bindings
+- [`@projects/sapphire-proxy`](../proxy) is the Go proxy plus the Expo module wrapping its gomobile bindings
   (`Sapphireproxy.xcframework` / `sapphireproxy.aar`). `start()` brings up the node, starts the
   proxy, and points WebViews at it:
   - iOS 17+: `WKWebsiteDataStore.default().proxyConfigurations` (HTTP CONNECT). `react-native-webview`
@@ -33,7 +33,7 @@ Needs Go, Xcode, and the Android SDK + NDK. The bindings are gitignored; `prebui
 them first.
 
 ```sh
-pnpm nx run sapphire-proxy:build   # gomobile bind → modules/sapphire-proxy/{ios/Frameworks,android/libs}
+pnpm nx run sapphire-proxy:build   # gomobile bind → ../proxy/{ios/Frameworks,android/libs}
 pnpm nx run sapphire-mobile:run-ios
 pnpm nx run sapphire-mobile:run-android
 ```

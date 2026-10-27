@@ -2,7 +2,3 @@
 /ios
 /android
 expo-env.d.ts
-
-# gomobile output, built by `nx build sapphire-proxy`
-modules/sapphire-proxy/ios/Frameworks
-modules/sapphire-proxy/android/libs

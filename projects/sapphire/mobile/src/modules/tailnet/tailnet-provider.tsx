@@ -7,7 +7,7 @@ import {
 } from 'react';
 import { AppState } from 'react-native';
 
-import * as SapphireProxy from '../../../modules/sapphire-proxy';
+import * as SapphireProxy from '@projects/sapphire-proxy';
 
 const HOSTNAME = 'sapphire-mobile';
 const POLL_INTERVAL_MS = 2000;

@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import * as SapphireProxy from '../../modules/sapphire-proxy';
+import * as SapphireProxy from '@projects/sapphire-proxy';
+
 import { useTailnet } from '../modules/tailnet/tailnet-provider';
 import { useColors } from '../modules/theme';
 
