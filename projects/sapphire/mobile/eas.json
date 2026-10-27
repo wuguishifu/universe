@@ -24,7 +24,8 @@
     "production-internal": {
       "extends": "base",
       "environment": "production",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "channel": "production-internal"
     }
   }
 }

@@ -46,9 +46,9 @@ jobs:
           base: ${{ env.NX_BASE }}
           head: ${{ env.NX_HEAD }}
 
-  # Each app's build runs as its EAS workflow (<root>/.eas/workflows/build.yml) on EAS's machines.
-  # This job uploads the checkout, starts it, and waits, so a failed EAS build fails this run and
-  # the app is built again on the next merge.
+  # Each app's release runs as its EAS workflow (<root>/.eas/workflows/build.yml) on EAS's machines,
+  # which decides between a native build and an OTA update. This job uploads the checkout, starts
+  # it, and waits, so a failed EAS run fails this run and the app is released again on the next merge.
   build:
     name: Build ${{ matrix.app.project }}
     needs: plan
