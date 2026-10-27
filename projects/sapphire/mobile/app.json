@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "Sapphire",
+    "slug": "sapphire-mobile",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "sapphire",
+    "userInterfaceStyle": "automatic",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/86a068db-c3ea-45da-aaa6-afe1b05aecae"
+    },
+    "ios": {
+      "bundleIdentifier": "dev.wuguishifu.sapphire",
+      "supportsTablet": false,
+      "appleTeamId": "7C3LJCLXTY",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoadsInWebContent": true
+        }
+      }
+    },
+    "android": {
+      "package": "dev.wuguishifu.sapphire",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0b121b"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-web-browser",
+      "expo-notifications",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "17.0"
+          },
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 240,
+          "resizeMode": "contain",
+          "backgroundColor": "#0b121b"
+        }
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "86a068db-c3ea-45da-aaa6-afe1b05aecae"
+      }
+    },
+    "owner": "wuguishifu"
+  }
+}

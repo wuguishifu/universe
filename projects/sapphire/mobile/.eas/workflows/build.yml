@@ -1,0 +1,54 @@
+# Run by .github/workflows/build-mobile-apps.yml when a merge to main affects this app, or by hand
+# with `eas workflow:run .eas/workflows/build.yml`. There's no `on`, so EAS never starts it itself.
+#
+# Ships the merge as an OTA update when a build with the same native fingerprint already exists
+# (fingerprint.config.js decides what counts as native), and makes a new build otherwise.
+name: Build
+
+# Only build jobs take these from their eas.json profile, so match the profile's for the rest. The
+# image defaults are too old for this repo (Node 18 can't run Metro, and older pnpm can't read the
+# pnpm 12 lockfile).
+defaults:
+  image: sdk-56
+  tools:
+    node: 24.21.0
+    pnpm: 12.9.0
+
+jobs:
+  fingerprint:
+    name: Fingerprint
+    type: fingerprint
+
+  get_ios_build:
+    name: Find iOS build
+    needs: [fingerprint]
+    type: get-build
+    params:
+      platform: ios
+      # Dev client builds can share the fingerprint, so only match the build updates go out to.
+      profile: production-internal
+      fingerprint_hash: ${{ needs.fingerprint.outputs.ios_fingerprint_hash }}
+
+  build_ios:
+    name: Build iOS
+    needs: [get_ios_build]
+    if: ${{ !needs.get_ios_build.outputs.build_id }}
+    type: build
+    params:
+      platform: ios
+      profile: production-internal
+
+  update_ios:
+    name: Publish iOS update
+    needs: [get_ios_build]
+    if: ${{ needs.get_ios_build.outputs.build_id }}
+    type: update
+    params:
+      platform: ios
+      # Matches the build profile's channel in eas.json
+      channel: production-internal
+    hooks:
+      # Builds get this from eas-build-post-install, but that's an EAS Build hook, so the update's
+      # bundle needs it done here.
+      after_install_node_modules:
+        - run: cd ../../../ && NX_DAEMON=false pnpm nx build convex-contracts

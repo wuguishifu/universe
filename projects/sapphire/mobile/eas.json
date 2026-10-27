@@ -1,0 +1,31 @@
+{
+  "cli": {
+    "version": ">= 23.2.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "base": {
+      "distribution": "internal",
+      "node": "24.21.0",
+      "pnpm": "12.9.0",
+      "ios": {
+        "image": "sdk-56"
+      },
+      "android": {
+        "image": "sdk-56",
+        "buildType": "apk"
+      }
+    },
+    "development": {
+      "extends": "base",
+      "developmentClient": true,
+      "environment": "development"
+    },
+    "production-internal": {
+      "extends": "base",
+      "environment": "production",
+      "autoIncrement": true,
+      "channel": "production-internal"
+    }
+  }
+}

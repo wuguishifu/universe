@@ -1,17 +1,20 @@
 {
-  "name": "notifications-mobile",
+  "name": "sapphire-mobile",
   "version": "0.0.1",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
-    "eas-build-post-install": "cd ../../../ && node tools/scripts/eas-build-post-install.mjs . platform/notifications/mobile && NX_DAEMON=false pnpm nx build convex-contracts"
+    "eas-build-pre-install": "../proxy/build.sh $EAS_BUILD_PLATFORM",
+    "eas-build-post-install": "cd ../../../ && node tools/scripts/eas-build-post-install.mjs . projects/sapphire/mobile && NX_DAEMON=false pnpm nx build convex-contracts"
   },
   "dependencies": {
     "@expo/metro": "*",
     "@expo/metro-runtime": "*",
     "@platform/convex-contracts": "workspace:*",
+    "@projects/sapphire-proxy": "workspace:*",
     "convex": "*",
     "expo": "*",
+    "expo-build-properties": "*",
     "expo-constants": "*",
     "expo-dev-client": "*",
     "expo-device": "*",
@@ -21,12 +24,16 @@
     "expo-splash-screen": "*",
     "expo-status-bar": "*",
     "expo-system-ui": "*",
+    "expo-updates": "*",
+    "expo-web-browser": "*",
     "react": "19.2.3",
     "react-native": "*",
     "react-native-gesture-handler": "*",
     "react-native-reanimated": "*",
     "react-native-safe-area-context": "*",
     "react-native-screens": "*",
+    "react-native-svg": "*",
+    "react-native-webview": "*",
     "react-native-worklets": "*"
   }
 }

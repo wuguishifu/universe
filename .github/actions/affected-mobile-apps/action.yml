@@ -1,0 +1,50 @@
+name: Affected Mobile Apps
+description: >-
+  List the mobile apps (projects with an eas.json and an .eas/workflows/build.yml at their root)
+  affected between two commits. Packages must already be installed and the history between base
+  and head fetched.
+
+inputs:
+  base:
+    description: Base commit for nx affected
+    required: true
+  head:
+    description: Head commit for nx affected
+    required: true
+
+outputs:
+  apps:
+    description: 'JSON array of {project, root}, e.g. [{"project": "sapphire-mobile", ...}]'
+    value: ${{ steps.apps.outputs.apps }}
+
+runs:
+  using: composite
+  steps:
+    - name: Find affected mobile apps
+      id: apps
+      shell: bash
+      env:
+        BASE: ${{ inputs.base }}
+        HEAD: ${{ inputs.head }}
+      run: |
+        AFFECTED=$(pnpm --silent nx show projects --affected --base="$BASE" --head="$HEAD" --json)
+        echo "Affected projects ($BASE..$HEAD): $AFFECTED"
+
+        APPS='[]'
+        for PROJECT in $(echo "$AFFECTED" | jq -r '.[]'); do
+          ROOT=$(pnpm --silent nx show project "$PROJECT" --json | jq -r '.root')
+          if [ ! -f "$ROOT/eas.json" ]; then
+            continue
+          fi
+
+          if [ ! -f "$ROOT/.eas/workflows/build.yml" ]; then
+            echo "::error file=$ROOT/eas.json::$ROOT has an eas.json but no .eas/workflows/build.yml"
+            exit 1
+          fi
+
+          APPS=$(echo "$APPS" | jq -c --arg project "$PROJECT" --arg root "$ROOT" \
+            '. + [{project: $project, root: $root}]')
+        done
+
+        echo "Mobile apps: $APPS"
+        echo "apps=$APPS" >> "$GITHUB_OUTPUT"

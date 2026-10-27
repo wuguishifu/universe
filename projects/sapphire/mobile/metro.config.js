@@ -13,7 +13,7 @@ const defaultConfig = getDefaultConfig(__dirname);
  * @type {import('metro-config').MetroConfig}
  */
 const customConfig = {
-  cacheVersion: 'notifications-mobile',
+  cacheVersion: 'sapphire-mobile',
 };
 
 module.exports = withNxMetro(mergeConfig(defaultConfig, customConfig), {

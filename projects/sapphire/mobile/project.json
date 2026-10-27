@@ -1,0 +1,24 @@
+{
+  "name": "sapphire-mobile",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/sapphire/mobile/src",
+  "projectType": "application",
+  "tags": ["scope:client"],
+  "// targets": "to see all targets run: nx show project sapphire-mobile --web",
+  "targets": {
+    "eas:build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "projects/sapphire/mobile",
+        "command": "eas workflow:run .eas/workflows/build.yml"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": { "command": "eas build", "cwd": "projects/sapphire/mobile" }
+    },
+    "prebuild": { "dependsOn": ["sapphire-proxy:build"] },
+    "run-ios": { "dependsOn": ["sapphire-proxy:build-ios"] },
+    "run-android": { "dependsOn": ["sapphire-proxy:build-android"] }
+  }
+}

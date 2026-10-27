@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Switch,
   Text,
-  useColorScheme,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,8 +19,9 @@ import {
   type PushRegistration,
   usePushRegistration,
 } from '../modules/notifications/push-registration';
+import { useColors } from '../modules/theme';
 
-export default function HomeScreen() {
+export default function NotificationsScreen() {
   const colors = useColors();
   const { registration, register } = usePushRegistration();
 
@@ -31,7 +31,9 @@ export default function HomeScreen() {
       style={{ flex: 1, backgroundColor: colors.background }}
     >
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={[styles.sectionTitle, { color: colors.muted }]}>
+        <Text
+          style={[styles.sectionTitle, { color: colors.muted, marginTop: 0 }]}
+        >
           THIS DEVICE
         </Text>
         <View style={[styles.card, { backgroundColor: colors.card }]}>
@@ -141,24 +143,22 @@ function Channels({ expoPushToken }: { expoPushToken: string }) {
       >
         <View style={styles.channelText}>
           <Text style={{ color: colors.text }}>{channel.label}</Text>
-          <Text style={[styles.description, { color: colors.muted }]}>
+          <Text style={[styles.small, { color: colors.muted }]}>
             {channel.description}
           </Text>
         </View>
-        <View>
-          <Switch
-            value={!muted}
-            onValueChange={async (enabled) => {
-              await setMutedChannels({
-                deviceSecret,
-                expoPushToken,
-                mutedChannels: enabled
-                  ? device.mutedChannels.filter((id) => id !== channel.id)
-                  : [...device.mutedChannels, channel.id],
-              });
-            }}
-          />
-        </View>
+        <Switch
+          value={!muted}
+          onValueChange={async (enabled) => {
+            await setMutedChannels({
+              deviceSecret,
+              expoPushToken,
+              mutedChannels: enabled
+                ? device.mutedChannels.filter((id) => id !== channel.id)
+                : [...device.mutedChannels, channel.id],
+            });
+          }}
+        />
       </View>
     );
   });
@@ -173,46 +173,20 @@ function Button({ label, onPress }: { label: string; onPress: () => void }) {
   );
 }
 
-function useColors() {
-  return useColorScheme() === 'dark' ? darkColors : lightColors;
-}
-
-const lightColors = {
-  background: '#f2f2f7',
-  card: '#ffffff',
-  text: '#000000',
-  muted: '#6e6e73',
-  border: '#d1d1d6',
-  accent: '#007aff',
-  danger: '#ff3b30',
-};
-
-const darkColors: typeof lightColors = {
-  background: '#000000',
-  card: '#1c1c1e',
-  text: '#ffffff',
-  muted: '#98989f',
-  border: '#38383a',
-  accent: '#0a84ff',
-  danger: '#ff453a',
-};
-
 const styles = StyleSheet.create({
   content: {
     padding: 16,
-    flexGrow: 1,
+    gap: 8,
   },
   sectionTitle: {
     fontSize: 13,
     marginTop: 16,
-    marginBottom: 6,
-    marginHorizontal: 16,
+    marginLeft: 16,
   },
   card: {
     borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
+    padding: 16,
+    gap: 4,
   },
   token: {
     fontSize: 12,
@@ -231,10 +205,10 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 2,
   },
-  description: {
+  small: {
     fontSize: 13,
   },
   button: {
-    paddingVertical: 4,
+    paddingVertical: 8,
   },
 });

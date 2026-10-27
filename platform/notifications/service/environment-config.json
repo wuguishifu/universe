@@ -1,5 +1,9 @@
 {
   "$schema": "../../../tools/environment/environment-config.schema.json",
   "hasConvex": true,
-  "secretsPaths": ["platform/redis", "platform/notifications/service"]
+  "secretsPaths": [
+    "platform/redis",
+    "platform/notifications/service",
+    "platform/convex/app"
+  ]
 }

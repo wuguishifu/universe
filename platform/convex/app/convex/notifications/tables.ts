@@ -4,7 +4,7 @@ import { v } from 'convex/values';
 import { devicePlatform, notificationChannel } from './validators';
 
 export const notificationsTables = {
-  /** A device notifications-mobile is installed on, by its Expo push token. */
+  /** A device sapphire-mobile is installed on, by its Expo push token. */
   notificationDevices: defineTable({
     expoPushToken: v.string(),
     platform: devicePlatform,

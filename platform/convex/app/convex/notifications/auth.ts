@@ -4,7 +4,7 @@ import { ConvexError, v } from 'convex/values';
  * Notifications' functions are public and a deployment URL isn't a secret, so each one takes one of
  * these arguments. Call the matching assert first thing in every handler.
  *
- * - `deviceSecret` (NOTIFICATIONS_DEVICE_SECRET) is baked into notifications-mobile, so it only
+ * - `deviceSecret` (NOTIFICATIONS_DEVICE_SECRET) is baked into sapphire-mobile, so it only
  *   lets a device register and change its own preferences.
  * - `secret` (NOTIFICATIONS_CONVEX_SECRET) stays on notifications-service, which reads and prunes
  *   devices.

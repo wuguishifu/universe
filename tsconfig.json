@@ -106,9 +106,6 @@
       "path": "./libs/http"
     },
     {
-      "path": "./platform/notifications/mobile"
-    },
-    {
       "path": "./platform/notifications/client-nest"
     },
     {
@@ -116,6 +113,9 @@
     },
     {
       "path": "./platform/notifications/service"
+    },
+    {
+      "path": "./projects/sapphire/mobile"
     }
   ],
   "compilerOptions": {

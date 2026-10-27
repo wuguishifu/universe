@@ -1,3 +1,5 @@
+node tools/scripts/check-eas-pins.mjs || exit 1
+
 CURRENT_BRANCH=$(git branch --show-current)
 
 if [[ "main" == "$CURRENT_BRANCH" ]]; then

@@ -1,0 +1,82 @@
+name: Build Mobile Apps
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  # nx-set-shas reads past runs of this workflow to find the last successful build
+  actions: read
+
+concurrency:
+  group: build-mobile-apps
+  # Never cancel a build halfway through; queue the next run instead.
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Find affected mobile apps
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      apps: ${{ steps.apps.outputs.apps }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # nx affected needs the history between the base and head commits
+          fetch-depth: 0
+
+      - name: Install packages
+        uses: ./.github/actions/setup-packages
+
+      # Base is the commit of the last successful run of this workflow on main, so apps from a
+      # failed run get rebuilt on the next merge instead of being skipped.
+      - name: Derive base and head SHAs
+        uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: main
+
+      - name: Find affected mobile apps
+        id: apps
+        uses: ./.github/actions/affected-mobile-apps
+        with:
+          base: ${{ env.NX_BASE }}
+          head: ${{ env.NX_HEAD }}
+
+  # Each app's release runs as its EAS workflow (<root>/.eas/workflows/build.yml) on EAS's machines,
+  # which decides between a native build and an OTA update. This job uploads the checkout, starts
+  # it, and waits, so a failed EAS run fails this run and the app is released again on the next merge.
+  build:
+    name: Build ${{ matrix.app.project }}
+    needs: plan
+    if: needs.plan.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    # Mostly waiting on EAS, including its build queue.
+    timeout-minutes: 120
+    strategy:
+      # Apps ship independently, so one failing shouldn't stop the others.
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.plan.outputs.apps) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # eas-cli reads the app config, which needs the app's expo package installed.
+      - name: Install packages
+        uses: ./.github/actions/setup-packages
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Run EAS workflow
+        working-directory: ${{ matrix.app.root }}
+        run: eas workflow:run .eas/workflows/build.yml --non-interactive --wait

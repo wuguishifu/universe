@@ -1,7 +1,7 @@
 # notifications
 
 Sends a notification through [notifications-service](../../../platform/notifications/service), to
-every device running [notifications-mobile](../../../platform/notifications/mobile) that hasn't
+every device running [sapphire-mobile](../../../projects/sapphire/mobile) that hasn't
 muted the channel. Handy for testing the app, and for anything outside the cluster that wants to
 send one from a shell.
 

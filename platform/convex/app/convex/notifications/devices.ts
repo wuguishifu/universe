@@ -10,7 +10,7 @@ import {
 } from './auth';
 import { devicePlatform, notificationChannel } from './validators';
 
-// MARK: notifications-mobile
+// MARK: sapphire-mobile
 
 /** Called on every launch, so it keeps the device's muted channels. */
 export const register = mutation({
