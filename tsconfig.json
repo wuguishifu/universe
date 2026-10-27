@@ -106,9 +106,6 @@
       "path": "./libs/http"
     },
     {
-      "path": "./platform/notifications/mobile"
-    },
-    {
       "path": "./platform/notifications/client-nest"
     },
     {

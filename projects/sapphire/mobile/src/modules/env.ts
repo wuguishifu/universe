@@ -4,4 +4,11 @@ if (!convexUrl) {
   throw new Error('Missing EXPO_PUBLIC_CONVEX_URL environment variable');
 }
 
-export const env = { convexUrl };
+const deviceSecret = process.env.EXPO_PUBLIC_NOTIFICATIONS_DEVICE_SECRET;
+if (!deviceSecret) {
+  throw new Error(
+    'Missing EXPO_PUBLIC_NOTIFICATIONS_DEVICE_SECRET environment variable',
+  );
+}
+
+export const env = { convexUrl, deviceSecret };

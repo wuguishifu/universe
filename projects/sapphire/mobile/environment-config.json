@@ -2,5 +2,5 @@
   "$schema": "../../../tools/environment/environment-config.schema.json",
   "hasConvex": true,
   "publicPrefix": "EXPO_PUBLIC_",
-  "secretsPaths": ["platform/convex/app"]
+  "secretsPaths": ["platform/convex/app", "projects/sapphire/mobile"]
 }

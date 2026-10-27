@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { api } from '@platform/convex-contracts';
 
+import { usePushRegistration } from '../modules/notifications/push-registration';
 import { useTailnet } from '../modules/tailnet/tailnet-provider';
 import { useColors } from '../modules/theme';
 
@@ -34,6 +35,7 @@ export default function DashboardScreen() {
     >
       <ScrollView contentContainerStyle={styles.content}>
         <TailnetRow />
+        <NotificationsRow />
         <Text style={[styles.sectionTitle, { color: colors.muted }]}>
           SERVICES
         </Text>
@@ -83,7 +85,6 @@ export default function DashboardScreen() {
 }
 
 function TailnetRow() {
-  const colors = useColors();
   const tailnet = useTailnet();
 
   const state =
@@ -92,28 +93,70 @@ function TailnetRow() {
       : tailnet.phase === 'started' && tailnet.status
         ? tailnet.status.backendState
         : 'Starting';
-  const running = state === 'Running';
+
+  return (
+    <StatusRow
+      label={`Tailnet · ${state === 'NeedsLogin' ? 'Tap to log in' : state}`}
+      health={
+        state === 'Running' ? 'ok' : state === 'Error' ? 'error' : 'neutral'
+      }
+      onPress={() => router.push('/tailnet')}
+    />
+  );
+}
+
+function NotificationsRow() {
+  const { registration } = usePushRegistration();
+
+  const { state, health } = (
+    {
+      pending: { state: 'Registering', health: 'neutral' },
+      unsupported: { state: 'Unsupported', health: 'neutral' },
+      denied: { state: 'Off', health: 'error' },
+      error: { state: 'Error', health: 'error' },
+      registered: { state: 'On', health: 'ok' },
+    } as const
+  )[registration.status];
+
+  return (
+    <StatusRow
+      label={`Notifications · ${state}`}
+      health={health}
+      onPress={() => router.push('/notifications')}
+    />
+  );
+}
+
+function StatusRow({
+  label,
+  health,
+  onPress,
+}: {
+  label: string;
+  health: 'ok' | 'error' | 'neutral';
+  onPress: () => void;
+}) {
+  const colors = useColors();
 
   return (
     <Pressable
-      onPress={() => router.push('/tailnet')}
+      onPress={onPress}
       style={[styles.card, styles.row, { backgroundColor: colors.card }]}
     >
       <View
         style={[
           styles.dot,
           {
-            backgroundColor: running
-              ? colors.success
-              : state === 'Error'
-                ? colors.danger
-                : colors.border,
+            backgroundColor:
+              health === 'ok'
+                ? colors.success
+                : health === 'error'
+                  ? colors.danger
+                  : colors.border,
           },
         ]}
       />
-      <Text style={{ flex: 1, color: colors.text }}>
-        Tailnet · {state === 'NeedsLogin' ? 'Tap to log in' : state}
-      </Text>
+      <Text style={{ flex: 1, color: colors.text }}>{label}</Text>
       <Text style={{ color: colors.muted }}>›</Text>
     </Pressable>
   );

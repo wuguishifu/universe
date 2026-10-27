@@ -28,11 +28,16 @@
     "plugins": [
       "expo-router",
       "expo-web-browser",
+      "expo-notifications",
       [
         "expo-build-properties",
         {
-          "ios": { "deploymentTarget": "17.0" },
-          "android": { "usesCleartextTraffic": true }
+          "ios": {
+            "deploymentTarget": "17.0"
+          },
+          "android": {
+            "usesCleartextTraffic": true
+          }
         }
       ],
       [
@@ -46,7 +51,10 @@
       ]
     ],
     "extra": {
-      "router": {}
+      "router": {},
+      "eas": {
+        "projectId": "86a068db-c3ea-45da-aaa6-afe1b05aecae"
+      }
     },
     "owner": "wuguishifu"
   }
