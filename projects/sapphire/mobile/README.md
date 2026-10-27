@@ -86,8 +86,32 @@ Android. Without them the Notifications screen shows the error. `notifications-s
 Push notifications don't work in a simulator, so test on a phone. To send one, use
 [`tools/scripts/notifications/send.mjs`](../../../tools/scripts/notifications).
 
+## Building with EAS
+
+```sh
+# the build that lives on your phone, pointed at prod convex
+pnpm nx build sapphire-mobile -- --profile production-internal --platform ios --local
+
+# a dev client pointed at dev convex (pnpm nx start sapphire-mobile to serve it)
+pnpm nx build sapphire-mobile -- --profile development --platform ios --local
+```
+
+Builds run with `--local` because they need Go to build the proxy bindings, which EAS's build
+image doesn't have. EAS only copies what git tracks, so the bindings and `@platform/convex-contracts`
+(a buildable lib whose `dist/` is gitignored) aren't in the build directory. `eas-build-post-install`
+in `package.json` builds both after EAS installs dependencies, using `EAS_BUILD_PLATFORM` to pick
+the iOS or Android bindings. Any other buildable lib the app starts importing needs adding there too.
+
+EAS builds don't read `.env.local`. Each profile names an EAS environment (`development` or
+`production`); set `EXPO_PUBLIC_CONVEX_URL` and `EXPO_PUBLIC_NOTIFICATIONS_DEVICE_SECRET` there with
+`eas env:create`.
+
+Internal (ad hoc) builds only install on devices registered with `eas device:create` before the
+build, and stop launching when their provisioning profile expires (after a year).
+
 ## Known gaps
 
-- No EAS config yet; EAS builds would need Go + gomobile in the build image (or prebuilt bindings).
+- EAS builds only work with `--local`; building in the cloud would need Go + gomobile in the build
+  image (or prebuilt bindings).
 - iOS suspends the node in the background; it reconnects on foreground in a second or two.
 - No tabs or URL bar inside the browser screen.

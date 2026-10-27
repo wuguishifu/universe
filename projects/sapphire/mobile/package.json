@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "main": "expo-router/entry",
+  "scripts": {
+    "eas-build-post-install": "cd ../../../ && node tools/scripts/eas-build-post-install.mjs . projects/sapphire/mobile && NX_DAEMON=false pnpm nx build convex-contracts && NX_DAEMON=false pnpm nx run sapphire-proxy:build-$EAS_BUILD_PLATFORM"
+  },
   "dependencies": {
     "@expo/metro": "*",
     "@expo/metro-runtime": "*",
