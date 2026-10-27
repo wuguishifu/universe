@@ -720,6 +720,15 @@ importers:
         specifier: workspace:*
         version: link:../contracts
 
+  platform/notifications/client-next:
+    dependencies:
+      '@libs/http':
+        specifier: workspace:*
+        version: link:../../../libs/http
+      '@platform/notifications-contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
   platform/notifications/contracts:
     dependencies:
       '@libs/queue':
