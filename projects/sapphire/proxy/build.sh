@@ -22,17 +22,14 @@ if ! command -v go >/dev/null && [[ -n "${EAS_BUILD:-}" ]]; then
   export PATH="$GO_ROOT/bin:$PATH"
 fi
 
-export PATH="$(go env GOPATH)/bin:$PATH"
-
-if ! command -v gomobile >/dev/null; then
-  go install golang.org/x/mobile/cmd/gomobile@latest
-  gomobile init
-fi
+# gomobile and gobind are tools in go.mod, so every machine binds with the same pinned versions.
+# gomobile looks gobind up on PATH, so put the pinned build first.
+export PATH="$(dirname "$(go tool -n gobind)"):$PATH"
 
 build_ios() {
   mkdir -p "ios/Frameworks"
   rm -rf "ios/Frameworks/Sapphireproxy.xcframework"
-  gomobile bind -target=ios,iossimulator -iosversion=15.1 -ldflags="-s -w" \
+  go tool gomobile bind -target=ios,iossimulator -iosversion=15.1 -ldflags="-s -w" \
     -o "ios/Frameworks/Sapphireproxy.xcframework" .
 }
 
@@ -43,7 +40,7 @@ build_android() {
     export ANDROID_NDK_HOME
   fi
   mkdir -p "android/libs"
-  gomobile bind -target=android/arm64,android/amd64 -androidapi 24 \
+  go tool gomobile bind -target=android/arm64,android/amd64 -androidapi 24 \
     -javapkg dev.wuguishifu.sapphire -ldflags="-s -w" \
     -o "android/libs/sapphireproxy.aar" .
   rm -f "android/libs/sapphireproxy-sources.jar"

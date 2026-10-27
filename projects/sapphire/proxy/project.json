@@ -11,7 +11,8 @@
       "inputs": [
         "{projectRoot}/**/*.go",
         "{projectRoot}/go.mod",
-        "{projectRoot}/go.sum"
+        "{projectRoot}/go.sum",
+        "{projectRoot}/build.sh"
       ],
       "outputs": ["{projectRoot}/ios/Frameworks"],
       "options": {
@@ -25,7 +26,8 @@
       "inputs": [
         "{projectRoot}/**/*.go",
         "{projectRoot}/go.mod",
-        "{projectRoot}/go.sum"
+        "{projectRoot}/go.sum",
+        "{projectRoot}/build.sh"
       ],
       "outputs": ["{projectRoot}/android/libs"],
       "options": {
