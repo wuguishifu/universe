@@ -4,21 +4,27 @@
     "appVersionSource": "remote"
   },
   "build": {
-    "development": {
-      "developmentClient": true,
+    "base": {
       "distribution": "internal",
-      "environment": "development",
+      "node": "24.21.0",
+      "pnpm": "12.9.0",
+      "ios": {
+        "image": "sdk-56"
+      },
       "android": {
+        "image": "sdk-56",
         "buildType": "apk"
       }
     },
+    "development": {
+      "extends": "base",
+      "developmentClient": true,
+      "environment": "development"
+    },
     "production-internal": {
-      "distribution": "internal",
+      "extends": "base",
       "environment": "production",
-      "autoIncrement": true,
-      "android": {
-        "buildType": "apk"
-      }
+      "autoIncrement": true
     }
   }
 }
