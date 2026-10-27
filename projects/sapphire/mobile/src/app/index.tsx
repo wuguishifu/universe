@@ -1,198 +1,133 @@
+import { useQuery } from 'convex/react';
 import { router } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
-import { useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import * as SapphireProxy from '@projects/sapphire-proxy';
+import { api } from '@platform/convex-contracts';
 
 import { useTailnet } from '../modules/tailnet/tailnet-provider';
 import { useColors } from '../modules/theme';
 
-export default function HomeScreen() {
+const COLUMNS = 3;
+const PADDING = 16;
+const GAP = 8;
+
+export default function DashboardScreen() {
   const colors = useColors();
-  const tailnet = useTailnet();
-  const [url, setUrl] = useState('http://');
-  const [showLogs, setShowLogs] = useState(false);
-
-  const status = tailnet.phase === 'started' ? tailnet.status : undefined;
-  const running = status?.backendState === 'Running';
-  const peers = [...(status?.peers ?? [])].sort(
-    (a, b) =>
-      Number(b.online) - Number(a.online) ||
-      a.hostName.localeCompare(b.hostName),
-  );
-
-  const open = (target: string) =>
-    router.push({ pathname: '/browse', params: { url: target } });
+  const items = useQuery(api.sapphire.dashboard.list);
+  const { width } = useWindowDimensions();
+  const tileSize = (width - PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
 
   return (
     <SafeAreaView
       edges={['top', 'bottom']}
       style={{ flex: 1, backgroundColor: colors.background }}
     >
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView contentContainerStyle={styles.content}>
+        <TailnetRow />
         <Text style={[styles.sectionTitle, { color: colors.muted }]}>
-          TAILNET
+          SERVICES
         </Text>
-        <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <NodeStatus />
-        </View>
-
-        {running && (
-          <>
-            <Text style={[styles.sectionTitle, { color: colors.muted }]}>
-              OPEN
-            </Text>
-            <View
-              style={[
-                styles.card,
-                styles.row,
-                { backgroundColor: colors.card },
-              ]}
-            >
-              <TextInput
-                value={url}
-                onChangeText={setUrl}
-                onSubmitEditing={() => open(url)}
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="url"
-                returnKeyType="go"
-                placeholder="http://sol:8080"
-                placeholderTextColor={colors.muted}
-                style={[styles.input, { color: colors.text }]}
-              />
-              <Button label="Go" onPress={() => open(url)} />
-            </View>
-
-            <Text style={[styles.sectionTitle, { color: colors.muted }]}>
-              PEERS
-            </Text>
-            <View style={[styles.card, { backgroundColor: colors.card }]}>
-              {peers.map((peer, i) => (
+        {items === undefined ? (
+          <ActivityIndicator style={styles.placeholder} />
+        ) : items.length === 0 ? (
+          <Text style={[styles.placeholder, { color: colors.muted }]}>
+            Nothing here yet
+          </Text>
+        ) : (
+          <View style={styles.grid}>
+            {[...items]
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((item) => (
                 <Pressable
-                  key={peer.dnsName || peer.hostName}
+                  key={item._id}
                   onPress={() =>
-                    setUrl(`http://${peer.dnsName || peer.hostName}`)
+                    router.push({
+                      pathname: '/browse',
+                      params: { url: item.url },
+                    })
                   }
-                  style={[
-                    styles.peer,
-                    i > 0 && [styles.divider, { borderColor: colors.border }],
+                  style={({ pressed }) => [
+                    styles.tile,
+                    {
+                      width: tileSize,
+                      height: tileSize,
+                      backgroundColor: colors.card,
+                      opacity: pressed ? 0.6 : 1,
+                    },
                   ]}
                 >
-                  <View
-                    style={[
-                      styles.dot,
-                      {
-                        backgroundColor: peer.online
-                          ? colors.success
-                          : colors.border,
-                      },
-                    ]}
-                  />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.text }}>{peer.hostName}</Text>
-                    <Text style={[styles.small, { color: colors.muted }]}>
-                      {peer.ips[0]} · {peer.os}
-                    </Text>
-                  </View>
+                  <Image source={{ uri: item.iconUrl }} style={styles.icon} />
+                  <Text
+                    numberOfLines={2}
+                    style={[styles.name, { color: colors.text }]}
+                  >
+                    {item.name}
+                  </Text>
                 </Pressable>
               ))}
-            </View>
-          </>
+          </View>
         )}
-
-        <Button
-          label={showLogs ? 'Hide logs' : 'Show logs'}
-          onPress={() => setShowLogs((s) => !s)}
-        />
-        {showLogs && <Logs />}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function NodeStatus() {
+function TailnetRow() {
   const colors = useColors();
   const tailnet = useTailnet();
 
-  if (tailnet.phase === 'error') {
-    return (
-      <Text style={{ color: colors.danger }}>
-        Couldn't start: {tailnet.message}
-      </Text>
-    );
-  }
-  if (tailnet.phase === 'starting' || !tailnet.status) {
-    return <ActivityIndicator />;
-  }
-
-  const { status, proxyPort } = tailnet;
-  const { authURL } = status;
-  return (
-    <>
-      <Text style={{ color: colors.text }}>{status.backendState}</Text>
-      {status.self?.dnsName && (
-        <Text selectable style={[styles.small, { color: colors.muted }]}>
-          {status.self.dnsName} · {status.self.ips.join(', ')}
-        </Text>
-      )}
-      <Text style={[styles.small, { color: colors.muted }]}>
-        proxy on 127.0.0.1:{proxyPort}
-      </Text>
-
-      {authURL ? (
-        <Button
-          label="Log in to Tailscale"
-          onPress={() => WebBrowser.openBrowserAsync(authURL)}
-        />
-      ) : null}
-      {status.backendState === 'Running' && (
-        <Button label="Log out" onPress={() => SapphireProxy.logout()} />
-      )}
-    </>
-  );
-}
-
-function Logs() {
-  const colors = useColors();
-  const [logs, setLogs] = useState(() => SapphireProxy.logs());
+  const state =
+    tailnet.phase === 'error'
+      ? 'Error'
+      : tailnet.phase === 'started' && tailnet.status
+        ? tailnet.status.backendState
+        : 'Starting';
+  const running = state === 'Running';
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card }]}>
-      <Button label="Refresh" onPress={() => setLogs(SapphireProxy.logs())} />
-      <Text selectable style={[styles.logs, { color: colors.muted }]}>
-        {logs.split('\n').slice(-150).join('\n')}
+    <Pressable
+      onPress={() => router.push('/tailnet')}
+      style={[styles.card, styles.row, { backgroundColor: colors.card }]}
+    >
+      <View
+        style={[
+          styles.dot,
+          {
+            backgroundColor: running
+              ? colors.success
+              : state === 'Error'
+                ? colors.danger
+                : colors.border,
+          },
+        ]}
+      />
+      <Text style={{ flex: 1, color: colors.text }}>
+        Tailnet · {state === 'NeedsLogin' ? 'Tap to log in' : state}
       </Text>
-    </View>
-  );
-}
-
-function Button({ label, onPress }: { label: string; onPress: () => void }) {
-  const colors = useColors();
-  return (
-    <Pressable onPress={onPress} style={styles.button}>
-      <Text style={{ color: colors.accent }}>{label}</Text>
+      <Text style={{ color: colors.muted }}>›</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   content: {
-    padding: 16,
+    padding: PADDING,
     gap: 8,
+  },
+  title: {
+    fontSize: 34,
+    fontWeight: '700',
+    marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 13,
@@ -202,39 +137,40 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 10,
     padding: 16,
-    gap: 4,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  input: {
-    flex: 1,
-    fontSize: 16,
-  },
-  peer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 8,
-  },
-  divider: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
   },
-  small: {
+  placeholder: {
+    marginTop: 24,
+    textAlign: 'center',
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: GAP,
+  },
+  tile: {
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  icon: {
+    width: 48,
+    height: 48,
+    resizeMode: 'contain',
+  },
+  name: {
     fontSize: 13,
-  },
-  logs: {
-    fontFamily: 'Menlo',
-    fontSize: 10,
-  },
-  button: {
-    paddingVertical: 8,
+    textAlign: 'center',
   },
 });

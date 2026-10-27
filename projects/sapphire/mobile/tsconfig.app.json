@@ -13,5 +13,10 @@
     "src/**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../platform/convex/contracts/tsconfig.lib.json"
+    }
   ]
 }

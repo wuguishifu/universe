@@ -6,7 +6,9 @@
   "dependencies": {
     "@expo/metro": "*",
     "@expo/metro-runtime": "*",
+    "@platform/convex-contracts": "workspace:*",
     "@projects/sapphire-proxy": "workspace:*",
+    "convex": "*",
     "expo": "*",
     "expo-build-properties": "*",
     "expo-constants": "*",
@@ -23,6 +25,7 @@
     "react-native-reanimated": "*",
     "react-native-safe-area-context": "*",
     "react-native-screens": "*",
+    "react-native-svg": "*",
     "react-native-webview": "*",
     "react-native-worklets": "*"
   }

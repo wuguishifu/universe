@@ -38,8 +38,11 @@ pnpm nx run sapphire-mobile:run-ios
 pnpm nx run sapphire-mobile:run-android
 ```
 
-On first launch, tap **Log in to Tailscale** and approve the node. Then tap a peer to fill in its
-URL (add a port if needed) and hit **Go**.
+`EXPO_PUBLIC_CONVEX_URL` comes from `nx setup environment` (see [`.env.example`](./.env.example)); the
+home screen lists the services in the convex `dashboardItems` table, same as sapphire-web.
+
+On first launch, open **Tailnet**, tap **Log in to Tailscale** and approve the node. Then tap a
+service, or on the Tailnet screen tap a peer to fill in its URL (add a port if needed) and hit **Go**.
 
 Suggested ACL: tag the node (`tag:sapphire-mobile`) and only allow it the service ports you want
 reachable from the phone.
@@ -48,4 +51,4 @@ reachable from the phone.
 
 - No EAS config yet; EAS builds would need Go + gomobile in the build image (or prebuilt bindings).
 - iOS suspends the node in the background; it reconnects on foreground in a second or two.
-- No saved services list, tabs, or URL bar inside the browser screen.
+- No tabs or URL bar inside the browser screen.
