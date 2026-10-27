@@ -1,0 +1,9 @@
+{
+  "name": "thermo-automation-mcp",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/thermo-automation/mcp/src",
+  "projectType": "library",
+  "tags": ["scope:shared"],
+  "// targets": "to see all targets run: nx show project thermo-automation-mcp --web",
+  "targets": {}
+}

@@ -74,6 +74,16 @@ export class RedisCacheService implements OnApplicationShutdown {
     return this.parse(target.key, raw, { operation: 'get', key });
   }
 
+  /** Reads and deletes the value in one step, so of concurrent callers only one gets it. */
+  async take<K extends RedisValueKey>(
+    target: Target<K>,
+  ): Promise<RedisOutput<K> | undefined> {
+    const key = this.keyOf(target);
+    const raw = await this.client.getdel(key);
+    if (raw === null) return undefined;
+    return this.parse(target.key, raw, { operation: 'take', key });
+  }
+
   async set<K extends RedisValueKey>(
     target: Target<K> & {
       value: RedisInput<K>;
