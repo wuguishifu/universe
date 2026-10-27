@@ -33,10 +33,16 @@
   "exclude": ["node_modules", "jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
   "references": [
     {
-      "path": "../../../libs/ui-web"
+      "path": "../../../platform/notifications/contracts"
+    },
+    {
+      "path": "../../../platform/notifications/client-next"
     },
     {
       "path": "../../../platform/convex/contracts"
+    },
+    {
+      "path": "../../../libs/ui-web"
     }
   ]
 }

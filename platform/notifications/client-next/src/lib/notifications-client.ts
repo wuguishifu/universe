@@ -13,6 +13,8 @@ import {
 
 import { type NotificationsClientConfig } from './config';
 
+const sendResponseSchema = z.object({ jobId: z.string() });
+
 export type SendNotificationOptions = {
   /**
    * Makes sending it again a no-op while the job is still in Redis (about an hour after it's sent).
@@ -40,8 +42,7 @@ export class NotificationsClient {
 
   constructor(
     private readonly config:
-      | NotificationsClientConfig
-      | (() => NotificationsClientConfig),
+      NotificationsClientConfig | (() => NotificationsClientConfig),
   ) {}
 
   /**
@@ -63,23 +64,21 @@ export class NotificationsClient {
       { ...notification, source: serviceName },
       'notification',
     );
-    const response = await httpService.post<{ jobId: string }>(
-      '/notifications',
-      {
-        ...data,
-        idempotencyKey: parseOrThrow(
-          idempotencyKeySchema,
-          idempotencyKey,
-          'idempotencyKey',
-        ),
-      },
-    );
-    return { jobId: response.data.jobId };
+    const response = await httpService.post('/notifications', {
+      ...data,
+      idempotencyKey: parseOrThrow(
+        idempotencyKeySchema,
+        idempotencyKey,
+        'idempotencyKey',
+      ),
+    });
+    // Something in front of the service (e.g. a Cloudflare Access login page) can answer with a 200.
+    return parseOrThrow(sendResponseSchema, response.data, 'response');
   }
 
   private resolve(): { serviceName: string; httpService: HttpService } {
     if (!this.resolved) {
-      const { serviceName, baseUrl, apiToken } =
+      const { serviceName, baseUrl, apiToken, headers } =
         typeof this.config === 'function' ? this.config() : this.config;
       this.resolved = {
         serviceName,
@@ -87,6 +86,7 @@ export class NotificationsClient {
         httpService: new HttpService({
           baseURL: `${baseUrl}/api`,
           headers: {
+            ...headers,
             Authorization: `Bearer ${apiToken}`,
           },
         }),

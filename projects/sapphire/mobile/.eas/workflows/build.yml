@@ -52,3 +52,52 @@ jobs:
       # bundle needs it done here.
       after_install_node_modules:
         - run: cd ../../../ && NX_DAEMON=false pnpm nx build convex-contracts
+
+  # Notifies every device through sapphire-web, since notifications-service is only on the tailnet.
+  # SAPPHIRE_WEB_API_TOKEN (secret, production environment) is sapphire-web's API_TOKEN. A failed
+  # notification doesn't fail the release: the build or update already went out.
+  notify_ios_build:
+    name: Notify about iOS build
+    needs: [build_ios]
+    environment: production
+    steps:
+      - name: Send notification
+        run: |
+          curl --fail-with-body --silent --show-error --retry 2 \
+            -X POST https://wuguishifu.dev/api/notifications \
+            -H "Authorization: Bearer $SAPPHIRE_WEB_API_TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d @- <<'JSON' || echo "Couldn't send the build notification"
+          {
+            "channel": "general",
+            "title": "Sapphire ${{ needs.build_ios.outputs.app_version }} (${{ needs.build_ios.outputs.app_build_version }}) is ready to install",
+            "body": "This one has native changes, so it needs installing. Tap to open the build on EAS.",
+            "url": "https://expo.dev/accounts/wuguishifu/projects/sapphire-mobile/builds/${{ needs.build_ios.outputs.build_id }}",
+            "ttlSeconds": 86400,
+            "collapseId": "sapphire-mobile-build",
+            "idempotencyKey": "build-${{ needs.build_ios.outputs.build_id }}"
+          }
+          JSON
+
+  notify_ios_update:
+    name: Notify about iOS update
+    needs: [update_ios]
+    environment: production
+    steps:
+      - name: Send notification
+        # expo-updates checks on launch and applies what it downloads on the launch after.
+        run: |
+          curl --fail-with-body --silent --show-error --retry 2 \
+            -X POST https://wuguishifu.dev/api/notifications \
+            -H "Authorization: Bearer $SAPPHIRE_WEB_API_TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d @- <<'JSON' || echo "Couldn't send the update notification"
+          {
+            "channel": "general",
+            "title": "Sapphire update published",
+            "body": "It downloads the next time the app launches and applies on the launch after that.",
+            "ttlSeconds": 86400,
+            "collapseId": "sapphire-mobile-update",
+            "idempotencyKey": "update-${{ needs.update_ios.outputs.first_update_group_id }}"
+          }
+          JSON

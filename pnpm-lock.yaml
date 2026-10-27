@@ -1070,6 +1070,12 @@ importers:
       '@platform/convex-contracts':
         specifier: workspace:*
         version: link:../../../platform/convex/contracts
+      '@platform/notifications-client-next':
+        specifier: workspace:*
+        version: link:../../../platform/notifications/client-next
+      '@platform/notifications-contracts':
+        specifier: workspace:*
+        version: link:../../../platform/notifications/contracts
 
   projects/thermo-automation/contracts: {}
 
