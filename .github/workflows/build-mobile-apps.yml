@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: build-mobile-apps
-  # Never cancel a build halfway through; queue the next run instead.
+  # Never cancel an EAS run halfway through starting; queue the next run instead.
   cancel-in-progress: false
 
 jobs:
@@ -32,8 +32,8 @@ jobs:
       - name: Install packages
         uses: ./.github/actions/setup-packages
 
-      # Base is the commit of the last successful run of this workflow on main, so apps from a
-      # failed run get rebuilt on the next merge instead of being skipped.
+      # Base is the commit of the last successful run of this workflow on main, so apps whose EAS
+      # run failed to start get rebuilt on the next merge instead of being skipped.
       - name: Derive base and head SHAs
         uses: nrwl/nx-set-shas@v4
         with:
@@ -47,15 +47,16 @@ jobs:
           head: ${{ env.NX_HEAD }}
 
   # Each app's release runs as its EAS workflow (<root>/.eas/workflows/build.yml) on EAS's machines,
-  # which decides between a native build and an OTA update. This job uploads the checkout, starts
-  # it, and waits, so a failed EAS run fails this run and the app is released again on the next merge.
+  # which decides between a native build and an OTA update. This job only uploads the checkout and
+  # starts it, since the free tier's queue can take over an hour. A failed EAS run sends its own
+  # notification, but this run still succeeds, so the next merge won't release that app again unless
+  # it's affected again.
   build:
     name: Build ${{ matrix.app.project }}
     needs: plan
     if: needs.plan.outputs.apps != '[]'
     runs-on: ubuntu-latest
-    # Mostly waiting on EAS, including its build queue.
-    timeout-minutes: 120
+    timeout-minutes: 20
     strategy:
       # Apps ship independently, so one failing shouldn't stop the others.
       fail-fast: false
@@ -79,4 +80,4 @@ jobs:
 
       - name: Run EAS workflow
         working-directory: ${{ matrix.app.root }}
-        run: eas workflow:run .eas/workflows/build.yml --non-interactive --wait
+        run: eas workflow:run .eas/workflows/build.yml --non-interactive

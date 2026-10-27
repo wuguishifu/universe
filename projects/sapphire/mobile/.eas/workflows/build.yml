@@ -101,3 +101,30 @@ jobs:
             "idempotencyKey": "update-${{ needs.update_ios.outputs.first_update_group_id }}"
           }
           JSON
+
+  # GitHub only starts this workflow and doesn't wait for it, so this is the only sign a release
+  # failed. `after` runs it once the release jobs finish, whether they passed, failed, or were
+  # skipped.
+  notify_ios_failure:
+    name: Notify about failed release
+    after: [fingerprint, get_ios_build, build_ios, update_ios]
+    if: ${{ failure() }}
+    environment: production
+    steps:
+      - name: Send notification
+        run: |
+          curl --fail-with-body --silent --show-error --retry 2 \
+            -X POST https://wuguishifu.dev/api/notifications \
+            -H "Authorization: Bearer $SAPPHIRE_WEB_API_TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d @- <<'JSON' || echo "Couldn't send the failure notification"
+          {
+            "channel": "general",
+            "title": "Sapphire release failed",
+            "body": "Nothing went out. Tap to open the workflow run on EAS.",
+            "url": "${{ workflow.url }}",
+            "ttlSeconds": 86400,
+            "collapseId": "sapphire-mobile-failure",
+            "idempotencyKey": "failure-${{ workflow.id }}"
+          }
+          JSON
