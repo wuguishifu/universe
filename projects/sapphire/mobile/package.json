@@ -4,7 +4,8 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
-    "eas-build-post-install": "cd ../../../ && node tools/scripts/eas-build-post-install.mjs . projects/sapphire/mobile && NX_DAEMON=false pnpm nx build convex-contracts && NX_DAEMON=false pnpm nx run sapphire-proxy:build-$EAS_BUILD_PLATFORM"
+    "eas-build-pre-install": "../proxy/build.sh $EAS_BUILD_PLATFORM",
+    "eas-build-post-install": "cd ../../../ && node tools/scripts/eas-build-post-install.mjs . projects/sapphire/mobile && NX_DAEMON=false pnpm nx build convex-contracts"
   },
   "dependencies": {
     "@expo/metro": "*",

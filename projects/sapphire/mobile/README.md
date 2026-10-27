@@ -102,11 +102,19 @@ pnpm nx build sapphire-mobile -- --profile development --platform ios --local
 ```
 
 EAS only copies what git tracks, so the proxy bindings and `@platform/convex-contracts` (a
-buildable lib whose `dist/` is gitignored) aren't in the build directory. `eas-build-post-install`
-in `package.json` builds both after EAS installs dependencies, using `EAS_BUILD_PLATFORM` to pick
-the iOS or Android bindings. EAS's images don't have Go, so `../proxy/build.sh` downloads the
-version in `go.mod` when it runs on EAS. Any other buildable lib the app starts importing needs
-adding to `eas-build-post-install` too.
+buildable lib whose `dist/` is gitignored) aren't in the build directory. The hooks in
+`package.json` build them:
+
+- `eas-build-pre-install` runs `../proxy/build.sh` for `EAS_BUILD_PLATFORM`. It has to run before
+  `pod install`, which drops a vendored framework that doesn't exist yet (the build then fails with
+  `no such module 'Sapphireproxy'`), and on iOS EAS installs pods before the post-install hook.
+  EAS's images don't have Go, so `build.sh` downloads the version in `go.mod` when it runs on EAS.
+- `eas-build-post-install` builds `convex-contracts` once dependencies are installed. Any other
+  buildable lib the app starts importing needs adding there too.
+
+Builds pin their image, Node, and pnpm in `eas.json`'s `base` profile: the `auto` image picked an
+old one for this app (Xcode 15.4, Node 18), and pnpm has to match the root `packageManager` to
+read the lockfile.
 
 EAS builds don't read `.env.local`. Each profile names an EAS environment (`development` or
 `production`); set `EXPO_PUBLIC_CONVEX_URL` and `EXPO_PUBLIC_NOTIFICATIONS_DEVICE_SECRET` there with
