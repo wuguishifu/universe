@@ -13,9 +13,7 @@
         "{projectRoot}/go.mod",
         "{projectRoot}/go.sum"
       ],
-      "outputs": [
-        "{projectRoot}/ios/Frameworks"
-      ],
+      "outputs": ["{projectRoot}/ios/Frameworks"],
       "options": {
         "command": "./build.sh ios",
         "cwd": "projects/sapphire/proxy"
@@ -29,9 +27,7 @@
         "{projectRoot}/go.mod",
         "{projectRoot}/go.sum"
       ],
-      "outputs": [
-        "{projectRoot}/android/libs"
-      ],
+      "outputs": ["{projectRoot}/android/libs"],
       "options": {
         "command": "./build.sh android",
         "cwd": "projects/sapphire/proxy"
