@@ -180,15 +180,44 @@ func Logout() error {
 func dial(s *tsnet.Server) func(ctx context.Context, network, addr string) (net.Conn, error) {
 	var direct net.Dialer
 	return func(ctx context.Context, network, addr string) (net.Conn, error) {
-		host, _, err := net.SplitHostPort(addr)
+		host, port, err := net.SplitHostPort(addr)
 		if err != nil {
 			return nil, err
 		}
 		if isTailnetHost(host) {
 			return s.Dial(ctx, network, addr)
 		}
+		ip, err := resolveTailnetIP(ctx, host)
+		if err != nil {
+			return nil, err
+		}
+		if ip != nil {
+			return s.Dial(ctx, network, net.JoinHostPort(ip.String(), port))
+		}
 		return direct.DialContext(ctx, network, addr)
 	}
+}
+
+var lookupIP = net.DefaultResolver.LookupIP
+
+// resolveTailnetIP resolves host through regular DNS and returns its first
+// tailnet address, or nil if it has none. Public records can point at tailnet
+// IPs (e.g. a Cloudflare record for a tailnet-only service), and those are
+// unreachable over the regular network.
+func resolveTailnetIP(ctx context.Context, host string) (net.IP, error) {
+	if net.ParseIP(host) != nil {
+		return nil, nil
+	}
+	ips, err := lookupIP(ctx, "ip", host)
+	if err != nil {
+		return nil, err
+	}
+	for _, ip := range ips {
+		if isTailnetIP(ip) {
+			return ip, nil
+		}
+	}
+	return nil, nil
 }
 
 var (
@@ -197,9 +226,13 @@ var (
 	magicIP = net.ParseIP("100.100.100.100")
 )
 
+func isTailnetIP(ip net.IP) bool {
+	return !ip.Equal(magicIP) && (cgnat.Contains(ip) || tsULA.Contains(ip))
+}
+
 func isTailnetHost(host string) bool {
 	if ip := net.ParseIP(host); ip != nil {
-		return !ip.Equal(magicIP) && (cgnat.Contains(ip) || tsULA.Contains(ip))
+		return isTailnetIP(ip)
 	}
 	host = strings.TrimSuffix(strings.ToLower(host), ".")
 	if host == "localhost" {

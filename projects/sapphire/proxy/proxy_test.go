@@ -1,8 +1,10 @@
 package sapphireproxy
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -28,6 +30,40 @@ func TestIsTailnetHost(t *testing.T) {
 			t.Errorf("isTailnetHost(%q) = %v, want %v", host, got, want)
 		}
 	}
+}
+
+func TestResolveTailnetIP(t *testing.T) {
+	records := map[string][]net.IP{
+		"auth.example.dev":  {net.ParseIP("100.110.46.33")},
+		"mixed.example.dev": {net.ParseIP("203.0.113.7"), net.ParseIP("fd7a:115c:a1e0::5")},
+		"cdn.example.com":   {net.ParseIP("203.0.113.8")},
+	}
+	defer func(orig func(context.Context, string, string) ([]net.IP, error)) { lookupIP = orig }(lookupIP)
+	lookupIP = func(_ context.Context, _, host string) ([]net.IP, error) {
+		return records[host], nil
+	}
+
+	for host, want := range map[string]string{
+		"auth.example.dev":  "100.110.46.33",
+		"mixed.example.dev": "fd7a:115c:a1e0::5",
+		"cdn.example.com":   "",
+		"203.0.113.9":       "",
+	} {
+		ip, err := resolveTailnetIP(context.Background(), host)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := ipString(ip); got != want {
+			t.Errorf("resolveTailnetIP(%q) = %q, want %q", host, got, want)
+		}
+	}
+}
+
+func ipString(ip net.IP) string {
+	if ip == nil {
+		return ""
+	}
+	return ip.String()
 }
 
 // Non-tailnet destinations dial directly, so both proxy modes can be
