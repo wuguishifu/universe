@@ -88,19 +88,25 @@ Push notifications don't work in a simulator, so test on a phone. To send one, u
 
 ## Building with EAS
 
-```sh
-# the build that lives on your phone, pointed at prod convex
-pnpm nx build sapphire-mobile -- --profile production-internal --platform ios --local
+Merging to main builds the app on EAS whenever it's affected:
+[`build-mobile-apps`](../../../.github/workflows/build-mobile-apps.yml) runs
+[`.eas/workflows/build.yml`](./.eas/workflows/build.yml) (iOS, `production-internal`) and waits for
+it. To build by hand:
 
-# a dev client pointed at dev convex (pnpm nx start sapphire-mobile to serve it)
+```sh
+# the build that lives on your phone, pointed at prod convex (same as the merge build)
+eas workflow:run .eas/workflows/build.yml
+
+# a dev client pointed at dev convex (pnpm nx start sapphire-mobile to serve it); --local builds on this Mac
 pnpm nx build sapphire-mobile -- --profile development --platform ios --local
 ```
 
-Builds run with `--local` because they need Go to build the proxy bindings, which EAS's build
-image doesn't have. EAS only copies what git tracks, so the bindings and `@platform/convex-contracts`
-(a buildable lib whose `dist/` is gitignored) aren't in the build directory. `eas-build-post-install`
+EAS only copies what git tracks, so the proxy bindings and `@platform/convex-contracts` (a
+buildable lib whose `dist/` is gitignored) aren't in the build directory. `eas-build-post-install`
 in `package.json` builds both after EAS installs dependencies, using `EAS_BUILD_PLATFORM` to pick
-the iOS or Android bindings. Any other buildable lib the app starts importing needs adding there too.
+the iOS or Android bindings. EAS's images don't have Go, so `../proxy/build.sh` downloads the
+version in `go.mod` when it runs on EAS. Any other buildable lib the app starts importing needs
+adding to `eas-build-post-install` too.
 
 EAS builds don't read `.env.local`. Each profile names an EAS environment (`development` or
 `production`); set `EXPO_PUBLIC_CONVEX_URL` and `EXPO_PUBLIC_NOTIFICATIONS_DEVICE_SECRET` there with
@@ -111,7 +117,6 @@ build, and stop launching when their provisioning profile expires (after a year)
 
 ## Known gaps
 
-- EAS builds only work with `--local`; building in the cloud would need Go + gomobile in the build
-  image (or prebuilt bindings).
+- The merge build is iOS only; Android needs its push setup (Firebase) first.
 - iOS suspends the node in the background; it reconnects on foreground in a second or two.
 - No tabs or URL bar inside the browser screen.

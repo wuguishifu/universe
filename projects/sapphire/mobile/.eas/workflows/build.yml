@@ -1,0 +1,11 @@
+# Run by .github/workflows/build-mobile-apps.yml when a merge to main affects this app, or by hand
+# with `eas workflow:run .eas/workflows/build.yml`. There's no `on`, so EAS never starts it itself.
+name: Build
+
+jobs:
+  build_ios:
+    name: Build iOS
+    type: build
+    params:
+      platform: ios
+      profile: production-internal
