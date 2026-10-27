@@ -3,7 +3,7 @@ import { ChevronLeft } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { WebView } from 'react-native-webview';
+import type { WebView } from 'react-native-webview';
 
 import {
   parseWindowMessage,
@@ -11,7 +11,7 @@ import {
   WINDOW_CLOSED_SCRIPT,
   WINDOW_OPEN_SHIM,
 } from '../modules/browser/popup-window';
-import { WebViewLoading } from '../modules/browser/webview-loading';
+import { LoadingWebView } from '../modules/browser/webview-loading';
 import { useColors } from '../modules/theme';
 
 export default function BrowseScreen() {
@@ -45,7 +45,7 @@ export default function BrowseScreen() {
         </TouchableOpacity>
         <Text style={{ color: colors.text }}>{title}</Text>
       </View>
-      <WebView
+      <LoadingWebView
         ref={webView}
         source={{ uri: url }}
         onNavigationStateChange={(nav) => setTitle(nav.title || nav.url)}
@@ -61,9 +61,6 @@ export default function BrowseScreen() {
         incognito={false}
         allowsBackForwardNavigationGestures
         sharedCookiesEnabled
-        startInLoadingState
-        renderLoading={() => <WebViewLoading />}
-        style={{ flex: 1, backgroundColor: colors.background }}
       />
       <PopupWindow url={popupUrl} onDismiss={dismissPopup} />
     </SafeAreaView>

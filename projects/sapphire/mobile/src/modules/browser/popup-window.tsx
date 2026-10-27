@@ -1,9 +1,9 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { WebView, type WebViewMessageEvent } from 'react-native-webview';
+import type { WebViewMessageEvent } from 'react-native-webview';
 
 import { useColors } from '../theme';
 
-import { WebViewLoading } from './webview-loading';
+import { LoadingWebView } from './webview-loading';
 
 /**
  * react-native-webview has no real popup support: `window.open()` returns
@@ -128,13 +128,10 @@ export function PopupWindow({
           </Pressable>
         </View>
         {url && (
-          <WebView
+          <LoadingWebView
             source={{ uri: url }}
             incognito={false}
             sharedCookiesEnabled
-            startInLoadingState
-            renderLoading={() => <WebViewLoading />}
-            style={{ flex: 1, backgroundColor: colors.background }}
           />
         )}
       </View>
