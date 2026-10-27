@@ -109,6 +109,9 @@
       "path": "./platform/notifications/client-nest"
     },
     {
+      "path": "./platform/notifications/client-next"
+    },
+    {
       "path": "./platform/notifications/contracts"
     },
     {

@@ -56,10 +56,10 @@ The **Notifications** row on the home screen shows whether the device is registe
 mute channels.
 
 ```
-any nest app ──NotificationsClient──▶ Redis queue ─┐
-                                    (or HTTP) ─────┴─▶ notifications-service ──▶ Expo push ──▶ APNs/FCM ──▶ this app
-                                                              │
-                                                              └── reads/prunes devices in convex ◀── this app registers
+any nest/next app ──NotificationsClient──▶ Redis queue ─┐
+                                         (or HTTP) ─────┴─▶ notifications-service ──▶ Expo push ──▶ APNs/FCM ──▶ this app
+                                                                   │
+                                                                   └── reads/prunes devices in convex ◀── this app registers
 ```
 
 - Channels are defined in `@platform/notifications-contracts/channels`. The app reads them from
@@ -91,7 +91,13 @@ Push notifications don't work in a simulator, so test on a phone. To send one, u
 Merging to main builds the app on EAS whenever it's affected:
 [`build-mobile-apps`](../../../.github/workflows/build-mobile-apps.yml) runs
 [`.eas/workflows/build.yml`](./.eas/workflows/build.yml) (iOS, `production-internal`) and waits for
-it. To build by hand:
+it. Once the build or update is out, the workflow notifies every device on the `general` channel
+through sapphire-web's `POST /api/notifications` (EAS can't reach notifications-service on the
+tailnet): a new build links to its EAS page to install it, and an OTA update just says it's on the
+way. That needs `SAPPHIRE_WEB_API_TOKEN` (secret visibility) in the `production` EAS environment,
+matching sapphire-web's `API_TOKEN`. A failed notification doesn't fail the release.
+
+To build by hand:
 
 ```sh
 # the build that lives on your phone, pointed at prod convex (same as the merge build)

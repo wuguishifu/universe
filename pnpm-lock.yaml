@@ -720,6 +720,15 @@ importers:
         specifier: workspace:*
         version: link:../contracts
 
+  platform/notifications/client-next:
+    dependencies:
+      '@libs/http':
+        specifier: workspace:*
+        version: link:../../../libs/http
+      '@platform/notifications-contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
   platform/notifications/contracts:
     dependencies:
       '@libs/queue':
@@ -1061,6 +1070,12 @@ importers:
       '@platform/convex-contracts':
         specifier: workspace:*
         version: link:../../../platform/convex/contracts
+      '@platform/notifications-client-next':
+        specifier: workspace:*
+        version: link:../../../platform/notifications/client-next
+      '@platform/notifications-contracts':
+        specifier: workspace:*
+        version: link:../../../platform/notifications/contracts
 
   projects/thermo-automation/contracts: {}
 

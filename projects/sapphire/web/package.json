@@ -6,7 +6,9 @@
     "start": "next start"
   },
   "dependencies": {
+    "@libs/ui-web": "workspace:*",
     "@platform/convex-contracts": "workspace:*",
-    "@libs/ui-web": "workspace:*"
+    "@platform/notifications-client-next": "workspace:*",
+    "@platform/notifications-contracts": "workspace:*"
   }
 }
