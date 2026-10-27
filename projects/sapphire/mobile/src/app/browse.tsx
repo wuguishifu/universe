@@ -11,6 +11,7 @@ import {
   WINDOW_CLOSED_SCRIPT,
   WINDOW_OPEN_SHIM,
 } from '../modules/browser/popup-window';
+import { WebViewLoading } from '../modules/browser/webview-loading';
 import { useColors } from '../modules/theme';
 
 export default function BrowseScreen() {
@@ -60,6 +61,8 @@ export default function BrowseScreen() {
         incognito={false}
         allowsBackForwardNavigationGestures
         sharedCookiesEnabled
+        startInLoadingState
+        renderLoading={() => <WebViewLoading />}
         style={{ flex: 1, backgroundColor: colors.background }}
       />
       <PopupWindow url={popupUrl} onDismiss={dismissPopup} />

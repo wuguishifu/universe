@@ -3,6 +3,8 @@ import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
 import { useColors } from '../theme';
 
+import { WebViewLoading } from './webview-loading';
+
 /**
  * react-native-webview has no real popup support: `window.open()` returns
  * null and the target is loaded into the opener's own WebView. SSO flows that
@@ -113,22 +115,29 @@ export function PopupWindow({
       presentationStyle="pageSheet"
       onRequestClose={onDismiss}
     >
-      <View style={[styles.header, { borderColor: colors.border }]}>
-        <Text numberOfLines={1} style={[styles.title, { color: colors.text }]}>
-          {url?.replace(/^\w+:\/\/([^/?#]+).*$/, '$1')}
-        </Text>
-        <Pressable onPress={onDismiss} hitSlop={8}>
-          <Text style={{ color: colors.accent, fontSize: 17 }}>Done</Text>
-        </Pressable>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={[styles.header, { borderColor: colors.border }]}>
+          <Text
+            numberOfLines={1}
+            style={[styles.title, { color: colors.text }]}
+          >
+            {url?.replace(/^\w+:\/\/([^/?#]+).*$/, '$1')}
+          </Text>
+          <Pressable onPress={onDismiss} hitSlop={8}>
+            <Text style={{ color: colors.accent, fontSize: 17 }}>Done</Text>
+          </Pressable>
+        </View>
+        {url && (
+          <WebView
+            source={{ uri: url }}
+            incognito={false}
+            sharedCookiesEnabled
+            startInLoadingState
+            renderLoading={() => <WebViewLoading />}
+            style={{ flex: 1, backgroundColor: colors.background }}
+          />
+        )}
       </View>
-      {url && (
-        <WebView
-          source={{ uri: url }}
-          incognito={false}
-          sharedCookiesEnabled
-          style={{ flex: 1 }}
-        />
-      )}
     </Modal>
   );
 }

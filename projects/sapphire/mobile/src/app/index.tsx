@@ -7,7 +7,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,8 +24,6 @@ const GAP = 8;
 export default function DashboardScreen() {
   const colors = useColors();
   const items = useQuery(api.sapphire.dashboard.list);
-  const { width } = useWindowDimensions();
-  const tileSize = (width - PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
 
   return (
     <SafeAreaView
@@ -47,41 +44,56 @@ export default function DashboardScreen() {
           </Text>
         ) : (
           <View style={styles.grid}>
-            {[...items]
-              .sort((a, b) => a.name.localeCompare(b.name))
-              .map((item) => (
-                <Pressable
-                  key={item._id}
-                  onPress={() =>
-                    router.push({
-                      pathname: '/browse',
-                      params: { url: item.url },
-                    })
-                  }
-                  style={({ pressed }) => [
-                    styles.tile,
-                    {
-                      width: tileSize,
-                      height: tileSize,
-                      backgroundColor: colors.card,
-                      opacity: pressed ? 0.6 : 1,
-                    },
-                  ]}
-                >
-                  <Image source={{ uri: item.iconUrl }} style={styles.icon} />
-                  <Text
-                    numberOfLines={2}
-                    style={[styles.name, { color: colors.text }]}
+            {chunk(
+              [...items].sort((a, b) => a.name.localeCompare(b.name)),
+              COLUMNS,
+            ).map((row) => (
+              <View key={row[0]?._id} style={styles.gridRow}>
+                {row.map((item) => (
+                  <Pressable
+                    key={item._id}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/browse',
+                        params: { url: item.url },
+                      })
+                    }
+                    style={({ pressed }) => [
+                      styles.tile,
+                      {
+                        backgroundColor: colors.card,
+                        opacity: pressed ? 0.6 : 1,
+                      },
+                    ]}
                   >
-                    {item.name}
-                  </Text>
-                </Pressable>
-              ))}
+                    <Image source={{ uri: item.iconUrl }} style={styles.icon} />
+                    <Text
+                      numberOfLines={2}
+                      style={[styles.name, { color: colors.text }]}
+                    >
+                      {item.name}
+                    </Text>
+                  </Pressable>
+                ))}
+                {/* Keep a short last row's tiles the same size as the rest. */}
+                {Array.from({ length: COLUMNS - row.length }, (_, i) => (
+                  <View key={i} style={styles.tileSpacer} />
+                ))}
+              </View>
+            ))}
           </View>
         )}
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const rows: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    rows.push(items.slice(i, i + size));
+  }
+  return rows;
 }
 
 function TailnetRow() {
@@ -196,16 +208,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   grid: {
+    gap: GAP,
+  },
+  gridRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: GAP,
   },
   tile: {
+    flex: 1,
+    aspectRatio: 1,
     borderRadius: 10,
     padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+  },
+  tileSpacer: {
+    flex: 1,
   },
   icon: {
     width: 48,
