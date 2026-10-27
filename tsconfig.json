@@ -119,6 +119,15 @@
     },
     {
       "path": "./projects/sapphire/mobile"
+    },
+    {
+      "path": "./projects/thermo-automation/mcp"
+    },
+    {
+      "path": "./platform/mcp/toolkit"
+    },
+    {
+      "path": "./platform/mcp/service"
     }
   ],
   "compilerOptions": {

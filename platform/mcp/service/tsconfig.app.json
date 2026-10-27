@@ -1,0 +1,39 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "module": "esnext",
+    "types": ["node"],
+    "rootDir": "src",
+    "moduleResolution": "bundler",
+    "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "target": "es2021",
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "strictBindCallApply": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "ignoreDeprecations": "6.0"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["eslint.config.js", "eslint.config.cjs", "eslint.config.mjs"],
+  "references": [
+    {
+      "path": "../../../projects/thermo-automation/mcp/tsconfig.lib.json"
+    },
+    {
+      "path": "../toolkit/tsconfig.lib.json"
+    },
+    {
+      "path": "../../../libs/redis-cache/tsconfig.lib.json"
+    },
+    {
+      "path": "../../../libs/nest/redis-cache/tsconfig.lib.json"
+    },
+    {
+      "path": "../../../libs/nest/core/tsconfig.lib.json"
+    }
+  ]
+}
