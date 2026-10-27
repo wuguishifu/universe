@@ -14,7 +14,7 @@ import { z } from 'zod';
 import { RedisCacheService } from '@libs/nest-redis-cache';
 
 import { EnvironmentService } from '../../config/environment';
-import { type Grant, MCP_REDIS } from '../../config/redis-keys';
+import { type Issued, MCP_REDIS } from '../../config/redis-keys';
 
 import { AutheliaService } from './authelia.service';
 import { ClientsService } from './clients.service';
@@ -58,7 +58,8 @@ const sameResource = (a: string, b: string) =>
 /**
  * The OAuth 2.1 authorization server MCP clients see. It has no users of its own: /authorize sends
  * the browser to Authelia, and once Authelia comes back to /callback it gives the client a code
- * for its own tokens. Tokens are opaque and live in Redis, so deleting a key revokes one.
+ * for its own tokens. Tokens are opaque and live in Redis, grouped by grant (one sign-in), so
+ * deleting a grant revokes that connection.
  */
 @Injectable()
 export class OAuthService implements OAuthTokenVerifier {
@@ -234,6 +235,7 @@ export class OAuthService implements OAuthTokenVerifier {
       value: {
         clientId: pending.clientId,
         subject,
+        grantId: randomToken(),
         redirectUri: pending.redirectUri,
         codeChallenge: pending.codeChallenge,
       },
@@ -261,15 +263,14 @@ export class OAuthService implements OAuthTokenVerifier {
       );
     }
 
-    let grant: Grant | undefined;
+    let issued: Issued | undefined;
     switch (params.grant_type) {
       case 'authorization_code': {
         const code =
           params.code &&
-          (await this.redis.take({
-            key: MCP_REDIS.authorizationCodes,
-            id: hashToken(params.code),
-          }));
+          (await this.redeem(params.code, (id) =>
+            this.redis.take({ key: MCP_REDIS.authorizationCodes, id }),
+          ));
         const valid =
           code &&
           code.clientId === client.clientId &&
@@ -277,19 +278,21 @@ export class OAuthService implements OAuthTokenVerifier {
             params.redirect_uri === code.redirectUri) &&
           params.code_verifier !== undefined &&
           safeEqual(hashToken(params.code_verifier), code.codeChallenge);
-        grant = valid ? code : undefined;
+        issued = valid ? code : undefined;
         break;
       }
       case 'refresh_token': {
         // Refresh tokens are single use: each refresh gets a new one (OAuth 2.1, public clients).
         const stored =
           params.refresh_token &&
-          (await this.redis.take({
-            key: MCP_REDIS.refreshTokens,
-            id: hashToken(params.refresh_token),
-          }));
-        grant =
-          stored && stored.clientId === client.clientId ? stored : undefined;
+          (await this.redeem(params.refresh_token, (id) =>
+            this.redis.take({ key: MCP_REDIS.refreshTokens, id }),
+          ));
+        const live =
+          stored &&
+          stored.clientId === client.clientId &&
+          (await this.isLive(stored.grantId));
+        issued = live ? stored : undefined;
         break;
       }
       default:
@@ -298,7 +301,7 @@ export class OAuthService implements OAuthTokenVerifier {
           'Use authorization_code or refresh_token',
         );
     }
-    if (!grant) {
+    if (!issued) {
       throw new OAuthError(
         OAuthErrorCode.InvalidGrant,
         'The code or refresh token is invalid, expired or already used',
@@ -306,10 +309,7 @@ export class OAuthService implements OAuthTokenVerifier {
     }
 
     await this.clients.save(client);
-    return this.issueTokens({
-      clientId: grant.clientId,
-      subject: grant.subject,
-    });
+    return this.issueTokens(issued);
   }
 
   async verifyAccessToken(token: string): Promise<AuthInfo> {
@@ -317,7 +317,7 @@ export class OAuthService implements OAuthTokenVerifier {
       key: MCP_REDIS.accessTokens,
       id: hashToken(token),
     });
-    if (!stored) {
+    if (!stored || !(await this.isLive(stored.grantId))) {
       throw new OAuthError(
         OAuthErrorCode.InvalidToken,
         'Unknown or expired token',
@@ -333,15 +333,63 @@ export class OAuthService implements OAuthTokenVerifier {
     };
   }
 
-  private async issueTokens(grant: Grant) {
+  /**
+   * Takes a single-use code or refresh token, remembering it as spent. Spent tokens aren't
+   * expected again: one coming back means it was stolen and both the thief and the client have
+   * used it, so the grant it came from is revoked. That cuts off whichever of them holds the
+   * replacement, and the user signs in again.
+   */
+  private async redeem<T extends { grantId: string }>(
+    token: string,
+    take: (id: string) => Promise<T | undefined>,
+  ): Promise<T | undefined> {
+    const id = hashToken(token);
+    const stored = await take(id);
+    if (stored) {
+      await this.redis.set({
+        key: MCP_REDIS.spentTokens,
+        id,
+        value: { grantId: stored.grantId },
+        ttlSeconds: this.refreshTokenTtlSeconds,
+      });
+      return stored;
+    }
+
+    const spent = await this.redis.get({ key: MCP_REDIS.spentTokens, id });
+    if (
+      spent &&
+      (await this.redis.delete({ key: MCP_REDIS.grants, id: spent.grantId }))
+    ) {
+      this.logger.warn(
+        `A spent code or refresh token was used again, so its grant ${spent.grantId} was revoked`,
+      );
+    }
+    return undefined;
+  }
+
+  private async isLive(grantId: string): Promise<boolean> {
+    const grant = await this.redis.get({ key: MCP_REDIS.grants, id: grantId });
+    return grant !== undefined;
+  }
+
+  private async issueTokens({ grantId, clientId, subject }: Issued) {
     const accessToken = randomToken();
     const refreshToken = randomToken();
     await Promise.all([
+      // Lives as long as its latest refresh token.
+      this.redis.set({
+        key: MCP_REDIS.grants,
+        id: grantId,
+        value: { clientId, subject },
+        ttlSeconds: this.refreshTokenTtlSeconds,
+      }),
       this.redis.set({
         key: MCP_REDIS.accessTokens,
         id: hashToken(accessToken),
         value: {
-          ...grant,
+          grantId,
+          clientId,
+          subject,
           expiresAt: Date.now() + this.accessTokenTtlSeconds * 1000,
         },
         ttlSeconds: this.accessTokenTtlSeconds,
@@ -349,7 +397,7 @@ export class OAuthService implements OAuthTokenVerifier {
       this.redis.set({
         key: MCP_REDIS.refreshTokens,
         id: hashToken(refreshToken),
-        value: grant,
+        value: { grantId, clientId, subject },
         ttlSeconds: this.refreshTokenTtlSeconds,
       }),
     ]);

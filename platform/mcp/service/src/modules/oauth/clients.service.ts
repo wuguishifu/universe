@@ -80,10 +80,10 @@ export class ClientsService {
     const rejected = metadata.redirect_uris.find(
       (uri) => !this.isAllowedRedirectUri(uri),
     );
-    if (rejected) {
+    if (rejected !== undefined) {
       throw new OAuthError(
         OAuthErrorCode.InvalidRedirectUri,
-        `${rejected} isn't an allowed redirect URI`,
+        `${JSON.stringify(rejected)} isn't an allowed redirect URI`,
       );
     }
 

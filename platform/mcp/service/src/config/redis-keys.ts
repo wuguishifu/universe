@@ -27,6 +27,13 @@ export const grantSchema = z.object({
 });
 export type Grant = z.infer<typeof grantSchema>;
 
+/**
+ * What a code or token carries: the grant (one sign-in) it came from. Every refresh token and
+ * access token of one connection shares the grant, so deleting the grant revokes them all.
+ */
+export const issuedSchema = grantSchema.extend({ grantId: z.string() });
+export type Issued = z.infer<typeof issuedSchema>;
+
 /** A sign-in that went to Authelia and hasn't come back yet. */
 export const pendingAuthorizationSchema = z.object({
   clientId: z.string(),
@@ -40,12 +47,12 @@ export const pendingAuthorizationSchema = z.object({
 });
 export type PendingAuthorization = z.infer<typeof pendingAuthorizationSchema>;
 
-export const authorizationCodeSchema = grantSchema.extend({
+export const authorizationCodeSchema = issuedSchema.extend({
   redirectUri: z.string(),
   codeChallenge: z.string(),
 });
 
-export const accessTokenSchema = grantSchema.extend({
+export const accessTokenSchema = issuedSchema.extend({
   /** Epoch milliseconds. */
   expiresAt: z.number(),
 });
@@ -70,5 +77,14 @@ export const MCP_REDIS = defineRedisKeys('mcp-service', {
   accessTokens: redisValue('access-tokens', accessTokenSchema, {
     perId: true,
   }),
-  refreshTokens: redisValue('refresh-tokens', grantSchema, { perId: true }),
+  refreshTokens: redisValue('refresh-tokens', issuedSchema, { perId: true }),
+  /** By grant id. A connection is live while its grant is. */
+  grants: redisValue('grants', grantSchema, { perId: true }),
+  /**
+   * Codes and refresh tokens already used, by hash: a second use means one was stolen, so the
+   * grant is revoked.
+   */
+  spentTokens: redisValue('spent-tokens', z.object({ grantId: z.string() }), {
+    perId: true,
+  }),
 });

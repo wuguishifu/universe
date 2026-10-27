@@ -22,7 +22,10 @@ GET  /.well-known/oauth-authorization-server, /.well-known/oauth-protected-resou
 ```
 
 Tokens are opaque random strings, kept in Redis under their SHA-256 (`MCP_REDIS` in
-[redis-keys.ts](src/config/redis-keys.ts)), so deleting a key revokes one. `/mcp` is stateless:
+[redis-keys.ts](src/config/redis-keys.ts)). Each sign-in is a grant, and every token issued from it
+carries the grant's id: tokens only work while their grant exists, so deleting it revokes the
+connection. Codes and refresh tokens are single use, and a spent one coming back (it was stolen, and
+both the thief and the client have used it) revokes its grant. `/mcp` is stateless:
 `createMcpHandler` from `@modelcontextprotocol/server` serves both the 2026-07-28 protocol and the
 2025 one, building a server per request. Every tool call is logged with the client's id.
 
