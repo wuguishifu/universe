@@ -76,6 +76,24 @@ final class SnapshotTests: XCTestCase {
     }
   }
 
+  func testEqualityIgnoresOrderAndUnusedFields() throws {
+    let data = try makeSync()
+    var root = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+    var ciphers = try XCTUnwrap(root["ciphers"] as? [[String: Any]])
+    ciphers.reverse()
+    ciphers[0]["attachments"] = [["url": "https://vault.example.com/attachments/a?token=fresh"]]
+    root["ciphers"] = ciphers
+    let reordered = try JSONSerialization.data(withJSONObject: root)
+
+    XCTAssertNotEqual(data, reordered)
+    XCTAssertEqual(try VaultSnapshot(syncResponse: data), try VaultSnapshot(syncResponse: reordered))
+
+    ciphers[0]["favorite"] = true
+    root["ciphers"] = ciphers
+    let edited = try JSONSerialization.data(withJSONObject: root)
+    XCTAssertNotEqual(try VaultSnapshot(syncResponse: data), try VaultSnapshot(syncResponse: edited))
+  }
+
   func testInvalidResponse() {
     XCTAssertThrowsError(try VaultSnapshot(syncResponse: Data("{}".utf8)))
     XCTAssertThrowsError(try VaultSnapshot(syncResponse: Data("nope".utf8)))

@@ -6,6 +6,7 @@ type NativeSapphireProxy = {
   status(): Promise<string>;
   logout(): Promise<void>;
   logs(): string;
+  log(line: string): void;
 };
 
 const native = requireNativeModule<NativeSapphireProxy>('SapphireProxy');
@@ -57,4 +58,9 @@ export function logout(): Promise<void> {
 
 export function logs(): string {
   return native.logs();
+}
+
+/** Adds a line to the same buffer as the tailnet's logs. Never pass secrets. */
+export function log(line: string) {
+  native.log(line);
 }

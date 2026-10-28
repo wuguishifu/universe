@@ -71,7 +71,7 @@ jobs:
           {
             "channel": "general",
             "title": "Sapphire ${{ needs.build_ios.outputs.app_version }} (${{ needs.build_ios.outputs.app_build_version }}) is ready to install",
-            "body": "This one has native changes, so it needs installing. Tap to open the build on EAS.",
+            "body": "Tap to open the build on EAS.",
             "url": "https://expo.dev/accounts/wuguishifu/projects/sapphire-mobile/builds/${{ needs.build_ios.outputs.build_id }}",
             "ttlSeconds": 86400,
             "collapseId": "sapphire-mobile-build",
@@ -95,7 +95,7 @@ jobs:
           {
             "channel": "general",
             "title": "Sapphire update published",
-            "body": "It downloads the next time the app launches and applies on the launch after that.",
+            "body": "Open the app twice to install.",
             "ttlSeconds": 86400,
             "collapseId": "sapphire-mobile-update",
             "idempotencyKey": "update-${{ needs.update_ios.outputs.first_update_group_id }}"

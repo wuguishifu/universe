@@ -18,8 +18,17 @@ public struct VaultItemSecret: Equatable {
 
 /// The cached `/api/sync` response, still encrypted. Only personal, non-deleted logins count:
 /// organization items, the trash, and the other item types are out of scope for now.
-public struct VaultSnapshot {
-  struct Cipher {
+///
+/// Two snapshots are equal when they hold the same items, whatever order the server sent them in.
+/// The raw responses can differ even then (e.g. signed attachment URLs that are minted per
+/// request), so compare snapshots, not bytes, to tell whether a sync changed anything.
+public struct VaultSnapshot: Equatable {
+  struct Cipher: Equatable {
+    struct Uri: Equatable {
+      let uri: String?
+      let match: Int?
+    }
+
     let id: String
     /// Per-item key, wrapped with the user key. Newer clients set one on every item they save.
     let key: String?
@@ -28,7 +37,7 @@ public struct VaultSnapshot {
     let username: String?
     let password: String?
     let totp: String?
-    let uris: [(uri: String?, match: Int?)]
+    let uris: [Uri]
   }
 
   let ciphers: [Cipher]
@@ -49,7 +58,7 @@ public struct VaultSnapshot {
       else { return nil }
 
       let uris = (login.field("uris") as? [[String: Any]] ?? []).map {
-        (uri: $0.field("uri") as? String, match: $0.field("match") as? Int)
+        Cipher.Uri(uri: $0.field("uri") as? String, match: $0.field("match") as? Int)
       }
       return Cipher(
         id: id,
@@ -64,6 +73,10 @@ public struct VaultSnapshot {
   }
 
   public var count: Int { ciphers.count }
+
+  public static func == (lhs: Self, rhs: Self) -> Bool {
+    lhs.ciphers.sorted { $0.id < $1.id } == rhs.ciphers.sorted { $0.id < $1.id }
+  }
 
   /// Decrypts every item's summary. Items that fail to decrypt are skipped, unless they all
   /// fail, which means the user key is wrong (e.g. the account's keys were rotated).

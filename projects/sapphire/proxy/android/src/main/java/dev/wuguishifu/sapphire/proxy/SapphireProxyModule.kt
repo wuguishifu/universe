@@ -46,6 +46,10 @@ class SapphireProxyModule : Module() {
     Function("logs") {
       Sapphireproxy.recentLogs()
     }
+
+    Function("log") { line: String ->
+      Sapphireproxy.log(line)
+    }
   }
 
   // Applies to every WebView in the process.

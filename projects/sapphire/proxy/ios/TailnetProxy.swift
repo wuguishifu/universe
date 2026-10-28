@@ -17,6 +17,11 @@ public enum TailnetProxy {
     return port > 0 ? configuration(port: port) : nil
   }
 
+  /// Adds a line to the tailnet's log buffer, next to the proxy's own.
+  public static func log(_ line: String) {
+    SapphireproxyLog(line)
+  }
+
   /// An ephemeral URLSession that tunnels every request through the tailnet proxy.
   public static func session() -> URLSession? {
     guard let proxy = current() else { return nil }

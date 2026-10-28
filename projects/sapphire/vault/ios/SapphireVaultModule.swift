@@ -14,6 +14,10 @@ public class SapphireVaultModule: Module {
   public func definition() -> ModuleDefinition {
     Name("SapphireVault")
 
+    OnCreate {
+      VaultLog.sink = TailnetProxy.log
+    }
+
     AsyncFunction("getState") { () throws -> [String: Any] in
       try bridged {
         let state = try self.vault.get().state()
@@ -51,7 +55,9 @@ public class SapphireVaultModule: Module {
         let vault = try self.vault.get()
         let summaries = try await Task.detached {
           let userKey = try vault.userKey(prompt: "Unlock your vault")
-          // Read the cache after Face ID, so a sync that lands during the prompt is included.
+          // Prompt first, then give a sync that's already running (e.g. the app just opened) a
+          // moment to land, so the list is read from the cache it's about to write.
+          await vault.waitForSync(timeout: .seconds(5))
           return try vault.snapshot().summaries(userKey: userKey)
         }.value
         await CredentialIdentities.replace(with: summaries)
