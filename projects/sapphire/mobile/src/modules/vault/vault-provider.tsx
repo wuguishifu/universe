@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { AppState } from 'react-native';
 
+import * as SapphireProxy from '@projects/sapphire-proxy';
 import * as SapphireVault from '@projects/sapphire-vault';
 
 import { useTailnet } from '../tailnet/tailnet-provider';
@@ -96,6 +97,9 @@ export function VaultProvider({ children }: { children: ReactNode }) {
             if (!network || attempt === SYNC_ATTEMPTS) {
               throw error;
             }
+            SapphireProxy.log(
+              `app: sync attempt ${attempt} failed, retrying in ${SYNC_RETRY_MS}ms`,
+            );
             await new Promise((resolve) => setTimeout(resolve, SYNC_RETRY_MS));
           }
         }
@@ -123,12 +127,14 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     if (!running || !loggedIn) {
       return;
     }
+    SapphireProxy.log('app: syncing now that the tailnet is running');
     void syncNow();
     // Only after the background: Face ID prompts take the app from active to inactive and back,
     // and syncing then would relock the list whenever the cache changed, asking for Face ID again.
     let previous = AppState.currentState;
     const subscription = AppState.addEventListener('change', (next) => {
       if (next === 'active' && previous === 'background') {
+        SapphireProxy.log('app: syncing after coming back from the background');
         void syncNow();
       }
       previous = next;
@@ -154,10 +160,17 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
   // Native unlock waits for a running sync after Face ID, so the prompt shows straight away.
   const unlock = useCallback(async () => {
+    // Face ID, plus any wait for a running sync.
+    const started = Date.now();
+    SapphireProxy.log('app: unlocking');
     try {
       setItems(await SapphireVault.unlock());
+      SapphireProxy.log(`app: unlocked in ${Date.now() - started}ms`);
       return true;
     } catch (error) {
+      SapphireProxy.log(
+        `app: unlock failed after ${Date.now() - started}ms: ${SapphireVault.errorMessage(error)}`,
+      );
       const code = SapphireVault.errorCode(error);
       if (
         code === SapphireVault.VaultErrorCode.UserCanceled ||

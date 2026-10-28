@@ -43,6 +43,10 @@ public class SapphireProxyModule: Module {
     Function("logs") {
       SapphireproxyRecentLogs()
     }
+
+    Function("log") { (line: String) in
+      SapphireproxyLog(line)
+    }
   }
 
   private func stateDir() throws -> String {

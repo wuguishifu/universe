@@ -72,11 +72,12 @@ func (p *proxyServer) close() {
 }
 
 func tunnel(w http.ResponseWriter, r *http.Request, dialer func(ctx context.Context, network, addr string) (net.Conn, error)) {
+	started := time.Now()
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 	upstream, err := dialer(ctx, "tcp", r.Host)
 	cancel()
 	if err != nil {
-		logf("proxy: CONNECT %s: %v", r.Host, err)
+		logf("proxy: CONNECT %s failed after %dms: %v", r.Host, time.Since(started).Milliseconds(), err)
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}

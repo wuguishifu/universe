@@ -117,16 +117,21 @@ public struct VaultApi {
     request.setValue(String(1), forHTTPHeaderField: "Device-Type")
     request.timeoutInterval = 30
 
+    // The path only: the query and headers can carry tokens.
+    let label = "\(request.httpMethod ?? "GET") \(request.url?.path() ?? "?")"
+    let started = ContinuousClock.now
     let data: Data
     let response: URLResponse
     do {
       (data, response) = try await session.data(for: request)
     } catch {
+      VaultLog.log("\(label) failed after \(started.elapsed): \(error.localizedDescription)")
       throw VaultError.network(error.localizedDescription)
     }
     guard let http = response as? HTTPURLResponse else {
       throw VaultError.invalidResponse("not an HTTP response")
     }
+    VaultLog.log("\(label) \(http.statusCode), \(data.count) bytes in \(started.elapsed)")
     guard (200..<300).contains(http.statusCode) else {
       let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] ?? [:]
       if json.field("TwoFactorProviders") != nil {

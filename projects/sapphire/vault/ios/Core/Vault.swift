@@ -114,13 +114,18 @@ public actor Vault {
   /// Fetches `/api/sync` and replaces the cache. Concurrent calls share one request.
   public func sync(session: URLSession) async throws -> SyncResult {
     if let inFlightSync {
+      VaultLog.log("sync: joining the one already running")
       return try await inFlightSync.value
     }
     let generation = generation
     let task = Task {
+      let started = ContinuousClock.now
       do {
-        return try await performSync(session: session, generation: generation)
+        let result = try await performSync(session: session, generation: generation)
+        VaultLog.log("sync: done in \(started.elapsed), \(result.changed ? "changed" : "unchanged")")
+        return result
       } catch {
+        VaultLog.log("sync: failed after \(started.elapsed): \(error.localizedDescription)")
         // Whatever went wrong, report that the account changed if it did.
         try checkCurrent(generation)
         throw error
@@ -137,6 +142,8 @@ public actor Vault {
   /// Waits up to `timeout` for a running sync to finish, so a read right after sees its cache.
   public func waitForSync(timeout: Duration) async {
     guard let inFlightSync else { return }
+    let started = ContinuousClock.now
+    defer { VaultLog.log("unlock: waited \(started.elapsed) for the running sync") }
     // Awaiting a task's value ignores cancellation, so race it against the timeout by hand.
     let (done, continuation) = AsyncStream<Void>.makeStream()
     Task {
@@ -188,6 +195,7 @@ public actor Vault {
     if let accessToken, accessToken.expires.timeIntervalSinceNow > 60 {
       return accessToken.token
     }
+    VaultLog.log("sync: refreshing the access token")
     let appKeychain = try requireAppKeychain()
     guard let stored = try appKeychain.get(account: Account.refreshToken),
       let refreshToken = String(data: stored, encoding: .utf8)

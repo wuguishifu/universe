@@ -48,12 +48,18 @@ export function TailnetProvider({ children }: { children: ReactNode }) {
     }
 
     let foreground = AppState.currentState === 'active';
+    let lastState: SapphireProxy.BackendState | undefined;
     const poll = async () => {
       if (!foreground) {
         return;
       }
       try {
         const status = await SapphireProxy.status();
+        // When the app noticed, which can trail tsnet's own state change by a poll interval.
+        if (status.backendState !== lastState) {
+          lastState = status.backendState;
+          SapphireProxy.log(`app: tailnet is ${status.backendState}`);
+        }
         setTailnet((t) => (t.phase === 'started' ? { ...t, status } : t));
       } catch {
         // Transient while the backend restarts; the next poll will catch up.

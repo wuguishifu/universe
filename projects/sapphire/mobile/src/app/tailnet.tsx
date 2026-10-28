@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -174,7 +175,14 @@ function Logs() {
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card }]}>
-      <Button label="Refresh" onPress={() => setLogs(SapphireProxy.logs())} />
+      <View style={{ flexDirection: 'row', gap: 16 }}>
+        <Button label="Refresh" onPress={() => setLogs(SapphireProxy.logs())} />
+        {/* The whole buffer, not just what's shown, and without selectable text's copy limits. */}
+        <Button
+          label="Share"
+          onPress={() => void Share.share({ message: SapphireProxy.logs() })}
+        />
+      </View>
       <Text selectable style={[styles.logs, { color: colors.muted }]}>
         {logs.split('\n').slice(-150).join('\n')}
       </Text>

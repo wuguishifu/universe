@@ -14,6 +14,10 @@ public class SapphireVaultModule: Module {
   public func definition() -> ModuleDefinition {
     Name("SapphireVault")
 
+    OnCreate {
+      VaultLog.sink = TailnetProxy.log
+    }
+
     AsyncFunction("getState") { () throws -> [String: Any] in
       try bridged {
         let state = try self.vault.get().state()

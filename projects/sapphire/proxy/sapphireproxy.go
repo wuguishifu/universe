@@ -185,17 +185,29 @@ func dial(s *tsnet.Server) func(ctx context.Context, network, addr string) (net.
 			return nil, err
 		}
 		if isTailnetHost(host) {
-			return s.Dial(ctx, network, addr)
+			return dialTailnet(ctx, s, network, addr, addr, 0)
 		}
+		started := time.Now()
 		ip, err := resolveTailnetIP(ctx, host)
 		if err != nil {
 			return nil, err
 		}
 		if ip != nil {
-			return s.Dial(ctx, network, net.JoinHostPort(ip.String(), port))
+			return dialTailnet(ctx, s, network, addr, net.JoinHostPort(ip.String(), port), time.Since(started))
 		}
 		return direct.DialContext(ctx, network, addr)
 	}
+}
+
+// dialTailnet dials target through tsnet and logs how long it took (and how long the public DNS
+// lookup that found it took), since the first dials after a cold start wait on the tailnet.
+func dialTailnet(ctx context.Context, s *tsnet.Server, network, addr, target string, lookup time.Duration) (net.Conn, error) {
+	started := time.Now()
+	conn, err := s.Dial(ctx, network, target)
+	if err == nil {
+		logf("proxy: dialed %s over the tailnet in %dms (dns %dms)", addr, time.Since(started).Milliseconds(), lookup.Milliseconds())
+	}
+	return conn, err
 }
 
 var lookupIP = net.DefaultResolver.LookupIP
