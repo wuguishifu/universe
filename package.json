@@ -75,6 +75,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1108.0",
     "@aws-sdk/s3-request-presigner": "^3.1108.0",
+    "@bacons/apple-targets": "5.0.0",
     "@convex-dev/resend": "^0.2.3",
     "@discordjs/voice": "^0.19.2",
     "@expo/metro": "~56.0.0",

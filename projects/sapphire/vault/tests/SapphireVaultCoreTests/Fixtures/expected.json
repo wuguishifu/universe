@@ -1,0 +1,45 @@
+[
+  {
+    "name": "GitHub",
+    "username": "octocat@example.com",
+    "password": "gh-test-password-1",
+    "uris": [{ "uri": "https://github.com", "match": null }],
+    "totp": "JBSWY3DPEHPK3PXP",
+    "favorite": true
+  },
+  {
+    "name": "Host Match",
+    "username": "host-user",
+    "password": "host-pass",
+    "uris": [{ "uri": "https://login.example.co.uk:8443", "match": 1 }],
+    "totp": null,
+    "favorite": false
+  },
+  {
+    "name": "Exact Match",
+    "username": "exact-user",
+    "password": "exact-pass",
+    "uris": [
+      { "uri": "https://example.org/login", "match": 3 },
+      { "uri": "example.net", "match": null }
+    ],
+    "totp": null,
+    "favorite": false
+  },
+  {
+    "name": "No Username",
+    "username": null,
+    "password": "only-a-password",
+    "uris": [],
+    "totp": null,
+    "favorite": false
+  },
+  {
+    "name": "Café ☕",
+    "username": "ünïcødé",
+    "password": "pässwörd-✓",
+    "uris": [{ "uri": "https://unicode.example.com/a", "match": 2 }],
+    "totp": "otpauth://totp/Example:alice?secret=JBSWY3DPEHPK3PXP&issuer=Example&digits=8&period=60&algorithm=SHA256",
+    "favorite": false
+  }
+]

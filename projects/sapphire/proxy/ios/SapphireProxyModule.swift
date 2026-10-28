@@ -57,9 +57,6 @@ public class SapphireProxyModule: Module {
   // every WebView in the app tunnels through the local proxy via CONNECT.
   @MainActor
   private func routeWebViews(port: Int) {
-    let endpoint = NWEndpoint.hostPort(host: "127.0.0.1", port: NWEndpoint.Port(integerLiteral: UInt16(port)))
-    WKWebsiteDataStore.default().proxyConfigurations = [
-      ProxyConfiguration(httpCONNECTProxy: endpoint)
-    ]
+    WKWebsiteDataStore.default().proxyConfigurations = [TailnetProxy.configuration(port: port)]
   }
 }

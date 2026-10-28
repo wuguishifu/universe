@@ -12,10 +12,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { api } from '@platform/convex-contracts';
+import * as SapphireVault from '@projects/sapphire-vault';
 
 import { usePushRegistration } from '../modules/notifications/push-registration';
 import { useTailnet } from '../modules/tailnet/tailnet-provider';
 import { useColors } from '../modules/theme';
+import { formatAgo, useVault } from '../modules/vault/vault-provider';
 
 const COLUMNS = 3;
 const PADDING = 16;
@@ -33,6 +35,7 @@ export default function DashboardScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <TailnetRow />
         <NotificationsRow />
+        {SapphireVault.isAvailable && <VaultRow />}
         <Text style={[styles.sectionTitle, { color: colors.muted }]}>
           SERVICES
         </Text>
@@ -135,6 +138,40 @@ function NotificationsRow() {
       label={`Notifications · ${state}`}
       health={health}
       onPress={() => router.push('/notifications')}
+    />
+  );
+}
+
+function VaultRow() {
+  const { state, sync, items } = useVault();
+
+  let label: string;
+  let health: 'ok' | 'error' | 'neutral' = 'neutral';
+  if (!state) {
+    label = 'Loading';
+  } else if (!state.loggedIn) {
+    label = 'Tap to log in';
+  } else if (!state.keyAvailable || state.needsReauth) {
+    label = 'Enter master password';
+    health = 'error';
+  } else {
+    const synced =
+      sync.status === 'syncing'
+        ? 'syncing'
+        : sync.status === 'error'
+          ? 'sync failed'
+          : state.lastSync
+            ? `synced ${formatAgo(state.lastSync)}`
+            : 'not synced';
+    label = `${items ? 'Unlocked' : 'Locked'} · ${synced}`;
+    health = sync.status === 'error' ? 'error' : 'ok';
+  }
+
+  return (
+    <StatusRow
+      label={`Vault · ${label}`}
+      health={health}
+      onPress={() => router.push('/vault')}
     />
   );
 }

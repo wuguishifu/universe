@@ -1,0 +1,30 @@
+{
+  "name": "sapphire-vault",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/sapphire/vault",
+  "projectType": "library",
+  "tags": ["scope:client"],
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "swift test",
+        "cwd": "projects/sapphire/vault"
+      }
+    },
+    "capture-fixtures": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node scripts/capture-fixtures.mjs",
+        "cwd": "projects/sapphire/vault"
+      }
+    },
+    "update-public-suffix-list": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./scripts/update-public-suffix-list.sh",
+        "cwd": "projects/sapphire/vault"
+      }
+    }
+  }
+}

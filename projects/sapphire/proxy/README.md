@@ -12,6 +12,10 @@ serves a localhost HTTP proxy (CONNECT + absolute-URI) in front of it. The same 
 Exported API (gomobile-safe types only): `Start(dir, hostname)`, `Stop()`, `ProxyPort()`,
 `Status()` (JSON), `Logout()`, `RecentLogs()`, `SetInterfaces(spec)` (Android).
 
+On iOS, `TailnetProxy` (`ios/TailnetProxy.swift`) hands the running proxy to other native code as a
+`ProxyConfiguration` or a ready-made `URLSession`; [`sapphire-vault`](../vault) uses it for its API
+calls.
+
 ```sh
 pnpm nx run sapphire-proxy:build-ios      # → ios/Frameworks
 pnpm nx run sapphire-proxy:build-android  # → android/libs

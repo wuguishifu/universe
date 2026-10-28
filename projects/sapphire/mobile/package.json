@@ -12,6 +12,7 @@
     "@expo/metro-runtime": "*",
     "@platform/convex-contracts": "workspace:*",
     "@projects/sapphire-proxy": "workspace:*",
+    "@projects/sapphire-vault": "workspace:*",
     "convex": "*",
     "expo": "*",
     "expo-build-properties": "*",

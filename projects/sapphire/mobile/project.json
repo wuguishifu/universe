@@ -17,8 +17,15 @@
       "executor": "nx:run-commands",
       "options": { "command": "eas build", "cwd": "projects/sapphire/mobile" }
     },
-    "prebuild": { "dependsOn": ["sapphire-proxy:build"] },
+    "prebuild": { "dependsOn": ["setup", "sapphire-proxy:build"] },
     "run-ios": { "dependsOn": ["sapphire-proxy:build-ios"] },
-    "run-android": { "dependsOn": ["sapphire-proxy:build-android"] }
+    "run-android": { "dependsOn": ["sapphire-proxy:build-android"] },
+    "setup": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["rm -rf .expo android ios dist"],
+        "cwd": "projects/sapphire/mobile"
+      }
+    }
   }
 }
