@@ -17,8 +17,6 @@ import { useTailnet } from '../tailnet/tailnet-provider';
 const AUTO_LOCK_MS = 5 * 60 * 1000;
 const SYNC_ATTEMPTS = 3;
 const SYNC_RETRY_MS = 3000;
-/** How long unlocking waits for a sync that's already running. */
-const UNLOCK_SYNC_WAIT_MS = 5000;
 
 export type SyncStatus =
   | { status: 'idle' }
@@ -126,10 +124,14 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       return;
     }
     void syncNow();
+    // Only after the background: Face ID prompts take the app from active to inactive and back,
+    // and syncing then would relock the list whenever the cache changed, asking for Face ID again.
+    let previous = AppState.currentState;
     const subscription = AppState.addEventListener('change', (next) => {
-      if (next === 'active') {
+      if (next === 'active' && previous === 'background') {
         void syncNow();
       }
+      previous = next;
     });
     return () => subscription.remove();
   }, [running, loggedIn, syncNow]);
@@ -150,14 +152,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     return () => subscription.remove();
   }, []);
 
+  // Native unlock waits for a running sync after Face ID, so the prompt shows straight away.
   const unlock = useCallback(async () => {
-    // A sync that's already running (e.g. the app just opened) is about to replace the cache.
-    if (inFlightSync.current) {
-      await Promise.race([
-        inFlightSync.current,
-        new Promise((resolve) => setTimeout(resolve, UNLOCK_SYNC_WAIT_MS)),
-      ]);
-    }
     try {
       setItems(await SapphireVault.unlock());
       return true;

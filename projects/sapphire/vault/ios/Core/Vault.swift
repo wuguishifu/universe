@@ -134,6 +134,23 @@ public actor Vault {
     return try await task.value
   }
 
+  /// Waits up to `timeout` for a running sync to finish, so a read right after sees its cache.
+  public func waitForSync(timeout: Duration) async {
+    guard let inFlightSync else { return }
+    // Awaiting a task's value ignores cancellation, so race it against the timeout by hand.
+    let (done, continuation) = AsyncStream<Void>.makeStream()
+    Task {
+      _ = try? await inFlightSync.value
+      continuation.finish()
+    }
+    let timer = Task {
+      try? await Task.sleep(for: timeout)
+      continuation.finish()
+    }
+    for await _ in done {}
+    timer.cancel()
+  }
+
   /// Forgets the account on this device. Vaultwarden has no endpoint to revoke a refresh token,
   /// so the device stays in the account's device list. The device identifier is kept, so logging
   /// in again reuses that entry.
@@ -155,12 +172,13 @@ public actor Vault {
       data = try await api.sync(accessToken: try await validAccessToken(api, generation: generation))
     }
     try checkCurrent(generation)
-    _ = try VaultSnapshot(syncResponse: data)
+    let snapshot = try VaultSnapshot(syncResponse: data)
 
-    let changed = try store.readCache() != data
-    if changed {
+    let cached = try store.readCache()
+    if cached != data {
       try store.writeCache(data)
     }
+    let changed = cached.flatMap { try? VaultSnapshot(syncResponse: $0) } != snapshot
     let now = Date()
     store.lastSync = now
     return SyncResult(date: now, changed: changed)
