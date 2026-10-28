@@ -16,7 +16,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as SapphireVault from '@projects/sapphire-vault';
 
 import { useColors } from '../../modules/theme';
-import { Button, Toast, useToast, vaultStyles } from '../../modules/vault/ui';
+import {
+  Button,
+  copyWithToast,
+  showError,
+  vaultStyles,
+} from '../../modules/vault/ui';
 import { formatAgo, useVault } from '../../modules/vault/vault-provider';
 
 export default function VaultScreen() {
@@ -132,7 +137,6 @@ function ItemList({ items }: { items: SapphireVault.VaultItemSummary[] }) {
   const { syncNow } = useVault();
   const [query, setQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
-  const toast = useToast();
 
   const sorted = useMemo(
     () =>
@@ -159,7 +163,7 @@ function ItemList({ items }: { items: SapphireVault.VaultItemSummary[] }) {
     try {
       await syncNow();
     } catch (error) {
-      toast.show(SapphireVault.errorMessage(error));
+      showError("Couldn't sync", error);
     } finally {
       setRefreshing(false);
     }
@@ -254,7 +258,7 @@ function ItemList({ items }: { items: SapphireVault.VaultItemSummary[] }) {
               accessibilityLabel={`Copy password for ${item.name}`}
               hitSlop={8}
               onPress={() =>
-                toast.run(() => SapphireVault.copyPassword(item.id))
+                copyWithToast(() => SapphireVault.copyPassword(item.id))
               }
               style={({ pressed }) => [
                 styles.copy,
@@ -266,7 +270,6 @@ function ItemList({ items }: { items: SapphireVault.VaultItemSummary[] }) {
           </View>
         )}
       />
-      <Toast message={toast.message} />
     </SafeAreaView>
   );
 }

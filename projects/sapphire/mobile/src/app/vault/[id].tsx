@@ -13,7 +13,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as SapphireVault from '@projects/sapphire-vault';
 
 import { useColors } from '../../modules/theme';
-import { Button, Toast, useToast, vaultStyles } from '../../modules/vault/ui';
+import {
+  Button,
+  copyWithToast,
+  showError,
+  vaultStyles,
+} from '../../modules/vault/ui';
 import { useVault } from '../../modules/vault/vault-provider';
 
 const MATCH_LABELS: Record<SapphireVault.UriMatch, string> = {
@@ -29,7 +34,6 @@ export default function VaultItemScreen() {
   const colors = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { items } = useVault();
-  const toast = useToast();
 
   // Revealed secrets live only in this screen's state: gone when it unmounts or the vault locks.
   const [secret, setSecret] = useState<SapphireVault.VaultItemSecret>();
@@ -49,7 +53,7 @@ export default function VaultItemScreen() {
     } catch (error) {
       const code = SapphireVault.errorCode(error);
       if (code !== SapphireVault.VaultErrorCode.UserCanceled) {
-        toast.show(SapphireVault.errorMessage(error));
+        showError("Couldn't reveal", error);
       }
     } finally {
       setRevealing(false);
@@ -82,7 +86,7 @@ export default function VaultItemScreen() {
             value={item.username ?? '—'}
             onCopy={
               username
-                ? () => toast.run(() => SapphireVault.copy(username))
+                ? () => copyWithToast(() => SapphireVault.copy(username))
                 : undefined
             }
           />
@@ -93,7 +97,7 @@ export default function VaultItemScreen() {
             mono={!!secret?.password}
             // Before revealing, copying goes through Face ID natively; after, it's already here.
             onCopy={() =>
-              toast.run(() =>
+              copyWithToast(() =>
                 secret?.password
                   ? SapphireVault.copy(secret.password)
                   : SapphireVault.copyPassword(item.id),
@@ -106,14 +110,16 @@ export default function VaultItemScreen() {
               {secret?.totp ? (
                 <TotpField
                   value={secret.totp}
-                  onCopy={(code) => toast.run(() => SapphireVault.copy(code))}
+                  onCopy={(code) =>
+                    copyWithToast(() => SapphireVault.copy(code))
+                  }
                 />
               ) : (
                 <Field
                   label="One-time code"
                   value="••• •••"
                   onCopy={() =>
-                    toast.run(() => SapphireVault.copyTotp(item.id))
+                    copyWithToast(() => SapphireVault.copyTotp(item.id))
                   }
                 />
               )}
@@ -150,7 +156,9 @@ export default function VaultItemScreen() {
                             })
                         : undefined
                     }
-                    onCopy={() => toast.run(() => SapphireVault.copy(uri.uri))}
+                    onCopy={() =>
+                      copyWithToast(() => SapphireVault.copy(uri.uri))
+                    }
                   />
                 </View>
               ))}
@@ -158,7 +166,6 @@ export default function VaultItemScreen() {
           </>
         )}
       </ScrollView>
-      <Toast message={toast.message} />
     </SafeAreaView>
   );
 }

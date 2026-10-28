@@ -13,6 +13,7 @@
     "@platform/convex-contracts": "workspace:*",
     "@projects/sapphire-proxy": "workspace:*",
     "@projects/sapphire-vault": "workspace:*",
+    "burnt": "*",
     "convex": "*",
     "expo": "*",
     "expo-build-properties": "*",

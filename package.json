@@ -106,6 +106,7 @@
     "axios": "*",
     "axios-retry": "*",
     "bullmq": "^6.1.2",
+    "burnt": "^0.13.0",
     "chalk": "^5.6.2",
     "chrono-node": "^2.10.3",
     "class-variance-authority": "^0.7.1",
