@@ -2,5 +2,9 @@
   "$schema": "../../../tools/environment/environment-config.schema.json",
   "hasConvex": true,
   "publicPrefix": "NEXT_PUBLIC_",
-  "secretsPaths": ["platform/notifications/client", "projects/sapphire/web"]
+  "secretsPaths": [
+    "platform/notifications/client",
+    "projects/sapphire/web",
+    "platform/convex/app/next"
+  ]
 }
