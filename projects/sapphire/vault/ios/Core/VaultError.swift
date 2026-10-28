@@ -2,6 +2,8 @@ import Foundation
 
 public enum VaultError: Error, Equatable, LocalizedError {
   case notLoggedIn
+  /// The account logged out or logged in again while a sync was running; its results were dropped.
+  case accountChanged
   /// The refresh token was rejected; the master password is needed to get a new one.
   case reauthRequired
   /// The Face ID protected user key is gone (Face ID enrollment changed, or it was never stored).
@@ -26,6 +28,7 @@ public enum VaultError: Error, Equatable, LocalizedError {
   public var code: String {
     switch self {
     case .notLoggedIn: "ERR_VAULT_NOT_LOGGED_IN"
+    case .accountChanged: "ERR_VAULT_ACCOUNT_CHANGED"
     case .reauthRequired: "ERR_VAULT_REAUTH_REQUIRED"
     case .keyUnavailable: "ERR_VAULT_KEY_UNAVAILABLE"
     case .userCanceled: "ERR_VAULT_USER_CANCELED"
@@ -47,6 +50,7 @@ public enum VaultError: Error, Equatable, LocalizedError {
   public var errorDescription: String? {
     switch self {
     case .notLoggedIn: "Not logged in to the vault."
+    case .accountChanged: "The vault account changed during the sync."
     case .reauthRequired: "The session expired. Enter your master password to log in again."
     case .keyUnavailable: "Face ID changed or the vault key is missing. Enter your master password."
     case .userCanceled: "Canceled."

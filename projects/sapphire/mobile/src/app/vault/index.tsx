@@ -129,7 +129,7 @@ function Locked() {
 
 function ItemList({ items }: { items: SapphireVault.VaultItemSummary[] }) {
   const colors = useColors();
-  const { syncNow, unlock } = useVault();
+  const { syncNow } = useVault();
   const [query, setQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const toast = useToast();
@@ -153,12 +153,11 @@ function ItemList({ items }: { items: SapphireVault.VaultItemSummary[] }) {
     );
   }, [sorted, query]);
 
-  // Decrypting the fresh cache needs the key again, so a pull costs a Face ID prompt.
+  // If the cache changed, the provider locks and the locked screen asks for Face ID.
   const refresh = async () => {
     setRefreshing(true);
     try {
       await syncNow();
-      await unlock();
     } catch (error) {
       toast.show(SapphireVault.errorMessage(error));
     } finally {

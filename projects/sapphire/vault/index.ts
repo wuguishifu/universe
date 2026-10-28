@@ -1,4 +1,4 @@
-import { requireNativeModule } from 'expo-modules-core';
+import { requireOptionalNativeModule } from 'expo-modules-core';
 
 export type VaultState = {
   loggedIn: boolean;
@@ -33,9 +33,18 @@ export type VaultItemSecret = {
 
 export type TotpCode = { code: string; period: number; remaining: number };
 
+export type SyncResult = {
+  /** Epoch ms. */
+  syncedAt: number;
+  /** False when the server sent back exactly what was already cached. */
+  changed: boolean;
+};
+
 /** `error.code` values thrown by the native module. */
 export const VaultErrorCode = {
   NotLoggedIn: 'ERR_VAULT_NOT_LOGGED_IN',
+  /** A login or logout happened while the sync was running, so its results were dropped. */
+  AccountChanged: 'ERR_VAULT_ACCOUNT_CHANGED',
   ReauthRequired: 'ERR_VAULT_REAUTH_REQUIRED',
   KeyUnavailable: 'ERR_VAULT_KEY_UNAVAILABLE',
   UserCanceled: 'ERR_VAULT_USER_CANCELED',
@@ -65,7 +74,7 @@ export function errorCode(error: unknown): string | undefined {
 type NativeSapphireVault = {
   getState(): Promise<VaultState>;
   login(serverUrl: string, email: string, password: string): Promise<void>;
-  sync(): Promise<number>;
+  sync(): Promise<SyncResult>;
   unlock(): Promise<VaultItemSummary[]>;
   reveal(id: string): Promise<VaultItemSecret>;
   copyPassword(id: string): Promise<void>;
@@ -75,10 +84,21 @@ type NativeSapphireVault = {
   logout(): Promise<void>;
 };
 
-const native = requireNativeModule<NativeSapphireVault>('SapphireVault');
+const optional =
+  requireOptionalNativeModule<NativeSapphireVault>('SapphireVault');
+
+/** The vault is iOS only. Nothing else here works when this is false. */
+export const isAvailable = optional !== null;
+
+function native(): NativeSapphireVault {
+  if (!optional) {
+    throw new Error('The vault is only available on iOS');
+  }
+  return optional;
+}
 
 export function getState(): Promise<VaultState> {
-  return native.getState();
+  return native().getState();
 }
 
 /**
@@ -90,12 +110,12 @@ export function login(
   email: string,
   password: string,
 ): Promise<void> {
-  return native.login(serverUrl, email, password);
+  return native().login(serverUrl, email, password);
 }
 
-/** Refreshes the encrypted cache over the tailnet. Resolves with the sync time (epoch ms). */
-export function sync(): Promise<number> {
-  return native.sync();
+/** Refreshes the encrypted cache over the tailnet. */
+export function sync(): Promise<SyncResult> {
+  return native().sync();
 }
 
 /**
@@ -103,33 +123,33 @@ export function sync(): Promise<number> {
  * Passwords stay encrypted.
  */
 export function unlock(): Promise<VaultItemSummary[]> {
-  return native.unlock();
+  return native().unlock();
 }
 
 /** Face ID, then decrypts one item's password and TOTP secret. */
 export function reveal(id: string): Promise<VaultItemSecret> {
-  return native.reveal(id);
+  return native().reveal(id);
 }
 
 /** Face ID, then copies the password without it ever reaching JS. */
 export function copyPassword(id: string): Promise<void> {
-  return native.copyPassword(id);
+  return native().copyPassword(id);
 }
 
 /** Face ID, then copies the current TOTP code. */
 export function copyTotp(id: string): Promise<void> {
-  return native.copyTotp(id);
+  return native().copyTotp(id);
 }
 
 export function totp(value: string): TotpCode {
-  return native.totp(value);
+  return native().totp(value);
 }
 
 /** Copies to this device only, cleared after a minute. */
 export function copy(text: string): Promise<void> {
-  return native.copy(text);
+  return native().copy(text);
 }
 
 export function logout(): Promise<void> {
-  return native.logout();
+  return native().logout();
 }

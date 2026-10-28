@@ -36,9 +36,10 @@ public class SapphireVaultModule: Module {
       }
     }
 
-    AsyncFunction("sync") { () async throws -> Double in
+    AsyncFunction("sync") { () async throws -> [String: Any] in
       try await bridged {
-        try await self.vault.get().sync(session: try tailnetSession()).timeIntervalSince1970 * 1000
+        let result = try await self.vault.get().sync(session: try tailnetSession())
+        return ["syncedAt": result.date.timeIntervalSince1970 * 1000, "changed": result.changed]
       }
     }
 
@@ -49,7 +50,9 @@ public class SapphireVaultModule: Module {
       try await bridged {
         let vault = try self.vault.get()
         let summaries = try await Task.detached {
-          try vault.snapshot().summaries(userKey: vault.userKey(prompt: "Unlock your vault"))
+          let userKey = try vault.userKey(prompt: "Unlock your vault")
+          // Read the cache after Face ID, so a sync that lands during the prompt is included.
+          return try vault.snapshot().summaries(userKey: userKey)
         }.value
         await CredentialIdentities.replace(with: summaries)
         return summaries.map(serialize)

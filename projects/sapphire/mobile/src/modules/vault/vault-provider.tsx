@@ -54,7 +54,8 @@ export function useVault() {
  *
  * Syncs once the tailnet is running and again every time the app comes back to the foreground;
  * sync never needs Face ID. Unlocking decrypts summaries only, and they're dropped after the app
- * spends AUTO_LOCK_MS in the background.
+ * spends AUTO_LOCK_MS in the background, or when a sync changes the cache (so the list never
+ * disagrees with the secrets read from it). On Android, where there's no vault, it does nothing.
  */
 export function VaultProvider({ children }: { children: ReactNode }) {
   const tailnet = useTailnet();
@@ -73,7 +74,9 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    void refreshState();
+    if (SapphireVault.isAvailable) {
+      void refreshState();
+    }
   }, [refreshState]);
 
   const syncNow = useCallback(() => {
@@ -82,7 +85,10 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       try {
         for (let attempt = 1; ; attempt++) {
           try {
-            await SapphireVault.sync();
+            const { changed } = await SapphireVault.sync();
+            if (changed) {
+              setItems(null);
+            }
             break;
           } catch (error) {
             // Right after foregrounding, the node can take a few seconds to reconnect.
@@ -97,10 +103,15 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         }
         setSync({ status: 'idle' });
       } catch (error) {
-        setSync({
-          status: 'error',
-          message: SapphireVault.errorMessage(error),
-        });
+        // Superseded by a login or logout, which syncs (or doesn't) on its own.
+        const superseded =
+          SapphireVault.errorCode(error) ===
+          SapphireVault.VaultErrorCode.AccountChanged;
+        setSync(
+          superseded
+            ? { status: 'idle' }
+            : { status: 'error', message: SapphireVault.errorMessage(error) },
+        );
       } finally {
         await refreshState();
         inFlightSync.current = null;
@@ -170,6 +181,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       await SapphireVault.login(serverUrl, email, password);
       setItems(null);
       await refreshState();
+      // A sync from before the login gets discarded natively; don't join it.
+      await inFlightSync.current;
       await syncNow();
     },
     [refreshState, syncNow],

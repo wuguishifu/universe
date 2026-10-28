@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { api } from '@platform/convex-contracts';
+import * as SapphireVault from '@projects/sapphire-vault';
 
 import { usePushRegistration } from '../modules/notifications/push-registration';
 import { useTailnet } from '../modules/tailnet/tailnet-provider';
@@ -34,7 +35,7 @@ export default function DashboardScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <TailnetRow />
         <NotificationsRow />
-        <VaultRow />
+        {SapphireVault.isAvailable && <VaultRow />}
         <Text style={[styles.sectionTitle, { color: colors.muted }]}>
           SERVICES
         </Text>

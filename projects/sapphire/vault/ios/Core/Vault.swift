@@ -12,6 +12,12 @@ public struct VaultState {
   public let keyAvailable: Bool
 }
 
+public struct SyncResult {
+  public let date: Date
+  /// False when the server sent back exactly what was already cached.
+  public let changed: Bool
+}
+
 /// The vault's account lifecycle. The app uses all of it; the extension only reads the user key
 /// and the snapshot.
 public actor Vault {
@@ -29,7 +35,10 @@ public actor Vault {
   nonisolated let appKeychain: Keychain?
 
   private var accessToken: (token: String, expires: Date)?
-  private var inFlightSync: Task<Date, Error>?
+  private var inFlightSync: Task<SyncResult, Error>?
+  /// Bumped whenever the account or its tokens are replaced. A sync checks it after every await,
+  /// so one that started for the old account can't write its tokens or cache over the new one.
+  private var generation = 0
 
   public init(environment: VaultEnvironment) throws {
     store = try SharedStore(appGroup: environment.appGroup)
@@ -92,6 +101,8 @@ public actor Vault {
     if let existing = store.account, existing != account {
       wipe()
     }
+    // Even for the same account, a running sync holds tokens this login just replaced.
+    invalidatePendingWork()
     try sharedKeychain.set(userKey.data, account: Account.userKey, protection: .biometryCurrentSet)
     try appKeychain.set(Data(refreshToken.utf8), account: Account.refreshToken, protection: .afterFirstUnlock)
     store.account = account
@@ -101,13 +112,25 @@ public actor Vault {
   }
 
   /// Fetches `/api/sync` and replaces the cache. Concurrent calls share one request.
-  public func sync(session: URLSession) async throws -> Date {
+  public func sync(session: URLSession) async throws -> SyncResult {
     if let inFlightSync {
       return try await inFlightSync.value
     }
-    let task = Task { try await performSync(session: session) }
+    let generation = generation
+    let task = Task {
+      do {
+        return try await performSync(session: session, generation: generation)
+      } catch {
+        // Whatever went wrong, report that the account changed if it did.
+        try checkCurrent(generation)
+        throw error
+      }
+    }
     inFlightSync = task
-    defer { inFlightSync = nil }
+    defer {
+      // A login or logout may have replaced it with a newer sync.
+      if inFlightSync == task { inFlightSync = nil }
+    }
     return try await task.value
   }
 
@@ -118,27 +141,32 @@ public actor Vault {
     wipe()
   }
 
-  private func performSync(session: URLSession) async throws -> Date {
+  private func performSync(session: URLSession, generation: Int) async throws -> SyncResult {
     guard let account = store.account else { throw VaultError.notLoggedIn }
     let api = VaultApi(baseURL: URL(string: account.serverURL)!, session: session)
 
     let data: Data
     do {
-      data = try await api.sync(accessToken: try await validAccessToken(api))
+      data = try await api.sync(accessToken: try await validAccessToken(api, generation: generation))
     } catch VaultError.server(let status, _) where status == 401 {
+      try checkCurrent(generation)
       // The access token was revoked early (e.g. a password change); refresh once and retry.
       accessToken = nil
-      data = try await api.sync(accessToken: try await validAccessToken(api))
+      data = try await api.sync(accessToken: try await validAccessToken(api, generation: generation))
     }
+    try checkCurrent(generation)
     _ = try VaultSnapshot(syncResponse: data)
 
-    try store.writeCache(data)
+    let changed = try store.readCache() != data
+    if changed {
+      try store.writeCache(data)
+    }
     let now = Date()
     store.lastSync = now
-    return now
+    return SyncResult(date: now, changed: changed)
   }
 
-  private func validAccessToken(_ api: VaultApi) async throws -> String {
+  private func validAccessToken(_ api: VaultApi, generation: Int) async throws -> String {
     if let accessToken, accessToken.expires.timeIntervalSinceNow > 60 {
       return accessToken.token
     }
@@ -154,9 +182,11 @@ public actor Vault {
     do {
       token = try await api.refresh(refreshToken: refreshToken)
     } catch VaultError.reauthRequired {
+      try checkCurrent(generation)
       store.needsReauth = true
       throw VaultError.reauthRequired
     }
+    try checkCurrent(generation)
     if let rotated = token.refreshToken, rotated != refreshToken {
       try appKeychain.set(Data(rotated.utf8), account: Account.refreshToken, protection: .afterFirstUnlock)
     }
@@ -166,10 +196,21 @@ public actor Vault {
   }
 
   private func wipe() {
+    invalidatePendingWork()
     sharedKeychain.delete(account: Account.userKey)
     appKeychain?.delete(account: Account.refreshToken)
     accessToken = nil
     store.wipe()
+  }
+
+  /// Makes running syncs discard their results, and stops new ones from joining them.
+  private func invalidatePendingWork() {
+    generation += 1
+    inFlightSync = nil
+  }
+
+  private func checkCurrent(_ generation: Int) throws {
+    guard generation == self.generation else { throw VaultError.accountChanged }
   }
 
   private func requireAppKeychain() throws -> Keychain {
