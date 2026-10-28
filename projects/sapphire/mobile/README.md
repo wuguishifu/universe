@@ -86,6 +86,38 @@ Android. Without them the Notifications screen shows the error. `notifications-s
 Push notifications don't work in a simulator, so test on a phone. To send one, use
 [`tools/scripts/notifications/send.mjs`](../../../tools/scripts/notifications).
 
+## Vault
+
+The **Vault** row on the home screen is a read-only client for the Vaultwarden server (default
+`https://vault.wuguishifu.dev`), plus an AutoFill extension so Safari and other apps can fill from
+it. The crypto, storage, and API client live in [`sapphire-vault`](../vault); see its README for how
+the keys are stored.
+
+```
+app (foreground) ──TailnetProxy URLSession──▶ tsnet ─▶ vault: /api/sync ─▶ encrypted cache (App Group)
+AutoFill extension ── Face ID ─▶ user key (shared Keychain) ─▶ decrypts the cache          (no network)
+```
+
+- Log in once with the master password (the vault screen asks). After that, Face ID unlocks it.
+  The master password is needed again only after a Face ID change, a rejected refresh token, or a
+  logout.
+- The app syncs when the tailnet comes up and every time it returns to the foreground; sync doesn't
+  need Face ID. The extension only ever reads the last synced copy.
+- Unlocking decrypts the item list; copying or revealing a password asks for Face ID again. The
+  list locks 5 minutes after the app goes to the background.
+- Turn the extension on in Settings → General → AutoFill & Passwords → Sapphire. QuickType
+  suggestions update each time you unlock the vault in the app.
+
+The extension is the `autofill` target in [`targets/autofill`](./targets/autofill), added at
+prebuild by [`@bacons/apple-targets`](https://github.com/EvanBacon/expo-apple-targets). It links
+`SapphireVaultCore` through `pods.rb`. The app and the extension share the App Group
+`group.dev.wuguishifu.sapphire` and the Keychain group `<team>.dev.wuguishifu.sapphire.shared`;
+the refresh token sits in the app's own Keychain group, which the extension can't read.
+
+The extension is a second bundle ID (`dev.wuguishifu.sapphire.autofill`) with the AutoFill
+Credential Provider and App Groups capabilities, so the first `eas build` after adding it asks to
+create its provisioning profile.
+
 ## Building with EAS
 
 Merging to main builds the app on EAS whenever it's affected:
@@ -134,3 +166,5 @@ build, and stop launching when their provisioning profile expires (after a year)
 - The merge build is iOS only; Android needs its push setup (Firebase) first.
 - iOS suspends the node in the background; it reconnects on foreground in a second or two.
 - No tabs or URL bar inside the browser screen.
+- The vault is read-only and only handles personal logins: no organization items, other item
+  types, passkeys, Argon2id, or two-step login yet.

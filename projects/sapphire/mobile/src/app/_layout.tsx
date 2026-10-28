@@ -13,6 +13,7 @@ import { PushRegistrationProvider } from '../modules/notifications/push-registra
 import { useNotificationRouting } from '../modules/notifications/use-notification-routing';
 import { TailnetProvider } from '../modules/tailnet/tailnet-provider';
 import { useColors, useNavigationTheme } from '../modules/theme';
+import { VaultProvider } from '../modules/vault/vault-provider';
 
 // Without a handler, notifications that arrive while the app is open aren't shown.
 Notifications.setNotificationHandler({
@@ -29,7 +30,9 @@ export default function RootLayout() {
   return (
     <ConvexClientProvider>
       <TailnetProvider>
-        <Root />
+        <VaultProvider>
+          <Root />
+        </VaultProvider>
       </TailnetProvider>
     </ConvexClientProvider>
   );
@@ -63,6 +66,7 @@ function Root() {
           <Stack.Screen name="tailnet" />
           <Stack.Screen name="notifications" />
           <Stack.Screen name="browse" />
+          <Stack.Screen name="vault" />
         </Stack>
       </ThemeProvider>
     </PushRegistrationProvider>

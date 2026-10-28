@@ -1,0 +1,4 @@
+{
+  "$schema": "../../../tools/environment/environment-config.schema.json",
+  "secretsPaths": ["projects/sapphire/vault"]
+}

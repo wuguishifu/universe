@@ -21,7 +21,21 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoadsInWebContent": true
-        }
+        },
+        "NSFaceIDUsageDescription": "Face ID unlocks your vault.",
+        "SapphireVaultAppGroup": "group.dev.wuguishifu.sapphire",
+        "SapphireVaultSharedKeychainGroup": "$(AppIdentifierPrefix)dev.wuguishifu.sapphire.shared",
+        "SapphireVaultAppKeychainGroup": "$(AppIdentifierPrefix)dev.wuguishifu.sapphire"
+      },
+      "entitlements": {
+        "com.apple.developer.authentication-services.autofill-credential-provider": true,
+        "com.apple.security.application-groups": [
+          "group.dev.wuguishifu.sapphire"
+        ],
+        "keychain-access-groups": [
+          "$(AppIdentifierPrefix)dev.wuguishifu.sapphire",
+          "$(AppIdentifierPrefix)dev.wuguishifu.sapphire.shared"
+        ]
       }
     },
     "android": {
@@ -34,6 +48,7 @@
     "plugins": [
       "expo-router",
       "expo-web-browser",
+      "@bacons/apple-targets",
       "expo-notifications",
       [
         "expo-build-properties",
