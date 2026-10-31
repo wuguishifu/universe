@@ -53,7 +53,7 @@ jobs:
         uses: wuguishifu/version-bump-workflow@v1
         with:
           bump-type: ${{ steps.bump.outputs.bump-type }}
-          tag-prefix: v
+          tag-prefix: resume-v
           initial-version: 0.0.0
 
       - name: Compile LaTeX
