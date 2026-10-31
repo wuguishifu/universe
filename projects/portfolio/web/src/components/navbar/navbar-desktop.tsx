@@ -63,14 +63,16 @@ export function NavbarDesktop() {
               Projects
             </NavigationMenuLink>
           </NavigationMenuItem>
-          {/* <NavigationMenuItem>
+          <NavigationMenuItem>
             <NavigationMenuLink
               className="text-md px-4 py-2 hover:underline underline-offset-4 opacity-80 font-medium"
               href="/resume"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               Resume
             </NavigationMenuLink>
-          </NavigationMenuItem> */}
+          </NavigationMenuItem>
           <NavigationMenuItem>
             <Link
               href="mailto:bramer.bo@gmail.com"

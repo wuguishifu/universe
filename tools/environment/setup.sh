@@ -71,6 +71,19 @@ for APP in $APPS; do
 done
 ALL_SECRETS_PATHS=$(printf '%s\n' $ALL_SECRETS_PATHS | sort -u)
 
+# verify the CLI session once before fetching in parallel
+# without a valid session, every parallel `infisical secrets` call starts its own browser login flow
+# this check triggers at most one login flow if the session is missing or expired
+if ! command -v infisical > /dev/null 2>&1; then
+  echo "ERROR: infisical CLI not found, see tools/environment/README.md"
+  exit 1
+fi
+
+if ! infisical user get token --plain --silent --domain $INFISICAL_DOMAIN > /dev/null; then
+  echo "ERROR: infisical CLI is not authenticated, run \`nx auth environment\` and try again"
+  exit 1
+fi
+
 # fetch every path in parallel, mirroring the infisical folder structure in a temp dir
 SECRETS_DIR=$(mktemp -d)
 trap 'rm -rf "$SECRETS_DIR"' EXIT

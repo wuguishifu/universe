@@ -85,13 +85,16 @@ export function NavbarMobile() {
               Projects
             </Link>
 
-            {/* <Link
+            {/* Plain anchor: /resume is a route handler serving a PDF, not a page */}
+            <a
               href="/resume"
               onClick={closeDrawer}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-lg px-4 py-3 rounded-md hover:bg-accent transition-colors font-medium"
             >
               Resume
-            </Link> */}
+            </a>
 
             {/* Divider */}
             <div className="border-t border-border my-4" />
