@@ -49,15 +49,17 @@ jobs:
           head: ${{ env.NX_HEAD }}
 
   # Each app's release runs as its EAS workflow (<root>/.eas/workflows/build.yml) on EAS's machines,
-  # which decides between a native build and an OTA update. This job uploads the checkout, starts
-  # it, and waits, so a failed EAS run fails this run and the app is released again on the next merge.
+  # which decides between a native build and an OTA update. This job only uploads the checkout and
+  # starts it: waiting would hold a runner through EAS's free-tier queue. So a failed EAS run doesn't
+  # fail this run, and the next merge won't release the app again unless it's affected. The EAS
+  # workflow sends a notification when it fails; rerun it by hand from the app's root with
+  # `eas workflow:run .eas/workflows/build.yml`.
   build:
     name: Build ${{ matrix.app.project }}
     needs: plan
     if: needs.plan.outputs.apps != '[]'
     runs-on: ubuntu-latest
-    # Mostly waiting on EAS, including its build queue.
-    timeout-minutes: 120
+    timeout-minutes: 20
     strategy:
       # Apps ship independently, so one failing shouldn't stop the others.
       fail-fast: false
@@ -81,4 +83,4 @@ jobs:
 
       - name: Run EAS workflow
         working-directory: ${{ matrix.app.root }}
-        run: eas workflow:run .eas/workflows/build.yml --non-interactive --wait
+        run: eas workflow:run .eas/workflows/build.yml --non-interactive

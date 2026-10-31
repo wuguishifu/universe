@@ -9,7 +9,7 @@ and `100.x` IPs load as if the phone were on the tailnet.
 
 ## How it fits together
 
-```
+```plaintext
 WebView ──(proxy override)──▶ 127.0.0.1:<port> HTTP proxy ──┬─ tailnet host? ─▶ tsnet ─▶ WireGuard/DERP ─▶ sol, truenas, …
                                                             └─ otherwise ────▶ regular network (CDNs, fonts)
 ```
@@ -55,7 +55,7 @@ the service reads it. The service runs behind Tailscale, so the app never talks 
 The **Notifications** row on the home screen shows whether the device is registered and lets you
 mute channels.
 
-```
+```plaintext
 any nest/next app ──NotificationsClient──▶ Redis queue ─┐
                                          (or HTTP) ─────┴─▶ notifications-service ──▶ Expo push ──▶ APNs/FCM ──▶ this app
                                                                    │
@@ -93,7 +93,7 @@ The **Vault** row on the home screen is a read-only client for the Vaultwarden s
 it. The crypto, storage, and API client live in [`sapphire-vault`](../vault); see its README for how
 the keys are stored.
 
-```
+```plaintext
 app (foreground) ──TailnetProxy URLSession──▶ tsnet ─▶ vault: /api/sync ─▶ encrypted cache (App Group)
 AutoFill extension ── Face ID ─▶ user key (shared Keychain) ─▶ decrypts the cache          (no network)
 ```
@@ -122,12 +122,13 @@ create its provisioning profile.
 
 Merging to main builds the app on EAS whenever it's affected:
 [`build-mobile-apps`](../../../.github/workflows/build-mobile-apps.yml) runs
-[`.eas/workflows/build.yml`](./.eas/workflows/build.yml) (iOS, `production-internal`) and waits for
-it. Once the build or update is out, the workflow notifies every device on the `general` channel
+[`.eas/workflows/build.yml`](./.eas/workflows/build.yml) (iOS, `production-internal`). Once the
+build or update is out, the workflow notifies every device on the `general` channel
 through sapphire-web's `POST /api/notifications` (EAS can't reach notifications-service on the
 tailnet): a new build links to its EAS page to install it, and an OTA update just says it's on the
 way. That needs `SAPPHIRE_WEB_API_TOKEN` (secret visibility) in the `production` EAS environment,
-matching sapphire-web's `API_TOKEN`. A failed notification doesn't fail the release.
+matching sapphire-web's `API_TOKEN`. A failed notification doesn't fail the release. If the workflow
+fails, a notification will be sent about that as well. Then the workflow must be dispatched.
 
 To build by hand:
 

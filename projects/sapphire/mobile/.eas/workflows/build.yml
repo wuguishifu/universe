@@ -101,3 +101,28 @@ jobs:
             "idempotencyKey": "update-${{ needs.update_ios.outputs.first_update_group_id }}"
           }
           JSON
+
+  # build-mobile-apps.yml doesn't wait for this workflow, so this is the only signal that a release
+  # failed. `after` runs it whatever the other jobs did (`needs` would skip it).
+  notify_failure:
+    name: Notify about failed release
+    after: [fingerprint, get_ios_build, build_ios, update_ios]
+    if: ${{ after.fingerprint.status == 'failure' || after.get_ios_build.status == 'failure' || after.build_ios.status == 'failure' || after.update_ios.status == 'failure' }}
+    environment: production
+    steps:
+      - name: Send notification
+        run: |
+          curl --fail-with-body --silent --show-error --retry 2 \
+            -X POST https://wuguishifu.dev/api/notifications \
+            -H "Authorization: Bearer $SAPPHIRE_WEB_API_TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d @- <<'JSON' || echo "Couldn't send the failure notification"
+          {
+            "channel": "general",
+            "title": "Sapphire release failed",
+            "body": "Tap to open the workflow run on EAS.",
+            "url": "${{ workflow.url }}",
+            "ttlSeconds": 86400,
+            "idempotencyKey": "release-failed-${{ workflow.id }}"
+          }
+          JSON
