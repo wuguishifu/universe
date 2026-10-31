@@ -68,7 +68,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           VERSION: ${{ steps.version.outputs.tag }}
         run: |
-          gh release create "$VERSION" resume.pdf \
+          gh release create "$VERSION" projects/portfolio/resume/resume.pdf \
             --target "$GITHUB_SHA" \
             --title "$VERSION" \
             --generate-notes
