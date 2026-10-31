@@ -37,13 +37,14 @@ const automationId = z
 
 const AUTOMATIONS =
   'An automation is a window in which a thermostat is kept in a temperature range: when it is OFF ' +
-  'and out of range the service switches it to AUTO with setpoints aimed inside the range, and back ' +
-  'to OFF once it gets there. Thermostats in HEAT, COOL or emergency heat are never touched. ' +
+  "and out of range the service switches it to AUTO with setpoints on the range's bounds, and back " +
+  'to OFF once the temperature is `bufferC` inside the range (past the setpoint, since some ' +
+  'thermostats never stop on their own). Thermostats in HEAT, COOL or emergency heat are never touched. ' +
   '`daysMask` has bit `1 << weekday` set for each day the window starts on (0 = Sunday, so ' +
   'weekdays are 62 and every day is 127). `startsAt` and `endsAt` are "HH:MM" in the house\'s ' +
   'timezone: equal means all day, and an `endsAt` before `startsAt` runs overnight. Set ' +
-  '`minTemperatureC`, `maxTemperatureC` or both (null for no bound). `bufferC` is how far back ' +
-  'inside the range the temperature has to get before AUTO is turned off.';
+  '`minTemperatureC`, `maxTemperatureC` or both (null for no bound). `bufferC` never moves the ' +
+  'setpoints: it is only how far past the bound the temperature has to get before AUTO is turned off.';
 
 /** thermo-automation's thermostats and automations, through its API. */
 export function createThermoToolset({

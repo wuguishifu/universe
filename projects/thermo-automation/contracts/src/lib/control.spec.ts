@@ -171,31 +171,43 @@ describe('fitSetpoints', () => {
     );
   });
 
-  it('aims the setpoints inside the range by the buffer', () => {
+  it('keeps the setpoints on the bounds whatever the buffer', () => {
     assert.deepEqual(
       fitSetpoints(
         { minTemperatureC: 20, maxTemperatureC: 25, bufferC: 1 },
         reading(),
       ),
-      { heatSetpointC: 21, coolSetpointC: 24, bufferC: 1 },
+      { heatSetpointC: 20, coolSetpointC: 25, bufferC: 1 },
     );
     assert.deepEqual(
       fitSetpoints(
         { minTemperatureC: 20, maxTemperatureC: null, bufferC: 1 },
         reading(),
       ),
-      { heatSetpointC: 21, coolSetpointC: 32, bufferC: 1 },
+      { heatSetpointC: 20, coolSetpointC: 32, bufferC: 1 },
+    );
+    assert.deepEqual(
+      // At most 67.5 °F with a 1 °F buffer: 67.1 °F, not 66.2 °F.
+      fitSetpoints(
+        {
+          minTemperatureC: null,
+          maxTemperatureC: 19.722221,
+          bufferC: 0.5555556,
+        },
+        reading(),
+      ),
+      { heatSetpointC: 10, coolSetpointC: 19.5, bufferC: 0.5555556 },
     );
   });
 
-  it("shrinks the buffer to keep the setpoints the thermostat's gap apart", () => {
+  it("shrinks the buffer to leave the thermostat's gap between where AUTO turns off", () => {
     // 25 - 20 leaves 3 °C for the buffer on both sides once the 2 °C gap is taken out.
     assert.deepEqual(
       fitSetpoints(
         { minTemperatureC: 20, maxTemperatureC: 25, bufferC: 2 },
         reading(),
       ),
-      { heatSetpointC: 21.5, coolSetpointC: 23.5, bufferC: 1.5 },
+      { heatSetpointC: 20, coolSetpointC: 25, bufferC: 1.5 },
     );
     assert.deepEqual(
       fitSetpoints(
@@ -234,8 +246,8 @@ describe('decide', () => {
       assert.deepEqual(decision.action, {
         kind: 'start',
         mode: Mode.Auto,
-        heatSetpointC: 21,
-        coolSetpointC: 24,
+        heatSetpointC: 20,
+        coolSetpointC: 25,
       });
       assert.deepEqual(decision.activeRuleIds, [1]);
     });
@@ -248,13 +260,13 @@ describe('decide', () => {
       assert.equal(decision.action, null);
     });
 
-    it('keeps AUTO running until the temperature is past the buffer', () => {
+    it('keeps AUTO running past the setpoint until the temperature is past the buffer', () => {
       const decision = decide(
         input({
           reading: reading({
             mode: Mode.Auto,
-            heatSetpointC: 21,
-            coolSetpointC: 24,
+            heatSetpointC: 20,
+            coolSetpointC: 25,
             indoorTemperatureC: 20.5,
           }),
         }),
@@ -268,8 +280,8 @@ describe('decide', () => {
         input({
           reading: reading({
             mode: Mode.Auto,
-            heatSetpointC: 21,
-            coolSetpointC: 24,
+            heatSetpointC: 20,
+            coolSetpointC: 25,
             indoorTemperatureC: 21,
           }),
         }),
@@ -278,32 +290,51 @@ describe('decide', () => {
       assert.deepEqual(decision.action, {
         kind: 'stop',
         mode: Mode.Off,
-        heatSetpointC: 21,
-        coolSetpointC: 24,
+        heatSetpointC: 20,
+        coolSetpointC: 25,
       });
     });
 
-    it('turns AUTO off once a thermostat holding its setpoint reports just short of it', () => {
-      const holding = (indoorTemperatureC: number) =>
+    it('turns AUTO off at the bound less the buffer, not at the setpoint', () => {
+      // At most 67.5 °F with a 1 °F buffer: cooled at 67.1 °F, turned off at 66.5 °F.
+      const rules = [
+        rule({
+          minTemperatureC: null,
+          maxTemperatureC: 19.722221,
+          bufferC: 0.5555556,
+        }),
+      ];
+      const cooling = (indoorTemperatureC: number) =>
         decide(
           input({
+            rules,
             reading: reading({
               mode: Mode.Auto,
-              heatSetpointC: 21,
-              coolSetpointC: 24,
+              heatSetpointC: 10,
+              coolSetpointC: 19.5,
               indoorTemperatureC,
             }),
           }),
         ).action?.kind;
-      assert.equal(holding(20.8), 'stop');
-      assert.equal(holding(24.2), 'stop');
-      assert.equal(holding(20.7), undefined);
+      assert.equal(cooling(19.5), undefined);
+      assert.equal(cooling(19.2), undefined);
+      assert.equal(cooling(19.1), 'stop');
     });
 
     it('can turn AUTO off when one window sets the minimum and another the maximum', () => {
       const rules = [
-        rule({ id: 1, minTemperatureC: 20, maxTemperatureC: null, bufferC: 1.5 }),
-        rule({ id: 2, minTemperatureC: null, maxTemperatureC: 22, bufferC: 1.5 }),
+        rule({
+          id: 1,
+          minTemperatureC: 20,
+          maxTemperatureC: null,
+          bufferC: 1.5,
+        }),
+        rule({
+          id: 2,
+          minTemperatureC: null,
+          maxTemperatureC: 22,
+          bufferC: 1.5,
+        }),
       ];
       const started = decide(
         input({ rules, reading: reading({ indoorTemperatureC: 19 }) }),
@@ -331,7 +362,7 @@ describe('decide', () => {
         }),
       );
       assert.equal(decision.action?.kind, 'reapply');
-      assert.equal(decision.action?.coolSetpointC, 24);
+      assert.equal(decision.action?.coolSetpointC, 25);
     });
 
     it('re-applies setpoints that drifted while running AUTO', () => {
@@ -339,8 +370,8 @@ describe('decide', () => {
         input({
           reading: reading({
             mode: Mode.Auto,
-            heatSetpointC: 21,
-            coolSetpointC: 23,
+            heatSetpointC: 20,
+            coolSetpointC: 24,
             indoorTemperatureC: 25.5,
           }),
         }),
@@ -348,8 +379,8 @@ describe('decide', () => {
       assert.deepEqual(decision.action, {
         kind: 'reapply',
         mode: Mode.Auto,
-        heatSetpointC: 21,
-        coolSetpointC: 24,
+        heatSetpointC: 20,
+        coolSetpointC: 25,
       });
     });
 
@@ -358,8 +389,8 @@ describe('decide', () => {
         input({
           reading: reading({
             mode: Mode.Auto,
-            heatSetpointC: 21.1,
-            coolSetpointC: 23.9,
+            heatSetpointC: 20.1,
+            coolSetpointC: 24.9,
             indoorTemperatureC: 25.5,
           }),
         }),
@@ -419,7 +450,7 @@ describe('decide', () => {
       assert.deepEqual(decision.activeRuleIds, [1, 2]);
       assert.equal(decision.action?.kind, 'start');
       // Min 22 (rule 2) and max 25 (rule 1) only leave room for a 0.5 °C buffer.
-      assert.equal(decision.action?.heatSetpointC, 22.5);
+      assert.equal(decision.action?.heatSetpointC, 22);
       assert.equal(decision.target?.bufferC, 0.5);
     });
   });
@@ -488,8 +519,8 @@ describe('decide', () => {
           ],
           reading: reading({
             mode: Mode.Auto,
-            heatSetpointC: 21,
-            coolSetpointC: 24,
+            heatSetpointC: 20,
+            coolSetpointC: 25,
             indoorTemperatureC: 20.5,
           }),
         }),

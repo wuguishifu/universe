@@ -85,7 +85,10 @@ export type ControlTarget = {
   /** The merged bounds of the active automations. Null is unbounded. */
   minTemperatureC: number | null;
   maxTemperatureC: number | null;
-  /** The largest of their buffers, shrunk if the range is too narrow for it (see fitSetpoints). */
+  /**
+   * The largest of their buffers, shrunk if the range is too narrow for it (see fitSetpoints). AUTO
+   * is turned off once the temperature is this far inside the range.
+   */
   bufferC: number;
   /** What AUTO is set to, after fitting the bounds to the thermostat's limits. */
   heatSetpointC: number;
@@ -103,9 +106,6 @@ export type ControlDecision = {
 
 /** Setpoints closer than this to the target aren't re-applied. */
 const SETPOINT_TOLERANCE_C = 0.25;
-
-/** A satisfied thermostat can report a hair short of its setpoint, which counts as reaching it. */
-const REACHED_TOLERANCE_C = 0.25;
 
 /** Thermostats take setpoints in 0.5 °C steps. */
 const SETPOINT_STEP_C = 0.5;
@@ -171,14 +171,15 @@ export function mergeRules(rules: ControlRule[]) {
 }
 
 /**
- * AUTO needs both setpoints. They're aimed inside the range by the buffer, so a thermostat holding
- * them has reached the temperature where AUTO turns off. A missing bound is pushed to the
+ * AUTO needs both setpoints. They go on the range's bounds, rounded to the thermostat's step
+ * toward the inside of the range. The buffer never moves them: some thermostats keep running past
+ * their setpoint, so AUTO is turned off once the temperature is the buffer inside the range (see
+ * decide), and the buffer is what keeps that from flapping. A missing bound is pushed to the
  * thermostat's limit so AUTO never acts on that side.
  *
- * The buffer shrinks (possibly to 0) when the setpoints would otherwise end up closer than the
- * thermostat allows, as when one window's minimum and another's maximum overlap. Setpoints are
- * rounded to the thermostat's step toward the inside of the range, and the heat setpoint gives way
- * if they're still too close.
+ * The buffer shrinks (possibly to 0) to leave the thermostat's setpoint gap between where AUTO
+ * turns off on either side, as when one window's minimum and another's maximum overlap. The heat
+ * setpoint gives way if the setpoints are closer than the thermostat allows.
  */
 export function fitSetpoints(
   bounds: {
@@ -201,8 +202,8 @@ export function fitSetpoints(
       ? Math.min(bounds.bufferC, Math.max(0, (max - min - delta) / 2))
       : bounds.bufferC;
 
-  const coolSetpointC = clamp(max == null ? highest : snapDown(max - bufferC));
-  let heatSetpointC = clamp(min == null ? lowest : snapUp(min + bufferC));
+  const coolSetpointC = clamp(max == null ? highest : snapDown(max));
+  let heatSetpointC = clamp(min == null ? lowest : snapUp(min));
   if (heatSetpointC > coolSetpointC - delta) {
     heatSetpointC = coolSetpointC - delta;
   }
@@ -377,17 +378,14 @@ export function decide({
   }
 
   const temperature = reading.indoorTemperatureC;
-  const { minTemperatureC: min, maxTemperatureC: max } = target;
+  const { minTemperatureC: min, maxTemperatureC: max, bufferC } = target;
   const outOfRange =
     (min != null && temperature < min) || (max != null && temperature > max);
-  // Reached the setpoints AUTO is aimed at (and inside the range, in case the heat setpoint had to
-  // give way below the minimum, where turning off would only start AUTO again).
+  // Back inside the range by the buffer. The thermostat may have gone past its setpoint to get
+  // here, which is the point: some never stop on their own.
   const comfortable =
-    (min == null ||
-      temperature >=
-        Math.max(min, target.heatSetpointC - REACHED_TOLERANCE_C)) &&
-    (max == null ||
-      temperature <= Math.min(max, target.coolSetpointC + REACHED_TOLERANCE_C));
+    (min == null || temperature >= min + bufferC) &&
+    (max == null || temperature <= max - bufferC);
 
   const runAuto = (kind: ControlActionKind): ControlAction => ({
     kind,
