@@ -43,7 +43,9 @@ export function createMegaToolset({ baseUrl }: MegaToolsetOptions): McpToolset {
             'read a transfer a few times, so they can be null on the first call.\n' +
             `- \`state\` is one of ${Object.values(TransferState).join(', ')}. ` +
             '`heldByQueue` means it is held by "pause all" whatever its state says.\n' +
-            '- `queuePaused`: "pause all" is on.\n' +
+            '- `queuePaused`: "pause all" is on. MEGA only reports it while some transfer is ' +
+            'listed, so with no transfers at all it reads false even when paused, and anything ' +
+            'queued then will wait (`heldByQueue`) until mega_resume_all.\n' +
             "- `error`: why the downloader's last read failed. If it is set, the rest is from " +
             'the read before.\n' +
             'Call this again to follow a download: there are no notifications.',
@@ -60,7 +62,8 @@ export function createMegaToolset({ baseUrl }: MegaToolsetOptions): McpToolset {
             "Download MEGA links (https://mega.nz/file/... or /folder/...) into the server's " +
             'download folder, queued in the order given. A folder link downloads as a folder ' +
             'with its contents. If MEGA refuses a link, the links after it are not queued; the ' +
-            `ones before it already are. ${SNAPSHOT}`,
+            'ones before it already are. If the new transfers come back with `heldByQueue`, ' +
+            `"pause all" is on and mega_resume_all starts them. ${SNAPSHOT}`,
           inputSchema: z.object({
             urls: z
               .array(z.string().trim().refine(isMegaLink, 'Not a MEGA link'))
