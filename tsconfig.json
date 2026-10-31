@@ -124,6 +124,9 @@
       "path": "./projects/thermo-automation/mcp"
     },
     {
+      "path": "./projects/mega-client/mcp"
+    },
+    {
       "path": "./platform/mcp/toolkit"
     },
     {

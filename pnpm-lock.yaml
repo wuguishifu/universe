@@ -731,6 +731,9 @@ importers:
       '@platform/mcp-toolkit':
         specifier: workspace:*
         version: link:../toolkit
+      '@projects/mega-client-mcp':
+        specifier: workspace:*
+        version: link:../../../projects/mega-client/mcp
       '@projects/thermo-automation-mcp':
         specifier: workspace:*
         version: link:../../../projects/thermo-automation/mcp
@@ -976,6 +979,15 @@ importers:
         version: 2.8.1
 
   projects/mega-client/contracts: {}
+
+  projects/mega-client/mcp:
+    dependencies:
+      '@platform/mcp-toolkit':
+        specifier: workspace:*
+        version: link:../../../platform/mcp/toolkit
+      '@projects/mega-client-contracts':
+        specifier: workspace:*
+        version: link:../contracts
 
   projects/mega-client/service:
     dependencies:
