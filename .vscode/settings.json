@@ -6,7 +6,7 @@
   "js/ts.tsdk.path": "node_modules/typescript/lib",
   "editor.formatOnSave": false,
   "js/ts.preferences.importModuleSpecifier": "project-relative",
-  "vim.handleKeys": {
-    "<C-6>": false
-  }
+  "latex-workshop.latex.autoBuild.run": "onSave",
+  "latex-workshop.latex.outDir": "%DIR%/build",
+  "latex-workshop.view.pdf.viewer": "tab"
 }
