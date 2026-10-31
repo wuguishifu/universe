@@ -60,6 +60,7 @@ jobs:
         uses: xu-cheng/latex-action@v3
         with:
           root_file: projects/portfolio/resume/resume.tex
+          work_in_root_file_dir: true
 
       - name: Create release
         env:
