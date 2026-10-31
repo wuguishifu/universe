@@ -40,6 +40,9 @@ when it fails, so the model can react to it).
 - [thermo-automation](../../../projects/thermo-automation/mcp): `thermo_get_status`,
   `thermo_get_device_history`, `thermo_set_device_control`, `thermo_pause_device`,
   `thermo_resume_device`, and `thermo_create/update/delete_automation`.
+- [mega-client](../../../projects/mega-client/mcp): `mega_get_status`, `mega_queue_downloads`,
+  `mega_pause/resume/cancel_transfer` and `mega_pause/resume/cancel_all`. No tools for MEGA's
+  login: a password shouldn't go through the model, so signing in stays in the web app.
 
 To add a project: create its `mcp` lib, add its toolset to
 [toolsets.ts](src/modules/mcp/toolsets.ts) and its service URL to the environment (and the homelab

@@ -42,6 +42,8 @@ export const environmentSchema = baseEnvironmentSchema.extend({
   refreshTokenTtlDays: z.coerce.number().positive().default(30),
 
   thermoAutomationServiceUrl: z.url(),
+  /** On the NAS, over the tailnet. It has no login of its own, so this service is its only gate. */
+  megaClientServiceUrl: z.url(),
 });
 
 export class EnvironmentService extends createEnvironmentService(

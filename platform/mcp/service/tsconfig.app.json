@@ -24,6 +24,9 @@
       "path": "../../../projects/thermo-automation/mcp/tsconfig.lib.json"
     },
     {
+      "path": "../../../projects/mega-client/mcp/tsconfig.lib.json"
+    },
+    {
       "path": "../toolkit/tsconfig.lib.json"
     },
     {

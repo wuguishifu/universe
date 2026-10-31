@@ -1,6 +1,7 @@
 import type { FactoryProvider } from '@nestjs/common';
 
 import type { McpToolset } from '@platform/mcp-toolkit';
+import { createMegaToolset } from '@projects/mega-client-mcp';
 import { createThermoToolset } from '@projects/thermo-automation-mcp';
 
 import { EnvironmentService } from '../../config/environment';
@@ -13,5 +14,6 @@ export const toolsetsProvider: FactoryProvider<McpToolset[]> = {
   inject: [EnvironmentService],
   useFactory: ({ environment }: EnvironmentService) => [
     createThermoToolset({ baseUrl: environment.thermoAutomationServiceUrl }),
+    createMegaToolset({ baseUrl: environment.megaClientServiceUrl }),
   ],
 };
