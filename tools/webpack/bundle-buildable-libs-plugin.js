@@ -9,7 +9,7 @@
  * Usage: `new BundleBuildableLibsPlugin(['@platform/convex-contracts'])`
  *
  * @example
- * ```
+ * ```js
  * // webpack.config.js
  * module.exports = {
  *   ...,

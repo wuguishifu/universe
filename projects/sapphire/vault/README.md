@@ -20,7 +20,7 @@ tested by round trip) for adding items later.
 
 ## How unlocking works
 
-```
+```plaintext
 login (once):  master password ─PBKDF2─▶ master key ─HKDF─▶ stretched key ─decrypts─▶ user key
                                               └─PBKDF2(1)─▶ password hash ─▶ /identity/connect/token
 storage:       user key      → Keychain, shared group, .biometryCurrentSet + ThisDeviceOnly
