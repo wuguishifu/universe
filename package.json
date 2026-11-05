@@ -33,6 +33,7 @@
     "@prismicio/react": "^3.2.1",
     "@slicemachine/adapter-next": "^0.3.81",
     "@swc-node/register": "1.11.1",
+    "@swc/cli": "~0.8.1",
     "@swc/core": "1.15.8",
     "@swc/helpers": "0.5.21",
     "@tailwindcss/vite": "^4.3.3",

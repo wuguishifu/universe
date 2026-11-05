@@ -131,6 +131,9 @@
     },
     {
       "path": "./platform/mcp/service"
+    },
+    {
+      "path": "./projects/wuguishifu/web"
     }
   ],
   "compilerOptions": {

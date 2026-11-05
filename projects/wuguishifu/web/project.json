@@ -1,0 +1,66 @@
+{
+  "name": "wuguishifu-web",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/wuguishifu/web",
+  "projectType": "application",
+  "tags": ["scope:hybrid"],
+  "targets": {
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf projects/wuguishifu/web/.next"
+      }
+    },
+    "build": {
+      "defaultConfiguration": "production",
+      "dependsOn": ["clean"]
+    },
+    "serve": {
+      "defaultConfiguration": "development",
+      "options": {
+        "port": 4202
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^typecheck"],
+      "cache": true,
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/tsconfig.base.json",
+        {
+          "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+          "transitive": true
+        },
+        {
+          "fileset": "{projectRoot}/**/*.d.ts",
+          "dependencies": true
+        },
+        {
+          "externalDependencies": ["next", "typescript"]
+        }
+      ],
+      "outputs": [
+        "{projectRoot}/.next/types/**/*.ts",
+        "{projectRoot}/dist/tsconfig.tsbuildinfo"
+      ],
+      "syncGenerators": ["@nx/js:typescript-sync"],
+      "options": {
+        "cwd": "projects/wuguishifu/web",
+        "command": "next typegen && tsc --project tsconfig.json --noEmit"
+      }
+    },
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude '(^|/)convex/_generated(/|$)'",
+        "cwd": "projects/wuguishifu/web"
+      }
+    }
+  }
+}
