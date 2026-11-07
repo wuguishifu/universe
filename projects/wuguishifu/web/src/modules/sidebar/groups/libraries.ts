@@ -5,7 +5,6 @@ import { NavGroup } from '../types';
 export const librariesGroup: NavGroup = {
   id: 'libraries',
   label: 'Libraries',
-  href: '/libs',
   items: [
     {
       id: 'observability',
