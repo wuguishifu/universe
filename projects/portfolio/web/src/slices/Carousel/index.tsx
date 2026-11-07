@@ -3,9 +3,8 @@ import Image from 'next/image';
 import { FC } from 'react';
 
 import {
-  CarouselContainer,
+  Carousel as CarouselContainer,
   CarouselContent,
-  CarouselIndicator,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
@@ -51,7 +50,6 @@ const Carousel: FC<CarouselProps> = ({ slice, context }) => {
           </CarouselContent>
           <CarouselNext className="hidden md:flex" />
           <CarouselPrevious className="hidden md:flex" />
-          <CarouselIndicator />
         </CarouselContainer>
       </div>
     </section>
