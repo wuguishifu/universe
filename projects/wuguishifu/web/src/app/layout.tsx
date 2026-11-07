@@ -2,8 +2,9 @@ import { Metadata } from 'next';
 import { Nunito } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 
-import { cn } from '@libs/ui-web';
+import { cn, SidebarProvider, TooltipProvider } from '@libs/ui-web';
 
+import { AppSidebar } from '../modules/sidebar/app-sidebar';
 import './globals.css';
 
 const nunito = Nunito({ subsets: ['latin'] });
@@ -30,7 +31,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <TooltipProvider delayDuration={0}>
+            <SidebarProvider>
+              <AppSidebar />
+              {children}
+            </SidebarProvider>
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

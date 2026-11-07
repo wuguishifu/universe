@@ -1,5 +1,6 @@
 export * from './button';
 export * from './carousel';
+export * from './collapsible';
 export * from './dialog';
 export * from './drawer';
 export * from './dropdown-menu';
