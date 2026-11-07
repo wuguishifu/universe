@@ -16,6 +16,5 @@ export type NavItem = {
 export type NavGroup = {
   id: string;
   label: string;
-  href: string;
   items: NavItem[];
 };

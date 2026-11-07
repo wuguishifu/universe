@@ -20,10 +20,8 @@ import { NavGroup, NavItem } from './types';
 export function AppSidebarGroup({ group }: { group: NavGroup }) {
   return (
     <SidebarGroup className="py-1">
-      <SidebarGroupLabel asChild>
-        <Link href={group.href}>
-          <span className="truncate">{group.label}</span>
-        </Link>
+      <SidebarGroupLabel>
+        <span className="truncate">{group.label}</span>
       </SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>

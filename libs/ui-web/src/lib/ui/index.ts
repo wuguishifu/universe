@@ -1,4 +1,5 @@
 export * from './button';
+export * from './card';
 export * from './carousel';
 export * from './collapsible';
 export * from './dialog';

@@ -19,7 +19,7 @@ export const librariesGroup: NavGroup = {
       icon: Package,
       label: 'Product',
       href: '/libs/product',
-      children: [{ label: 'graphics-i18n', href: '/libs/graphics-i18n' }],
+      children: [{ label: 'graphics-i18n', href: 'https://i18n.graphics' }],
     },
     {
       id: 'generators',
@@ -31,10 +31,6 @@ export const librariesGroup: NavGroup = {
         {
           label: 'nx-expo-native-modules',
           href: '/libs/nx-expo-native-modules',
-        },
-        {
-          label: 'nx-nitro-modules',
-          href: '/libs/nx-nitro-modules',
         },
       ],
     },
