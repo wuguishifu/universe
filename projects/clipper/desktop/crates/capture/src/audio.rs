@@ -33,8 +33,8 @@ const POLL: Duration = Duration::from_millis(10);
 pub enum AudioSource {
     /// Everything the default output device plays.
     Desktop,
-    /// The default input device.
-    Microphone,
+    /// An input device: the one with this [`InputDevice::id`], or Windows' default.
+    Microphone { device: Option<String> },
     /// What one process (and its children) plays.
     App { pid: u32, name: String },
 }
@@ -44,7 +44,7 @@ impl AudioSource {
     pub fn title(&self) -> &str {
         match self {
             Self::Desktop => "Desktop",
-            Self::Microphone => "Microphone",
+            Self::Microphone { .. } => "Microphone",
             Self::App { name, .. } => name,
         }
     }
@@ -61,16 +61,37 @@ fn frames(duration: Duration) -> usize {
 
 type Queue = Arc<Mutex<VecDeque<u8>>>;
 
+/// The largest sample magnitude in `bytes` (f32le), 0 to 1 for audio that isn't clipping.
+fn peak(bytes: &[u8]) -> f32 {
+    bytes
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .map(|b| f32::from_le_bytes(*b).abs())
+        .filter(|s| s.is_finite())
+        .fold(0.0, f32::max)
+}
+
+/// How long a meter holds a peak before falling to the current level, so a short sound can be
+/// seen by a UI that only looks a few times a second.
+const PEAK_HOLD: Duration = Duration::from_millis(300);
+
+/// Each track's recent peak, for level meters: a sample magnitude, 0 to 1.
+pub type Levels = Arc<Mutex<Vec<f32>>>;
+
 /// Takes `n` frames from each queue and interleaves them: frame 0 of every source, then frame
-/// 1, and so on. A source with fewer than `n` frames is padded with silence at the end.
-fn interleave(queues: &[Queue], n: usize, out: &mut Vec<u8>) {
+/// 1, and so on. A source with fewer than `n` frames is padded with silence at the end. Returns
+/// each source's peak in what was taken.
+fn interleave(queues: &[Queue], n: usize, out: &mut Vec<u8>) -> Vec<f32> {
     let stride = BYTES_PER_FRAME * queues.len();
     out.clear();
     out.resize(n * stride, 0);
+    let mut peaks = Vec::with_capacity(queues.len());
     for (i, queue) in queues.iter().enumerate() {
         let mut queue = queue.lock().unwrap();
         let available = (queue.len() / BYTES_PER_FRAME).min(n);
         let taken: Vec<u8> = queue.drain(..available * BYTES_PER_FRAME).collect();
+        peaks.push(peak(&taken));
         for (frame, bytes) in taken.as_chunks::<BYTES_PER_FRAME>().0.iter().enumerate() {
             let at = frame * stride + i * BYTES_PER_FRAME;
             out[at..at + BYTES_PER_FRAME].copy_from_slice(bytes);
@@ -81,6 +102,7 @@ fn interleave(queues: &[Queue], n: usize, out: &mut Vec<u8>) {
         let excess = excess - excess % BYTES_PER_FRAME;
         queue.drain(..excess);
     }
+    peaks
 }
 
 /// Captures every source and writes them to `out` as one interleaved `f32le` stream at
@@ -90,11 +112,13 @@ fn interleave(queues: &[Queue], n: usize, out: &mut Vec<u8>) {
 /// The stream runs on the wall clock: one second of output is always one second of time, which
 /// keeps it in step with the video it's muxed with. Sources that deliver nothing (loopback while
 /// nothing plays, an app that's quiet, a source that failed to start) are written as silence.
-/// A source that fails is reported to `warn` and stays silent; the others carry on.
+/// A source that fails is reported to `warn` and stays silent; the others carry on. Each
+/// source's recent peak is kept in `levels`, in the same order.
 pub fn capture(
     sources: &[AudioSource],
     mut out: impl Write,
     stop: Arc<AtomicBool>,
+    levels: Levels,
     warn: impl Fn(String) + Send + Sync + 'static,
 ) -> Result<(), String> {
     let warn = Arc::new(warn);
@@ -132,6 +156,7 @@ pub fn capture(
         let mut dropped_early_audio = false;
         let mut written = primed;
         let mut buf = Vec::new();
+        let mut held: Vec<(f32, Instant)> = vec![(0.0, start); sources.len()];
         while !stop.load(Ordering::Relaxed) {
             thread::sleep(POLL);
             if !dropped_early_audio && start.elapsed() >= primed_for {
@@ -144,7 +169,14 @@ pub fn capture(
             if target <= written {
                 continue;
             }
-            interleave(&queues, target - written, &mut buf);
+            let peaks = interleave(&queues, target - written, &mut buf);
+            let now = Instant::now();
+            for ((level, at), peak) in held.iter_mut().zip(peaks) {
+                if peak >= *level || now - *at > PEAK_HOLD {
+                    (*level, *at) = (peak, now);
+                }
+            }
+            *levels.lock().unwrap() = held.iter().map(|(level, _)| *level).collect();
             out.write_all(&buf).map_err(|e| e.to_string())?;
             out.flush().map_err(|e| e.to_string())?;
             written = target;
@@ -201,15 +233,22 @@ fn open(source: &AudioSource) -> Result<(AudioClient, bool), String> {
         None,
     );
     let (mut client, mode, events) = match source {
-        AudioSource::Desktop | AudioSource::Microphone => {
-            let direction = match source {
-                AudioSource::Desktop => Direction::Render,
-                _ => Direction::Capture,
+        AudioSource::Desktop | AudioSource::Microphone { .. } => {
+            let enumerator =
+                DeviceEnumerator::new().map_err(wasapi_err("couldn't list audio devices"))?;
+            let device = match source {
+                AudioSource::Microphone {
+                    device: Some(id), ..
+                } => enumerator
+                    .get_device(id)
+                    .map_err(wasapi_err("the chosen microphone isn't available"))?,
+                AudioSource::Microphone { device: None } => enumerator
+                    .get_default_device(Direction::Capture)
+                    .map_err(wasapi_err("no default input device"))?,
+                _ => enumerator
+                    .get_default_device(Direction::Render)
+                    .map_err(wasapi_err("no default output device"))?,
             };
-            let device = DeviceEnumerator::new()
-                .map_err(wasapi_err("couldn't list audio devices"))?
-                .get_default_device(direction)
-                .map_err(wasapi_err("no default device"))?;
             tracing::info!(
                 track = source.title(),
                 device = %device.get_friendlyname().unwrap_or_default(),
@@ -295,6 +334,54 @@ fn capture_source(source: &AudioSource, queue: &Queue, stop: &AtomicBool) -> Res
     })();
     let _ = client.stop_stream();
     result
+}
+
+/// A microphone, or any other input device.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InputDevice {
+    /// Windows' ID for the device, which stays the same across restarts.
+    pub id: String,
+    pub name: String,
+    /// Whether it's Windows' default input device.
+    pub is_default: bool,
+    /// Whether it's the default for calls (what Discord and Teams use by default).
+    pub is_communications_default: bool,
+}
+
+/// The input devices that are plugged in and enabled.
+pub fn list_input_devices() -> Result<Vec<InputDevice>, String> {
+    thread::spawn(|| {
+        let _ = wasapi::initialize_mta();
+        let enumerator = DeviceEnumerator::new().map_err(wasapi_err("couldn't list devices"))?;
+        let default_id = |role| {
+            enumerator
+                .get_default_device_for_role(Direction::Capture, role)
+                .and_then(|d| d.get_id())
+                .ok()
+        };
+        let default = default_id(wasapi::Role::Console);
+        let communications = default_id(wasapi::Role::Communications);
+        let devices = enumerator
+            .get_device_collection(Direction::Capture)
+            .map_err(wasapi_err("couldn't list devices"))?;
+        let mut list = Vec::new();
+        for i in 0..devices.get_nbr_devices().unwrap_or(0) {
+            let Ok(device) = devices.get_device_at_index(i) else {
+                continue;
+            };
+            let Ok(id) = device.get_id() else { continue };
+            list.push(InputDevice {
+                is_default: default.as_ref() == Some(&id),
+                is_communications_default: communications.as_ref() == Some(&id),
+                name: device.get_friendlyname().unwrap_or_else(|_| id.clone()),
+                id,
+            });
+        }
+        Ok(list)
+    })
+    .join()
+    .unwrap_or_else(|_| Err("listing input devices panicked".into()))
 }
 
 /// An app with an audio session on the default output device: one that's playing, or has.
@@ -390,6 +477,20 @@ mod tests {
     }
 
     #[test]
+    fn reports_each_source_peak() {
+        let loud: Vec<u8> = [0.5f32, -0.9, 0.1, 0.2]
+            .iter()
+            .flat_map(|s| s.to_le_bytes())
+            .collect();
+        let queues = [
+            Arc::new(Mutex::new(loud.into_iter().collect())),
+            Queue::default(),
+        ];
+        let mut out = Vec::new();
+        assert_eq!(interleave(&queues, 2, &mut out), vec![0.9, 0.0]);
+    }
+
+    #[test]
     fn titles_and_mixes_tracks() {
         let app = AudioSource::App {
             pid: 1,
@@ -397,6 +498,6 @@ mod tests {
         };
         assert_eq!(app.title(), "VALORANT");
         assert!(!app.in_mix());
-        assert!(AudioSource::Desktop.in_mix() && AudioSource::Microphone.in_mix());
+        assert!(AudioSource::Desktop.in_mix() && AudioSource::Microphone { device: None }.in_mix());
     }
 }

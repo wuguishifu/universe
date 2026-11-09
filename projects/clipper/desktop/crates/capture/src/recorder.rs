@@ -20,7 +20,7 @@ use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
 
-use crate::audio::{self, AudioSource};
+use crate::audio::{self, AudioSource, Levels};
 use crate::window_list::{WindowInfo, window_exists};
 
 /// Each segment's length, and the most a clip can run past the time asked for.
@@ -90,6 +90,8 @@ struct Shared {
     stop: AtomicBool,
     /// Set by set_capture(): the current run ends and the next starts right away.
     restart: AtomicBool,
+    /// Each track's recent peak this run, in track order; empty when not recording.
+    levels: Levels,
 }
 
 impl Shared {
@@ -185,6 +187,7 @@ impl Recorder {
             child: Mutex::default(),
             stop: AtomicBool::new(false),
             restart: AtomicBool::new(false),
+            levels: Levels::default(),
         });
         let supervisor = shared.clone();
         thread::Builder::new()
@@ -260,6 +263,7 @@ impl Recorder {
         }
 
         // How loud the mix is, to set its gain. Audio only, so it's quick.
+        let measuring = Instant::now();
         let loudness = measure_args(&names, &tracks).and_then(|args| {
             let output = no_window(&mut Command::new(&self.shared.config.ffmpeg))
                 .current_dir(&dir)
@@ -269,14 +273,22 @@ impl Recorder {
             integrated_loudness(&String::from_utf8_lossy(&output.stderr))
         });
         let gain_db = mix_gain_db(loudness);
-        tracing::debug!(?loudness, gain_db, "mix loudness");
+        let measured_in = measuring.elapsed();
 
+        let saving = Instant::now();
         let output = no_window(&mut Command::new(&self.shared.config.ffmpeg))
             .current_dir(&dir)
             .args(save_args(&names, &tracks, gain_db))
             .arg(out)
             .output()
             .map_err(|e| format!("couldn't run ffmpeg: {e}"))?;
+        tracing::debug!(
+            ?loudness,
+            gain_db,
+            measure_ms = measured_in.as_millis() as u64,
+            save_ms = saving.elapsed().as_millis() as u64,
+            "saved clip"
+        );
         if !output.status.success() || !out.exists() {
             return Err(format!(
                 "ffmpeg couldn't save the clip: {}",
@@ -284,6 +296,12 @@ impl Recorder {
             ));
         }
         Ok(())
+    }
+
+    /// Each track's recent peak, in the order of [`RecorderStatus::tracks`]: a sample magnitude
+    /// from 0 to 1. Empty when not recording.
+    pub fn levels(&self) -> Vec<f32> {
+        self.shared.levels.lock().unwrap().clone()
     }
 
     pub fn stop(&self) {
@@ -319,9 +337,12 @@ fn concat_input(segments: &[String]) -> [String; 2] {
 }
 
 /// The arguments that measure the mix's integrated loudness (EBU R128), printed to stderr.
+///
+/// `-vn` drops the video as it's read: without it ffmpeg still processes it, which takes 4.5s
+/// for two minutes of 4K rather than 0.2s.
 fn measure_args(segments: &[String], tracks: &[AudioSource]) -> Option<Vec<String>> {
     let mix = mix_filter(tracks)?;
-    let mut args: Vec<String> = ["-hide_banner", "-nostdin", "-nostats"]
+    let mut args: Vec<String> = ["-hide_banner", "-nostdin", "-nostats", "-vn"]
         .map(String::from)
         .into();
     args.extend(concat_input(segments));
@@ -533,6 +554,7 @@ fn supervise(shared: &Arc<Shared>) {
             _ => run_once(shared, &dir, &source, &tracks),
         };
         shared.state.lock().unwrap().run = None;
+        shared.levels.lock().unwrap().clear();
         let _ = fs::remove_dir_all(&dir);
 
         if let Err(e) = result {
@@ -581,10 +603,11 @@ fn run_once(
     let audio_stop = Arc::new(AtomicBool::new(false));
     let audio = {
         let (stop, tracks, warn_to) = (audio_stop.clone(), tracks.to_vec(), shared.clone());
+        let levels = shared.levels.clone();
         thread::Builder::new()
             .name("audio".into())
             .spawn(move || {
-                audio::capture(&tracks, stdin, stop, move |warning| {
+                audio::capture(&tracks, stdin, stop, levels, move |warning| {
                     warn_to.state.lock().unwrap().track_warnings.push(warning);
                 })
             })
@@ -734,7 +757,7 @@ mod tests {
                 pid: 1,
                 name: "VALORANT".into(),
             },
-            AudioSource::Microphone,
+            AudioSource::Microphone { device: None },
         ];
         let args = save_args(&["seg000000.ts".into()], &tracks, 3.5).join(" ");
         assert!(args.contains("[0:a:0][0:a:2]amix=inputs=2"), "{args}");

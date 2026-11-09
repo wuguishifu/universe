@@ -12,7 +12,7 @@ mod recorder;
 mod time;
 mod window_list;
 
-pub use audio::{AudioApp, AudioSource, list_audio_apps};
+pub use audio::{AudioApp, AudioSource, InputDevice, Levels, list_audio_apps, list_input_devices};
 pub use buffer::{Packet, ReplayBuffer};
 pub use recorder::{CaptureSource, Recorder, RecorderConfig, RecorderStatus};
 pub use time::Timestamp;

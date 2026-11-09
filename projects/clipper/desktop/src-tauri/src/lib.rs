@@ -3,8 +3,8 @@ use std::sync::Mutex;
 use std::time::Duration;
 
 use clipper_capture::{
-    AudioApp, AudioSource, CaptureSource, Recorder, RecorderConfig, WindowInfo, list_audio_apps,
-    list_windows,
+    AudioApp, AudioSource, CaptureSource, InputDevice, Recorder, RecorderConfig, WindowInfo,
+    list_audio_apps, list_input_devices, list_windows,
 };
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, RunEvent};
@@ -21,8 +21,46 @@ const SAVE_SHORTCUT: (Modifiers, Code, &str) = (Modifiers::ALT, Code::F9, "Alt+F
 #[serde(rename_all = "camelCase")]
 struct TrackSettings {
     microphone: bool,
+    /// The input device the microphone track records ([`InputDevice::id`]), or `None` for
+    /// Windows' default.
+    microphone_device: Option<String>,
     /// Apps that get a track of their own, e.g. Discord.
     apps: Vec<AudioApp>,
+}
+
+/// What's remembered between runs, in `settings.json` in the app's config folder. Apps aren't:
+/// they're picked by process, which is different each time an app starts.
+#[derive(Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+struct SavedSettings {
+    microphone: bool,
+    microphone_device: Option<String>,
+}
+
+fn load_settings(path: &std::path::Path) -> TrackSettings {
+    let saved: SavedSettings = std::fs::read_to_string(path)
+        .ok()
+        .and_then(|json| serde_json::from_str(&json).ok())
+        .unwrap_or_default();
+    TrackSettings {
+        microphone: saved.microphone,
+        microphone_device: saved.microphone_device,
+        apps: Vec::new(),
+    }
+}
+
+fn save_settings(path: &std::path::Path, settings: &TrackSettings) {
+    let saved = SavedSettings {
+        microphone: settings.microphone,
+        microphone_device: settings.microphone_device.clone(),
+    };
+    let result = path
+        .parent()
+        .map_or(Ok(()), std::fs::create_dir_all)
+        .and_then(|()| std::fs::write(path, serde_json::to_string_pretty(&saved).unwrap()));
+    if let Err(e) = result {
+        tracing::warn!(error = %e, path = %path.display(), "couldn't save settings");
+    }
 }
 
 /// The tracks to record: Desktop, the recorded window's app, the other apps asked for, then
@@ -47,7 +85,9 @@ fn tracks_for(source: &CaptureSource, settings: &TrackSettings) -> Vec<AudioSour
         }
     }
     if settings.microphone {
-        tracks.push(AudioSource::Microphone);
+        tracks.push(AudioSource::Microphone {
+            device: settings.microphone_device.clone(),
+        });
     }
     tracks
 }
@@ -56,6 +96,7 @@ struct AppState {
     recorder: Recorder,
     clips_dir: PathBuf,
     tracks: Mutex<TrackSettings>,
+    settings_path: PathBuf,
     /// Set while a clip is being written, so a second press doesn't start another.
     saving: Mutex<bool>,
 }
@@ -126,8 +167,21 @@ fn list_capture_audio_apps() -> Result<Vec<AudioApp>, String> {
 fn set_tracks(state: tauri::State<AppState>, settings: TrackSettings) {
     let source = state.recorder.status().source;
     let tracks = tracks_for(&source, &settings);
+    save_settings(&state.settings_path, &settings);
     *state.tracks.lock().unwrap() = settings;
     state.recorder.set_capture(source, tracks);
+}
+
+/// The input devices a microphone track can record.
+#[tauri::command]
+fn list_microphones() -> Result<Vec<InputDevice>, String> {
+    list_input_devices()
+}
+
+/// Each track's recent peak (0 to 1), in the order of the status's `tracks`, for meters.
+#[tauri::command]
+fn get_levels(state: tauri::State<AppState>) -> Vec<f32> {
+    state.recorder.levels()
 }
 
 #[tauri::command]
@@ -236,7 +290,9 @@ pub fn run() {
             let work_dir = paths.app_local_data_dir()?.join("buffer");
             // Set CLIPPER_FFMPEG to use a particular build; otherwise ffmpeg on PATH.
             let ffmpeg = std::env::var_os("CLIPPER_FFMPEG").map_or("ffmpeg".into(), PathBuf::from);
-            tracing::info!(clips = %clips_dir.display(), buffer = %work_dir.display(), "starting Clipper");
+            let settings_path = paths.app_config_dir()?.join("settings.json");
+            let settings = load_settings(&settings_path);
+            tracing::info!(clips = %clips_dir.display(), buffer = %work_dir.display(), ?settings, "starting Clipper");
 
             let recorder = Recorder::start(
                 RecorderConfig {
@@ -247,12 +303,13 @@ pub fn run() {
                     video_bitrate: "30M".into(),
                 },
                 CaptureSource::Display,
-                tracks_for(&CaptureSource::Display, &TrackSettings::default()),
+                tracks_for(&CaptureSource::Display, &settings),
             );
             app.manage(AppState {
                 recorder,
                 clips_dir,
-                tracks: Mutex::default(),
+                tracks: Mutex::new(settings),
+                settings_path,
                 saving: Mutex::new(false),
             });
 
@@ -268,6 +325,8 @@ pub fn run() {
             set_source,
             list_capture_audio_apps,
             set_tracks,
+            get_levels,
+            list_microphones,
             save_clip
         ])
         .build(tauri::generate_context!())
@@ -303,6 +362,7 @@ mod tests {
     fn adds_the_window_app_then_other_apps_then_the_mic() {
         let settings = TrackSettings {
             microphone: true,
+            microphone_device: None,
             apps: vec![
                 AudioApp {
                     pid: 7,
@@ -320,5 +380,27 @@ mod tests {
             .map(|t| t.title().to_owned())
             .collect();
         assert_eq!(titles, ["Desktop", "VALORANT", "Discord", "Microphone"]);
+    }
+
+    #[test]
+    fn remembers_the_microphone_but_not_apps() {
+        let path =
+            std::env::temp_dir().join(format!("clipper-settings-{}.json", std::process::id()));
+        let settings = TrackSettings {
+            microphone: true,
+            microphone_device: Some("{0.0.1.00000000}.{c603}".into()),
+            apps: vec![AudioApp {
+                pid: 7,
+                name: "Discord".into(),
+            }],
+        };
+        save_settings(&path, &settings);
+        let loaded = load_settings(&path);
+        let _ = std::fs::remove_file(&path);
+        assert!(loaded.microphone);
+        assert_eq!(loaded.microphone_device, settings.microphone_device);
+        assert!(loaded.apps.is_empty());
+        // Nothing saved yet: the defaults.
+        assert!(!load_settings(&path).microphone);
     }
 }

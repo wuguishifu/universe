@@ -4,16 +4,59 @@
 //!
 //!   --window <title>   record the first window whose title contains <title> (else the display)
 //!   --app <name|pid>   add a track for an app playing audio (repeatable)
-//!   --mic              add a microphone track
-//!   --list             list the windows and audio apps that can be recorded
+//!   --mic [name]       add a microphone track: the default input, or the first whose name
+//!                      contains [name]
+//!   --list             list the windows, audio apps and input devices
+//!   --meter-inputs     meter every input device for a few seconds each, to find a live one
 //!
 //! There's always a Desktop track (everything the speakers play), first.
 
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use clipper_capture::{
-    AudioSource, CaptureSource, Recorder, RecorderConfig, list_audio_apps, list_windows,
+    AudioSource, CaptureSource, Levels, Recorder, RecorderConfig, audio, list_audio_apps,
+    list_input_devices, list_windows,
 };
+
+fn db(peak: f32) -> f32 {
+    20.0 * peak.max(1e-5).log10()
+}
+
+/// Each input device's loudest peak over a few seconds: one that's live shows its noise floor
+/// (or you talking), a dead one -100 dB.
+fn meter_inputs() {
+    for device in list_input_devices().unwrap_or_default() {
+        let stop = Arc::new(AtomicBool::new(false));
+        let levels = Levels::default();
+        let track = AudioSource::Microphone {
+            device: Some(device.id.clone()),
+        };
+        let thread = {
+            let (stop, levels) = (stop.clone(), levels.clone());
+            std::thread::spawn(move || {
+                audio::capture(&[track], std::io::sink(), stop, levels, |w| {
+                    eprintln!("  {w}")
+                })
+            })
+        };
+        let mut loudest = 0f32;
+        for _ in 0..30 {
+            std::thread::sleep(Duration::from_millis(100));
+            loudest = loudest.max(levels.lock().unwrap().first().copied().unwrap_or(0.0));
+        }
+        stop.store(true, Ordering::Relaxed);
+        let _ = thread.join();
+        let default = match (device.is_default, device.is_communications_default) {
+            (true, true) => " (default, calls default)",
+            (true, false) => " (default)",
+            (false, true) => " (calls default)",
+            _ => "",
+        };
+        println!("  peak {:>5.0} dB  {}{default}", db(loudest), device.name);
+    }
+}
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -26,6 +69,15 @@ fn main() {
         for app in list_audio_apps().unwrap_or_default() {
             println!("  {:>10}  {}", app.pid, app.name);
         }
+        println!("input devices:");
+        for d in list_input_devices().unwrap_or_default() {
+            let default = if d.is_default { " (default)" } else { "" };
+            println!("  {}{default}  {}", d.name, d.id);
+        }
+        return;
+    }
+    if args.iter().any(|a| a == "--meter-inputs") {
+        meter_inputs();
         return;
     }
 
@@ -33,7 +85,7 @@ fn main() {
     let out = args.get(1).cloned().unwrap_or_else(|| "clip.mp4".into());
     let mut source = CaptureSource::Display;
     let mut tracks = vec![AudioSource::Desktop];
-    let mut rest = args.iter().skip(2);
+    let mut rest = args.iter().skip(2).peekable();
     while let Some(arg) = rest.next() {
         match arg.as_str() {
             "--window" => {
@@ -57,7 +109,17 @@ fn main() {
                     name: app.name,
                 });
             }
-            "--mic" => tracks.push(AudioSource::Microphone),
+            "--mic" => {
+                let device = rest.next_if(|a| !a.starts_with("--")).map(|wanted| {
+                    list_input_devices()
+                        .unwrap_or_default()
+                        .into_iter()
+                        .find(|d| d.name.to_lowercase().contains(&wanted.to_lowercase()))
+                        .unwrap_or_else(|| panic!("no input device like {wanted:?}; see --list"))
+                        .id
+                });
+                tracks.push(AudioSource::Microphone { device });
+            }
             other => panic!("unknown option {other:?}"),
         }
     }
@@ -74,7 +136,18 @@ fn main() {
         source,
         tracks,
     );
-    std::thread::sleep(Duration::from_secs(seconds));
+    // Each track's peak once a second, in dBFS: a quick check that a source is being heard.
+    for _ in 0..seconds {
+        std::thread::sleep(Duration::from_secs(1));
+        let status = recorder.status();
+        let levels: Vec<String> = status
+            .tracks
+            .iter()
+            .zip(recorder.levels())
+            .map(|(track, peak)| format!("{} {:.0} dB", track.title(), db(peak)))
+            .collect();
+        println!("levels: {}", levels.join(", "));
+    }
     println!("{:?}", recorder.status());
     let started = std::time::Instant::now();
     match recorder.save_clip(out.as_ref()) {

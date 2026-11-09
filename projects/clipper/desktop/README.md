@@ -45,7 +45,11 @@ pnpm nx tauri clipper-desktop -- <args>   # any other tauri CLI command
   - **Desktop**: everything the default output device plays (loopback). Always recorded.
   - **The recorded window's app**, automatically, and any other **apps** added in the app (e.g.
     Discord): process loopback, which takes the process and its children.
-  - **Microphone**: the default input device, when switched on.
+  - **Microphone**, when switched on: Windows' default input device, or one picked in the app.
+    That choice, and whether it's on, is remembered in `settings.json` in the app's config
+    folder; added apps aren't, as they're picked by process.
+
+  Each track has a live level meter in the app.
 
   They're interleaved into one raw PCM stream on ffmpeg's stdin (2 channels per track), so they
   can't drift apart, and ffmpeg splits it back into a titled AAC track each. A source that's
@@ -69,6 +73,7 @@ To try the recorder without the app:
 cargo run -p clipper-capture --example record -- --list                       # windows, audio apps
 cargo run -p clipper-capture --example record -- 15 clip.mp4                  # the display
 cargo run -p clipper-capture --example record -- 15 clip.mp4 --window VALORANT --app Discord --mic
+cargo run -p clipper-capture --example record -- --meter-inputs                # which inputs are live
 ```
 
 ## How capture will work

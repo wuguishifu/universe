@@ -18,10 +18,25 @@ export type AudioApp = { pid: number; name: string };
 
 /** Mirrors `AudioSource` in crates/capture/src/audio.rs: one audio track. */
 export type AudioSource =
-  { kind: 'desktop' } | { kind: 'microphone' } | ({ kind: 'app' } & AudioApp);
+  | { kind: 'desktop' }
+  | { kind: 'microphone'; device: string | null }
+  | ({ kind: 'app' } & AudioApp);
+
+/** Mirrors `InputDevice` in crates/capture/src/audio.rs. */
+export type InputDevice = {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  isCommunicationsDefault: boolean;
+};
 
 /** Mirrors `TrackSettings` in src-tauri/src/lib.rs: the tracks asked for. */
-export type TrackSettings = { microphone: boolean; apps: AudioApp[] };
+export type TrackSettings = {
+  microphone: boolean;
+  /** An `InputDevice.id`, or null for Windows' default. */
+  microphoneDevice: string | null;
+  apps: AudioApp[];
+};
 
 /** Mirrors `Status` in src-tauri/src/lib.rs. */
 export type CaptureStatus = {
@@ -57,6 +72,9 @@ export const commands = {
   /** Changes the extra tracks; the buffer starts over. */
   setTracks: (settings: TrackSettings) =>
     invoke<void>('set_tracks', { settings }),
+  /** Each track's recent peak, 0 to 1, in the order of `CaptureStatus.tracks`. */
+  getLevels: () => invoke<number[]>('get_levels'),
+  listMicrophones: () => invoke<InputDevice[]>('list_microphones'),
   /** Starts saving; the result arrives as a clip event. */
   saveClip: () => invoke<void>('save_clip'),
 };

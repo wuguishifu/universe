@@ -17,6 +17,7 @@ tauri-build = { version = "2", features = [] }
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 clipper-capture.workspace = true
 serde.workspace = true
+serde_json = "1"
 tauri = { version = "2", features = [] }
 tauri-plugin-global-shortcut = "2"
 tracing.workspace = true
