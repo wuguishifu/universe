@@ -93,12 +93,6 @@
         "command": "convex deploy"
       }
     },
-    "preview-urls": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "bash ./scripts/convex/get-preview-urls.sh {args.previewName}"
-      }
-    },
     "update:ai-files": {
       "executor": "nx:run-commands",
       "options": {
