@@ -48,11 +48,16 @@ impl AudioSource {
             Self::App { name, .. } => name,
         }
     }
+}
 
-    /// Whether the track goes into a clip's mix. Apps don't, as Desktop already has them.
-    pub fn in_mix(&self) -> bool {
-        !matches!(self, Self::App { .. })
-    }
+/// Which of `tracks` (by index) go into a clip's mix. With a Desktop track, that's Desktop and
+/// the microphone: Desktop already has every app in it, so mixing them too would count them
+/// twice. Without one, it's every track.
+pub fn mixed_tracks(tracks: &[AudioSource]) -> Vec<usize> {
+    let has_desktop = tracks.contains(&AudioSource::Desktop);
+    (0..tracks.len())
+        .filter(|&i| !has_desktop || !matches!(tracks[i], AudioSource::App { .. }))
+        .collect()
 }
 
 fn frames(duration: Duration) -> usize {
@@ -497,7 +502,13 @@ mod tests {
             name: "VALORANT".into(),
         };
         assert_eq!(app.title(), "VALORANT");
-        assert!(!app.in_mix());
-        assert!(AudioSource::Desktop.in_mix() && AudioSource::Microphone { device: None }.in_mix());
+        let mic = AudioSource::Microphone { device: None };
+        // Desktop already has the app in it.
+        assert_eq!(
+            mixed_tracks(&[AudioSource::Desktop, app.clone(), mic.clone()]),
+            vec![0, 2]
+        );
+        // Without Desktop, the app is the game audio, so it's mixed.
+        assert_eq!(mixed_tracks(&[app, mic]), vec![0, 1]);
     }
 }

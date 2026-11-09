@@ -106,10 +106,46 @@ function TrackRow({
   );
 }
 
+/** A track that's switched on and off here, with its meter while it's on. */
+function SwitchRow({
+  label,
+  detail,
+  checked,
+  onChange,
+  peak,
+}: {
+  label: string;
+  detail?: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  /** Undefined while the track isn't recorded. */
+  peak: number | undefined;
+}) {
+  return (
+    <div className="flex h-7 items-center gap-2 text-sm">
+      <label className="flex min-w-0 items-center gap-2">
+        <Switch checked={checked} onCheckedChange={onChange} />
+        <span className="truncate">{label}</span>
+      </label>
+      {detail && (
+        <span className="text-muted-foreground shrink-0 text-xs">{detail}</span>
+      )}
+      {checked && (
+        <>
+          <span className="ml-auto" />
+          <Meter peak={peak} label={label} />
+          <span className="size-7 shrink-0" />
+        </>
+      )}
+    </div>
+  );
+}
+
 /**
- * The audio tracks, each with a level meter: Desktop (always), the recorded window's app
- * (automatically), apps added here, and the microphone. Saved clips add a mix of Desktop and the
- * microphone first.
+ * The audio tracks, each with a level meter: Desktop (always for the display, switched on here
+ * for a window), the recorded window's app (automatically), apps added here, and the
+ * microphone. Saved clips add a mix first: Desktop and the microphone, or with no Desktop, every
+ * track.
  */
 export function TrackPicker({ status }: { status: CaptureStatus }) {
   const { tracks, trackSettings: settings, source } = status;
@@ -126,6 +162,7 @@ export function TrackPicker({ status }: { status: CaptureStatus }) {
     (a) => a.pid !== windowPid && !settings.apps.some((s) => s.pid === a.pid),
   );
   const micIndex = tracks.findIndex((t) => t.kind === 'microphone');
+  const desktopIndex = tracks.findIndex((t) => t.kind === 'desktop');
   const [microphones, setMicrophones] = useState<InputDevice[]>([]);
   const refreshMicrophones = useCallback(() => {
     commands.listMicrophones().then(setMicrophones, () => setMicrophones([]));
@@ -142,7 +179,9 @@ export function TrackPicker({ status }: { status: CaptureStatus }) {
       <ul className="flex flex-col gap-1 text-sm">
         {tracks.map((track, i) => {
           const peak = levels[i];
+          // Switched on and off below.
           if (track.kind === 'microphone') return null;
+          if (track.kind === 'desktop' && windowPid !== undefined) return null;
           if (track.kind === 'app' && track.pid === windowPid) {
             return (
               <TrackRow
@@ -178,22 +217,22 @@ export function TrackPicker({ status }: { status: CaptureStatus }) {
         })}
       </ul>
 
-      <div className="flex h-7 items-center gap-2 text-sm">
-        <label className="flex items-center gap-2">
-          <Switch
-            checked={settings.microphone}
-            onCheckedChange={(microphone) => update({ microphone })}
-          />
-          Microphone
-        </label>
-        {micIndex >= 0 && (
-          <>
-            <span className="ml-auto" />
-            <Meter peak={levels[micIndex]} label="Microphone" />
-            <span className="size-7 shrink-0" />
-          </>
-        )}
-      </div>
+      {windowPid !== undefined && (
+        <SwitchRow
+          label="Desktop audio"
+          detail="everything, as well"
+          checked={settings.desktopWithWindow}
+          onChange={(desktopWithWindow) => update({ desktopWithWindow })}
+          peak={desktopIndex >= 0 ? levels[desktopIndex] : undefined}
+        />
+      )}
+
+      <SwitchRow
+        label="Microphone"
+        checked={settings.microphone}
+        onChange={(microphone) => update({ microphone })}
+        peak={micIndex >= 0 ? levels[micIndex] : undefined}
+      />
 
       {settings.microphone && (
         <select

@@ -32,6 +32,8 @@ export type InputDevice = {
 
 /** Mirrors `TrackSettings` in src-tauri/src/lib.rs: the tracks asked for. */
 export type TrackSettings = {
+  /** Whether a recorded window gets a Desktop track too; the display always has one. */
+  desktopWithWindow: boolean;
   microphone: boolean;
   /** An `InputDevice.id`, or null for Windows' default. */
   microphoneDevice: string | null;

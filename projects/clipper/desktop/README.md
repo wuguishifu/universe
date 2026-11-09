@@ -42,12 +42,14 @@ pnpm nx tauri clipper-desktop -- <args>   # any other tauri CLI command
   segments are written. Games redraw every frame, so they're fine. A closed window falls back to
   the display. Switching sources starts the buffer over.
 - **Audio tracks** (crates/capture/src/audio.rs), one WASAPI capture each:
-  - **Desktop**: everything the default output device plays (loopback). Always recorded.
+  - **Desktop**: everything the default output device plays (loopback). Always recorded for the
+    display; for a window, only when switched on ("Desktop audio").
   - **The recorded window's app**, automatically, and any other **apps** added in the app (e.g.
     Discord): process loopback, which takes the process and its children.
   - **Microphone**, when switched on: Windows' default input device, or one picked in the app.
-    That choice, and whether it's on, is remembered in `settings.json` in the app's config
-    folder; added apps aren't, as they're picked by process.
+
+  The Desktop audio and Microphone switches and the microphone device are remembered in
+  `settings.json` in the app's config folder; added apps aren't, as they're picked by process.
 
   Each track has a live level meter in the app.
 
@@ -61,9 +63,9 @@ pnpm nx tauri clipper-desktop -- <args>   # any other tauri CLI command
   recording started) into `Videos\Clipper\<window title or "Clipper"> <date> <time>.mp4` and
   beeps.
 - **Saved clips** have the video and every track copied as they are, plus a **Mix** first (the
-  default track, as most players only play the first). Mix is Desktop + Microphone (apps are
-  already in Desktop), measured with EBU R128 and turned toward -16 LUFS, at most +12 dB, then
-  limited to -1 dBFS peaks. Tracks are named in MP4 by both `name` and `handler_name`.
+  default track, as most players only play the first). With a Desktop track, Mix is Desktop +
+  Microphone (apps are already in Desktop); without one, it's every track. It's measured with
+  EBU R128 and turned toward -16 LUFS, at most +12 dB, then limited to -1 dBFS peaks. Tracks are named in MP4 by both `name` and `handler_name`.
 - If ffmpeg exits, it's started again after 2s. Clips only come from the current run. Changing
   the source or tracks starts the buffer over.
 
@@ -72,7 +74,7 @@ To try the recorder without the app:
 ```bash
 cargo run -p clipper-capture --example record -- --list                       # windows, audio apps
 cargo run -p clipper-capture --example record -- 15 clip.mp4                  # the display
-cargo run -p clipper-capture --example record -- 15 clip.mp4 --window VALORANT --app Discord --mic
+cargo run -p clipper-capture --example record -- 15 clip.mp4 --window VALORANT --no-desktop --mic
 cargo run -p clipper-capture --example record -- --meter-inputs                # which inputs are live
 ```
 

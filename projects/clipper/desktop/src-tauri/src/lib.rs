@@ -20,6 +20,8 @@ const SAVE_SHORTCUT: (Modifiers, Code, &str) = (Modifiers::ALT, Code::F9, "Alt+F
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct TrackSettings {
+    /// Whether a recorded window gets a Desktop track too. The display always has one.
+    desktop_with_window: bool,
     microphone: bool,
     /// The input device the microphone track records ([`InputDevice::id`]), or `None` for
     /// Windows' default.
@@ -33,6 +35,7 @@ struct TrackSettings {
 #[derive(Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 struct SavedSettings {
+    desktop_with_window: bool,
     microphone: bool,
     microphone_device: Option<String>,
 }
@@ -43,6 +46,7 @@ fn load_settings(path: &std::path::Path) -> TrackSettings {
         .and_then(|json| serde_json::from_str(&json).ok())
         .unwrap_or_default();
     TrackSettings {
+        desktop_with_window: saved.desktop_with_window,
         microphone: saved.microphone,
         microphone_device: saved.microphone_device,
         apps: Vec::new(),
@@ -51,6 +55,7 @@ fn load_settings(path: &std::path::Path) -> TrackSettings {
 
 fn save_settings(path: &std::path::Path, settings: &TrackSettings) {
     let saved = SavedSettings {
+        desktop_with_window: settings.desktop_with_window,
         microphone: settings.microphone,
         microphone_device: settings.microphone_device.clone(),
     };
@@ -63,15 +68,21 @@ fn save_settings(path: &std::path::Path, settings: &TrackSettings) {
     }
 }
 
-/// The tracks to record: Desktop, the recorded window's app, the other apps asked for, then
-/// the microphone.
+/// The tracks to record: Desktop (always for the display; for a window, if asked for), the
+/// recorded window's app, the other apps asked for, then the microphone.
 fn tracks_for(source: &CaptureSource, settings: &TrackSettings) -> Vec<AudioSource> {
-    let mut tracks = vec![AudioSource::Desktop];
-    if let CaptureSource::Window(window) = source {
-        tracks.push(AudioSource::App {
-            pid: window.pid,
-            name: window.title.clone(),
-        });
+    let mut tracks = Vec::new();
+    match source {
+        CaptureSource::Display => tracks.push(AudioSource::Desktop),
+        CaptureSource::Window(window) => {
+            if settings.desktop_with_window {
+                tracks.push(AudioSource::Desktop);
+            }
+            tracks.push(AudioSource::App {
+                pid: window.pid,
+                name: window.title.clone(),
+            });
+        }
     }
     for app in &settings.apps {
         let already = tracks
@@ -359,8 +370,30 @@ mod tests {
     }
 
     #[test]
+    fn leaves_desktop_out_of_a_window_unless_asked() {
+        let tracks = tracks_for(&window(5), &TrackSettings::default());
+        assert_eq!(
+            tracks,
+            vec![AudioSource::App {
+                pid: 5,
+                name: "VALORANT".into()
+            }]
+        );
+        // The display always has Desktop, whatever the setting.
+        let settings = TrackSettings {
+            desktop_with_window: false,
+            ..TrackSettings::default()
+        };
+        assert_eq!(
+            tracks_for(&CaptureSource::Display, &settings),
+            vec![AudioSource::Desktop]
+        );
+    }
+
+    #[test]
     fn adds_the_window_app_then_other_apps_then_the_mic() {
         let settings = TrackSettings {
+            desktop_with_window: true,
             microphone: true,
             microphone_device: None,
             apps: vec![
@@ -387,6 +420,7 @@ mod tests {
         let path =
             std::env::temp_dir().join(format!("clipper-settings-{}.json", std::process::id()));
         let settings = TrackSettings {
+            desktop_with_window: true,
             microphone: true,
             microphone_device: Some("{0.0.1.00000000}.{c603}".into()),
             apps: vec![AudioApp {
@@ -397,7 +431,7 @@ mod tests {
         save_settings(&path, &settings);
         let loaded = load_settings(&path);
         let _ = std::fs::remove_file(&path);
-        assert!(loaded.microphone);
+        assert!(loaded.microphone && loaded.desktop_with_window);
         assert_eq!(loaded.microphone_device, settings.microphone_device);
         assert!(loaded.apps.is_empty());
         // Nothing saved yet: the defaults.

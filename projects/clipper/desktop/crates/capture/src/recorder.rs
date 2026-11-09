@@ -322,9 +322,9 @@ const MIX_TARGET_LUFS: f64 = -16.0;
 /// turned up to full loudness, and silent ones stay silent.
 const MIX_MAX_GAIN_DB: f64 = 12.0;
 
-/// The filter that adds up the tracks [`AudioSource::in_mix`] says to mix, or `None` if none do.
+/// The filter that adds up the tracks [`audio::mixed_tracks`] says to mix, or `None` if none do.
 fn mix_filter(tracks: &[AudioSource]) -> Option<String> {
-    let mixed: Vec<usize> = (0..tracks.len()).filter(|&i| tracks[i].in_mix()).collect();
+    let mixed = audio::mixed_tracks(tracks);
     if mixed.is_empty() {
         return None;
     }
@@ -747,6 +747,20 @@ mod tests {
             split_tracks_filter(2),
             "[1:a]asplit=2[s0][s1];[s0]pan=stereo|c0=c0|c1=c1[t0];[s1]pan=stereo|c0=c2|c1=c3[t1]"
         );
+    }
+
+    #[test]
+    fn mixes_the_app_and_mic_when_theres_no_desktop() {
+        let tracks = [
+            AudioSource::App {
+                pid: 1,
+                name: "VALORANT".into(),
+            },
+            AudioSource::Microphone { device: None },
+        ];
+        let args = save_args(&["seg000000.ts".into()], &tracks, 0.0).join(" ");
+        assert!(args.contains("[0:a:0][0:a:1]amix=inputs=2"), "{args}");
+        assert!(args.contains("-metadata:s:a:1 title=VALORANT"), "{args}");
     }
 
     #[test]

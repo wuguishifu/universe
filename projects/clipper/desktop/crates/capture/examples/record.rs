@@ -9,7 +9,8 @@
 //!   --list             list the windows, audio apps and input devices
 //!   --meter-inputs     meter every input device for a few seconds each, to find a live one
 //!
-//! There's always a Desktop track (everything the speakers play), first.
+//!   --no-desktop       leave out the Desktop track (everything the speakers play), which is
+//!                      otherwise first
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -109,6 +110,7 @@ fn main() {
                     name: app.name,
                 });
             }
+            "--no-desktop" => tracks.retain(|t| *t != AudioSource::Desktop),
             "--mic" => {
                 let device = rest.next_if(|a| !a.starts_with("--")).map(|wanted| {
                     list_input_devices()
