@@ -9,14 +9,14 @@
     "circular-deps": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude '(^|/)convex/_generated(/|$)'",
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude \"(^|/)convex/_generated(/|$)\"",
         "cwd": "libs/redis-cache"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node --test 'src/**/*.spec.ts'",
+        "command": "node --test \"src/**/*.spec.ts\"",
         "cwd": "libs/redis-cache"
       }
     }

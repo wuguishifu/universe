@@ -11,9 +11,9 @@
         "cwd": "platform/convex/app",
         "parallel": true,
         "commands": [
-          "rm -rf ./dist",
-          "rm -rf ./node_modules",
-          "rm -rf ./out-tsc"
+          "rimraf ./dist",
+          "rimraf ./node_modules",
+          "rimraf ./out-tsc"
         ]
       }
     },
@@ -93,12 +93,6 @@
         "command": "convex deploy"
       }
     },
-    "preview-urls": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "bash ./scripts/convex/get-preview-urls.sh {args.previewName}"
-      }
-    },
     "update:ai-files": {
       "executor": "nx:run-commands",
       "options": {
@@ -109,7 +103,7 @@
     "circular-deps": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude '(^|/)convex/_generated(/|$)'",
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude \"(^|/)convex/_generated(/|$)\"",
         "cwd": "platform/convex/app"
       }
     }

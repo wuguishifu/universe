@@ -26,7 +26,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node --test 'src/**/*.spec.ts'",
+        "command": "node --test \"src/**/*.spec.ts\"",
         "cwd": "projects/mega-client/web"
       }
     },

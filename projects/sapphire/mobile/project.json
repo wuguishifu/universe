@@ -23,7 +23,7 @@
     "setup": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["rm -rf .expo android ios dist"],
+        "commands": ["rimraf .expo android ios dist"],
         "cwd": "projects/sapphire/mobile"
       }
     }
