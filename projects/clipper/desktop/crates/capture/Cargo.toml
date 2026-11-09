@@ -1,0 +1,8 @@
+[package]
+name = "clipper-capture"
+description = "Replay-buffer capture engine: audio and video in, keyframe-aligned clips out."
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[dependencies]

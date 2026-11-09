@@ -1,0 +1,63 @@
+{
+  "name": "clipper-desktop",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/clipper/desktop/src",
+  "projectType": "application",
+  "tags": ["scope:client"],
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "tauri dev",
+        "cwd": "projects/clipper/desktop"
+      }
+    },
+    "dev-web": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "vite",
+        "cwd": "projects/clipper/desktop"
+      }
+    },
+    "build-web": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["production", "^production"],
+      "outputs": ["{workspaceRoot}/dist/projects/clipper/desktop"],
+      "options": {
+        "command": "vite build",
+        "cwd": "projects/clipper/desktop"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tauri build",
+        "cwd": "projects/clipper/desktop"
+      }
+    },
+    "check-rust": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cargo clippy --workspace --all-targets -- -D warnings",
+        "cwd": "projects/clipper/desktop"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cargo test --workspace",
+        "cwd": "projects/clipper/desktop"
+      }
+    },
+    "tauri": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tauri",
+        "cwd": "projects/clipper/desktop"
+      }
+    }
+  }
+}

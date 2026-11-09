@@ -160,3 +160,6 @@ tsconfig.lib.tsbuildinfo
 __pycache__/
 *.py[cod]
 .venv/
+
+# Rust
+target/

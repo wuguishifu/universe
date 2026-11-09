@@ -1,0 +1,10 @@
+{
+  "name": "@projects/clipper-desktop",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@libs/ui-web": "workspace:*",
+    "@projects/clipper-contracts": "workspace:*"
+  }
+}

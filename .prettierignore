@@ -17,3 +17,6 @@ prismicio-types.d.ts
 
 **/.next
 **/tsconfig.tsbuildinfo
+
+**/target/**
+**/src-tauri/gen/**

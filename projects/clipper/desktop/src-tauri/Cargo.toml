@@ -1,0 +1,21 @@
+[package]
+name = "clipper-desktop"
+description = "Clipper for Windows"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[lib]
+# The _lib suffix keeps the lib's name apart from the binary's (cargo#8519).
+name = "clipper_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+clipper-capture.workspace = true
+serde.workspace = true
+tauri = { version = "2", features = [] }
+tracing.workspace = true
+tracing-subscriber.workspace = true
