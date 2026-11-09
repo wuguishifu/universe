@@ -2,8 +2,11 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::Duration;
 
-use clipper_capture::{CaptureSource, Recorder, RecorderConfig, WindowInfo, list_windows};
-use serde::Serialize;
+use clipper_capture::{
+    AudioApp, AudioSource, CaptureSource, Recorder, RecorderConfig, WindowInfo, list_audio_apps,
+    list_windows,
+};
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, RunEvent};
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
 
@@ -12,9 +15,47 @@ const BUFFER: Duration = Duration::from_secs(120);
 /// Saves a clip from anywhere, including from inside a game.
 const SAVE_SHORTCUT: (Modifiers, Code, &str) = (Modifiers::ALT, Code::F9, "Alt+F9");
 
+/// The audio tracks asked for, beyond the ones that are always there. Mirrored by
+/// `TrackSettings` in commands.ts.
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TrackSettings {
+    microphone: bool,
+    /// Apps that get a track of their own, e.g. Discord.
+    apps: Vec<AudioApp>,
+}
+
+/// The tracks to record: Desktop, the recorded window's app, the other apps asked for, then
+/// the microphone.
+fn tracks_for(source: &CaptureSource, settings: &TrackSettings) -> Vec<AudioSource> {
+    let mut tracks = vec![AudioSource::Desktop];
+    if let CaptureSource::Window(window) = source {
+        tracks.push(AudioSource::App {
+            pid: window.pid,
+            name: window.title.clone(),
+        });
+    }
+    for app in &settings.apps {
+        let already = tracks
+            .iter()
+            .any(|t| matches!(t, AudioSource::App { pid, .. } if *pid == app.pid));
+        if !already {
+            tracks.push(AudioSource::App {
+                pid: app.pid,
+                name: app.name.clone(),
+            });
+        }
+    }
+    if settings.microphone {
+        tracks.push(AudioSource::Microphone);
+    }
+    tracks
+}
+
 struct AppState {
     recorder: Recorder,
     clips_dir: PathBuf,
+    tracks: Mutex<TrackSettings>,
     /// Set while a clip is being written, so a second press doesn't start another.
     saving: Mutex<bool>,
 }
@@ -27,6 +68,9 @@ struct Status {
     buffer_seconds: u64,
     recording: bool,
     source: CaptureSource,
+    tracks: Vec<AudioSource>,
+    track_settings: TrackSettings,
+    track_warnings: Vec<String>,
     buffered_seconds: f64,
     last_error: Option<String>,
     clips_dir: String,
@@ -49,6 +93,9 @@ fn get_status(state: tauri::State<AppState>) -> Status {
         buffer_seconds: BUFFER.as_secs(),
         recording: recorder.recording,
         source: recorder.source,
+        tracks: recorder.tracks,
+        track_settings: state.tracks.lock().unwrap().clone(),
+        track_warnings: recorder.track_warnings,
         buffered_seconds: recorder.buffered_seconds,
         last_error: recorder.last_error,
         clips_dir: state.clips_dir.display().to_string(),
@@ -64,7 +111,23 @@ fn list_capture_windows() -> Vec<WindowInfo> {
 /// Switches what's recorded. The buffer starts over.
 #[tauri::command]
 fn set_source(state: tauri::State<AppState>, source: CaptureSource) {
-    state.recorder.set_source(source);
+    let tracks = tracks_for(&source, &state.tracks.lock().unwrap());
+    state.recorder.set_capture(source, tracks);
+}
+
+/// Apps playing audio, which can each get a track.
+#[tauri::command]
+fn list_capture_audio_apps() -> Result<Vec<AudioApp>, String> {
+    list_audio_apps()
+}
+
+/// Changes the extra audio tracks. The buffer starts over.
+#[tauri::command]
+fn set_tracks(state: tauri::State<AppState>, settings: TrackSettings) {
+    let source = state.recorder.status().source;
+    let tracks = tracks_for(&source, &settings);
+    *state.tracks.lock().unwrap() = settings;
+    state.recorder.set_capture(source, tracks);
 }
 
 #[tauri::command]
@@ -184,8 +247,14 @@ pub fn run() {
                     video_bitrate: "30M".into(),
                 },
                 CaptureSource::Display,
+                tracks_for(&CaptureSource::Display, &TrackSettings::default()),
             );
-            app.manage(AppState { recorder, clips_dir, saving: Mutex::new(false) });
+            app.manage(AppState {
+                recorder,
+                clips_dir,
+                tracks: Mutex::default(),
+                saving: Mutex::new(false),
+            });
 
             use tauri_plugin_global_shortcut::GlobalShortcutExt;
             if let Err(e) = app.global_shortcut().register(shortcut) {
@@ -197,6 +266,8 @@ pub fn run() {
             get_status,
             list_capture_windows,
             set_source,
+            list_capture_audio_apps,
+            set_tracks,
             save_clip
         ])
         .build(tauri::generate_context!())
@@ -207,4 +278,47 @@ pub fn run() {
             app.state::<AppState>().recorder.stop();
         }
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn window(pid: u32) -> CaptureSource {
+        CaptureSource::Window(WindowInfo {
+            hwnd: 1,
+            title: "VALORANT".into(),
+            exe: "VALORANT-Win64-Shipping.exe".into(),
+            pid,
+        })
+    }
+
+    #[test]
+    fn records_desktop_alone_by_default() {
+        let tracks = tracks_for(&CaptureSource::Display, &TrackSettings::default());
+        assert_eq!(tracks, vec![AudioSource::Desktop]);
+    }
+
+    #[test]
+    fn adds_the_window_app_then_other_apps_then_the_mic() {
+        let settings = TrackSettings {
+            microphone: true,
+            apps: vec![
+                AudioApp {
+                    pid: 7,
+                    name: "Discord".into(),
+                },
+                // The recorded window's own app isn't added twice.
+                AudioApp {
+                    pid: 5,
+                    name: "VALORANT-Win64-Shipping".into(),
+                },
+            ],
+        };
+        let titles: Vec<String> = tracks_for(&window(5), &settings)
+            .iter()
+            .map(|t| t.title().to_owned())
+            .collect();
+        assert_eq!(titles, ["Desktop", "VALORANT", "Discord", "Microphone"]);
+    }
 }

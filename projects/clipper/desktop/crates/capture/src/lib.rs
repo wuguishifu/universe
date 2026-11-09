@@ -2,7 +2,7 @@
 //! without a UI.
 //!
 //! For now, [`Recorder`] has ffmpeg capture and encode the display or a window and write short
-//! segments to disk, with desktop audio from [`audio`] piped in. The plan is to move to
+//! segments to disk, with an audio track per source from [`audio`] piped in. The plan is to move to
 //! in-process capture, with each stream kept in its own [`ReplayBuffer`] of encoded packets on
 //! one shared clock.
 
@@ -12,6 +12,7 @@ mod recorder;
 mod time;
 mod window_list;
 
+pub use audio::{AudioApp, AudioSource, list_audio_apps};
 pub use buffer::{Packet, ReplayBuffer};
 pub use recorder::{CaptureSource, Recorder, RecorderConfig, RecorderStatus};
 pub use time::Timestamp;

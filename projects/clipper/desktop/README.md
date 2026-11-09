@@ -41,20 +41,34 @@ pnpm nx tauri clipper-desktop -- <args>   # any other tauri CLI command
   nothing is recorded while a window sends none (minimized, or a static app), and no new
   segments are written. Games redraw every frame, so they're fine. A closed window falls back to
   the display. Switching sources starts the buffer over.
-- **Audio:** WASAPI loopback of the default output device (crates/capture/src/audio.rs), piped
-  in as raw PCM. Silence is written while nothing plays, so the audio stays in step with the clock.
+- **Audio tracks** (crates/capture/src/audio.rs), one WASAPI capture each:
+  - **Desktop**: everything the default output device plays (loopback). Always recorded.
+  - **The recorded window's app**, automatically, and any other **apps** added in the app (e.g.
+    Discord): process loopback, which takes the process and its children.
+  - **Microphone**: the default input device, when switched on.
+
+  They're interleaved into one raw PCM stream on ffmpeg's stdin (2 channels per track), so they
+  can't drift apart, and ffmpeg splits it back into a titled AAC track each. A source that's
+  quiet, or fails to start, is silence. The audio clock starts when ffmpeg starts reading stdin,
+  after it's opened the video source, so audio and video start together (measured within a frame).
+
 - ffmpeg writes 2s MPEG-TS segments to `%LOCALAPPDATA%\com.wuguishifu.clipper\buffer`. Old ones are
   deleted. **Alt+F9** (or the button) joins the newest segments covering 2 minutes (or since
   recording started) into `Videos\Clipper\<window title or "Clipper"> <date> <time>.mp4` and
   beeps.
-- If ffmpeg exits, it's started again after 2s. Clips only come from the current run.
+- **Saved clips** have the video and every track copied as they are, plus a **Mix** first (the
+  default track, as most players only play the first). Mix is Desktop + Microphone (apps are
+  already in Desktop), measured with EBU R128 and turned toward -16 LUFS, at most +12 dB, then
+  limited to -1 dBFS peaks. Tracks are named in MP4 by both `name` and `handler_name`.
+- If ffmpeg exits, it's started again after 2s. Clips only come from the current run. Changing
+  the source or tracks starts the buffer over.
 
 To try the recorder without the app:
 
 ```bash
-cargo run -p clipper-capture --example record -- --list                 # windows it can record
-cargo run -p clipper-capture --example record -- 15 clip.mp4            # the display
-cargo run -p clipper-capture --example record -- 15 clip.mp4 VALORANT   # a window, by title
+cargo run -p clipper-capture --example record -- --list                       # windows, audio apps
+cargo run -p clipper-capture --example record -- 15 clip.mp4                  # the display
+cargo run -p clipper-capture --example record -- 15 clip.mp4 --window VALORANT --app Discord --mic
 ```
 
 ## How capture will work

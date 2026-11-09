@@ -35,7 +35,7 @@ pub fn window_exists(handle: u64) -> bool {
     unsafe { IsWindow(Some(hwnd(handle))).as_bool() }
 }
 
-fn exe_name(pid: u32) -> String {
+pub(crate) fn exe_name(pid: u32) -> String {
     unsafe {
         let Ok(process) = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) else {
             return String::new();

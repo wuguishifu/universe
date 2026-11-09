@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@libs/ui-web';
 
 import { SourcePicker } from './components/source-picker';
+import { TrackPicker } from './components/track-picker';
 import {
   type CaptureStatus,
   type ClipEvent,
@@ -98,6 +99,12 @@ export function App() {
           </>
         )}
       </section>
+
+      {status && (
+        <section className="bg-card rounded-lg border p-4">
+          <TrackPicker status={status} />
+        </section>
+      )}
 
       {clips.length > 0 && (
         <section className="flex flex-col gap-2">
