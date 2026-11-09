@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "prepush": "./tools/scripts/prepush.sh",
+    "prepush": "node tools/scripts/prepush.mjs",
     "prepare": "husky",
     "format": "pnpm prettier --write ."
   },
@@ -58,6 +58,7 @@
     "madge": "^8.0.0",
     "nx": "23.1.1",
     "postcss": "8.4.38",
+    "rimraf": "^6.1.4",
     "slice-machine-ui": "^2.17.1",
     "tailwind-merge": "^3.3.1",
     "ts-node": "^10.9.2",

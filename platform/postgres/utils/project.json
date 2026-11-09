@@ -25,9 +25,9 @@
         "cwd": "platform/postgres/utils",
         "parallel": false,
         "commands": [
-          "rm -rf ../../../dist/platform/postgres/migrations",
+          "rimraf ../../../dist/platform/postgres/migrations",
           "esbuild ./src/lib/migrate.ts --bundle --platform=node --target=node22 --format=esm --external:pg-native --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --outfile=../../../dist/platform/postgres/migrations/migrate.mjs",
-          "cp -r ./src/lib/migrations ../../../dist/platform/postgres/migrations/migrations"
+          "node -e \"require('node:fs').cpSync('./src/lib/migrations', '../../../dist/platform/postgres/migrations/migrations', { recursive: true })\""
         ]
       }
     },

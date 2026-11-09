@@ -15,7 +15,7 @@
     "setup": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "/bin/sh ./tools/environment/setup.sh"
+        "command": "node ./tools/environment/setup.mjs"
       }
     }
   }

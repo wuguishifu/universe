@@ -9,7 +9,12 @@ This library handles secrets integration and storage with [infisical](https://in
 1. Install the [Infisical CLI](https://infisical.com/docs/cli/overview).
 
    ```sh
+   # macOS
    brew install infisical/get-cli/infisical
+
+   # Windows
+   scoop bucket add org https://github.com/Infisical/scoop-infisical.git
+   scoop install infisical
    ```
 
 1. Log into the Infisical CLI.
