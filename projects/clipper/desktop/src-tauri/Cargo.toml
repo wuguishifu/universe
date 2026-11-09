@@ -14,8 +14,11 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 clipper-capture.workspace = true
 serde.workspace = true
 tauri = { version = "2", features = [] }
+tauri-plugin-global-shortcut = "2"
 tracing.workspace = true
 tracing-subscriber.workspace = true
+windows = { version = "0.62", features = ["Win32_System_Diagnostics_Debug", "Win32_UI_WindowsAndMessaging"] }

@@ -29,6 +29,26 @@ pnpm nx check-rust clipper-desktop
 pnpm nx tauri clipper-desktop -- <args>   # any other tauri CLI command
 ```
 
+## How capture works now (MVP)
+
+`Recorder` (crates/capture/src/recorder.rs) runs ffmpeg from PATH (or `CLIPPER_FFMPEG`):
+
+- **Video:** `ddagrab` (Desktop Duplication of the main display) feeds D3D11 frames straight
+  into `h264_mf`, the GPU's Media Foundation encoder. That's the NVIDIA MFT here; `h264_nvenc`
+  needs driver 610+ with ffmpeg 9.
+- **Audio:** WASAPI loopback of the default output device (crates/capture/src/audio.rs), piped
+  in as raw PCM. Silence is written while nothing plays, so the audio stays in step with the clock.
+- ffmpeg writes 2s MPEG-TS segments to `%LOCALAPPDATA%\com.wuguishifu.clipper\buffer`. Old ones are
+  deleted. **Alt+F9** (or the button) joins the newest segments covering 2 minutes (or since
+  recording started) into `Videos\Clipper\Clipper <date> <time>.mp4` and beeps.
+- If ffmpeg exits, it's started again after 2s. Clips only come from the current run.
+
+To try the recorder without the app:
+
+```bash
+cargo run -p clipper-capture --example record -- 15 clip.mp4
+```
+
 ## How capture will work
 
 ```plaintext
