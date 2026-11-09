@@ -33,20 +33,28 @@ pnpm nx tauri clipper-desktop -- <args>   # any other tauri CLI command
 
 `Recorder` (crates/capture/src/recorder.rs) runs ffmpeg from PATH (or `CLIPPER_FFMPEG`):
 
-- **Video:** `ddagrab` (Desktop Duplication of the main display) feeds D3D11 frames straight
-  into `h264_mf`, the GPU's Media Foundation encoder. That's the NVIDIA MFT here; `h264_nvenc`
-  needs driver 610+ with ffmpeg 9.
+- **Video:** the source is picked in the app: the main display (`ddagrab`, Desktop Duplication)
+  or one window (`gfxcapture`, Windows.Graphics.Capture, by HWND). Either way D3D11 frames go
+  straight into `h264_mf`, the GPU's Media Foundation encoder, and never reach the CPU (about 7%
+  of one core at 4K60). That's the NVIDIA MFT here; `h264_nvenc` needs driver 610+ with ffmpeg 9.
+- **Windows only send frames when they change.** `fps` fills the gaps between frames, but
+  nothing is recorded while a window sends none (minimized, or a static app), and no new
+  segments are written. Games redraw every frame, so they're fine. A closed window falls back to
+  the display. Switching sources starts the buffer over.
 - **Audio:** WASAPI loopback of the default output device (crates/capture/src/audio.rs), piped
   in as raw PCM. Silence is written while nothing plays, so the audio stays in step with the clock.
 - ffmpeg writes 2s MPEG-TS segments to `%LOCALAPPDATA%\com.wuguishifu.clipper\buffer`. Old ones are
   deleted. **Alt+F9** (or the button) joins the newest segments covering 2 minutes (or since
-  recording started) into `Videos\Clipper\Clipper <date> <time>.mp4` and beeps.
+  recording started) into `Videos\Clipper\<window title or "Clipper"> <date> <time>.mp4` and
+  beeps.
 - If ffmpeg exits, it's started again after 2s. Clips only come from the current run.
 
 To try the recorder without the app:
 
 ```bash
-cargo run -p clipper-capture --example record -- 15 clip.mp4
+cargo run -p clipper-capture --example record -- --list                 # windows it can record
+cargo run -p clipper-capture --example record -- 15 clip.mp4            # the display
+cargo run -p clipper-capture --example record -- 15 clip.mp4 VALORANT   # a window, by title
 ```
 
 ## How capture will work

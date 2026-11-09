@@ -327,8 +327,10 @@ name = "clipper-capture"
 version = "0.0.1"
 dependencies = [
  "serde",
+ "serde_json",
  "tracing",
  "wasapi",
+ "windows",
 ]
 
 [[package]]

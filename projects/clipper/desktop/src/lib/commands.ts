@@ -1,11 +1,24 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
+/** Mirrors `WindowInfo` in crates/capture/src/window_list.rs. */
+export type WindowInfo = {
+  hwnd: number;
+  title: string;
+  exe: string;
+  pid: number;
+};
+
+/** Mirrors `CaptureSource` in crates/capture/src/recorder.rs. */
+export type CaptureSource =
+  { kind: 'display' } | ({ kind: 'window' } & WindowInfo);
+
 /** Mirrors `Status` in src-tauri/src/lib.rs. */
 export type CaptureStatus = {
   version: string;
   bufferSeconds: number;
   recording: boolean;
+  source: CaptureSource;
   bufferedSeconds: number;
   lastError: string | null;
   clipsDir: string;
@@ -21,6 +34,9 @@ export type ClipEvent = {
 /** Typed wrappers for the Rust commands registered in src-tauri/src/lib.rs. */
 export const commands = {
   getStatus: () => invoke<CaptureStatus>('get_status'),
+  listWindows: () => invoke<WindowInfo[]>('list_capture_windows'),
+  /** Switches what's recorded; the buffer starts over. */
+  setSource: (source: CaptureSource) => invoke<void>('set_source', { source }),
   /** Starts saving; the result arrives as a clip event. */
   saveClip: () => invoke<void>('save_clip'),
 };

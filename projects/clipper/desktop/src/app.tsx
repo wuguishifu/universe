@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { Button } from '@libs/ui-web';
 
+import { SourcePicker } from './components/source-picker';
 import {
   type CaptureStatus,
   type ClipEvent,
@@ -54,6 +55,7 @@ export function App() {
           <p className="text-muted-foreground text-sm">Connecting…</p>
         ) : (
           <>
+            <SourcePicker source={status.source} />
             <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
               <dt className="text-muted-foreground">Replay buffer</dt>
               <dd className="flex items-center gap-2">

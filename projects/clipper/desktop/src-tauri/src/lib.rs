@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::Duration;
 
-use clipper_capture::{Recorder, RecorderConfig};
+use clipper_capture::{CaptureSource, Recorder, RecorderConfig, WindowInfo, list_windows};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, RunEvent};
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
@@ -26,6 +26,7 @@ struct Status {
     version: &'static str,
     buffer_seconds: u64,
     recording: bool,
+    source: CaptureSource,
     buffered_seconds: f64,
     last_error: Option<String>,
     clips_dir: String,
@@ -47,11 +48,23 @@ fn get_status(state: tauri::State<AppState>) -> Status {
         version: env!("CARGO_PKG_VERSION"),
         buffer_seconds: BUFFER.as_secs(),
         recording: recorder.recording,
+        source: recorder.source,
         buffered_seconds: recorder.buffered_seconds,
         last_error: recorder.last_error,
         clips_dir: state.clips_dir.display().to_string(),
         shortcut: SAVE_SHORTCUT.2,
     }
+}
+
+#[tauri::command]
+fn list_capture_windows() -> Vec<WindowInfo> {
+    list_windows()
+}
+
+/// Switches what's recorded. The buffer starts over.
+#[tauri::command]
+fn set_source(state: tauri::State<AppState>, source: CaptureSource) {
+    state.recorder.set_source(source);
 }
 
 #[tauri::command]
@@ -68,6 +81,24 @@ fn beep(ok: bool) {
     }
 }
 
+/// What a clip's file name starts with: the window's title, or "Clipper" for the display.
+fn clip_name(source: &CaptureSource) -> String {
+    let title = match source {
+        CaptureSource::Display => "",
+        CaptureSource::Window(window) => &window.title,
+    };
+    let name: String = title
+        .chars()
+        // Characters Windows doesn't allow in file names.
+        .filter(|c| !"<>:\"/\\|?*".contains(*c) && !c.is_control())
+        .take(60)
+        .collect();
+    match name.trim() {
+        "" => "Clipper".into(),
+        name => name.into(),
+    }
+}
+
 fn save_clip_in_background(app: &AppHandle) {
     let app = app.clone();
     std::thread::spawn(move || {
@@ -79,9 +110,11 @@ fn save_clip_in_background(app: &AppHandle) {
             }
             *saving = true;
         }
-        let name = chrono::Local::now()
-            .format("Clipper %Y-%m-%d %H-%M-%S.mp4")
-            .to_string();
+        let name = format!(
+            "{} {}.mp4",
+            clip_name(&state.recorder.status().source),
+            chrono::Local::now().format("%Y-%m-%d %H-%M-%S")
+        );
         let path = state.clips_dir.join(name);
         let result = state.recorder.save_clip(&path);
         *state.saving.lock().unwrap() = false;
@@ -142,13 +175,16 @@ pub fn run() {
             let ffmpeg = std::env::var_os("CLIPPER_FFMPEG").map_or("ffmpeg".into(), PathBuf::from);
             tracing::info!(clips = %clips_dir.display(), buffer = %work_dir.display(), "starting Clipper");
 
-            let recorder = Recorder::start(RecorderConfig {
-                ffmpeg,
-                work_dir,
-                window: BUFFER,
-                framerate: 60,
-                video_bitrate: "30M".into(),
-            });
+            let recorder = Recorder::start(
+                RecorderConfig {
+                    ffmpeg,
+                    work_dir,
+                    window: BUFFER,
+                    framerate: 60,
+                    video_bitrate: "30M".into(),
+                },
+                CaptureSource::Display,
+            );
             app.manage(AppState { recorder, clips_dir, saving: Mutex::new(false) });
 
             use tauri_plugin_global_shortcut::GlobalShortcutExt;
@@ -157,7 +193,12 @@ pub fn run() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_status, save_clip])
+        .invoke_handler(tauri::generate_handler![
+            get_status,
+            list_capture_windows,
+            set_source,
+            save_clip
+        ])
         .build(tauri::generate_context!())
         .expect("error while building Clipper");
 
