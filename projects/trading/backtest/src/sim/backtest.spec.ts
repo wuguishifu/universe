@@ -160,6 +160,64 @@ describe('runBacktest', () => {
   });
 });
 
+describe('runBacktest with real quotes', () => {
+  it('buys at the real ask, and a target sells at the next minute’s bid', async () => {
+    const dir = writeFixture();
+    const at = (minutesAfterOpen: number) =>
+      Date.parse(isoAt(DAY, minutesAfterOpen));
+    mkdirSync(join(dir, 'quotes', 'SPY'), { recursive: true });
+    writeFileSync(
+      join(dir, 'quotes', 'SPY', `${DAY}.json`),
+      JSON.stringify({
+        // Quoted 0.98 / 1.03 until 09:42, when it jumps to 1.58 / 1.62, then eases to 1.50 / 1.56.
+        SPY261117C00100000: [
+          [at(0), 0.98, 1.03],
+          [at(12), 1.58, 1.62],
+          [at(13), 1.5, 1.56],
+        ],
+        SPY261117P00094000: [[at(0), 0.99, 1.01]],
+      }),
+    );
+    const result = await runBacktest({
+      strategy,
+      simulation: simulationConfigSchema.parse({
+        prices: 'quotes',
+        feePerContract: 0.05,
+        warmupDays: 1,
+      }),
+      store: new DataStore(dir),
+      from: DAY,
+      to: DAY,
+    });
+    const [trade] = result.trades;
+    assert.equal(trade?.symbol, 'SPY261117C00100000');
+    assert.equal(trade?.entryPrice, 1.03);
+    assert.equal(trade?.reason, 'profitTarget');
+    // The 09:42 quote's midpoint of 1.60 is past the target, and the sell gets 09:43's bid.
+    assert.equal(trade?.exitPrice, 1.5);
+    assert.equal(trade?.netPnl.toFixed(2), '46.90');
+    assert.deepEqual(
+      result.openPositions.map((p) => [p.contract.symbol, p.entryPrice]),
+      [['SPY261117P00094000', 1.01]],
+    );
+  });
+
+  it('warns about a day with no quote file and trades nothing on it', async () => {
+    const result = await runBacktest({
+      strategy,
+      simulation: simulationConfigSchema.parse({
+        prices: 'quotes',
+        warmupDays: 1,
+      }),
+      store: new DataStore(writeFixture()),
+      from: DAY,
+      to: DAY,
+    });
+    assert.equal(result.trades.length, 0);
+    assert.deepEqual(result.warnings, [`No SPY option quotes on ${DAY}`]);
+  });
+});
+
 describe('runBacktest at expiry', () => {
   it('settles an expiring option that stopped trading at intrinsic value, instead of holding it forever', async () => {
     // The same-day 100 call trades at 0.50 until 09:41 and never again. Going flat at 09:42 finds

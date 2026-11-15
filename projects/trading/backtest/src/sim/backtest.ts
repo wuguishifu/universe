@@ -15,6 +15,7 @@ import {
 } from '@projects/trading-core';
 
 import { MarketData } from '../data/data-store';
+import { QuoteFile, QuoteRow, quoteAt } from '../data/theta';
 
 import { HistoricalChains } from './historical-chains';
 import { modelQuote } from './quotes';
@@ -83,11 +84,17 @@ const PATH_OFFSETS_MS = [0, 15_000, 30_000, 45_000];
  * 2. Each ticker's 1-minute underlying bar is delivered, which is when signals fire.
  *
  * Orders fill immediately through the simulated broker.
+ *
+ * With `prices: quotes`, step 1 instead marks each held option once, at the real bid and ask that
+ * stood when the minute began, and orders fill against the real quote when they go out.
  */
 export async function runBacktest(
   input: BacktestInput,
 ): Promise<BacktestResult> {
   const { store, simulation, from, to } = input;
+  const real = simulation.prices === 'quotes';
+  if (real && !store.optionQuotes)
+    throw new Error('This data store has no option quotes');
   const calendarDays = store.calendar();
   const chains = new HistoricalChains(simulation);
   const engine = new TradingEngine({
@@ -127,6 +134,7 @@ export async function runBacktest(
   engine.setEquity(broker.equity([]));
 
   let options = new OptionBarIndex();
+  let quotes = new OptionQuoteIndex();
   /** Each ticker's latest 1-minute close, for settling options that expire without a last trade. */
   const lastUnderlying = new Map<string, number>();
   const handle = async (batch: readonly EngineEvent[]): Promise<void> => {
@@ -143,10 +151,18 @@ export async function runBacktest(
           : undefined;
         const { order } = event;
         const maxWait = simulation.maxPriceAgeMinutes * MINUTE_MS;
-        const market =
-          order.reason && PRICE_TRIGGERED.has(order.reason)
+        const triggered =
+          order.reason !== undefined && PRICE_TRIGGERED.has(order.reason);
+        let market: MarketPrice | undefined;
+        if (real) {
+          market = triggered
+            ? quotes.afterTrigger(order.symbol, order.time)
+            : quotes.at(order.symbol, order.time);
+        } else {
+          market = triggered
             ? options.priceAfterTrigger(order.symbol, order.time, maxWait)
             : options.firstPriceAtOrAfter(order.symbol, order.time, maxWait);
+        }
         let update = broker.fill(order, multiplier, market);
         const spot = position && lastUnderlying.get(position.ticker);
         if (
@@ -182,6 +198,7 @@ export async function runBacktest(
   for (const date of days) {
     const stock = new Map<string, Map<number, Bar>>();
     options = new OptionBarIndex();
+    quotes = new OptionQuoteIndex();
     const minutes = new Set<number>();
 
     for (const ticker of tickers) {
@@ -195,8 +212,14 @@ export async function runBacktest(
 
       const optionBars = store.optionBars(ticker, date);
       if (!optionBars) warnings.push(`No ${ticker} option bars on ${date}`);
-      chains.load(ticker, optionBars ?? new Map());
+      const optionQuotes = real
+        ? (store.optionQuotes?.(ticker, date) ?? null)
+        : null;
+      if (real && !optionQuotes)
+        warnings.push(`No ${ticker} option quotes on ${date}`);
+      chains.load(ticker, optionBars ?? new Map(), optionQuotes ?? undefined);
       options.load(optionBars ?? new Map());
+      if (optionQuotes) quotes.load(optionQuotes);
     }
 
     const tradesBefore = trades.length;
@@ -210,6 +233,21 @@ export async function runBacktest(
           .map((p) => p.contract.symbol),
       );
       for (const symbol of held) {
+        if (real) {
+          const quote = quotes.at(symbol, minute);
+          if (quote) {
+            await handle(
+              await engine.onQuote({
+                symbol,
+                time: minute,
+                bid: quote.bid ?? quote.price,
+                ask: quote.ask ?? quote.price,
+                last: quote.price,
+              }),
+            );
+          }
+          continue;
+        }
         const bar = options.at(symbol, minute);
         if (!bar) continue;
         const path = worstCasePricePath(bar);
@@ -269,6 +307,36 @@ export const intrinsicValue = (
     0,
     contract.type === 'call' ? spot - contract.strike : contract.strike - spot,
   );
+
+/** Real bid/ask history for one day. A contract's quote at a time is its last change at or before it. */
+export class OptionQuoteIndex {
+  private readonly rows = new Map<string, QuoteRow[]>();
+
+  load(file: QuoteFile): void {
+    for (const [symbol, rows] of Object.entries(file))
+      this.rows.set(symbol, rows);
+  }
+
+  /** What a market order sent at `time` fills against. */
+  at(symbol: string, time: number): MarketPrice | undefined {
+    const row = quoteAt(this.rows.get(symbol) ?? [], time);
+    if (!row) return undefined;
+    const [, bid, ask] = row;
+    return { price: (bid + ask) / 2, time, bid, ask };
+  }
+
+  /**
+   * Where a sell sent in reaction to the quote at `time` fills: the bid a minute later, which is
+   * the next one on file, but no better than the bid that triggered it.
+   */
+  afterTrigger(symbol: string, time: number): MarketPrice | undefined {
+    const trigger = this.at(symbol, time);
+    const next = this.at(symbol, time + MINUTE_MS);
+    if (!trigger || !next) return trigger;
+    const bid = Math.min(trigger.bid ?? 0, next.bid ?? 0);
+    return { ...next, bid, price: (bid + (next.ask ?? bid)) / 2 };
+  }
+}
 
 /** Looks up an option's bar for a given minute, indexing each symbol only once it's needed. */
 export class OptionBarIndex {

@@ -8,7 +8,7 @@ import { Bar, CalendarDay, nyTime } from '@projects/trading-core';
 import { DailyAdjustment } from '../download/alpaca-client';
 
 import { alpacaBarSchema, alpacaCalendarDaySchema, toBar } from './alpaca';
-import { QuoteFile } from './theta';
+import { QuoteFile, QuoteRow } from './theta';
 
 /**
  * Reads historical data laid out as:
@@ -86,6 +86,7 @@ export class DataStore {
   optionQuotes(ticker: string, date: string): QuoteFile | null {
     const path = DataStore.quotePath(this.dir, ticker, date);
     if (!existsSync(path)) return null;
+    // Written by our own downloader and tens of megabytes a day, so only the outer shape is checked.
     return quoteFileSchema.parse(readJson(path));
   }
 
@@ -106,7 +107,7 @@ export class DataStore {
 
 const quoteFileSchema = z.record(
   z.string(),
-  z.array(z.tuple([z.number(), z.number(), z.number()])),
+  z.custom<QuoteRow[]>(Array.isArray),
 );
 
 /** A daily bar, labelled with its New York date. */
@@ -121,7 +122,8 @@ const readJson = (path: string): unknown =>
 export type MarketData = Pick<
   DataStore,
   'calendar' | 'stockBars' | 'optionBars'
->;
+> &
+  Partial<Pick<DataStore, 'optionQuotes'>>;
 
 /**
  * Keeps everything it reads in memory. Parsing JSON is most of a single run's time, so a sweep
@@ -131,6 +133,7 @@ export class CachedDataStore extends DataStore {
   private calendarCache: CalendarDay[] | undefined;
   private readonly stocks = new Map<string, Bar[] | null>();
   private readonly options = new Map<string, Map<string, Bar[]> | null>();
+  private readonly quotes = new Map<string, QuoteFile | null>();
 
   override calendar(): CalendarDay[] {
     return (this.calendarCache ??= super.calendar());
@@ -148,5 +151,12 @@ export class CachedDataStore extends DataStore {
     if (!this.options.has(key))
       this.options.set(key, super.optionBars(ticker, date));
     return this.options.get(key) ?? null;
+  }
+
+  override optionQuotes(ticker: string, date: string): QuoteFile | null {
+    const key = `${ticker}/${date}`;
+    if (!this.quotes.has(key))
+      this.quotes.set(key, super.optionQuotes(ticker, date));
+    return this.quotes.get(key) ?? null;
   }
 }

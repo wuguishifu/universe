@@ -9,13 +9,22 @@ import {
 import { modelQuote, roundToCent } from './quotes';
 import { SimulationConfig } from './simulation-config';
 
-/** An option trade price and when it happened. */
-export type MarketPrice = { price: number; time: number };
+/**
+ * What an order fills against, and when: a trade price to model a quote around, or a real quote if
+ * `bid` and `ask` are given.
+ */
+export type MarketPrice = {
+  price: number;
+  time: number;
+  bid?: number;
+  ask?: number;
+};
 
 /**
  * Fills orders at the modeled ask when buying or bid when selling, plus slippage, rounded to the
  * cent against the trader. With `fillAt: 'nextTrade'` the quote is built around `market`, the first
- * trade at or after the order; with `'decision'` it's the price the engine saw.
+ * trade at or after the order; with `'decision'` it's the price the engine saw. A `market` that
+ * carries a real bid and ask fills at those instead.
  */
 export class SimulatedBroker {
   private readonly simulation: SimulationConfig;
@@ -42,7 +51,13 @@ export class SimulatedBroker {
   ): OrderUpdate {
     let base = order.refPrice;
     let time = order.time;
-    if (this.simulation.fillAt === 'nextTrade') {
+    if (market?.bid !== undefined && market.ask !== undefined) {
+      base = order.side === 'buy' ? market.ask : market.bid;
+      time = market.time;
+    } else if (
+      this.simulation.fillAt === 'nextTrade' ||
+      this.simulation.prices === 'quotes'
+    ) {
       if (!market) {
         return {
           orderId: order.id,

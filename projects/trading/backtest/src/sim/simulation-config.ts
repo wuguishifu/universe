@@ -11,7 +11,15 @@ export const simulationConfigSchema = z.object({
    */
   fillAt: z.enum(['nextTrade', 'decision']).default('nextTrade'),
   /**
-   * Alpaca has no historical option quotes, so the bid/ask is modeled around each traded price:
+   * Where option prices come from:
+   * `trades` models a bid/ask around each traded price, using `spreadPct` and `minSpread`.
+   * `quotes` uses the real bid/ask history in `data/quotes` (see the README's "Option quotes"). Buys
+   * pay the ask and sells get the bid that stood when the order went out, positions are marked
+   * once a minute, and `fillAt`, `spreadPct`, `minSpread` and `maxPriceAgeMinutes` are ignored.
+   */
+  prices: z.enum(['trades', 'quotes']).default('trades'),
+  /**
+   * With `prices: trades`, the bid/ask is modeled around each traded price:
    * a spread of this fraction of the price, split evenly either side.
    */
   spreadPct: z.number().nonnegative().default(0.03),

@@ -42,7 +42,13 @@ This writes `data/quotes/<TICKER>/<DATE>.json`, `{ "<OCC symbol>": [[time, bid, 
 - `--concurrency` is how many ticker-days to fetch at once: 2 on the Value plan (the default), 4 on Standard, 8 on Pro.
 - `THETA_URL` points at a terminal somewhere other than `http://127.0.0.1:25503`.
 
-The simulator doesn't read these yet; fills are still modeled from trades as described below.
+To backtest against them, set `"prices": "quotes"` in a config's `simulation`. The default, `"trades"`, models the spread as described under "How fills are modeled". With quotes:
+
+- Entries pay the real ask and exits get the real bid that stood when the order went out. `spreadPct`, `minSpread`, `fillAt` and `maxPriceAgeMinutes` are ignored; `slippagePct` and fees still apply.
+- Held options are marked once a minute at the real midpoint, so a target or stop can't fire on a spike inside a minute. When one fires, the sell gets the bid a minute later, and never better than the bid that triggered it.
+- Chains hold every contract with a quote at that moment, whether or not it has traded.
+- A day with no quote file trades nothing and is listed in the run's warnings.
+- Only quote changes are stored, and moments with no quote at all were dropped, so a contract nobody is quoting keeps its last quote.
 
 ## Run
 
