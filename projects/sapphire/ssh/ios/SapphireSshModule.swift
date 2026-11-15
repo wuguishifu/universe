@@ -154,18 +154,27 @@ public class SapphireSshModule: Module {
     AsyncFunction("startShell") { (sessionId: String, cols: Int, rows: Int) throws in
       try bridged {
         guard let session = self.sessions[sessionId] else { throw SshError.sessionNotFound }
-        try session.startShell(
-          cols: cols, rows: rows,
-          onOutput: { [weak self] data in
-            self?.sendEvent("onData", ["sessionId": sessionId, "data": data.base64EncodedString()])
-          },
-          onClose: { [weak self] message in
-            guard let self else { return }
+        do {
+          try session.startShell(
+            cols: cols, rows: rows,
+            onOutput: { [weak self] data in
+              self?.sendEvent("onData", ["sessionId": sessionId, "data": data.base64EncodedString()])
+            },
+            onClose: { [weak self] message in
+              guard let self else { return }
+              self.sessions[sessionId] = nil
+              var payload: [String: Any] = ["sessionId": sessionId]
+              payload["message"] = message
+              self.sendEvent("onClose", payload)
+            })
+        } catch {
+          // Go closes the connection when its shell can't start, and no onClose follows; drop
+          // it here. (Still started means this was a second start of a running shell.)
+          if !session.shellStarted {
             self.sessions[sessionId] = nil
-            var payload: [String: Any] = ["sessionId": sessionId]
-            payload["message"] = message
-            self.sendEvent("onClose", payload)
-          })
+          }
+          throw error
+        }
       }
     }
 
@@ -255,7 +264,10 @@ final class SshSession: @unchecked Sendable {
   func startShell(
     cols: Int, rows: Int, onOutput: @escaping (Data) -> Void, onClose: @escaping (String?) -> Void
   ) throws {
-    lock.withLock { started = true }
+    let wasStarted = lock.withLock {
+      defer { started = true }
+      return started
+    }
     do {
       try client.startShell(
         cols: cols, rows: rows,
@@ -268,7 +280,10 @@ final class SshSession: @unchecked Sendable {
           }
         })
     } catch {
-      lock.withLock { started = false }
+      // Go refuses a second start without touching the running shell, so leave it marked.
+      if !wasStarted {
+        lock.withLock { started = false }
+      }
       throw error
     }
   }

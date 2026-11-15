@@ -45,7 +45,9 @@ MagicDNS name), so this guards against a reused name or IP more than against a n
 
 `connect`/`connectProfile` authenticate and return a session id; `startShell(id, cols, rows)` then
 opens an `xterm-256color` PTY. The split lets the terminal measure itself first, so the shell starts
-at the right size and no output arrives before JS is listening. Output is batched for 8ms and
+at the right size and no output arrives before JS is listening. A session runs one shell: if
+`startShell` fails, the connection is closed and the id is gone, so reconnecting means a new
+`connect`. `close` can interrupt a `startShell` that's waiting on the server. Output is batched for 8ms and
 crosses the bridge as base64 (chunks can split UTF-8 sequences; xterm.js reassembles them).
 A keepalive every 30s notices dead connections, e.g. after the app was suspended.
 

@@ -28,6 +28,10 @@ type testSSHServer struct {
 	password string
 	userKey  ssh.PublicKey
 	kbdOnly  bool
+	// stallPty leaves pty-req unanswered; refusePty rejects it.
+	stallPty  bool
+	refusePty bool
+	ptyReqs   chan struct{}
 
 	mu      sync.Mutex
 	ptyTerm string
@@ -41,7 +45,8 @@ func newTestSSHServer(t *testing.T, hostKey ssh.Signer) *testSSHServer {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { ln.Close() })
-	srv := &testSSHServer{t: t, addr: ln.Addr().String(), hostKey: hostKey, password: "hunter2"}
+	srv := &testSSHServer{t: t, addr: ln.Addr().String(), hostKey: hostKey, password: "hunter2",
+		ptyReqs: make(chan struct{}, 8)}
 
 	go func() {
 		for {
@@ -118,8 +123,12 @@ func (srv *testSSHServer) session(channel ssh.Channel, requests <-chan *ssh.Requ
 			srv.mu.Lock()
 			srv.ptyTerm = term
 			srv.ptySize = [2]uint32{binary.BigEndian.Uint32(rest), binary.BigEndian.Uint32(rest[4:])}
+			stall, refuse := srv.stallPty, srv.refusePty
 			srv.mu.Unlock()
-			req.Reply(true, nil)
+			srv.ptyReqs <- struct{}{}
+			if !stall {
+				req.Reply(!refuse, nil)
+			}
 		case "window-change":
 			cols, rows := binary.BigEndian.Uint32(req.Payload), binary.BigEndian.Uint32(req.Payload[4:])
 			channel.Write([]byte(fmt.Sprintf("resized %dx%d\n", cols, rows)))
@@ -291,6 +300,63 @@ func TestSSHCloseByClientIsClean(t *testing.T) {
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("OnClose never fired")
+	}
+}
+
+func TestSSHCloseInterruptsStalledStart(t *testing.T) {
+	hostKey, _ := newSigner(t)
+	srv := newTestSSHServer(t, hostKey)
+	srv.configure(func(srv *testSSHServer) { srv.stallPty = true })
+	client, err := testConnect(t, knownHostsAt(t.TempDir()), srv, "hunter2", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	started := make(chan error, 1)
+	go func() { started <- client.StartShell(80, 24, newRecordingListener()) }()
+	select {
+	case <-srv.ptyReqs:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the server never got pty-req")
+	}
+
+	closed := make(chan struct{})
+	go func() {
+		client.Close()
+		close(closed)
+	}()
+	select {
+	case <-closed:
+	case <-time.After(2 * time.Second):
+		t.Fatal("Close blocked behind the stalled StartShell")
+	}
+	select {
+	case err := <-started:
+		if sshErrorCode(err) != sshErrClosed {
+			t.Errorf("StartShell = %v, want %s", err, sshErrClosed)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("StartShell didn't return after Close")
+	}
+}
+
+func TestSSHFailedStartClosesConnection(t *testing.T) {
+	hostKey, _ := newSigner(t)
+	srv := newTestSSHServer(t, hostKey)
+	srv.configure(func(srv *testSSHServer) { srv.refusePty = true })
+	client, err := testConnect(t, knownHostsAt(t.TempDir()), srv, "hunter2", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := client.StartShell(80, 24, newRecordingListener()); sshErrorCode(err) != sshErrClosed {
+		t.Fatalf("StartShell = %v, want %s", err, sshErrClosed)
+	}
+	select {
+	case <-client.done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("the connection stayed open after the shell failed to start")
+	}
+	if err := client.StartShell(80, 24, newRecordingListener()); sshErrorCode(err) != sshErrClosed {
+		t.Errorf("second StartShell = %v, want %s", err, sshErrClosed)
 	}
 }
 

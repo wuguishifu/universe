@@ -70,6 +70,7 @@ type SSHClient struct {
 	done       chan struct{}
 
 	mu       sync.Mutex
+	starting bool
 	session  *ssh.Session
 	stdin    io.WriteCloser
 	closed   bool
@@ -247,47 +248,41 @@ func (c *SSHClient) HostKeyIsNew() bool { return c.newHostKey }
 
 // StartShell requests an xterm-256color PTY of cols x rows and starts the login shell. Output
 // goes to listener until the shell exits or the connection drops, then OnClose fires once.
+// The connection exists to run this one shell, so if it can't start, the connection is closed too.
 func (c *SSHClient) StartShell(cols, rows int, listener SSHListener) error {
 	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.closed {
+	switch {
+	case c.closed:
+		c.mu.Unlock()
 		return sshErrorf(sshErrClosed, "the connection is closed")
-	}
-	if c.session != nil {
+	case c.starting || c.session != nil:
+		c.mu.Unlock()
 		return sshErrorf(sshErrClosed, "the shell is already running")
 	}
+	c.starting = true
+	c.mu.Unlock()
 
-	session, err := c.client.NewSession()
-	if err != nil {
-		return sshErrorf(sshErrClosed, "couldn't open a session: %v", err)
+	// Every step waits on the server, so none of it holds c.mu: Close (and keepalive) can still
+	// get in, and closing the connection fails whichever request is stuck.
+	session, stdin, stdout, stderr, err := c.openShell(cols, rows)
+
+	c.mu.Lock()
+	c.starting = false
+	closed := c.closed
+	if err == nil && !closed {
+		c.session, c.stdin = session, stdin
 	}
-	// Most servers only accept LANG with AcceptEnv; without it, a UTF-8 locale is up to them.
-	_ = session.Setenv("LANG", "en_US.UTF-8")
-	modes := ssh.TerminalModes{ssh.ECHO: 1, ssh.TTY_OP_ISPEED: 38400, ssh.TTY_OP_OSPEED: 38400}
-	if err := session.RequestPty("xterm-256color", rows, cols, modes); err != nil {
-		session.Close()
-		return sshErrorf(sshErrClosed, "the server refused a terminal: %v", err)
+	c.mu.Unlock()
+	if closed {
+		if err == nil {
+			session.Close()
+		}
+		return sshErrorf(sshErrClosed, "the connection closed while the shell was starting")
 	}
-	stdin, err := session.StdinPipe()
 	if err != nil {
-		session.Close()
+		c.Close()
 		return err
 	}
-	stdout, err := session.StdoutPipe()
-	if err != nil {
-		session.Close()
-		return err
-	}
-	stderr, err := session.StderrPipe()
-	if err != nil {
-		session.Close()
-		return err
-	}
-	if err := session.Shell(); err != nil {
-		session.Close()
-		return sshErrorf(sshErrClosed, "the server refused a shell: %v", err)
-	}
-	c.session, c.stdin = session, stdin
 
 	var pumps sync.WaitGroup
 	pump := func(r io.Reader) {
@@ -330,6 +325,40 @@ func (c *SSHClient) StartShell(cols, rows int, listener SSHListener) error {
 		listener.OnClose(message)
 	}()
 	return nil
+}
+
+// openShell opens a session with an xterm-256color PTY and starts the login shell in it.
+func (c *SSHClient) openShell(cols, rows int) (session *ssh.Session, stdin io.WriteCloser,
+	stdout, stderr io.Reader, err error) {
+	opened, err := c.client.NewSession()
+	if err != nil {
+		return nil, nil, nil, nil, sshErrorf(sshErrClosed, "couldn't open a session: %v", err)
+	}
+	session = opened
+	defer func() {
+		if err != nil {
+			opened.Close()
+		}
+	}()
+	// Most servers only accept LANG with AcceptEnv; without it, a UTF-8 locale is up to them.
+	_ = session.Setenv("LANG", "en_US.UTF-8")
+	modes := ssh.TerminalModes{ssh.ECHO: 1, ssh.TTY_OP_ISPEED: 38400, ssh.TTY_OP_OSPEED: 38400}
+	if err = session.RequestPty("xterm-256color", rows, cols, modes); err != nil {
+		return nil, nil, nil, nil, sshErrorf(sshErrClosed, "the server refused a terminal: %v", err)
+	}
+	if stdin, err = session.StdinPipe(); err != nil {
+		return nil, nil, nil, nil, err
+	}
+	if stdout, err = session.StdoutPipe(); err != nil {
+		return nil, nil, nil, nil, err
+	}
+	if stderr, err = session.StderrPipe(); err != nil {
+		return nil, nil, nil, nil, err
+	}
+	if err = session.Shell(); err != nil {
+		return nil, nil, nil, nil, sshErrorf(sshErrClosed, "the server refused a shell: %v", err)
+	}
+	return session, stdin, stdout, stderr, nil
 }
 
 // Write sends keystrokes (or pasted text) to the shell.
