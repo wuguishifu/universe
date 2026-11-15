@@ -210,8 +210,10 @@ export async function runBacktest(
       stock.set(ticker, new Map(bars.map((bar) => [bar.time, bar])));
       for (const bar of bars) minutes.add(bar.time);
 
-      const optionBars = store.optionBars(ticker, date);
-      if (!optionBars) warnings.push(`No ${ticker} option bars on ${date}`);
+      // With real quotes the trade bars aren't used, and a sweep worker would hold them in memory.
+      const optionBars = real ? null : store.optionBars(ticker, date);
+      if (!real && !optionBars)
+        warnings.push(`No ${ticker} option bars on ${date}`);
       const optionQuotes = real
         ? (store.optionQuotes?.(ticker, date) ?? null)
         : null;

@@ -1,0 +1,62 @@
+Sweeping 01-ema-vwap-baseline-quotes with 13 workers
+288 configs
+  train 2024-02-01 → 2026-04-30: 807/8064
+  train 2024-02-01 → 2026-04-30: 1613/8064
+  train 2024-02-01 → 2026-04-30: 2420/8064
+  train 2024-02-01 → 2026-04-30: 3226/8064
+  train 2024-02-01 → 2026-04-30: 4032/8064
+  train 2024-02-01 → 2026-04-30: 4839/8064
+  train 2024-02-01 → 2026-04-30: 5645/8064
+  train 2024-02-01 → 2026-04-30: 6452/8064
+  train 2024-02-01 → 2026-04-30: 7258/8064
+  train 2024-02-01 → 2026-04-30: 8064/8064
+
+Average effect of each setting on the training range (288 configs):
+
+timeframe  mean P&L   median  profitable  trades
+3m          -$12087  -$11772          0%    3190
+5m          -$10728  -$10382          0%    2441
+10m          -$7100   -$7311          6%    1699
+
+emaStop    mean P&L   median  profitable  trades
+ema-close    -$7186   -$7358          4%    2678
+no-ema      -$12757  -$12287          0%    2209
+
+premiumStop  mean P&L   median  profitable  trades
+stop30         -$9994  -$10003          1%    2510
+no-stop        -$9949   -$9165          3%    2376
+
+target     mean P&L  median  profitable  trades
+tp50        -$10597  -$9890          0%    2477
+tp100       -$10389  -$9938          0%    2438
+no-target    -$8929  -$6519          6%    2416
+
+expiry  mean P&L   median  profitable  trades
+0dte     -$10609  -$10327          0%    2345
+1dte      -$9334   -$9551          4%    2542
+
+strike  mean P&L   median  profitable  trades
+atm      -$11175  -$10523          1%    2538
+otm1      -$8768   -$8888          3%    2349
+
+onCross        mean P&L  median  profitable  trades
+exit-on-cross   -$10014  -$9613          2%    2691
+hold             -$9929  -$9862          2%    2196
+
+Top 10 by training netPnl (of 288 with ≥300 trades):
+
+#                                                                config  train trades     net    PF     t  max DD   2024    2025    2026
+1            10m · ema-close · no-stop · no-target · 1dte · otm1 · hold          1893  +$1406  1.03   0.2  -$6329  +$729  +$1070   -$393
+2   10m · ema-close · no-stop · no-target · 1dte · otm1 · exit-on-cross          1922  +$1335  1.03   0.2  -$6309  +$677   +$968   -$311
+3    10m · ema-close · no-stop · no-target · 1dte · atm · exit-on-cross          1927   +$398  1.01   0.1  -$6957  +$549   +$458   -$609
+4    10m · ema-close · stop30 · no-target · 1dte · otm1 · exit-on-cross          1921   +$339  1.01   0.1  -$7044  +$135   +$591   -$387
+5             10m · ema-close · stop30 · no-target · 1dte · otm1 · hold          1891   +$325  1.01   0.1  -$7187  +$210   +$578   -$462
+6             10m · ema-close · no-stop · no-target · 1dte · atm · hold          1900   +$321  1.01   0.1  -$6952  +$593   +$415   -$687
+7   10m · ema-close · no-stop · no-target · 0dte · otm1 · exit-on-cross          1499   -$259  0.99  -0.0  -$7634    -$2   +$731   -$987
+8     10m · ema-close · stop30 · no-target · 1dte · atm · exit-on-cross          1930   -$276  0.99  -0.0  -$7485   +$26   +$380   -$682
+9            10m · ema-close · no-stop · no-target · 0dte · otm1 · hold          1477   -$336  0.99  -0.1  -$7825   +$53   +$700  -$1089
+10             10m · ema-close · stop30 · no-target · 1dte · atm · hold          1903   -$479  0.99  -0.1  -$7629   +$76   +$192   -$747
+
+6 of 288 configs were profitable on the training range.
+
+Finished in 224s. Wrote /Users/bo/Developer/wuguishifu/universe/projects/trading/backtest/runs/2026-11-15T21-02-31-sweep-01-ema-vwap-baseline-quotes

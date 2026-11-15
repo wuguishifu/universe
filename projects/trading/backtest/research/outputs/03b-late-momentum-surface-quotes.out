@@ -1,0 +1,56 @@
+Sweeping 03b-late-momentum-surface-quotes with 13 workers
+200 configs
+  train 2024-02-01 → 2026-04-30: 560/5600
+  train 2024-02-01 → 2026-04-30: 1120/5600
+  train 2024-02-01 → 2026-04-30: 1680/5600
+  train 2024-02-01 → 2026-04-30: 2240/5600
+  train 2024-02-01 → 2026-04-30: 2800/5600
+  train 2024-02-01 → 2026-04-30: 3360/5600
+  train 2024-02-01 → 2026-04-30: 3920/5600
+  train 2024-02-01 → 2026-04-30: 4480/5600
+  train 2024-02-01 → 2026-04-30: 5040/5600
+  train 2024-02-01 → 2026-04-30: 5600/5600
+
+Average effect of each setting on the training range (200 configs):
+
+measure  mean P&L  median  profitable  trades
+m15         -$529   -$198         46%     211
+m30         -$610    -$93         48%     338
+m45        -$1484   -$999         32%     431
+m60        -$2300  -$1804         32%     491
+
+entry    mean P&L  median  profitable  trades
+last30      -$445    +$18         55%     368
+last45      -$752   -$263         43%     368
+last60     +$1081  +$1103         80%     368
+last90     -$2712  -$2129          5%     368
+last120    -$3326  -$2714         15%     368
+
+minMove  mean P&L  median  profitable  trades
+0.25%      -$3887  -$3944         18%     786
+0.4%       -$1568  -$1368         23%     492
+0.5%        -$684   -$182         48%     354
+0.75%       +$162   +$523         70%     148
+1.0%        -$177   -$213         40%      58
+
+exit   mean P&L  median  profitable  trades
+hold      -$933   -$296         44%     368
+tp100    -$1528   -$662         35%     368
+
+Top 10 by training netPnl (of 160 with ≥100 trades):
+
+#                         config  train trades     net    PF    t  max DD    2024    2025   2026
+1     m30 · last60 · 0.5% · hold           328  +$4791  1.57  2.3  -$1674   -$177  +$4900   +$68
+2     m30 · last60 · 0.4% · hold           451  +$3623  1.30  1.7  -$1803   -$667  +$4191   +$98
+3    m30 · last60 · 0.5% · tp100           328  +$3412  1.46  2.5  -$1642    -$41  +$2845  +$608
+4    m30 · last60 · 0.75% · hold           117  +$3381  2.15  2.1   -$677    +$57  +$3429  -$105
+5     m15 · last60 · 0.5% · hold           168  +$2656  1.59  1.6   -$877   +$580  +$2339  -$263
+6    m30 · last60 · 0.4% · tp100           451  +$2370  1.22  1.6  -$1870   -$229  +$2305  +$293
+7     m45 · last60 · 0.4% · hold           580  +$2334  1.15  1.0  -$3034  -$2918  +$5610  -$358
+8    m15 · last60 · 0.25% · hold           546  +$2148  1.14  1.0  -$1757   +$190  +$2707  -$749
+9    m45 · last60 · 0.75% · hold           196  +$2004  1.35  1.1  -$1303   -$762  +$3107  -$340
+10  m45 · last60 · 0.75% · tp100           196  +$1855  1.37  1.6   -$922   -$630  +$2702  -$216
+
+79 of 200 configs were profitable on the training range.
+
+Finished in 129s. Wrote /Users/bo/Developer/wuguishifu/universe/projects/trading/backtest/runs/2026-11-15T21-09-41-sweep-03b-late-momentum-surface-quotes

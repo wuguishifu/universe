@@ -5,6 +5,8 @@
 //   node research/tools/h1-short-vol.mjs                         development 2024-02-01 → 2026-04-30
 //   node research/tools/h1-short-vol.mjs --holdout               holdout 2026-05-01 → 2026-11-13 (P only)
 //   node research/tools/h1-short-vol.mjs --dump=SPY,2025-03-12   print every step of P for one ticker-day
+//   node research/tools/h1-short-vol.mjs --quotes               development on real NBBO quotes (h1.md, "H1q")
+//   node research/tools/h1-short-vol.mjs --quotes --holdout --candidates=ID,ID   holdout on frozen candidates
 //   options: --workers=12  --from=YYYY-MM-DD --to=YYYY-MM-DD
 import { readFileSync, existsSync } from 'node:fs';
 import { cpus } from 'node:os';
@@ -22,6 +24,14 @@ const COSTS = {
   harsh: { spreadPct: 0.01, minSpread: 0.04 },
 };
 const FILL_WINDOW = 5; // minutes
+// With --quotes: real bid/ask, plus this many extra cents per leg each way.
+const QUOTE_COSTS = { primary: 0, stress: 0.01, harsh: 0.02 };
+// Information-only switches for H1q (h1.md, dated note 2): --max-age=N and --settle=close|ah.
+const ARGS = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/, '').split('=')));
+const QUOTE_MAX_AGE = Number(ARGS['max-age'] ?? 15); // minutes since the leg's quote last changed
+// close: intrinsic from the official close. ah: intrinsic from the 17:29 price, as if every holder
+// made the exercise decision at the 17:30 cutoff (both ours and the other side's).
+const SETTLE = ARGS.settle ?? 'close';
 
 // ---------- configs (19, pre-registered) ----------
 const hm = (s) => Number(s.slice(0, 2)) * 60 + Number(s.slice(3));
@@ -49,6 +59,14 @@ for (const id of ['IB-1000-expiry', 'IB-1200-expiry', 'IB-1400-expiry', 'IB-1400
 for (const c of CONFIGS) INFO_CONFIGS.push({ ...c, id: `${c.id}~in10`, maxDist: 10 });
 for (const entry of ['12:00', '14:00']) INFO_CONFIGS.push({ ...byId(`IB-${entry.replace(':', '')}-expiry`), id: `IB-${entry.replace(':', '')}-close1550`, exit: 'close', core: false });
 const ALL_CONFIGS = [...CONFIGS, ...INFO_CONFIGS];
+
+// ---------- H1q: the same configs on real quotes (pre-registered in h1.md before the run) ----------
+const AFTERNOON = ['IB-1200-expiry', 'IB-1400-expiry', 'IB-1200-close1550', 'IB-1400-close1550'];
+const Q_BASE = [...CONFIGS, ...INFO_CONFIGS.filter((c) => c.id === 'IB-1200-close1550' || c.id === 'IB-1400-close1550')];
+const Q_CONFIGS = [...Q_BASE, ...Q_BASE.map((c) => ({ ...c, id: `${c.id}~in10`, maxDist: 10 }))];
+// Information only (h1.md, dated note 2): close all legs a few minutes before the bell instead of at 15:50.
+for (const entry of ['1200', '1400'])
+  for (const before of [5, 1]) Q_CONFIGS.push({ ...byId(`IB-${entry}-expiry`), id: `IB-${entry}-close${before}m`, exit: 'close', closeBefore: before, core: false });
 
 // ---------- fill model (same as src/sim/quotes.ts) ----------
 const roundToCent = (price, side) => {
@@ -88,7 +106,130 @@ function loadDay(ticker, date) {
       chain.set(`${type}${strike}`, { bars: list, byMin: new Map(list.map((b) => [b.m, b])) });
     }
   }
-  return { stock, chain };
+  return { stock, chain, midnight };
+}
+
+/** Real NBBO changes for the day's 0DTE contracts: "C570" -> [[minute-ms offset, bid, ask], ...] sorted. */
+function loadQuotes(ticker, date, midnight) {
+  const file = `${DATA}/quotes/${ticker}/${date}.json`;
+  const quotes = new Map();
+  if (!existsSync(file)) return null;
+  const raw = JSON.parse(readFileSync(file, 'utf8'));
+  const tag = date.slice(2, 4) + date.slice(5, 7) + date.slice(8, 10);
+  for (const [sym, rows] of Object.entries(raw)) {
+    const rest = sym.slice(ticker.length);
+    if (!sym.startsWith(ticker) || rest.slice(0, 6) !== tag) continue;
+    quotes.set(`${rest[6]}${Number(rest.slice(7)) / 1000}`, rows.map(([t, b, a]) => [(t - midnight) / 60000, b, a]));
+  }
+  return quotes;
+}
+
+/** The NBBO standing at minute `m`: its last change at or before it. */
+const quoteAtMin = (rows, m) => {
+  if (!rows) return undefined;
+  let lo = 0, hi = rows.length - 1, found;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (rows[mid][0] <= m) { found = rows[mid]; lo = mid + 1; } else hi = mid - 1;
+  }
+  return found && { bid: found[1], ask: found[2], mid: (found[1] + found[2]) / 2, age: m - found[0] };
+};
+const usable = (q) => q && q.ask > 0 && q.bid >= 0 && q.ask >= q.bid && q.age <= QUOTE_MAX_AGE;
+
+/** H1q: one ticker-day on real quotes (rules in h1.md, "Rerun on real quotes"). */
+function runDayQuotes(ticker, day, configs, dump = false) {
+  const log = dump ? console.log : () => undefined;
+  const open = hm(day.open);
+  const close = hm(day.close);
+  const { stock, midnight } = loadDay(ticker, day.date);
+  const quotes = loadQuotes(ticker, day.date, midnight);
+  const out = { ticker, date: day.date, records: [], quality: null, qquality: null, bench: {} };
+  const settleBar = officialClose(stock, close, open);
+  // The 16:00 bar's open is the closing-auction print.
+  const ScOfficial = settleBar ? (settleBar.m === close ? settleBar.o : settleBar.c) : undefined;
+  const ahBar = stock.filter((b) => b.m <= 17 * 60 + 29 && b.m >= close).at(-1);
+  const Sc = SETTLE === 'ah' ? (ahBar?.c ?? ScOfficial) : ScOfficial;
+  const push = (base, status) => { for (const cost of Object.keys(QUOTE_COSTS)) out.records.push({ ...base, cost, status }); };
+  log(`${ticker} ${day.date} session ${day.open}-${day.close}; 0DTE contracts quoted ${quotes?.size ?? 0}; official close ${Sc}`);
+
+  for (const cfg of configs) {
+    const T = hm(cfg.entry);
+    const base = { cfg: cfg.id, ticker, date: day.date };
+    if (!quotes || quotes.size === 0) { push(base, 'no-0dte'); continue; }
+    if (T >= close - 10) { push(base, 'early-close'); continue; }
+    const spotBar = stockBefore(stock, T, open);
+    if (!spotBar || Sc === undefined) { push(base, 'no-stock'); continue; }
+    const S = spotBar.c;
+    const legs = strikesFor(cfg, S).map((l) => {
+      const rows = quotes.get(`${l.type}${l.strike}`);
+      return { ...l, rows, q: l.q, entry: quoteAtMin(rows, T) };
+    });
+    const W = legs[0].W;
+    if (cfg.maxDist && legs.some((l) => Math.abs(l.strike - S) > cfg.maxDist)) { push(base, 'beyond-range'); continue; }
+    if (cfg.id === PRIMARY || dump) {
+      log(`\n[${cfg.id}] spot at ${cfg.entry} ${S}; K ${legs[0].K}; W ${W}`);
+      for (const l of legs) log(`  ${l.q < 0 ? 'sell' : 'buy '} ${l.type}${l.strike}: ${l.entry ? `bid ${l.entry.bid} ask ${l.entry.ask} (age ${l.entry.age.toFixed(1)} min)` : 'NO QUOTE'}`);
+    }
+    if (cfg.id === PRIMARY) {
+      out.qquality = legs.map((l) => ({ role: `${l.q < 0 ? 'short' : 'wing'}-${l.type}`, usable: usable(l.entry), spread: l.entry ? l.entry.ask - l.entry.bid : null, mid: l.entry?.mid ?? null, age: l.entry?.age ?? null }));
+    }
+    if (cfg.core && cfg.structure === 'IB' && cfg.exit === 'expiry' && usable(legs[0].entry) && usable(legs[1].entry)) {
+      out.bench[cfg.entry] = { S, K: legs[0].strike, Sc, straddle: legs[0].entry.mid + legs[1].entry.mid, move: Math.abs(Sc - S), payoff: Math.abs(Sc - legs[0].strike) };
+    }
+    if (legs.some((l) => !usable(l.entry))) { push(base, 'unfilled'); continue; }
+    const midCredit = legs.reduce((s, l) => s - l.q * l.entry.mid, 0);
+    const inconsistent = midCredit >= W || midCredit <= 0;
+    const stop = close - 10;
+
+    for (const [costName, extra] of Object.entries(QUOTE_COSTS)) {
+      // What closing leg l at quote x costs (+) or pays (−), per share.
+      const closeLeg = (l, x) => (l.q < 0 ? x.ask + extra : -Math.max(0, x.bid - extra));
+      const credit = legs.reduce((s, l) => s + (l.q < 0 ? Math.max(0, l.entry.bid - extra) : -(l.entry.ask + extra)), 0);
+      let fees = FEE * 4;
+      let exitReason = 'expiry';
+      let closeDebit = 0;
+      const open4 = legs.map(() => true);
+      if (cfg.exit === 'tp50') {
+        for (let m = T + 1; m < stop; m++) {
+          const now = legs.map((l) => quoteAtMin(l.rows, m));
+          if (now.some((x) => !x)) continue;
+          const D = legs.reduce((s, l, i) => s - l.q * now[i].mid, 0);
+          if (D > 0.5 * credit) continue;
+          exitReason = 'tp50';
+          const next = legs.map((l) => quoteAtMin(l.rows, m + 1));
+          let atTrigger = 0;
+          let atNext = 0;
+          legs.forEach((l, i) => {
+            const x = next[i] ?? now[i];
+            if (l.q > 0 && x.bid - extra <= 0) return; // a worthless wing is left to expire
+            open4[i] = false;
+            fees += FEE;
+            atTrigger += closeLeg(l, now[i]);
+            atNext += closeLeg(l, x);
+          });
+          closeDebit = Math.max(atTrigger, atNext); // never better than at the trigger
+          if (costName === 'primary') log(`  TP50 at ${fmtMin(m)}: mid debit ${D.toFixed(3)} <= 0.5 x credit ${credit.toFixed(2)}; close debit ${closeDebit.toFixed(2)}`);
+          break;
+        }
+      } else if (cfg.exit === 'close') {
+        exitReason = 'close';
+        const at = close - (cfg.closeBefore ?? 10);
+        legs.forEach((l, i) => {
+          const x = quoteAtMin(l.rows, at);
+          open4[i] = false;
+          fees += FEE;
+          closeDebit += x && x.ask > 0 ? closeLeg(l, x) : l.q < 0 ? intrinsic(l.type, l.strike, Sc) : -intrinsic(l.type, l.strike, Sc);
+        });
+      }
+      const settle = legs.reduce((s, l, i) => s + (open4[i] ? -l.q * intrinsic(l.type, l.strike, Sc) : 0), 0);
+      const pnl = 100 * (credit - closeDebit - settle) - fees;
+      const maxLoss = 100 * (W - credit) + FEE * 4;
+      out.records.push({ ...base, cost: costName, status: 'ok', pnl, credit: 100 * credit, maxLoss, exitReason, inconsistent, midCredit: 100 * midCredit });
+      if (costName === 'primary' && (cfg.id === PRIMARY || dump))
+        log(`  ${costName}: credit/share ${credit.toFixed(2)} (mid ${midCredit.toFixed(3)}); expiry value ${settle.toFixed(2)}; fees ${fees.toFixed(2)}; P&L $${pnl.toFixed(2)}; exit ${exitReason}`);
+    }
+  }
+  return out;
 }
 
 /** Last stock close of a bar starting before minute `m` (and at or after `from`). */
@@ -252,10 +393,10 @@ const fmtMin = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m
 
 // ---------- worker ----------
 if (!isMainThread) {
-  const configs = ALL_CONFIGS.filter((c) => workerData.configIds.includes(c.id));
+  const configs = (workerData.quotes ? Q_CONFIGS : ALL_CONFIGS).filter((c) => workerData.configIds.includes(c.id));
   parentPort.on('message', (task) => {
     if (task === null) return process.exit(0);
-    parentPort.postMessage(runDay(task.ticker, task.day, configs));
+    parentPort.postMessage((workerData.quotes ? runDayQuotes : runDay)(task.ticker, task.day, configs));
   });
 } else {
   main();
@@ -265,6 +406,9 @@ if (!isMainThread) {
 async function main() {
   const args = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/, '').split('=')));
   const holdout = 'holdout' in args;
+  const useQuotes = 'quotes' in args;
+  const candidates = args.candidates ? args.candidates.split(',') : null;
+  if (holdout && useQuotes && !candidates) throw new Error('a quotes holdout needs --candidates (frozen in h1.md first)');
   const from = args.from ?? (holdout ? '2026-05-01' : '2024-02-01');
   const to = args.to ?? (holdout ? '2026-11-13' : '2026-04-30');
   if (!holdout && to > '2026-04-30') throw new Error('development ends 2026-04-30; use --holdout');
@@ -273,14 +417,21 @@ async function main() {
   if (args.dump) {
     const [ticker, date] = args.dump.split(',');
     const day = calendar.find((d) => d.date === date) ?? JSON.parse(readFileSync(`${DATA}/calendar.json`, 'utf8')).find((d) => d.date === date);
-    const cfgs = args.cfg ? ALL_CONFIGS.filter((c) => c.id === args.cfg) : CONFIGS.filter((c) => c.id === PRIMARY);
-    const r = runDay(ticker, day, cfgs, true);
+    const pool = useQuotes ? Q_CONFIGS : ALL_CONFIGS;
+    const cfgs = pool.filter((c) => c.id === (args.cfg ?? PRIMARY));
+    const r = (useQuotes ? runDayQuotes : runDay)(ticker, day, cfgs, true);
     console.log('\nbenchmark', r.bench);
     return;
   }
 
   const info = 'info' in args;
-  const configIds = holdout ? [PRIMARY] : (info ? ALL_CONFIGS : CONFIGS).map((c) => c.id);
+  const configIds = useQuotes
+    ? holdout
+      ? candidates
+      : Q_CONFIGS.map((c) => c.id)
+    : holdout
+      ? [PRIMARY]
+      : (info ? ALL_CONFIGS : CONFIGS).map((c) => c.id);
   const tasks = [];
   for (const day of calendar) for (const ticker of TICKERS) tasks.push({ ticker, day });
   const nWorkers = Number(args.workers ?? Math.min(12, cpus().length));
@@ -289,7 +440,7 @@ async function main() {
     let next = 0;
     let done = 0;
     for (let i = 0; i < nWorkers; i++) {
-      const w = new Worker(fileURLToPath(import.meta.url), { workerData: { configIds } });
+      const w = new Worker(fileURLToPath(import.meta.url), { workerData: { configIds, quotes: useQuotes }, argv: process.argv.slice(2) });
       const feed = () => w.postMessage(next < tasks.length ? tasks[next++] : null);
       w.on('message', (r) => {
         results.push(r);
@@ -300,7 +451,7 @@ async function main() {
       feed();
     }
   });
-  report(results, configIds, { from, to, holdout, info });
+  report(results, configIds, { from, to, holdout, info, quotes: useQuotes });
 }
 
 // ---------- stats ----------
@@ -370,10 +521,11 @@ function summarize(recs) {
   };
 }
 
-function report(results, configIds, { from, to, holdout, info }) {
+function report(results, configIds, { from, to, holdout, info, quotes }) {
   const all = results.flatMap((r) => r.records);
   const p = (...a) => console.log(...a);
-  p(`H1 short 0DTE structures — ${holdout ? 'HOLDOUT' : 'development'} ${from} → ${to}`);
+  p(`H1${quotes ? `q (real NBBO quotes; settled ${SETTLE === 'ah' ? 'at the 17:29 price' : 'on the 16:00 bar open'}; quote max age ${QUOTE_MAX_AGE} min)` : ''} short 0DTE structures — ${holdout ? 'HOLDOUT' : 'development'} ${from} → ${to}`);
+  if (quotes) p('cost levels: primary = real bid/ask; stress = +1¢ per leg each way; harsh = +2¢');
   p(`ticker-days processed: ${results.length}; configs: ${configIds.length}\n`);
 
   // Skip accounting for each config (primary costs).
@@ -399,7 +551,8 @@ function report(results, configIds, { from, to, holdout, info }) {
     }
 
   // Primary detail (plus information-only detail for afternoon entries when --info).
-  for (const D of info ? [PRIMARY, 'IB-1200-expiry', 'IB-1400-expiry'] : [PRIMARY]) {
+  const details = quotes ? (holdout ? configIds : [PRIMARY, ...AFTERNOON]) : info ? [PRIMARY, 'IB-1200-expiry', 'IB-1400-expiry'] : [PRIMARY];
+  for (const D of details) {
   p(`\n## ${D === PRIMARY ? 'Primary config' : 'Information only:'} ${D} detail`);
   for (const cost of Object.keys(COSTS)) {
     const s = summ[`${D}|${cost}`];
@@ -428,6 +581,20 @@ function report(results, configIds, { from, to, holdout, info }) {
       p(`  information only, excluding ${ok.length - cons.length} structures with inconsistent prints: n ${sc.n}, net ${$(sc.net)}, t ${f2(sc.t)}`);
     }
   }
+  }
+
+  // Leg quality on real quotes.
+  const qq = results.filter((r) => r.qquality);
+  if (qq.length) {
+    p(`\n## Leg quotes at entry, ${PRIMARY} (${qq.length} ticker-days with a quoted 0DTE chain)`);
+    p('ticker role       usable   median spread   mean spread/mid   median age (min)');
+    const median = (a) => [...a].sort((x, y) => x - y)[a.length >> 1];
+    for (const t of TICKERS)
+      for (const role of ['short-C', 'short-P', 'wing-C', 'wing-P']) {
+        const legs = qq.filter((r) => r.ticker === t).map((r) => r.qquality.find((x) => x.role === role));
+        const u = legs.filter((l) => l.usable);
+        p(`${t}    ${role.padEnd(9)}  ${pct(u.length / legs.length).padStart(6)}   $${median(u.map((l) => l.spread)).toFixed(3).padStart(6)}        ${pct(mean(u.filter((l) => l.mid > 0).map((l) => l.spread / l.mid))).padStart(7)}        ${median(u.map((l) => l.age)).toFixed(2)}`);
+      }
   }
 
   // Leg quality.
@@ -466,6 +633,7 @@ function report(results, configIds, { from, to, holdout, info }) {
   }
 
   // Pass rule.
+  if (quotes) return quotePassRules(summ, configIds, holdout, p);
   if (!holdout) {
     const P = (c) => summ[`${PRIMARY}|${c}`];
     const yearsOk = Object.values(P('primary').years).every((v) => v > 0);
@@ -490,5 +658,50 @@ function report(results, configIds, { from, to, holdout, info }) {
     p(`${tick >= 2 ? 'PASS' : 'FAIL'}  ≥ 2 of 3 tickers > 0 (${tick})`);
     p(`${P.t >= 2 ? 'PASS' : 'FAIL'}  daily t ≥ 2 (${f2(P.t)})`);
     p(`${summ[`${PRIMARY}|stress`].net >= 0 ? 'PASS' : 'FAIL'}  stress ≥ 0 (${$(summ[`${PRIMARY}|stress`].net)})`);
+  }
+}
+
+function quotePassRules(summ, configIds, holdout, p) {
+  const devRules = (id) => {
+    const P = (c) => summ[`${id}|${c}`];
+    const tick = TICKERS.filter((t) => P('primary').perTicker[t].net > 0).length;
+    return [
+      ['1 net > 0 at primary and stress', P('primary').net > 0 && P('stress').net > 0],
+      [`2 daily t ≥ 2.5 (${f2(P('primary').t)})`, P('primary').t >= 2.5],
+      [`3 every dev year > 0 (${Object.entries(P('primary').years).map(([y, v]) => `${y} ${$(v)}`).join(', ')})`, Object.values(P('primary').years).every((v) => v > 0)],
+      [`4 ≥ 2 of 3 tickers > 0 (${tick})`, tick >= 2],
+      [`5 > 0 without 5 best days (${$(P('primary').no5)})`, P('primary').no5 > 0],
+      [`6 harsh ≥ 0 (${$(P('harsh').net)})`, P('harsh').net >= 0],
+    ];
+  };
+  if (holdout) {
+    for (const id of configIds) {
+      const P = summ[`${id}|primary`];
+      const tick = TICKERS.filter((t) => P.perTicker[t].net > 0).length;
+      const rules = [
+        [`≥ 2 of 3 tickers > 0 (${tick})`, tick >= 2],
+        [`daily t ≥ 2 (${f2(P.t)})`, P.t >= 2],
+        [`stress ≥ 0 (${$(summ[`${id}|stress`].net)})`, summ[`${id}|stress`].net >= 0],
+      ];
+      p(`\n## Holdout pass rule: ${id}`);
+      for (const [name, ok] of rules) p(`${ok ? 'PASS' : 'FAIL'}  ${name}`);
+      p(`VERDICT ${id}: ${rules.every((r) => r[1]) ? 'PASS' : 'FAIL'}`);
+    }
+    return;
+  }
+  p('\n## Pass rule 1: the primary config, development rule (items 1–6; item 7 below)');
+  const r1 = devRules(PRIMARY);
+  const corePos = CONFIGS.filter((c) => c.core).filter((c) => summ[`${c.id}|primary`].net > 0).length;
+  r1.push([`7 ≥ 8 of 16 core configs > 0 (${corePos})`, corePos >= 8]);
+  for (const [name, ok] of r1) p(`${ok ? 'PASS' : 'FAIL'}  ${name}`);
+  p(`VERDICT P: ${r1.every((r) => r[1]) ? 'PASS' : 'FAIL'}`);
+  p('\n## Pass rule 2: does the afternoon effect survive? (items 1–6, and ~in10 positive with t ≥ 2)');
+  for (const id of AFTERNOON) {
+    const rules = devRules(id);
+    const in10 = summ[`${id}~in10|primary`];
+    rules.push([`in10 net > 0 and t ≥ 2 (${$(in10.net)}, t ${f2(in10.t)})`, in10.net > 0 && in10.t >= 2]);
+    p(`\n${id}`);
+    for (const [name, ok] of rules) p(`  ${ok ? 'PASS' : 'FAIL'}  ${name}`);
+    p(`  ${id}: ${rules.every((r) => r[1]) ? 'SURVIVES' : 'DOES NOT SURVIVE'}`);
   }
 }

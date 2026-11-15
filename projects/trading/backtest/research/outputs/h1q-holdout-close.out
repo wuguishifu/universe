@@ -1,0 +1,121 @@
+H1q (real NBBO quotes; settled on the 16:00 bar open; quote max age 9999 min) short 0DTE structures — HOLDOUT 2026-05-01 → 2026-11-13
+cost levels: primary = real bid/ask; stress = +1¢ per leg each way; harsh = +2¢
+ticker-days processed: 411; configs: 2
+
+## Structures taken and skipped (per config, primary costs)
+config                   ok    no-0dte  early-close  unfilled  no-stock  beyond-$10
+IB-1200-expiry            410        0            0         1         0           0
+IB-1400-expiry            409        0            0         2         0           0
+
+## All configs: net $, daily t, per ticker net, worst day, max DD (÷ avg daily credit), w/o 5 best
+config                   cost     n     net        t      SPY        QQQ        IWM        worst(÷cr)       maxDD(÷cr)       no5best   ΣP&L/Σmaxloss  avg daily credit   by year
+IB-1200-expiry           primary   410    +$1,666    0.40    +$1,035        −$3      +$635  −$1,126 (-1.86)   +$4,242 (7.02)    −$1,102        1.0%      +$604        2026 +$1,666
+IB-1200-expiry           stress    410       +$26    0.01      +$487      −$547       +$87  −$1,138 (-1.92)   +$4,513 (7.62)    −$2,682        0.0%      +$592        2026 +$26
+IB-1200-expiry           harsh     410    −$1,614   -0.38       −$61    −$1,091      −$461  −$1,150 (-1.98)   +$4,992 (8.61)    −$4,262       -1.0%      +$580        2026 −$1,614
+IB-1400-expiry           primary   409    +$7,360    2.20    +$3,547    +$3,203      +$610  −$1,063 (-2.35)   +$2,938 (6.51)    +$4,912        4.1%      +$451        2026 +$7,360
+IB-1400-expiry           stress    409    +$5,724    1.71    +$2,999    +$2,663       +$62  −$1,075 (-2.45)   +$3,053 (6.95)    +$3,336        3.2%      +$439        2026 +$5,724
+IB-1400-expiry           harsh     409    +$4,088    1.22    +$2,451    +$2,123      −$486  −$1,087 (-2.54)   +$3,362 (7.87)    +$1,760        2.2%      +$427        2026 +$4,088
+
+## Information only: IB-1200-expiry detail
+
+### primary
+structures 410 over 137 days; net +$1,666; per day +$12; daily t 0.40; win rate 56.3%
+avg credit per structure $201.79, avg max loss $387.19; avg daily credit (all tickers) $603.91
+total P&L / total max loss 1.0%; median of per-structure P&L / max loss 7.0% (the per-structure mean, 0.1%, is distorted by a few structures whose prints make max loss ≈ $0)
+worst day −$1,126 on 2026-11-02 (-1.86 × avg daily credit); max drawdown +$4,242 (7.02 × avg daily credit)
+without 5 best days −$1,102
+per ticker: SPY +$1,035 (n 137, t 0.56); QQQ −$3 (n 136, t -0.00); IWM +$635 (n 137, t 0.70)
+per year: 2026 +$1,666
+  SPY by year: 2026 +$1,035
+  QQQ by year: 2026 −$3
+  IWM by year: 2026 +$635
+  worst structures: SPY 2026-11-02 −$533 (credit $254, maxloss $546); SPY 2026-09-30 −$455 (credit $201, maxloss $599); SPY 2026-06-05 −$450 (credit $250, maxloss $450); SPY 2026-06-17 −$410 (credit $390, maxloss $410); QQQ 2026-10-16 −$410 (credit $290, maxloss $410); QQQ 2026-11-02 −$402 (credit $298, maxloss $402); SPY 2026-05-12 −$399 (credit $221, maxloss $479); QQQ 2026-05-12 −$392 (credit $308, maxloss $392)
+  information only, excluding 0 structures with inconsistent prints: n 410, net +$1,666, t 0.40
+
+### stress
+structures 410 over 137 days; net +$26; per day +$0; daily t 0.01; win rate 54.9%
+avg credit per structure $197.79, avg max loss $391.19; avg daily credit (all tickers) $591.93
+total P&L / total max loss 0.0%; median of per-structure P&L / max loss 6.3% (the per-structure mean, -1.2%, is distorted by a few structures whose prints make max loss ≈ $0)
+worst day −$1,138 on 2026-11-02 (-1.92 × avg daily credit); max drawdown +$4,513 (7.62 × avg daily credit)
+without 5 best days −$2,682
+per ticker: SPY +$487 (n 137, t 0.26); QQQ −$547 (n 136, t -0.27); IWM +$87 (n 137, t 0.09)
+per year: 2026 +$26
+  SPY by year: 2026 +$487
+  QQQ by year: 2026 −$547
+  IWM by year: 2026 +$87
+
+### harsh
+structures 410 over 137 days; net −$1,614; per day −$12; daily t -0.38; win rate 54.9%
+avg credit per structure $193.79, avg max loss $395.19; avg daily credit (all tickers) $579.96
+total P&L / total max loss -1.0%; median of per-structure P&L / max loss 4.8% (the per-structure mean, -2.4%, is distorted by a few structures whose prints make max loss ≈ $0)
+worst day −$1,150 on 2026-11-02 (-1.98 × avg daily credit); max drawdown +$4,992 (8.61 × avg daily credit)
+without 5 best days −$4,262
+per ticker: SPY −$61 (n 137, t -0.03); QQQ −$1,091 (n 136, t -0.54); IWM −$461 (n 137, t -0.51)
+per year: 2026 −$1,614
+  SPY by year: 2026 −$61
+  QQQ by year: 2026 −$1,091
+  IWM by year: 2026 −$461
+
+## Information only: IB-1400-expiry detail
+
+### primary
+structures 409 over 137 days; net +$7,360; per day +$54; daily t 2.20; win rate 67.0%
+avg credit per structure $151.15, avg max loss $437.07; avg daily credit (all tickers) $451.25
+total P&L / total max loss 4.1%; median of per-structure P&L / max loss 8.5% (the per-structure mean, 3.0%, is distorted by a few structures whose prints make max loss ≈ $0)
+worst day −$1,063 on 2026-06-05 (-2.35 × avg daily credit); max drawdown +$2,938 (6.51 × avg daily credit)
+without 5 best days +$4,912
+per ticker: SPY +$3,547 (n 137, t 2.51); QQQ +$3,203 (n 135, t 1.87); IWM +$610 (n 137, t 0.95)
+per year: 2026 +$7,360
+  SPY by year: 2026 +$3,547
+  QQQ by year: 2026 +$3,203
+  IWM by year: 2026 +$610
+  worst structures: SPY 2026-06-05 −$496 (credit $204, maxloss $496); SPY 2026-06-17 −$441 (credit $359, maxloss $441); QQQ 2026-06-05 −$438 (credit $262, maxloss $438); QQQ 2026-05-12 −$395 (credit $222, maxloss $478); SPY 2026-09-30 −$392 (credit $164, maxloss $636); QQQ 2026-11-02 −$387 (credit $294, maxloss $406); QQQ 2026-06-17 −$305 (credit $395, maxloss $305); QQQ 2026-11-11 −$296 (credit $166, maxloss $534)
+  information only, excluding 0 structures with inconsistent prints: n 409, net +$7,360, t 2.20
+
+### stress
+structures 409 over 137 days; net +$5,724; per day +$42; daily t 1.71; win rate 65.5%
+avg credit per structure $147.15, avg max loss $441.07; avg daily credit (all tickers) $439.31
+total P&L / total max loss 3.2%; median of per-structure P&L / max loss 7.6% (the per-structure mean, 1.9%, is distorted by a few structures whose prints make max loss ≈ $0)
+worst day −$1,075 on 2026-06-05 (-2.45 × avg daily credit); max drawdown +$3,053 (6.95 × avg daily credit)
+without 5 best days +$3,336
+per ticker: SPY +$2,999 (n 137, t 2.12); QQQ +$2,663 (n 135, t 1.55); IWM +$62 (n 137, t 0.10)
+per year: 2026 +$5,724
+  SPY by year: 2026 +$2,999
+  QQQ by year: 2026 +$2,663
+  IWM by year: 2026 +$62
+
+### harsh
+structures 409 over 137 days; net +$4,088; per day +$30; daily t 1.22; win rate 63.1%
+avg credit per structure $143.15, avg max loss $445.07; avg daily credit (all tickers) $427.36
+total P&L / total max loss 2.2%; median of per-structure P&L / max loss 6.7% (the per-structure mean, 0.8%, is distorted by a few structures whose prints make max loss ≈ $0)
+worst day −$1,087 on 2026-06-05 (-2.54 × avg daily credit); max drawdown +$3,362 (7.87 × avg daily credit)
+without 5 best days +$1,760
+per ticker: SPY +$2,451 (n 137, t 1.73); QQQ +$2,123 (n 135, t 1.24); IWM −$486 (n 137, t -0.76)
+per year: 2026 +$4,088
+  SPY by year: 2026 +$2,451
+  QQQ by year: 2026 +$2,123
+  IWM by year: 2026 −$486
+
+## Unhedged benchmark at 12:00 (information only): ATM straddle print (no costs) vs realised move to the official close
+ticker   n     straddle   |close−S|   |close−K| (payoff)   payoff/straddle   straddle − payoff (per share)   share of days payoff > straddle
+SPY     137      2.352       2.131                2.176             0.925        0.175 (t 1.19)        38.7%
+QQQ     137      3.263       3.118                3.106             0.952        0.157 (t 0.79)        39.4%
+IWM     137      1.185       1.057                1.056             0.892        0.129 (t 1.64)        40.9%
+
+## Unhedged benchmark at 14:00 (information only): ATM straddle print (no costs) vs realised move to the official close
+ticker   n     straddle   |close−S|   |close−K| (payoff)   payoff/straddle   straddle − payoff (per share)   share of days payoff > straddle
+SPY     137      1.757       1.344                1.404             0.800        0.352 (t 3.28)        24.8%
+QQQ     137      2.380       1.995                1.990             0.836        0.390 (t 2.80)        32.1%
+IWM     137      0.872       0.675                0.748             0.858        0.124 (t 2.36)        32.1%
+
+## Holdout pass rule: IB-1200-expiry
+PASS  ≥ 2 of 3 tickers > 0 (2)
+FAIL  daily t ≥ 2 (0.40)
+PASS  stress ≥ 0 (+$26)
+VERDICT IB-1200-expiry: FAIL
+
+## Holdout pass rule: IB-1400-expiry
+PASS  ≥ 2 of 3 tickers > 0 (3)
+PASS  daily t ≥ 2 (2.20)
+PASS  stress ≥ 0 (+$5,724)
+VERDICT IB-1400-expiry: PASS

@@ -1,0 +1,102 @@
+{
+  "name": "03c-late-momentum-direction-quotes",
+  "train": {
+    "from": "2024-02-01",
+    "to": "2026-04-30"
+  },
+  "simulation": {
+    "startingCash": 25000,
+    "spreadPct": 0.01,
+    "minSpread": 0.01,
+    "feePerContract": 0.05,
+    "fillAt": "nextTrade",
+    "warmupDays": 5,
+    "prices": "quotes"
+  },
+  "base": {
+    "tickers": [
+      "SPY",
+      "QQQ",
+      "IWM"
+    ],
+    "timeframeMinutes": 5,
+    "session": "regular",
+    "indicators": {},
+    "signal": {
+      "type": "timedMomentum",
+      "reference": "open",
+      "measureMinutes": 30,
+      "entryBeforeCloseMinutes": 60,
+      "minMovePct": 0
+    },
+    "entryFilters": [],
+    "exits": [
+      {
+        "type": "flatBeforeClose",
+        "minutes": 2
+      }
+    ],
+    "contract": {
+      "expiry": {
+        "type": "nearest",
+        "minDte": 0,
+        "maxDte": 0
+      },
+      "strike": {
+        "type": "atm"
+      }
+    },
+    "sizing": {
+      "type": "contracts",
+      "count": 1
+    },
+    "risk": [
+      {
+        "type": "maxPositions",
+        "count": 3
+      }
+    ],
+    "markPrice": "mid"
+  },
+  "axes": {
+    "direction": {
+      "with": {},
+      "against": {
+        "signal": {
+          "invert": true
+        }
+      }
+    },
+    "minMove": {
+      "0.4%": {
+        "signal": {
+          "minMovePct": 0.004
+        }
+      },
+      "0.5%": {
+        "signal": {
+          "minMovePct": 0.005
+        }
+      },
+      "0.75%": {
+        "signal": {
+          "minMovePct": 0.0075
+        }
+      }
+    },
+    "exit": {
+      "hold": {},
+      "tp100": {
+        "exits": [
+          {
+            "type": "profitTarget",
+            "pct": 1
+          }
+        ]
+      }
+    }
+  },
+  "rankBy": "netPnl",
+  "minTrades": 100,
+  "top": 10
+}

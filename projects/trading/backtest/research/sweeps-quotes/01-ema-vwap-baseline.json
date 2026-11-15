@@ -1,0 +1,148 @@
+{
+  "name": "01-ema-vwap-baseline-quotes",
+  "train": {
+    "from": "2024-02-01",
+    "to": "2026-04-30"
+  },
+  "simulation": {
+    "startingCash": 25000,
+    "spreadPct": 0.01,
+    "minSpread": 0.01,
+    "feePerContract": 0.05,
+    "fillAt": "nextTrade",
+    "prices": "quotes"
+  },
+  "base": {
+    "preset": "ema-vwap-crossover",
+    "tickers": [
+      "SPY",
+      "QQQ",
+      "IWM"
+    ],
+    "exits": [
+      {
+        "type": "flatBeforeClose",
+        "minutes": 10
+      }
+    ],
+    "entryFilters": [
+      {
+        "type": "timeWindow",
+        "startDelayMinutes": 15,
+        "endBeforeCloseMinutes": 30
+      },
+      {
+        "type": "cooldown",
+        "bars": 2,
+        "afterReasons": [
+          "pnlStop",
+          "indicatorBreak"
+        ]
+      }
+    ]
+  },
+  "axes": {
+    "timeframe": {
+      "3m": {
+        "timeframeMinutes": 3
+      },
+      "5m": {
+        "timeframeMinutes": 5
+      },
+      "10m": {
+        "timeframeMinutes": 10
+      }
+    },
+    "emaStop": {
+      "ema-close": {
+        "exits": [
+          {
+            "type": "indicatorBreak",
+            "indicator": "ema9",
+            "trigger": "close"
+          }
+        ]
+      },
+      "no-ema": {}
+    },
+    "premiumStop": {
+      "stop30": {
+        "exits": [
+          {
+            "type": "pnlStop",
+            "pct": 0.3
+          }
+        ]
+      },
+      "no-stop": {}
+    },
+    "target": {
+      "tp50": {
+        "exits": [
+          {
+            "type": "profitTarget",
+            "pct": 0.5
+          }
+        ]
+      },
+      "tp100": {
+        "exits": [
+          {
+            "type": "profitTarget",
+            "pct": 1
+          }
+        ]
+      },
+      "no-target": {}
+    },
+    "expiry": {
+      "0dte": {
+        "contract": {
+          "expiry": {
+            "type": "nearest",
+            "minDte": 0,
+            "maxDte": 0
+          }
+        }
+      },
+      "1dte": {
+        "contract": {
+          "expiry": {
+            "type": "nearest",
+            "minDte": 1
+          }
+        }
+      }
+    },
+    "strike": {
+      "atm": {
+        "contract": {
+          "strike": {
+            "type": "atm"
+          }
+        }
+      },
+      "otm1": {
+        "contract": {
+          "strike": {
+            "type": "strikeOffset",
+            "steps": 1
+          }
+        }
+      }
+    },
+    "onCross": {
+      "exit-on-cross": {
+        "exits": [
+          {
+            "type": "oppositeSignal"
+          }
+        ]
+      },
+      "hold": {}
+    }
+  },
+  "rankBy": "netPnl",
+  "minTrades": 300,
+  "top": 10
+}
