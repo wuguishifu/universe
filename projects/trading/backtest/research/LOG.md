@@ -186,3 +186,36 @@ Trade counts per ticker are in brackets. **C1 passes the holdout rule:** positiv
 Concentration checks: without its 5 best trades C1 still made +$933. Six of seven months were positive (May +$136, Jun +$772, Jul +$451, Aug −$216, Sep +$199, Oct +$235, Nov 1–13 +$479). Puts made +$1,731 and calls +$325. The average entry price was $0.86, so one contract risks under $100.
 
 Caveats are in `SUMMARY.md`. Holdout outputs (summary and trades) are in `outputs/holdout-c1-*`.
+
+## Idea 6: does the direction hold in 2016–2023 stock data? (written 2026-11-15, before running)
+
+The options test can't go before February 2024, but C1's direction call needs only stock prices. This checks it on 2016-01-04 → 2023-12-29 (2,012 trading days per ticker, never used before), with shares instead of options. No costs: the question is only whether the direction is right more than chance.
+
+**Primary test, C1's frozen rule exactly.** For each ticker-day:
+
+- Session open = the open of the first regular-session 1-minute bar.
+- Move = close of the last 1-minute bar before open + 30 minutes, over the session open, minus 1. Trade only if |move| ≥ 0.5%.
+- Entry = price at close − 60 minutes (the last 1-minute close before it). Exit = price at close − 2 minutes. Early-close days use their own close.
+- Signed return r = sign(move) × (exit / entry − 1).
+
+SPY, QQQ and IWM often move together, so ticker-days on the same date aren't independent. Combined statistics average r across the tickers that traded each date, then take a t-stat across dates.
+
+**Pass rule:** combined mean > 0 with day-clustered t ≥ 2; mean positive on ≥ 2 of 3 tickers; mean positive in ≥ 5 of 8 years. If it fails, the options result is probably luck.
+
+**Information only (not part of the pass):** entry at close − 120/90/60/30 minutes × measure 15/30/60 minutes × minimum move 0.25/0.5/1% (36 settings), the previous-close reference from the paper, the same rule on 2024-02 → 2026-11 (the options period) for comparison, and bullish vs bearish days separately.
+
+### Result (run once, 2026-11-15): **FAIL**
+
+| C1 rule, shares, no costs | Ticker-days | Mean    | Hit   | Day-clustered t | SPY      | QQQ     | IWM     |
+| ------------------------- | ----------- | ------- | ----- | --------------- | -------- | ------- | ------- |
+| **2016–2023 (fresh)**     | 1,153       | −2.0 bp | 49.9% | −0.64           | −7.1 bp  | −1.8 bp | −0.7 bp |
+| 2024-02 → 2026-11         | 416         | +6.9 bp | 55.8% | 1.49            | +11.8 bp | +8.7 bp | +4.2 bp |
+
+Pass rule: t −0.64 (needs ≥ 2), 0/3 tickers positive (needs 2), 3/8 years positive (needs 5). It isn't close: over eight years, the 10:00 direction called the last hour right 49.9% of the time.
+
+- The script finds 416 signals on the options period against the engine's 414 trades, so it's measuring the same rule. The effect is visible there in shares too (+6.9 bp, t 1.5), but not in the eight years before.
+- Up and down days both fail on 2016–2023. The puts that carried the options holdout had no edge before 2024 either (−3.2 bp).
+- The paper's version (previous close → 10:00 predicting the last 30 minutes) is also flat on 2016–2023: −0.4 bp, t −0.65, with 2021 and 2022 clearly negative.
+- None of the 36 grid settings reaches t 2. The best is +5.3 bp, t 1.63 (entry at close − 120, measure 15 minutes, ≥ 0.5%), and is one of 36. There's nothing special about 15:00 in the long sample.
+
+Conclusion: C1's edge is most likely specific to 2024–2026, or luck. The options holdout was a genuine out-of-sample pass, but it was 86 trades in the same two-and-a-half-year regime the rule was found in. Eight earlier years show nothing. Output: `outputs/06-stock-momentum.out`.
