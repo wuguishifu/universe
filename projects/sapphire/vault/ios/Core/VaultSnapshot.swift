@@ -10,14 +10,25 @@ public struct VaultItemSummary: Equatable {
   public let hasTotp: Bool
 }
 
+/// An SSH key item (Bitwarden's cipher type 5), without its private key.
+public struct VaultSshKeySummary: Equatable {
+  public let id: String
+  public let name: String
+  /// OpenSSH authorized_keys format, e.g. `ssh-ed25519 AAAA…`.
+  public let publicKey: String?
+  /// `SHA256:…`, as Bitwarden shows it.
+  public let fingerprint: String?
+}
+
 public struct VaultItemSecret: Equatable {
   public let password: String?
   /// The raw TOTP field (see `Totp`).
   public let totp: String?
 }
 
-/// The cached `/api/sync` response, still encrypted. Only personal, non-deleted logins count:
-/// organization items, the trash, and the other item types are out of scope for now.
+/// The cached `/api/sync` response, still encrypted. Only personal, non-deleted logins and SSH keys
+/// count: organization items, the trash, and the other item types are out of scope for now. SSH
+/// keys are kept apart from logins, so the item list and AutoFill never see them.
 ///
 /// Two snapshots are equal when they hold the same items, whatever order the server sent them in.
 /// The raw responses can differ even then (e.g. signed attachment URLs that are minted per
@@ -40,20 +51,46 @@ public struct VaultSnapshot: Equatable {
     let uris: [Uri]
   }
 
+  struct SshKeyCipher: Equatable {
+    let id: String
+    let key: String?
+    let name: String?
+    let privateKey: String?
+    let publicKey: String?
+    let fingerprint: String?
+  }
+
   let ciphers: [Cipher]
+  let sshKeys: [SshKeyCipher]
 
   public init(syncResponse data: Data) throws {
     guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-      let ciphers = root.field("ciphers") as? [[String: Any]]
+      let all = root.field("ciphers") as? [[String: Any]]
     else {
       throw VaultError.invalidResponse("sync response has no ciphers")
     }
+    let personal = all.filter { cipher in
+      cipher.field("id") is String
+        && (cipher.field("organizationId") is NSNull || cipher.field("organizationId") == nil)
+        && (cipher.field("deletedDate") is NSNull || cipher.field("deletedDate") == nil)
+    }
 
-    self.ciphers = ciphers.compactMap { cipher in
+    sshKeys = personal.compactMap { cipher in
+      guard let id = cipher.field("id") as? String, cipher.field("type") as? Int == 5,
+        let sshKey = cipher.field("sshKey") as? [String: Any]
+      else { return nil }
+      return SshKeyCipher(
+        id: id,
+        key: cipher.field("key") as? String,
+        name: cipher.field("name") as? String,
+        privateKey: sshKey.field("privateKey") as? String,
+        publicKey: sshKey.field("publicKey") as? String,
+        fingerprint: sshKey.field("keyFingerprint") as? String)
+    }
+
+    ciphers = personal.compactMap { cipher in
       guard let id = cipher.field("id") as? String,
         cipher.field("type") as? Int == 1,
-        cipher.field("organizationId") is NSNull || cipher.field("organizationId") == nil,
-        cipher.field("deletedDate") is NSNull || cipher.field("deletedDate") == nil,
         let login = cipher.field("login") as? [String: Any]
       else { return nil }
 
@@ -72,10 +109,12 @@ public struct VaultSnapshot: Equatable {
     }
   }
 
+  /// The number of logins.
   public var count: Int { ciphers.count }
 
   public static func == (lhs: Self, rhs: Self) -> Bool {
     lhs.ciphers.sorted { $0.id < $1.id } == rhs.ciphers.sorted { $0.id < $1.id }
+      && lhs.sshKeys.sorted { $0.id < $1.id } == rhs.sshKeys.sorted { $0.id < $1.id }
   }
 
   /// Decrypts every item's summary. Items that fail to decrypt are skipped, unless they all
@@ -98,6 +137,31 @@ public struct VaultSnapshot: Equatable {
     return VaultItemSecret(
       password: try cipher.password.map { try EncString($0).decryptString(with: key) },
       totp: try cipher.totp.map { try EncString($0).decryptString(with: key) })
+  }
+
+  /// Decrypts every SSH key's name, public key and fingerprint. Like `summaries`, items that fail
+  /// are skipped unless they all do.
+  public func sshKeySummaries(userKey: VaultKey) throws -> [VaultSshKeySummary] {
+    let summaries = sshKeys.compactMap { cipher -> VaultSshKeySummary? in
+      guard let key = try? itemKey(key: cipher.key, userKey: userKey) else { return nil }
+      return try? VaultSshKeySummary(
+        id: cipher.id,
+        name: cipher.name.map { try EncString($0).decryptString(with: key) } ?? "",
+        publicKey: cipher.publicKey.map { try EncString($0).decryptString(with: key) },
+        fingerprint: cipher.fingerprint.map { try EncString($0).decryptString(with: key) })
+    }
+    if summaries.isEmpty && !sshKeys.isEmpty {
+      throw VaultError.decryptionFailed
+    }
+    return summaries
+  }
+
+  /// Decrypts one SSH key's private key (OpenSSH format, as Bitwarden stores it).
+  public func sshPrivateKey(id: String, userKey: VaultKey) throws -> String {
+    guard let cipher = sshKeys.first(where: { $0.id == id }), let privateKey = cipher.privateKey else {
+      throw VaultError.itemNotFound
+    }
+    return try EncString(privateKey).decryptString(with: itemKey(key: cipher.key, userKey: userKey))
   }
 
   private func cipher(_ id: String) throws -> Cipher {
@@ -123,7 +187,11 @@ public struct VaultSnapshot: Equatable {
   }
 
   private func itemKey(_ cipher: Cipher, userKey: VaultKey) throws -> VaultKey {
-    guard let key = cipher.key else { return userKey }
+    try itemKey(key: cipher.key, userKey: userKey)
+  }
+
+  private func itemKey(key: String?, userKey: VaultKey) throws -> VaultKey {
+    guard let key else { return userKey }
     return try VaultKey(data: EncString(key).decrypt(with: userKey))
   }
 }

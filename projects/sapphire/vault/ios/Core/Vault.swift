@@ -43,7 +43,7 @@ public actor Vault {
   public init(environment: VaultEnvironment) throws {
     store = try SharedStore(appGroup: environment.appGroup)
     sharedKeychain = Keychain(accessGroup: environment.sharedKeychainGroup)
-    appKeychain = environment.appKeychainGroup.map(Keychain.init(accessGroup:))
+    appKeychain = environment.appKeychainGroup.map { Keychain(accessGroup: $0) }
   }
 
   public nonisolated func state() -> VaultState {

@@ -67,6 +67,7 @@ function Root() {
           <Stack.Screen name="notifications" />
           <Stack.Screen name="browse" />
           <Stack.Screen name="vault" />
+          <Stack.Screen name="ssh" />
         </Stack>
       </ThemeProvider>
     </PushRegistrationProvider>

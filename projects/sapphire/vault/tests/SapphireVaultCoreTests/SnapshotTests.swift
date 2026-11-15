@@ -94,6 +94,49 @@ final class SnapshotTests: XCTestCase {
     XCTAssertNotEqual(try VaultSnapshot(syncResponse: data), try VaultSnapshot(syncResponse: edited))
   }
 
+  /// Logins and SSH keys side by side, in Bitwarden's type 5 shape.
+  func makeSshSync(privateKey: String = "-----BEGIN OPENSSH PRIVATE KEY-----\nabc\n") throws -> Data {
+    let itemKey = VaultKey.random()
+    let ciphers: [[String: Any]] = [
+      ["id": "login", "type": 1, "name": try enc("Login"), "login": ["username": try enc("alice")]],
+      [
+        "id": "ssh", "type": 5, "name": try enc("sol", itemKey), "key": try EncString.encrypt(itemKey.data, with: userKey).string,
+        "sshKey": [
+          "privateKey": try enc(privateKey, itemKey), "publicKey": try enc("ssh-ed25519 AAAA bo@sol", itemKey),
+          "keyFingerprint": try enc("SHA256:abc", itemKey),
+        ],
+      ],
+      ["id": "org-ssh", "type": 5, "organizationId": "o1", "name": try enc("Org"), "sshKey": [:]],
+      ["id": "deleted-ssh", "type": 5, "deletedDate": "2026-01-01T00:00:00Z", "name": try enc("Gone"), "sshKey": [:]],
+    ]
+    return try JSONSerialization.data(withJSONObject: ["object": "sync", "ciphers": ciphers])
+  }
+
+  func testSshKeys() throws {
+    let snapshot = try VaultSnapshot(syncResponse: makeSshSync())
+    // SSH keys stay out of the logins (and so out of AutoFill).
+    XCTAssertEqual(snapshot.count, 1)
+    XCTAssertEqual(try snapshot.summaries(userKey: userKey).map(\.id), ["login"])
+
+    XCTAssertEqual(
+      try snapshot.sshKeySummaries(userKey: userKey),
+      [VaultSshKeySummary(id: "ssh", name: "sol", publicKey: "ssh-ed25519 AAAA bo@sol", fingerprint: "SHA256:abc")])
+    XCTAssertEqual(
+      try snapshot.sshPrivateKey(id: "ssh", userKey: userKey), "-----BEGIN OPENSSH PRIVATE KEY-----\nabc\n")
+    XCTAssertThrowsError(try snapshot.sshPrivateKey(id: "login", userKey: userKey)) {
+      XCTAssertEqual($0 as? VaultError, .itemNotFound)
+    }
+    XCTAssertThrowsError(try snapshot.sshKeySummaries(userKey: .random())) {
+      XCTAssertEqual($0 as? VaultError, .decryptionFailed)
+    }
+  }
+
+  func testSshKeyChangesCount() throws {
+    XCTAssertNotEqual(
+      try VaultSnapshot(syncResponse: makeSshSync(privateKey: "one")),
+      try VaultSnapshot(syncResponse: makeSshSync(privateKey: "two")))
+  }
+
   func testInvalidResponse() {
     XCTAssertThrowsError(try VaultSnapshot(syncResponse: Data("{}".utf8)))
     XCTAssertThrowsError(try VaultSnapshot(syncResponse: Data("nope".utf8)))
