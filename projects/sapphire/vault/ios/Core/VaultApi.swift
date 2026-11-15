@@ -24,6 +24,11 @@ public struct TokenResponse {
 /// The handful of Bitwarden endpoints the vault needs, against a Vaultwarden base URL.
 public struct VaultApi {
   static let clientId = "mobile"
+  /// Sent as `Bitwarden-Client-Version` on every request. Vaultwarden leaves SSH key items out of
+  /// `/api/sync` for clients older than 2024.12.0 (or that send no version), and newer releases
+  /// refuse logins without the header. This is the lowest version that gets SSH keys, so the
+  /// server doesn't switch on response changes meant for later clients.
+  static let clientVersion = "2024.12.0"
 
   let baseURL: URL
   let session: URLSession
@@ -115,6 +120,7 @@ public struct VaultApi {
   private func perform(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
     var request = request
     request.setValue(String(1), forHTTPHeaderField: "Device-Type")
+    request.setValue(Self.clientVersion, forHTTPHeaderField: "Bitwarden-Client-Version")
     request.timeoutInterval = 30
 
     // The path only: the query and headers can carry tokens.

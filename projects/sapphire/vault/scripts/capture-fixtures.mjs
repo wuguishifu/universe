@@ -30,7 +30,9 @@ const deviceIdentifier = '5a9f3c1e-7b2d-4e8a-9c6f-0d1e2f3a4b5c';
 const outDir = path.join(root, 'tests/SapphireVaultCoreTests/Fixtures');
 
 async function request(method, url, init) {
-  const response = await fetch(url, { method, ...init });
+  // Same as VaultApi.clientVersion: without it, the sync leaves out SSH keys.
+  const headers = { 'Bitwarden-Client-Version': '2024.12.0', ...init.headers };
+  const response = await fetch(url, { method, ...init, headers });
   const text = await response.text();
   if (!response.ok) {
     throw new Error(`${method} ${url}: ${response.status} ${text}`);
