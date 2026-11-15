@@ -1,0 +1,23 @@
+{
+  "name": "trading-core",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/trading/core/src",
+  "projectType": "library",
+  "tags": ["scope:shared"],
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import @swc-node/register/esm-register --test \"src/**/*.spec.ts\"",
+        "cwd": "projects/trading/core"
+      }
+    },
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning",
+        "cwd": "projects/trading/core"
+      }
+    }
+  }
+}

@@ -1162,6 +1162,12 @@ importers:
         specifier: workspace:*
         version: link:../contracts
 
+  projects/trading/core:
+    dependencies:
+      zod:
+        specifier: ^4.3.6
+        version: 4.6.5
+
   projects/wuguishifu/web:
     dependencies:
       '@libs/ui-web':
