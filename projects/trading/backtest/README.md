@@ -18,7 +18,7 @@ data/stocks/<TICKER>/<DATE>.json      [AlpacaBar]                       1-minute
 data/options/<TICKER>/<DATE>.json     { "<OCC symbol>": [AlpacaBar] }   1-minute bars that day
 ```
 
-Options cover expirations 0–7 days out and whole-dollar strikes from 10 below the day's low to 10 above its high. Alpaca's option history starts in February 2024.
+Options cover expirations 0–7 days out and whole-dollar strikes from 10 below the day's low to 10 above its high. Alpaca's option history starts in February 2024. For earlier years, add `--stocks-only` to fetch just the stock bars.
 
 ## Run
 

@@ -30,6 +30,8 @@ export type DownloadOptions = {
   strikeStep: number;
   /** Trading days of stock bars to fetch before `from`, for indicator warmup. */
   warmupDays: number;
+  /** Skip option bars, e.g. for years before Alpaca's option history starts (February 2024). */
+  stocksOnly?: boolean;
   log: (line: string) => void;
 };
 
@@ -120,6 +122,8 @@ export async function download(options: DownloadOptions): Promise<void> {
       log(`${date} ${ticker}: ${bars.length} stock bars`);
     }
   }
+
+  if (options.stocksOnly) return;
 
   const store = new DataStore(dir);
   for (const date of days) {

@@ -25,7 +25,7 @@ const print = (line = ''): void => {
 const USAGE = `Usage:
   backtest run      [--config <file> | --preset <name>] [--from YYYY-MM-DD] [--to YYYY-MM-DD]
                     [--data <dir>] [--out <dir>] [--daily]
-  backtest download --from YYYY-MM-DD --to YYYY-MM-DD [--tickers SPY,QQQ] [--data <dir>]
+  backtest download --from YYYY-MM-DD --to YYYY-MM-DD [--tickers SPY,QQQ] [--data <dir>] [--stocks-only]
                     [--expiry-days 7] [--strike-padding 10] [--strike-step 1] [--warmup-days 5]
   backtest sweep    --config <file> [--data <dir>] [--out <dir>] [--workers N]
 
@@ -103,6 +103,7 @@ async function downloadCommand(args: string[]): Promise<void> {
       'strike-padding': { type: 'string', default: '10' },
       'strike-step': { type: 'string', default: '1' },
       'warmup-days': { type: 'string', default: '5' },
+      'stocks-only': { type: 'boolean', default: false },
     },
   });
   if (!values.from || !values.to)
@@ -118,6 +119,7 @@ async function downloadCommand(args: string[]): Promise<void> {
     strikePadding: Number(values['strike-padding']),
     strikeStep: Number(values['strike-step']),
     warmupDays: Number(values['warmup-days']),
+    stocksOnly: values['stocks-only'],
     log: print,
   });
   print('Done.');
