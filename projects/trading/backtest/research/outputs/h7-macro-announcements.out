@@ -1,0 +1,145 @@
+# H7: macro-announcement premium. Close-to-close excess over BIL, adjusted daily bars.
+Sample 2016-01-05 -> 2026-11-13: 2732 trading days.
+BIL dates not in calendar.json: none; calendar days missing from BIL: none
+CPI events 130 (moved: 2017-04-14 -> 2017-04-17; 2020-04-10 -> 2020-04-13)
+Jobs events 130 (moved: 2021-04-02 -> 2021-04-05; 2023-04-07 -> 2023-04-10; 2026-04-03 -> 2026-04-06)
+E = CPI ∪ jobs: 260 event days. FOMC in range: 86 (not trading days: 0)
+CPI days that are also FOMC days: 2016-03-16, 2017-03-15, 2017-06-14, 2017-12-13, 2019-12-11, 2020-06-10, 2024-06-12
+N (non-announcement days): 2393. Days held by the strategy: 260 (9.5% of days)
+E by weekday: {"Wed":51,"Fri":139,"Thu":33,"Tue":32,"Mon":5}
+
+## Primary: E (CPI + jobs) vs N, daily excess return over BIL, bp
+Ticker    nE  E mean  E med E up%   E sd    nN  N mean  N med N up%   N sd   diff      t  sdE/sdN   m/v E   m/v N
+SPY      260     3.4   15.3    57    119  2393     5.6    6.7    55    109   -2.1  -0.28     1.09    2.41    4.67
+QQQ      260     8.1   20.7    59    152  2393     6.8   11.6    56    139    1.4   0.14     1.09    3.54    3.49
+IWM      260     1.2   20.3    54    157  2393     4.4    9.4    53    140   -3.1  -0.31     1.12    0.50    2.21
+IEF      260    -3.0   -1.4    49     53  2393    -0.5   -0.1    49     39   -2.5  -0.74     1.36  -10.65   -3.40
+TLT      260    -5.7   -2.1    50    109  2393    -1.0    1.4    51     91   -4.6  -0.66     1.20   -4.76   -1.24
+(m/v = mean / variance of daily excess returns, in units of 1/return; the paper's reward-to-risk per day.)
+IEF and TLT rows are information only (#5, #6).
+
+## Same-weekday check (required): weekday-stratified difference, weighted by event counts
+SPY: D -1.4 bp, t -0.17
+   Mon: events   5 mean   37.9 | N  504 mean    9.2 | diff   28.7
+   Tue: events  32 mean   -2.4 | N  531 mean    6.3 | diff   -8.6
+   Wed: events  51 mean   -1.3 | N  433 mean   11.0 | diff  -12.3
+   Thu: events  33 mean    9.4 | N  515 mean   -1.7 | diff   11.1
+   Fri: events 139 mean    3.8 | N  410 mean    3.5 | diff    0.3
+QQQ: D 5.1 bp, t 0.50
+IWM: D -2.2 bp, t -0.20
+SPY Friday events vs Friday N: 0.3 bp, t 0.03; non-Friday events vs non-Friday N: -3.0 bp, t -0.27
+SPY N mean by weekday (bp): Mon 9.2, Tue 6.3, Wed 11.0, Thu -1.7, Fri 3.5
+
+## SPY per year: E mean, N mean, difference (bp)
+2016: n 24  E   -3.0  N    6.9  diff  -10.0
+2017: n 24  E   25.8  N    5.8  diff   20.0
+2018: n 24  E   -7.7  N   -0.1  diff   -7.6
+2019: n 24  E   50.4  N    6.3  diff   44.1
+2020: n 24  E  -32.6  N   10.9  diff  -43.5
+2021: n 24  E   22.5  N    9.2  diff   13.4
+2022: n 24  E  -26.1  N   -7.4  diff  -18.6
+2023: n 24  E   42.4  N    4.1  diff   38.4
+2024: n 24  E   10.7  N    7.9  diff    2.9
+2025: n 22  E  -34.7  N    9.2  diff  -43.9
+2026: n 22  E  -15.1  N    8.6  diff  -23.7
+Full years with diff > 0: 5/10
+QQQ full years with diff > 0: 5/10
+IWM full years with diff > 0: 3/10
+
+## SPY concentration
+5 best event days: 2022-11-10 548, 2019-01-04 336, 2022-10-13 261, 2020-06-05 261, 2023-01-06 231
+5 worst event days: 2025-04-04 -589, 2020-03-11 -492, 2025-04-10 -439, 2022-09-13 -437, 2022-06-10 -289
+Without the 5 best event days: diff -8.5 bp, t -1.18
+Without the 5 best and 5 worst event days (info): diff 0.4 bp, t 0.07
+Both sets trimmed 2% each tail (info): diff -0.6 bp, t -0.09
+
+## Pass rule
+1. SPY diff -2.1 bp, t -0.28 (> 0, t ≥ 2): no
+2. SPY same-weekday D -1.4 bp, t -0.17 (> 0, t ≥ 1.5): no
+3. QQQ diff 1.4, IWM diff -3.1 (both > 0): no
+4. SPY years positive 5/10 (≥ 6): no
+5. SPY diff without 5 best -8.5 (> 0): no
+Effect verdict: FAIL
+
+## Strategy: SPY from the close before each event to the event-day close (MOC), BIL otherwise
+SPY buy & hold                 Sharpe 0.75  CAGR 14.7%  excess 13.1%/yr  max DD -33.8%
+BIL only                       CAGR 2.17%
+E, 0 bp/side                   Sharpe 0.14  t 0.46  CAGR 2.83%  excess 0.82%/yr  max DD -17.0%
+E, 0.3 bp/side                 Sharpe 0.09  t 0.30  CAGR 2.54%  excess 0.53%/yr  max DD -17.7%
+E, 1 bp/side                   Sharpe -0.02  t -0.08  CAGR 1.85%  excess -0.14%/yr  max DD -19.2%
+E, 2 bp/side                   Sharpe -0.19  t -0.62  CAGR 0.88%  excess -1.10%/yr  max DD -21.3%
+E, 5 bp/side                   Sharpe -0.68  t -2.23  CAGR -1.99%  excess -3.98%/yr  max DD -27.4%
+Information only:
+E, cash when out, 2 bp/side    Sharpe -0.35  t -1.16  CAGR -0.08%  excess -2.05%/yr  max DD -19.9%
+E, cash when out, 0.3 bp/side  Sharpe -0.21  t -0.70  CAGR 0.74%  excess -1.24%/yr  max DD -18.0%
+E, 16:01 fills, 0 bp           Sharpe 0.11  t 0.36  CAGR 2.65%  excess 0.63%/yr  max DD -17.1%  (late-fill events without minute data: 3)
+E, 16:01 fills, 2 bp/side      Sharpe -0.22  t -0.73  CAGR 0.70%  excess -1.28%/yr  max DD -21.4%  (late-fill events without minute data: 3)
+E ∪ FOMC, 2 bp/side            Sharpe -0.25  t -0.81  CAGR 0.31%  excess -1.62%/yr  max DD -14.7%
+E ∪ FOMC, 5 bp/side            Sharpe -0.80  t -2.64  CAGR -3.31%  excess -5.29%/yr  max DD -30.6%
+Share of buy & hold's summed excess return earned on E days: 6.2% (E is 9.5% of days); on E ∪ FOMC: 6.4% (12.4% of days)
+Worth trading (effect exists, Sharpe at 2 bp ≥ buy & hold 0.75, Sharpe at 5 bp > 0): NO (2 bp -0.19, 5 bp -0.68)
+
+## Information only (excess bp/day unless stated; diff vs N; Welch t)
+#1 CPI days alone                                   SPY  nE 130  E    1.7  N    5.6  diff   -3.9  t -0.36  sdE  120 sdN  109
+#2 Jobs days alone                                  SPY  nE 130  E    5.1  N    5.6  diff   -0.4  t -0.04  sdE  118 sdN  109
+#1 CPI days alone                                   QQQ  nE 130  E   15.9  N    6.8  diff    9.1  t  0.69  sdE  148 sdN  139
+#2 Jobs days alone                                  QQQ  nE 130  E    0.4  N    6.8  diff   -6.3  t -0.46  sdE  156 sdN  139
+#1 CPI days alone                                   IWM  nE 130  E   -8.5  N    4.4  diff  -12.8  t -0.88  sdE  164 sdN  140
+#2 Jobs days alone                                  IWM  nE 130  E   11.0  N    4.4  diff    6.6  t  0.49  sdE  150 sdN  140
+   SPY jobs alone, same-weekday D 1.5 bp, t 0.14
+   SPY CPI alone, same-weekday D -4.3 bp, t -0.39
+#3 Overnight, prev close -> open (raw)              SPY  nE 260  E    5.4  N    3.2  diff    2.2  t  0.44  sdE   78 sdN   71
+#4 Intraday, open -> close (raw)                    SPY  nE 260  E   -1.1  N    3.2  diff   -4.3  t -0.76  sdE   86 sdN   83
+#3 Overnight, prev close -> open (raw)              QQQ  nE 260  E    6.6  N    4.0  diff    2.5  t  0.40  sdE   97 sdN   85
+#4 Intraday, open -> close (raw)                    QQQ  nE 260  E    2.5  N    3.5  diff   -1.0  t -0.14  sdE  114 sdN  109
+#3 Overnight, prev close -> open (raw)              IWM  nE 260  E   10.4  N    5.2  diff    5.2  t  0.76  sdE  108 sdN   88
+#4 Intraday, open -> close (raw)                    IWM  nE 260  E   -8.2  N    0.0  diff   -8.2  t -1.08  sdE  116 sdN  111
+   SPY overnight, same-weekday D 2.2 bp, t 0.41
+   SPY intraday, same-weekday D -3.5 bp, t -0.60
+   SPY CPI: overnight diff 0.9 (t 0.12), intraday diff -4.7 (t -0.61)
+   SPY jobs: overnight diff 3.6 (t 0.55), intraday diff -3.8 (t -0.49)
+#5/#6 Bonds, E                                      IEF  nE 260  E   -3.0  N   -0.5  diff   -2.5  t -0.74  sdE   53 sdN   39
+   IEF same-weekday D -4.0 bp, t -1.16
+   bonds, CPI alone                                 IEF  nE 130  E    2.6  N   -0.5  diff    3.1  t  0.66  sdE   53 sdN   39
+   bonds, jobs alone                                IEF  nE 130  E   -8.6  N   -0.5  diff   -8.1  t -1.69  sdE   54 sdN   39
+#5/#6 Bonds, E                                      TLT  nE 260  E   -5.7  N   -1.0  diff   -4.6  t -0.66  sdE  109 sdN   91
+   TLT same-weekday D -7.6 bp, t -1.05
+   bonds, CPI alone                                 TLT  nE 130  E    1.2  N   -1.0  diff    2.2  t  0.23  sdE  106 sdN   91
+   bonds, jobs alone                                TLT  nE 130  E  -12.5  N   -1.0  diff  -11.5  t -1.15  sdE  112 sdN   91
+#7 2016-2020                                        SPY  nE 120  E    6.6  N    6.0  diff    0.6  t  0.06  sdE  102 sdN  118
+#8 2021-2026                                        SPY  nE 140  E    0.7  N    5.2  diff   -4.5  t -0.39  sdE  132 sdN  101
+   SPY 2016-2020 same-weekday D 3.4 bp, t 0.32
+   SPY 2021-2026 same-weekday D -4.7 bp, t -0.40
+   CPI 2016-2020                                    SPY  nE  60  E   -3.0  N    6.0  diff   -9.0  t -0.69  sdE   97 sdN  118
+   CPI 2021-2026                                    SPY  nE  70  E    5.7  N    5.2  diff    0.5  t  0.03  sdE  138 sdN  101
+   jobs 2016-2020                                   SPY  nE  60  E   16.2  N    6.0  diff   10.2  t  0.72  sdE  107 sdN  118
+   jobs 2021-2026                                   SPY  nE  70  E   -4.3  N    5.2  diff   -9.5  t -0.62  sdE  127 sdN  101
+#7 2016-2020                                        QQQ  nE 120  E   13.2  N    8.9  diff    4.2  t  0.36  sdE  122 sdN  141
+#8 2021-2026                                        QQQ  nE 140  E    3.8  N    4.9  diff   -1.1  t -0.07  sdE  173 sdN  138
+#7 2016-2020                                        IWM  nE 120  E    8.5  N    5.6  diff    3.0  t  0.22  sdE  137 sdN  145
+#8 2021-2026                                        IWM  nE 140  E   -5.0  N    3.3  diff   -8.3  t -0.55  sdE  173 sdN  136
+#9 CPI 2021-2023 alone                              SPY  nE  36  E   10.2  N    2.0  diff    8.3  t  0.30  sdE  161 sdN  106
+   SPY CPI 2021-2023: 36 days, sd 161 bp vs N same years sd 106 bp
+#10 FOMC days (close-to-close)                      SPY  nE  86  E    2.2  N    5.6  diff   -3.4  t -0.29  sdE  109 sdN  109
+   SPY FOMC vs non-announcement Wednesdays: diff -8.8 bp, t -0.68
+#10 FOMC days (close-to-close)                      QQQ  nE  86  E   18.4  N    6.8  diff   11.7  t  0.72  sdE  148 sdN  139
+#10 FOMC days (close-to-close)                      IWM  nE  86  E    4.9  N    4.4  diff    0.6  t  0.03  sdE  151 sdN  140
+#10 FOMC days (close-to-close)                      IEF  nE  86  E   14.5  N   -0.5  diff   15.0  t  2.95  sdE   47 sdN   39
+#10 FOMC days (close-to-close)                      TLT  nE  86  E   25.9  N   -1.0  diff   26.9  t  2.99  sdE   82 sdN   91
+#11 All announcement days (E ∪ FOMC)                SPY  nE 339  E    2.7  N    5.6  diff   -2.9  t -0.43  sdE  117 sdN  109
+   SPY E ∪ FOMC same-weekday D -3.4 bp, t -0.49
+#11 All announcement days (E ∪ FOMC)                QQQ  nE 339  E    9.7  N    6.8  diff    2.9  t  0.33  sdE  152 sdN  139
+#11 All announcement days (E ∪ FOMC)                IWM  nE 339  E    1.9  N    4.4  diff   -2.4  t -0.27  sdE  156 sdN  140
+#12 E vs all other days (FOMC left in)              SPY  nE 260  E    3.4  N    5.4  diff   -2.0  t -0.26  sdE  119 sdN  109
+#13 Good Friday events dropped                      SPY  nE 255  E    2.7  N    5.6  diff   -2.9  t -0.37  sdE  119 sdN  109
+   same-weekday D -1.9 bp, t -0.24
+   the moved events: 2017-04-17 86, 2020-04-13 -94, 2021-04-05 143, 2023-04-10 9, 2026-04-06 45
+#14 Placebo: trading day before each event          SPY  nE 257  E    6.5  N    5.4  diff    1.1  t  0.14  sdE  126 sdN  107
+#15 Placebo: trading day after each event           SPY  nE 256  E    0.7  N    6.1  diff   -5.4  t -0.65  sdE  127 sdN  107
+#14 Placebo: trading day before each event          QQQ  nE 257  E    8.5  N    6.5  diff    2.0  t  0.19  sdE  166 sdN  136
+#15 Placebo: trading day after each event           QQQ  nE 256  E    3.6  N    7.1  diff   -3.6  t -0.34  sdE  160 sdN  136
+#14 Placebo: trading day before each event          IWM  nE 257  E    3.1  N    4.5  diff   -1.4  t -0.15  sdE  144 sdN  140
+#15 Placebo: trading day after each event           IWM  nE 256  E    2.5  N    4.6  diff   -2.1  t -0.19  sdE  175 sdN  136
+#16-#18: see the strategy section above.
+
+Configs: 1 primary + 18 information only = 19.

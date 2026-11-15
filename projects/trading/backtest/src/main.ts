@@ -14,7 +14,10 @@ import { dailyStats } from './daily/daily-stats';
 import { DataStore } from './data/data-store';
 import { AlpacaClient } from './download/alpaca-client';
 import { download, downloadDaily } from './download/download';
-import { downloadQuotes } from './download/download-quotes';
+import {
+  downloadChainSnapshots,
+  downloadQuotes,
+} from './download/download-quotes';
 import { ThetaClient } from './download/theta-client';
 import { formatSummary, writeRun } from './report/report';
 import { computeStats } from './report/stats';
@@ -41,6 +44,8 @@ const USAGE = `Usage:
   backtest download-quotes --from YYYY-MM-DD --to YYYY-MM-DD [--tickers SPY,QQQ] [--data <dir>]
                     [--expiry-days 7] [--strike-padding 10] [--strike-step 1] [--concurrency 2]
                     [--full-chain] [--probe]
+  backtest download-chains --from YYYY-MM-DD --to YYYY-MM-DD [--tickers SPY] [--data <dir>]
+                    [--max-dte 60] [--low 0.6] [--high 1.25] [--minutes-before-close 15] [--concurrency 2]
   backtest sweep    --config <file> [--data <dir>] [--out <dir>] [--workers N]
   backtest download-daily --from YYYY-MM-DD --to YYYY-MM-DD (--tickers SPY,EFA | --tickers-file <file>)
                     [--adjustment all|raw] [--skip-existing] [--data <dir>]
@@ -207,6 +212,39 @@ async function downloadQuotesCommand(args: string[]): Promise<void> {
   print('Done.');
 }
 
+async function downloadChainsCommand(args: string[]): Promise<void> {
+  const { values } = parseArgs({
+    args,
+    options: {
+      from: { type: 'string' },
+      to: { type: 'string' },
+      tickers: { type: 'string', default: 'SPY' },
+      data: { type: 'string', default: 'data' },
+      'max-dte': { type: 'string', default: '60' },
+      low: { type: 'string', default: '0.6' },
+      high: { type: 'string', default: '1.25' },
+      'minutes-before-close': { type: 'string', default: '15' },
+      concurrency: { type: 'string', default: '2' },
+    },
+  });
+  if (!values.from || !values.to)
+    throw new Error('download-chains needs --from and --to');
+  await downloadChainSnapshots({
+    client: ThetaClient.fromEnv(),
+    dir: resolve(values.data),
+    tickers: values.tickers.split(',').map((t) => t.trim().toUpperCase()),
+    from: values.from,
+    to: values.to,
+    maxDte: Number(values['max-dte']),
+    lowFraction: Number(values.low),
+    highFraction: Number(values.high),
+    minutesBeforeClose: Number(values['minutes-before-close']),
+    concurrency: Number(values.concurrency),
+    log: print,
+  });
+  print('Done.');
+}
+
 async function sweepCommand(args: string[]): Promise<void> {
   const { values } = parseArgs({
     args,
@@ -347,6 +385,7 @@ async function main(): Promise<void> {
   if (command === 'run') await run(args);
   else if (command === 'download') await downloadCommand(args);
   else if (command === 'download-quotes') await downloadQuotesCommand(args);
+  else if (command === 'download-chains') await downloadChainsCommand(args);
   else if (command === 'sweep') await sweepCommand(args);
   else if (command === 'download-daily') await downloadDailyCommand(args);
   else if (command === 'daily') dailyCommand(args);

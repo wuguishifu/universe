@@ -18,6 +18,7 @@ import { QuoteFile, QuoteRow } from './theta';
  * stocks/<TICKER>/<DATE>.json    [AlpacaBar, ...]                 1-minute bars for that New York date
  * options/<TICKER>/<DATE>.json   { "<OCC symbol>": [AlpacaBar] }  1-minute bars for that date
  * quotes/<TICKER>/<DATE>.json    { "<OCC symbol>": [QuoteRow] }   bid/ask changes that date, from Theta Data
+ * chains/<TICKER>/<DATE>.json    { "<OCC symbol>": [QuoteRow] }   one bid/ask snapshot per contract, 15 minutes before the close
  * daily/<TICKER>.json            [AlpacaBar, ...]                 daily bars, split- and dividend-adjusted
  * daily-raw/<TICKER>.json        [AlpacaBar, ...]                 daily bars as traded, unadjusted
  * ```
@@ -36,6 +37,8 @@ export class DataStore {
     join(dir, 'options', ticker, `${date}.json`);
   static quotePath = (dir: string, ticker: string, date: string) =>
     join(dir, 'quotes', ticker, `${date}.json`);
+  static chainPath = (dir: string, ticker: string, date: string) =>
+    join(dir, 'chains', ticker, `${date}.json`);
   static dailyPath = (
     dir: string,
     ticker: string,
@@ -87,6 +90,13 @@ export class DataStore {
     const path = DataStore.quotePath(this.dir, ticker, date);
     if (!existsSync(path)) return null;
     // Written by our own downloader and tens of megabytes a day, so only the outer shape is checked.
+    return quoteFileSchema.parse(readJson(path));
+  }
+
+  /** The day's chain snapshot (see `download-chains`), or null if that day wasn't downloaded. */
+  chainSnapshot(ticker: string, date: string): QuoteFile | null {
+    const path = DataStore.chainPath(this.dir, ticker, date);
+    if (!existsSync(path)) return null;
     return quoteFileSchema.parse(readJson(path));
   }
 

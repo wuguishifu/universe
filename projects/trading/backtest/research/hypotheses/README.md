@@ -42,3 +42,29 @@ Before running anything on prices, write in `<id>.md`: the hypothesis and who is
 ## Report back (final message)
 
 Verdict (PASS / FAIL / INCONCLUSIVE against your own pass rule), the primary table, configs tried, the strongest reason to doubt the result, and the paths of the files you wrote. Be blunt; a clean negative is a good outcome.
+
+---
+
+# Round 2 (2026-11-15): h6–h10
+
+Everything above still applies, with these additions. Also read `h1.md` from "Rerun on real quotes" to the end, and `h3.md`: both contain lessons that apply to you.
+
+## Lessons from round 1
+
+- **Expiring options are priced to the 17:30 exercise cutoff, not to the 16:00 close.** Settling a short option held to expiry at intrinsic from the official close credits the seller with after-hours risk they really carry (h1). Close option positions before expiry unless your design explicitly models exercise.
+- **Real spreads are often much wider than the old 1% model,** especially in fast markets and on IWM. Use real quotes whenever options are involved.
+- **One minute of fill timing can be worth a lot** (h3: a one-minute look-ahead turned Sharpe 0.47 into 1.40). For share strategies, report the result with fills one minute later than your primary as a robustness check.
+- **Share costs:** SPY, QQQ and IWM have a one-cent spread, about 0.15–0.3 bp per side, and the opening and closing auctions have no spread to cross. Primary 1 bp per side, stress 3 bp per side, plus zero cost, unless your design argues otherwise in advance.
+
+## New data
+
+- `data/quotes/<T>/<DATE>.json`: real 1-minute NBBO for SPY, QQQ, IWM options, 2024-02-01 → 2026-11-13, same contracts as `data/options`. `{ "<OCC symbol>": [[epochMs, bid, ask], ...] }`, only changes stored: a contract's quote at time t is its last row at or before t. A row stamped T is the quote standing at T:00.
+- `data/chains/<T>/<DATE>.json`: one NBBO snapshot per contract per day, taken 15 minutes before the close (15:45, or 12:45 on early-close days), for SPY, QQQ, IWM, 2020-01-02 → 2026-11-13. Every expiration up to 60 calendar days out and strikes from 60% of the day's low to 125% of its high. Same format, one row per contract. The 2020-01 → 2024-01 part has never been used by anyone.
+- `data/bls/dates.json`: CPI and Employment Situation release dates 2016–2026 (08:30 NY, before the open). Five fall on Good Fridays, when the market is closed.
+- `data/fomc/dates.json`: scheduled FOMC announcement dates (see LOG.md part 4).
+- Stock 1-minute bars run 04:00–20:00, so pre-market and after-hours prices are available. The 16:00 bar's open is the closing-auction print; the 09:30 bar's open is the opening print.
+- Correction (h10, 2026-11-15): that's approximate. The 16:00 bar's open differs from the official close by more than 5 bp on 3–7% of days. For auction prices prefer the official open and close in `data/daily-raw/<T>.json` (raw daily bars for the 21 ETFs, added 2026-11-15; adjusted ones are in `data/daily`). Alpaca's adjusted series misses two SPY dividends, 2016-03-18 and 2018-06-15.
+
+## Samples
+
+There is no untouched holdout for SPY/QQQ/IWM share data from 2016–2026: Parts 1–4 and h3/h4 have used it. So for share strategies, the protection against overfitting is the design: a single published rule with published parameters as the primary, a small grid only as a robustness check, and a pass rule set in advance. Say in your design which choices come from the literature and which are yours.

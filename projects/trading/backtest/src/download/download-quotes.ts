@@ -209,3 +209,101 @@ export async function downloadQuotes(
   if (totals.empty > 0)
     log(`${totals.empty} ticker-days had no quotes at Theta Data.`);
 }
+
+export type ChainDownloadOptions = Pick<
+  QuoteDownloadOptions,
+  'client' | 'dir' | 'tickers' | 'from' | 'to' | 'concurrency' | 'log'
+> & {
+  /** Expirations from 0 up to this many calendar days out. */
+  maxDte: number;
+  /** Strikes from this fraction of the day's low to this fraction of its high, e.g. 0.6 and 1.25. */
+  lowFraction: number;
+  highFraction: number;
+  /** When to take the snapshot, in minutes before the session's close (early closes included). */
+  minutesBeforeClose: number;
+};
+
+/** `HH:MM` → the same clock time `minutes` earlier, as `HH:MM:SS`. */
+export function clockMinus(hhmm: string, minutes: number): string {
+  const [h = 0, m = 0] = hhmm.split(':').map(Number);
+  const total = h * 60 + m - minutes;
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}:00`;
+}
+
+/**
+ * Fills `chains/<TICKER>/<DATE>.json` with one NBBO snapshot of the whole chain per day, for
+ * strategies that decide once a day and hold for weeks. Needs the stock bars on disk for each day's
+ * range. Days already on disk are skipped.
+ */
+export async function downloadChainSnapshots(
+  options: ChainDownloadOptions,
+): Promise<void> {
+  const { client, dir, tickers, from, to, log } = options;
+  const store = new DataStore(dir);
+  const calendar = store
+    .calendar()
+    .filter((d) => d.date >= from && d.date <= to);
+  const jobs = calendar.flatMap((day) =>
+    tickers
+      .filter(
+        (ticker) => !existsSync(DataStore.chainPath(dir, ticker, day.date)),
+      )
+      .map((ticker) => ({ ticker, day })),
+  );
+  log(
+    `${jobs.length} ticker-days to fetch (${calendar.length * tickers.length - jobs.length} already on disk)`,
+  );
+
+  let next = 0;
+  let done = 0;
+  const worker = async (): Promise<void> => {
+    for (let job = jobs[next++]; job; job = jobs[next++]) {
+      const { ticker, day } = job;
+      const stock = store.stockBars(ticker, day.date) ?? [];
+      if (stock.length === 0) {
+        log(
+          `${day.date} ${ticker}: no stock bars, skipping (run download --stocks-only first)`,
+        );
+        continue;
+      }
+      const range = rangeOf(stock);
+      const time = clockMinus(day.close, options.minutesBeforeClose);
+      const filter = {
+        minStrike: Math.floor(range.low * options.lowFraction),
+        maxStrike: Math.ceil(range.high * options.highFraction),
+        maxExpiration: addDays(day.date, options.maxDte),
+      };
+      let collector = new QuoteCollector(filter);
+      const found = await client.optionQuotes(
+        {
+          symbol: ticker,
+          date: day.date,
+          maxDte: options.maxDte,
+          startTime: time,
+          endTime: time,
+        },
+        () => {
+          collector = new QuoteCollector(filter);
+        },
+        (line) => collector.push(line),
+      );
+      done += 1;
+      if (!found) {
+        log(`${day.date} ${ticker}: Theta Data has no quotes at ${time}`);
+        continue;
+      }
+      const quotes = collector.result();
+      writeJsonAtomic(DataStore.chainPath(dir, ticker, day.date), quotes);
+      const expirations = new Set(
+        Object.keys(quotes).map((s) => parseOccSymbol(s)?.expiration),
+      );
+      if (done % 50 === 0 || done === jobs.length || collector.malformed > 0)
+        log(
+          `${day.date} ${ticker} ${time}: ${Object.keys(quotes).length} contracts, ${expirations.size} expirations${collector.malformed ? `, ${collector.malformed} unreadable` : ''} (${done}/${jobs.length})`,
+        );
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.max(1, options.concurrency) }, worker),
+  );
+}

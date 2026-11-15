@@ -8,6 +8,7 @@ import { DataStore } from '../data/data-store';
 import { nyLocalToEpoch, quoteAt, QuoteCollector } from '../data/theta';
 
 import {
+  clockMinus,
   coverage,
   downloadQuotes,
   strikesEitherSide,
@@ -248,5 +249,12 @@ describe('downloadQuotes', () => {
       traded: 2,
       quoted: 1,
     });
+  });
+});
+
+describe('clockMinus', () => {
+  it('handles full and early closes', () => {
+    assert.equal(clockMinus('16:00', 15), '15:45:00');
+    assert.equal(clockMinus('13:00', 15), '12:45:00');
   });
 });

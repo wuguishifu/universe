@@ -1,0 +1,330 @@
+# H6 overnight drift — output of research/tools/h6-overnight.mjs
+
+## 0. Data verification
+
+Prices: official open/close from data/daily-raw; dividend factor F = adjusted close (data/daily) / raw close; ex-date where ln F steps up by > 2 bp (h6.md, dated note 2).
+
+### SPY
+- Opening: |ln(official open / 09:30 bar open)|: median 0.00 bp, 90th 0.47, 99th 1.29, within 0.4 bp on 87%.
+- Closing: |ln(official close / 16:00 bar open)|: median 0.84 bp, 90th 2.57, 99th 8.26, within 0.4 bp on 23%.
+- Closing: |ln(official close / 15:59 bar open)|: median 3.67 bp, 90th 11.38, 99th 27.32, within 0.4 bp on 5%.
+- Days with the minute print > 5 bp from the official price: 09:30 open 1, 16:00 bar open 77 (of 2717).
+- Dated-note-1 derived prices vs data/daily-raw: open median 0.06 bp, 90th 0.17, 99th 0.27, within 0.4 bp on 100%; close median 0.07 bp, 90th 0.17, 99th 0.26, within 0.4 bp on 100%.
+- Since the last ex-date (2026-09-18, 41 days, F = 1.000000): daily open = 09:30 bar open to the cent on 23; daily close = 16:00 bar open on 2.
+- Reconstructed close-to-close vs official adjusted close-to-close: median 0.08 bp, 90th 0.23, 99th 0.40, within 0.4 bp on 99%, max 52.54 bp.
+- Ex-dividend nights: 41. Per year: 2016 3, 2017 4, 2018 3, 2019 4, 2020 4, 2021 4, 2022 4, 2023 4, 2024 4, 2025 4, 2026 3. Total dividend yield 16.3% over the sample.
+  - 2016-06-17 $1.077, 2016-09-16 $1.082, 2016-12-16 $1.326, 2017-03-17 $1.031, 2017-06-16 $1.187, 2017-09-15 $1.239, 2017-12-15 $1.343, 2018-03-16 $1.093, 2018-09-21 $1.321, 2018-12-21 $1.435, 2019-03-15 $1.232, 2019-06-21 $1.436, 2019-09-20 $1.376, 2019-12-20 $1.572, 2020-03-20 $1.408, 2020-06-19 $1.369, 2020-09-18 $1.348, 2020-12-18 $1.572, 2021-03-19 $1.282, 2021-06-18 $1.376, 2021-09-17 $1.429, 2021-12-17 $1.636, 2022-03-18 $1.372, 2022-06-17 $1.573, 2022-09-16 $1.590, 2022-12-16 $1.778, 2023-03-17 $1.503, 2023-06-16 $1.642, 2023-09-15 $1.587, 2023-12-15 $1.905, 2024-03-15 $1.599, 2024-06-21 $1.761, 2024-09-20 $1.748, 2024-12-20 $1.966, 2025-03-21 $1.693, 2025-06-20 $1.761, 2025-09-19 $1.835, 2025-12-19 $1.988, 2026-03-20 $1.823, 2026-06-18 $1.899, 2026-09-18 $1.890
+- Imputed dividends (missing from the adjusted bars): 2016-03-18 $1.077 (mean of 2016-06-17); 2018-06-15 $1.207 (mean of 2018-03-16 & 2018-09-21)
+- Split / anomaly flags: none
+- Nights used: 2715. Skipped (minute file missing on D or E): 17: 2024-01-02, 2024-01-03, 2024-01-04, 2024-01-05, 2024-01-08, 2024-01-09, 2024-01-10, 2024-01-11, 2024-01-12, 2024-01-16, 2024-01-17, 2024-01-18, 2024-01-19, 2024-01-22, 2024-01-23, 2024-01-24, 2024-01-25
+
+### QQQ
+- Opening: |ln(official open / 09:30 bar open)|: median 0.00 bp, 90th 0.74, 99th 2.28, within 0.4 bp on 81%.
+- Closing: |ln(official close / 16:00 bar open)|: median 0.95 bp, 90th 3.90, 99th 10.27, within 0.4 bp on 25%.
+- Closing: |ln(official close / 15:59 bar open)|: median 3.91 bp, 90th 11.74, 99th 30.10, within 0.4 bp on 5%.
+- Days with the minute print > 5 bp from the official price: 09:30 open 1, 16:00 bar open 169 (of 2717).
+- Dated-note-1 derived prices vs data/daily-raw: open median 0.08 bp, 90th 0.25, 99th 0.44, within 0.4 bp on 98%; close median 0.08 bp, 90th 0.26, 99th 0.46, within 0.4 bp on 98%.
+- Since the last ex-date (2026-09-21, 40 days, F = 1.000000): daily open = 09:30 bar open to the cent on 20; daily close = 16:00 bar open on 2.
+- Reconstructed close-to-close vs official adjusted close-to-close: median 0.10 bp, 90th 0.34, 99th 0.63, within 0.4 bp on 93%, max 0.97 bp.
+- Ex-dividend nights: 44. Per year: 2016 4, 2017 4, 2018 4, 2019 4, 2020 4, 2021 4, 2022 4, 2023 5, 2024 4, 2025 4, 2026 3. Total dividend yield 7.9% over the sample.
+  - 2016-03-18 $0.323, 2016-06-17 $0.291, 2016-09-16 $0.286, 2016-12-16 $0.350, 2017-03-17 $0.273, 2017-06-16 $0.383, 2017-09-18 $0.319, 2017-12-18 $0.336, 2018-03-19 $0.277, 2018-06-18 $0.374, 2018-09-24 $0.337, 2018-12-24 $0.420, 2019-03-18 $0.320, 2019-06-24 $0.420, 2019-09-23 $0.384, 2019-12-23 $0.463, 2020-03-23 $0.365, 2020-06-22 $0.431, 2020-09-21 $0.387, 2020-12-21 $0.560, 2021-03-22 $0.386, 2021-06-21 $0.399, 2021-09-20 $0.420, 2021-12-20 $0.488, 2022-03-21 $0.442, 2022-06-21 $0.526, 2022-09-19 $1.035, 2022-12-19 $0.649, 2023-03-20 $0.481, 2023-06-20 $0.500, 2023-09-18 $0.536, 2023-12-18 $0.808, 2023-12-27 $0.212, 2024-03-18 $0.574, 2024-06-24 $0.758, 2024-09-23 $0.673, 2024-12-23 $0.843, 2025-03-24 $0.713, 2025-06-23 $0.592, 2025-09-22 $0.687, 2025-12-22 $0.800, 2026-03-23 $0.734, 2026-06-22 $0.808, 2026-09-21 $0.750
+- Imputed dividends (missing from the adjusted bars): none
+- Split / anomaly flags: none
+- Nights used: 2715. Skipped (minute file missing on D or E): 17: 2024-01-02, 2024-01-03, 2024-01-04, 2024-01-05, 2024-01-08, 2024-01-09, 2024-01-10, 2024-01-11, 2024-01-12, 2024-01-16, 2024-01-17, 2024-01-18, 2024-01-19, 2024-01-22, 2024-01-23, 2024-01-24, 2024-01-25
+
+### IWM
+- Opening: |ln(official open / 09:30 bar open)|: median 0.00 bp, 90th 0.92, 99th 3.64, within 0.4 bp on 79%.
+- Closing: |ln(official close / 16:00 bar open)|: median 0.64 bp, 90th 3.31, 99th 9.31, within 0.4 bp on 45%.
+- Closing: |ln(official close / 15:59 bar open)|: median 4.32 bp, 90th 11.39, 99th 25.96, within 0.4 bp on 4%.
+- Days with the minute print > 5 bp from the official price: 09:30 open 9, 16:00 bar open 126 (of 2717).
+- Dated-note-1 derived prices vs data/daily-raw: open median 0.14 bp, 90th 0.30, 99th 0.49, within 0.4 bp on 98%; close median 0.14 bp, 90th 0.32, 99th 0.52, within 0.4 bp on 96%.
+- Since the last ex-date (2026-09-15, 44 days, F = 1.000000): daily open = 09:30 bar open to the cent on 32; daily close = 16:00 bar open on 9.
+- Reconstructed close-to-close vs official adjusted close-to-close: median 0.17 bp, 90th 0.44, 99th 0.74, within 0.4 bp on 87%, max 1.47 bp.
+- Ex-dividend nights: 43. Per year: 2016 4, 2017 4, 2018 4, 2019 4, 2020 4, 2021 4, 2022 4, 2023 4, 2024 4, 2025 4, 2026 3. Total dividend yield 13.6% over the sample.
+  - 2016-03-23 $0.317, 2016-07-06 $0.630, 2016-09-26 $0.342, 2016-12-22 $0.555, 2017-03-24 $0.389, 2017-07-06 $0.610, 2017-09-26 $0.346, 2017-12-21 $0.586, 2018-03-22 $0.363, 2018-07-03 $0.595, 2018-09-26 $0.460, 2018-12-17 $0.473, 2019-03-20 $0.416, 2019-06-17 $0.542, 2019-09-24 $0.542, 2019-12-16 $0.594, 2020-03-25 $0.424, 2020-06-15 $0.465, 2020-09-23 $0.566, 2020-12-14 $0.595, 2021-03-25 $0.404, 2021-06-10 $0.347, 2021-09-24 $0.675, 2021-12-13 $0.666, 2022-03-24 $0.399, 2022-06-09 $0.495, 2022-09-26 $0.872, 2022-12-13 $0.835, 2023-03-23 $0.630, 2023-06-07 $0.508, 2023-09-26 $0.826, 2023-12-20 $0.736, 2024-03-21 $0.523, 2024-06-11 $0.564, 2024-09-25 $0.754, 2024-12-17 $0.692, 2025-03-18 $0.452, 2025-06-16 $0.572, 2025-09-16 $0.676, 2025-12-16 $0.842, 2026-03-17 $0.448, 2026-06-15 $0.696, 2026-09-15 $0.750
+- Imputed dividends (missing from the adjusted bars): none
+- Split / anomaly flags: none
+- Nights used: 2715. Skipped (minute file missing on D or E): 17: 2024-01-02, 2024-01-03, 2024-01-04, 2024-01-05, 2024-01-08, 2024-01-09, 2024-01-10, 2024-01-11, 2024-01-12, 2024-01-16, 2024-01-17, 2024-01-18, 2024-01-19, 2024-01-22, 2024-01-23, 2024-01-24, 2024-01-25
+
+## 1. Decomposition, no costs (common days; overnight includes the dividend)
+
+### SPY (2715 days, 2016-01-05 → 2026-11-13)
+
+| Series                 | bp/day | ann.   | t     | NW t  | sd bp  | share | worst  | −5best |
+| ---------------------- | ------ | ------ | ----- | ----- | ------ | ----- | ------ | ------ |
+| overnight (total)      |   3.87 |   9.8% |  2.82 |  2.76 |   71.5 |   64% |  -1074 |   3.11 |
+| overnight (raw, no div) |   3.23 |   8.1% |  2.35 |  2.30 |   71.7 |   54% |  -1074 |   2.48 |
+| intraday               |   2.15 |   5.4% |  1.34 |  1.52 |   83.9 |   36% |   -541 |   1.09 |
+| close-to-close         |   6.02 |  15.2% |  2.85 |  3.10 |  110.3 |  100% |  -1078 |   4.64 |
+| overnight − intraday   |   1.72 |   4.3% |  0.81 |  0.84 |  110.2 |       |  -1180 |   0.49 |
+
+Log-return share (information): overnight 67%, intraday 33%. Growth of $1: overnight 2.67, intraday 1.63, buy-and-hold 4.35.
+
+| Year | n   | overnight bp | intraday bp | cc bp | on − id bp | t(on) | t(diff) | on share |
+| ---- | --- | ------------ | ----------- | ----- | ---------- | ----- | ------- | -------- |
+| 2016 | 251 |         0.04 |        5.37 |  5.41 |      -5.32 |  0.01 |   -1.05 |       1% |
+| 2017 | 251 |         5.12 |        2.81 |  7.93 |       2.31 |  3.18 |    0.89 |      65% |
+| 2018 | 251 |         5.77 |       -7.02 | -1.29 |      12.79 |  1.73 |    1.79 |    -447% |
+| 2019 | 252 |         5.55 |        5.49 | 11.06 |       0.06 |  1.77 |    0.01 |      50% |
+| 2020 | 253 |         5.20 |        3.41 |  8.75 |       1.79 |  0.54 |    0.15 |      59% |
+| 2021 | 252 |         6.55 |        3.75 | 10.32 |       2.81 |  2.22 |    0.58 |      63% |
+| 2022 | 251 |        -5.30 |       -1.52 | -6.82 |      -3.79 | -0.97 |   -0.39 |      78% |
+| 2023 | 250 |         2.39 |        7.27 |  9.64 |      -4.88 |  0.80 |   -0.87 |      25% |
+| 2024 | 235 |         9.21 |       -0.54 |  8.66 |       9.75 |  2.65 |    1.80 |     106% |
+| 2025 | 250 |         3.47 |        3.91 |  7.27 |      -0.44 |  0.74 |   -0.05 |      48% |
+| 2026*| 219 |         5.01 |        0.34 |  5.35 |       4.67 |  1.33 |    0.81 |      93% |
+
+(* partial year, not counted.) Full years with mean overnight > 0: 9 of 10.
+
+### QQQ (2715 days, 2016-01-05 → 2026-11-13)
+
+| Series                 | bp/day | ann.   | t     | NW t  | sd bp  | share | worst  | −5best |
+| ---------------------- | ------ | ------ | ----- | ----- | ------ | ----- | ------ | ------ |
+| overnight (total)      |   4.93 |  12.4% |  3.00 |  3.25 |   85.8 |   63% |   -946 |   4.06 |
+| overnight (raw, no div) |   4.64 |  11.7% |  2.82 |  3.05 |   85.9 |   59% |   -946 |   3.77 |
+| intraday               |   2.91 |   7.3% |  1.38 |  1.54 |  110.2 |   37% |   -607 |   1.67 |
+| close-to-close         |   7.87 |  19.8% |  2.91 |  3.25 |  140.9 |  100% |  -1198 |   6.28 |
+| overnight − intraday   |   2.02 |   5.1% |  0.76 |  0.83 |  138.5 |       |  -1225 |   0.72 |
+
+Log-return share (information): overnight 66%, intraday 34%. Growth of $1: overnight 3.45, intraday 1.87, buy-and-hold 6.46.
+
+| Year | n   | overnight bp | intraday bp | cc bp | on − id bp | t(on) | t(diff) | on share |
+| ---- | --- | ------------ | ----------- | ----- | ---------- | ----- | ------- | -------- |
+| 2016 | 251 |         0.77 |        3.34 |  4.10 |      -2.57 |  0.19 |   -0.40 |      19% |
+| 2017 | 251 |         7.25 |        4.21 | 11.47 |       3.04 |  3.35 |    0.77 |      63% |
+| 2018 | 251 |         6.08 |       -5.03 |  0.99 |      11.11 |  1.32 |    1.16 |     614% |
+| 2019 | 252 |         5.74 |        7.80 | 13.58 |      -2.06 |  1.43 |   -0.34 |      42% |
+| 2020 | 253 |         9.92 |        7.95 | 18.21 |       1.98 |  1.03 |    0.16 |      55% |
+| 2021 | 252 |         6.21 |        4.05 | 10.28 |       2.16 |  1.53 |    0.31 |      60% |
+| 2022 | 251 |        -8.66 |       -4.91 | -13.58 |      -3.75 | -1.24 |   -0.29 |      64% |
+| 2023 | 250 |         4.56 |       13.61 | 18.14 |      -9.05 |  1.12 |   -1.20 |      25% |
+| 2024 | 235 |        11.86 |       -3.20 |  8.64 |      15.06 |  2.48 |    1.98 |     137% |
+| 2025 | 250 |         6.40 |        2.39 |  8.64 |       4.01 |  1.09 |    0.37 |      74% |
+| 2026*| 219 |         4.48 |        1.21 |  5.76 |       3.27 |  0.73 |    0.37 |      78% |
+
+(* partial year, not counted.) Full years with mean overnight > 0: 9 of 10.
+
+### IWM (2715 days, 2016-01-05 → 2026-11-13)
+
+| Series                 | bp/day | ann.   | t     | NW t  | sd bp  | share | worst  | −5best |
+| ---------------------- | ------ | ------ | ----- | ----- | ------ | ----- | ------ | ------ |
+| overnight (total)      |   6.04 |  15.2% |  3.53 |  3.51 |   89.1 |  120% |   -930 |   4.93 |
+| overnight (raw, no div) |   5.53 |  13.9% |  3.23 |  3.22 |   89.2 |  110% |   -930 |   4.42 |
+| intraday               |  -1.01 |  -2.5% | -0.47 | -0.52 |  112.0 |  -20% |   -585 |  -2.11 |
+| close-to-close         |   5.02 |  12.6% |  1.84 |  1.88 |  142.5 |  100% |  -1190 |   3.59 |
+| overnight − intraday   |   7.05 |  17.8% |  2.56 |  2.78 |  143.6 |       |  -1102 |   5.50 |
+
+Log-return share (information): overnight 141%, intraday -41%. Growth of $1: overnight 4.62, intraday 0.64, buy-and-hold 2.96.
+
+| Year | n   | overnight bp | intraday bp | cc bp | on − id bp | t(on) | t(diff) | on share |
+| ---- | --- | ------------ | ----------- | ----- | ---------- | ----- | ------- | -------- |
+| 2016 | 251 |         1.22 |        8.13 |  9.37 |      -6.90 |  0.31 |   -1.00 |      13% |
+| 2017 | 251 |         6.50 |       -0.77 |  5.71 |       7.27 |  2.58 |    1.46 |     114% |
+| 2018 | 251 |         4.91 |       -8.92 | -4.07 |      13.84 |  1.69 |    1.80 |    -121% |
+| 2019 | 252 |         7.10 |        2.36 |  9.49 |       4.74 |  2.16 |    0.80 |      75% |
+| 2020 | 253 |        13.26 |       -3.05 | 10.46 |      16.31 |  1.14 |    1.13 |     127% |
+| 2021 | 252 |        12.29 |       -6.00 |  6.28 |      18.29 |  2.65 |    2.09 |     196% |
+| 2022 | 251 |        -3.09 |       -4.49 | -7.57 |       1.40 | -0.53 |    0.13 |      41% |
+| 2023 | 250 |         4.24 |        2.78 |  7.02 |       1.46 |  0.96 |    0.18 |      60% |
+| 2024 | 235 |        11.91 |       -5.38 |  6.47 |      17.28 |  1.97 |    1.90 |     184% |
+| 2025 | 250 |         1.90 |        4.12 |  5.79 |      -2.22 |  0.32 |   -0.20 |      33% |
+| 2026*| 219 |         6.49 |        0.03 |  6.49 |       6.46 |  1.26 |    0.77 |     100% |
+
+(* partial year, not counted.) Full years with mean overnight > 0: 9 of 10.
+
+### Pass rule: "the effect exists"
+
+1. SPY overnight mean 3.87 bp, t 2.82 (need > 0, t ≥ 2.5): PASS
+2. SPY overnight − intraday 1.72 bp, t 0.81 (need > 0, t ≥ 2): FAIL
+3. QQQ overnight 4.93 bp, diff 2.02 bp; IWM overnight 6.04 bp, diff 7.05 bp (need all > 0): PASS
+4. SPY overnight positive in 9 of 10 full years (need ≥ 7): PASS
+
+**Effect exists: FAIL**
+
+## 2. Strategies (each-way cost per side; Sharpe on excess of BIL)
+
+Overnight-only and buy-and-hold are invested at every end of day, so excess = return − BIL. Intraday-only is in cash at every end of day, so it earns BIL and its excess is its return. CAGR uses 252 days a year. Skipped days are 0 for the strategies and excluded for buy-and-hold.
+
+### SPY
+
+| Strategy                       | CAGR   | vol    | Sharpe | t     | maxDD   | worst  | −5 best | time in mkt   |
+| ------------------------------ | ------ | ------ | ------ | ----- | ------- | ------ | ------- | ------------- |
+| buy-and-hold                   |  14.6% |  17.5% |   0.75 |  2.45 |  -33.8% | -10.8% |   10.8% |   100% / 100% |
+| overnight-only, zero 0 bp      |   9.5% |  11.3% |   0.67 |  2.21 |  -32.7% | -10.7% |    7.5% |      81% / 0% |
+| overnight-only, primary 1 bp   |   4.1% |  11.3% |   0.23 |  0.75 |  -33.0% | -10.8% |    2.2% |      81% / 0% |
+| overnight-only, stress 3 bp    |  -5.8% |  11.3% |  -0.66 | -2.17 |  -51.5% | -10.8% |   -7.6% |      81% / 0% |
+| intraday-only, zero 0 bp       |   4.6% |  13.3% |   0.41 |  1.34 |  -24.9% |  -5.4% |    2.0% |    19% / 100% |
+| intraday-only, primary 1 bp    |  -0.5% |  13.3% |   0.03 |  0.09 |  -28.2% |  -5.4% |   -3.0% |    19% / 100% |
+| intraday-only, stress 3 bp     | -10.0% |  13.3% |  -0.73 | -2.39 |  -70.3% |  -5.5% |  -12.3% |    19% / 100% |
+
+(time in market = share of clock hours / share of regular-session hours)
+
+Break-even each-way cost for overnight-only: mean return 0 at 1.93 bp per side; excess over BIL 0 at 1.51 bp; Sharpe equal to buy-and-hold's (0.75) never (its zero-cost Sharpe is already lower).
+
+| Year | B&H return | overnight 0 bp | overnight 1 bp | overnight 3 bp | intraday 0 bp |
+| ---- | ---------- | -------------- | -------------- | -------------- | ------------- |
+| 2016 |      13.6% |          -0.3% |          -5.2% |         -14.2% |         13.9% |
+| 2017 |      21.7% |          13.6% |           8.0% |          -2.3% |          7.2% |
+| 2018 |      -4.6% |          15.2% |           9.5% |          -0.9% |        -17.1% |
+| 2019 |      31.1% |          14.7% |           9.0% |          -1.4% |         14.4% |
+| 2020 |      18.4% |          10.6% |           5.2% |          -4.9% |          7.0% |
+| 2021 |      28.6% |          17.6% |          11.8% |           1.1% |          9.3% |
+| 2022 |     -18.2% |         -13.3% |         -17.5% |         -25.4% |         -5.6% |
+| 2023 |      26.2% |           5.9% |           0.7% |          -8.9% |         19.2% |
+| 2024 |      21.6% |          23.7% |          18.1% |           7.5% |         -1.7% |
+| 2025 |      17.7% |           8.3% |           3.0% |          -6.8% |          8.7% |
+| 2026 |      11.5% |          11.2% |           6.4% |          -2.5% |          0.3% |
+
+### QQQ
+
+| Strategy                       | CAGR   | vol    | Sharpe | t     | maxDD   | worst  | −5 best | time in mkt   |
+| ------------------------------ | ------ | ------ | ------ | ----- | ------- | ------ | ------- | ------------- |
+| buy-and-hold                   |  18.9% |  22.4% |   0.79 |  2.60 |  -35.0% | -12.0% |   14.4% |   100% / 100% |
+| overnight-only, zero 0 bp      |  12.2% |  13.6% |   0.76 |  2.48 |  -27.3% |  -9.5% |    9.8% |      81% / 0% |
+| overnight-only, primary 1 bp   |   6.7% |  13.6% |   0.39 |  1.27 |  -30.7% |  -9.5% |    4.4% |      81% / 0% |
+| overnight-only, stress 3 bp    |  -3.6% |  13.6% |  -0.35 | -1.16 |  -41.7% |  -9.5% |   -5.6% |      81% / 0% |
+| intraday-only, zero 0 bp       |   6.0% |  17.5% |   0.42 |  1.38 |  -24.7% |  -6.1% |    2.8% |    19% / 100% |
+| intraday-only, primary 1 bp    |   0.8% |  17.5% |   0.13 |  0.43 |  -28.2% |  -6.1% |   -2.2% |    19% / 100% |
+| intraday-only, stress 3 bp     |  -8.9% |  17.5% |  -0.44 | -1.46 |  -65.0% |  -6.1% |  -11.6% |    19% / 100% |
+
+(time in market = share of clock hours / share of regular-session hours)
+
+Break-even each-way cost for overnight-only: mean return 0 at 2.47 bp per side; excess over BIL 0 at 2.04 bp; Sharpe equal to buy-and-hold's (0.79) never (its zero-cost Sharpe is already lower).
+
+| Year | B&H return | overnight 0 bp | overnight 1 bp | overnight 3 bp | intraday 0 bp |
+| ---- | ---------- | -------------- | -------------- | -------------- | ------------- |
+| 2016 |       9.4% |           1.4% |          -3.5% |         -12.7% |          7.9% |
+| 2017 |      32.6% |          19.8% |          13.9% |           3.0% |         10.7% |
+| 2018 |      -0.1% |          15.7% |          10.0% |          -0.5% |        -13.7% |
+| 2019 |      39.0% |          15.0% |           9.3% |          -1.2% |         20.9% |
+| 2020 |      48.6% |          24.7% |          18.5% |           7.1% |         19.2% |
+| 2021 |      27.4% |          16.3% |          10.6% |          -0.0% |          9.5% |
+| 2022 |     -32.5% |         -20.8% |         -24.6% |         -31.8% |        -14.8% |
+| 2023 |      54.9% |          11.5% |           6.1% |          -4.0% |         38.9% |
+| 2024 |      20.6% |          31.3% |          25.2% |          14.0% |         -8.1% |
+| 2025 |      20.8% |          16.1% |          10.4% |          -0.1% |          4.0% |
+| 2026 |      11.0% |           9.3% |           4.6% |          -4.1% |          1.6% |
+
+### IWM
+
+| Strategy                       | CAGR   | vol    | Sharpe | t     | maxDD   | worst  | −5 best | time in mkt   |
+| ------------------------------ | ------ | ------ | ------ | ----- | ------- | ------ | ------- | ------------- |
+| buy-and-hold                   |  10.6% |  22.6% |   0.47 |  1.53 |  -41.3% | -11.9% |    6.8% |   100% / 100% |
+| overnight-only, zero 0 bp      |  15.3% |  14.1% |   0.93 |  3.04 |  -31.3% |  -9.3% |   12.2% |      81% / 0% |
+| overnight-only, primary 1 bp   |   9.6% |  14.1% |   0.57 |  1.87 |  -31.7% |  -9.3% |    6.7% |      81% / 0% |
+| overnight-only, stress 3 bp    |  -0.9% |  14.1% |  -0.14 | -0.47 |  -40.8% |  -9.4% |   -3.5% |      81% / 0% |
+| intraday-only, zero 0 bp       |  -4.0% |  17.8% |  -0.14 | -0.47 |  -57.5% |  -5.9% |   -6.6% |    19% / 100% |
+| intraday-only, primary 1 bp    |  -8.8% |  17.8% |  -0.43 | -1.40 |  -71.8% |  -5.9% |  -11.2% |    19% / 100% |
+| intraday-only, stress 3 bp     | -17.5% |  17.8% |  -0.99 | -3.26 |  -88.9% |  -5.9% |  -19.7% |    19% / 100% |
+
+(time in market = share of clock hours / share of regular-session hours)
+
+Break-even each-way cost for overnight-only: mean return 0 at 3.02 bp per side; excess over BIL 0 at 2.60 bp; Sharpe equal to buy-and-hold's (0.47) at 1.29 bp.
+
+| Year | B&H return | overnight 0 bp | overnight 1 bp | overnight 3 bp | intraday 0 bp |
+| ---- | ---------- | -------------- | -------------- | -------------- | ------------- |
+| 2016 |      24.5% |           2.6% |          -2.4% |         -11.7% |         21.3% |
+| 2017 |      14.6% |          17.5% |          11.7% |           1.0% |         -2.4% |
+| 2018 |     -11.1% |          12.8% |           7.3% |          -3.0% |        -21.2% |
+| 2019 |      25.4% |          19.2% |          13.3% |           2.5% |          5.2% |
+| 2020 |      20.2% |          33.9% |          27.3% |          15.0% |        -10.2% |
+| 2021 |      14.3% |          35.3% |          28.7% |          16.4% |        -15.5% |
+| 2022 |     -20.5% |          -8.5% |         -12.9% |         -21.3% |        -13.1% |
+| 2023 |      16.8% |          10.5% |           5.1% |          -4.9% |          5.7% |
+| 2024 |      14.1% |          30.9% |          24.9% |          13.7% |        -12.9% |
+| 2025 |      12.7% |           3.7% |          -1.4% |         -10.7% |          8.6% |
+| 2026 |      13.5% |          14.5% |           9.6% |           0.4% |         -0.9% |
+
+### Pass rule: "worth trading"
+
+SPY overnight-only Sharpe at primary 1 bp 0.23 vs buy-and-hold 0.75: **FAIL**. (QQQ 0.39 vs 0.79, IWM 0.57 vs 0.47, information.)
+
+## 3. Information only
+
+### 3a. Weekend/holiday nights vs single weeknights (overnight total, no costs)
+
+| Ticker | weeknights n | bp/night | t    | weekend n | bp/night | t    | weekend bp per calendar day |
+| ------ | ------------ | -------- | ---- | --------- | -------- | ---- | --------------------------- |
+| SPY    |         2126 |     4.65 | 3.26 |       589 |     1.04 | 0.28 |                        0.34 |
+|        | (intraday after weeknight 1.02 bp, after weekend 6.24 bp)
+| QQQ    |         2126 |     5.88 | 3.31 |       589 |     1.52 | 0.38 |                        0.49 |
+|        | (intraday after weeknight 0.38 bp, after weekend 12.06 bp)
+| IWM    |         2126 |     6.07 | 3.33 |       589 |     5.90 | 1.36 |                        1.92 |
+|        | (intraday after weeknight -1.41 bp, after weekend 0.42 bp)
+
+### 3b. Overnight split: after-hours, 20:00 → 04:00 residual (incl. dividend), pre-market (no costs)
+
+| Ticker | n    | after-hours bp | t     | residual bp | t     | pre-market bp | t     | sum bp | sd AH / res / PM bp |
+| ------ | ---- | -------------- | ----- | ----------- | ----- | ------------- | ----- | ------ | ------------------- |
+| SPY    | 2715 |           0.45 |  0.78 |        1.94 |  2.20 |          1.47 |  1.74 |   3.86 | 30 / 46 / 44 |
+| QQQ    | 2715 |           1.09 |  1.54 |        3.69 |  3.56 |          0.14 |  0.14 |   4.92 | 37 / 54 / 53 |
+| IWM    | 2715 |           0.60 |  0.93 |        3.05 |  2.71 |          2.39 |  2.09 |   6.04 | 33 / 59 / 60 |
+
+By year, SPY (bp/night):
+
+| Year | after-hours | residual | pre-market | intraday |
+| ---- | ----------- | -------- | ---------- | -------- |
+| 2016 |        0.12 |     0.59 |      -0.64 |     5.37 |
+| 2017 |       -0.85 |     1.87 |       4.10 |     2.81 |
+| 2018 |       -0.36 |     4.61 |       1.53 |    -7.02 |
+| 2019 |       -1.13 |     5.25 |       1.44 |     5.49 |
+| 2020 |        2.87 |     1.02 |       1.12 |     3.41 |
+| 2021 |        1.90 |     0.87 |       3.79 |     3.75 |
+| 2022 |        0.16 |    -0.84 |      -4.59 |    -1.52 |
+| 2023 |        0.44 |     1.16 |       0.82 |     7.27 |
+| 2024 |       -0.56 |     5.27 |       4.47 |    -0.54 |
+| 2025 |        0.88 |     1.47 |       1.10 |     3.91 |
+| 2026 |        1.50 |     0.00 |       3.52 |     0.34 |
+
+### 3c. Timing variants of the overnight trade (configs 5–8)
+
+| Ticker | Variant                       | n    | gross bp | t     | Sharpe 0 | Sharpe 1 bp | Sharpe 3 bp | CAGR 1 bp | break-even bp |
+| ------ | ----------------------------- | ---- | -------- | ----- | -------- | ----------- | ----------- | --------- | ------------- |
+| SPY    | P: 16:00 auction → 09:30      | 2715 |     3.87 |  2.82 |     0.67 |        0.23 |       -0.66 |      4.1% |          1.93 |
+| SPY    | 2: P without dividend         | 2715 |     3.23 |  2.35 |     0.53 |        0.09 |       -0.80 |      2.5% |          1.62 |
+| SPY    | 5: 15:59 open → 09:30         | 2714 |     4.23 |  3.08 |     0.75 |        0.31 |       -0.58 |      5.1% |          2.11 |
+| SPY    | 6: 16:01+ → 09:30             | 2715 |     3.83 |  2.78 |     0.66 |        0.22 |       -0.67 |      4.0% |          1.91 |
+| SPY    | 7: 16:00 auction → 09:31+     | 2715 |     4.24 |  3.10 |     0.76 |        0.31 |       -0.58 |      5.1% |          2.12 |
+| SPY    | 8: 16:01+ → 09:31+            | 2715 |     4.20 |  3.06 |     0.75 |        0.30 |       -0.59 |      5.0% |          2.10 |
+|        | late fills > 5 min: 16:01 entry 1, 09:31 exit 1; no print 16:01–20:00 0 |
+| QQQ    | P: 16:00 auction → 09:30      | 2715 |     4.93 |  3.00 |     0.76 |        0.39 |       -0.35 |      6.7% |          2.47 |
+| QQQ    | 2: P without dividend         | 2715 |     4.64 |  2.82 |     0.70 |        0.33 |       -0.41 |      5.9% |          2.32 |
+| QQQ    | 5: 15:59 open → 09:30         | 2715 |     5.18 |  3.16 |     0.81 |        0.43 |       -0.31 |      7.4% |          2.59 |
+| QQQ    | 6: 16:01+ → 09:30             | 2715 |     4.43 |  2.69 |     0.66 |        0.29 |       -0.45 |      5.3% |          2.21 |
+| QQQ    | 7: 16:00 auction → 09:31+     | 2715 |     5.35 |  3.23 |     0.83 |        0.46 |       -0.27 |      7.8% |          2.67 |
+| QQQ    | 8: 16:01+ → 09:31+            | 2715 |     4.84 |  2.93 |     0.74 |        0.37 |       -0.37 |      6.4% |          2.42 |
+|        | late fills > 5 min: 16:01 entry 0, 09:31 exit 1; no print 16:01–20:00 0 |
+| IWM    | P: 16:00 auction → 09:30      | 2715 |     6.04 |  3.53 |     0.93 |        0.57 |       -0.14 |      9.6% |          3.02 |
+| IWM    | 2: P without dividend         | 2715 |     5.53 |  3.23 |     0.83 |        0.48 |       -0.23 |      8.2% |          2.77 |
+| IWM    | 5: 15:59 open → 09:30         | 2714 |     6.51 |  3.82 |     1.01 |        0.66 |       -0.06 |     10.9% |          3.26 |
+| IWM    | 6: 16:01+ → 09:30             | 2715 |     5.75 |  3.38 |     0.88 |        0.52 |       -0.20 |      8.8% |          2.87 |
+| IWM    | 7: 16:00 auction → 09:31+     | 2715 |     6.38 |  3.62 |     0.96 |        0.61 |       -0.08 |     10.5% |          3.19 |
+| IWM    | 8: 16:01+ → 09:31+            | 2715 |     6.10 |  3.48 |     0.91 |        0.57 |       -0.13 |      9.7% |          3.05 |
+|        | late fills > 5 min: 16:01 entry 1, 09:31 exit 1; no print 16:01–20:00 0 |
+
+### 3d. Return per unit of variance (daily mean / daily variance; no costs)
+
+| Ticker | overnight mean/var | intraday mean/var | cc mean/var | var share overnight | sd on / id / cc bp |
+| ------ | ------------------ | ----------------- | ----------- | ------------------- | ------------------ |
+| SPY    |               7.57 |              3.06 |        4.95 |                 42% | 71 / 84 / 110 |
+| QQQ    |               6.70 |              2.40 |        3.96 |                 38% | 86 / 110 / 141 |
+| IWM    |               7.60 |             -0.80 |        2.47 |                 39% | 89 / 112 / 142 |
+
+(If overnight return were compensation for overnight variance at the same price of risk as intraday, the two mean/var ratios would be equal.)
+
+### 3e. Price-source sensitivity (config 10, dated note 2; no costs)
+
+| Ticker | Prices                                   | n    | overnight bp (t) | intraday bp (t) | on − id bp (t) | on share |
+| ------ | ---------------------------------------- | ---- | ---------------- | --------------- | -------------- | -------- |
+| SPY    | official, data/daily-raw (primary)       | 2715 |      3.87 (2.82) |     2.15 (1.34) |    1.72 (0.81) |      64% |
+| SPY    | official, without imputed dividends      | 2715 |      3.83 (2.79) |     2.15 (1.34) |    1.68 (0.79) |      64% |
+| SPY    | dated note 1 (derived from adjusted)     | 2715 |      3.87 (2.82) |     2.16 (1.34) |    1.71 (0.81) |      64% |
+| SPY    | minute prints: 16:00 bar open, 09:30 open | 2713 |      4.03 (2.90) |     1.99 (1.23) |    2.04 (0.97) |      67% |
+| QQQ    | official, data/daily-raw (primary)       | 2715 |      4.93 (3.00) |     2.91 (1.38) |    2.02 (0.76) |      63% |
+| QQQ    | official, without imputed dividends      | 2715 |      4.93 (3.00) |     2.91 (1.38) |    2.02 (0.76) |      63% |
+| QQQ    | dated note 1 (derived from adjusted)     | 2715 |      4.93 (2.99) |     2.92 (1.38) |    2.01 (0.75) |      63% |
+| QQQ    | minute prints: 16:00 bar open, 09:30 open | 2715 |      4.98 (3.02) |     2.87 (1.35) |    2.12 (0.80) |      63% |
+| IWM    | official, data/daily-raw (primary)       | 2715 |      6.04 (3.53) |   -1.01 (-0.47) |    7.05 (2.56) |     120% |
+| IWM    | official, without imputed dividends      | 2715 |      6.04 (3.53) |   -1.01 (-0.47) |    7.05 (2.56) |     120% |
+| IWM    | dated note 1 (derived from adjusted)     | 2715 |      6.03 (3.52) |   -1.00 (-0.47) |    7.03 (2.55) |     120% |
+| IWM    | minute prints: 16:00 bar open, 09:30 open | 2713 |      5.97 (3.45) |   -0.92 (-0.43) |    6.89 (2.49) |     118% |

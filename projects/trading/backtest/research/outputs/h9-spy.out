@@ -1,0 +1,384 @@
+# H9 put-write — SPY — snapshots 2020-01-02 → 2026-11-13; months 2020-01 → 2026-10 (82)
+
+SPY: 1710 of 1727 trading days have a chain file; missing: 2024-01-02 2024-01-03 2024-01-04 2024-01-05 2024-01-08 2024-01-09 2024-01-10 2024-01-11 2024-01-12 2024-01-16 2024-01-17 2024-01-18 2024-01-19 2024-01-22 2024-01-23 2024-01-24 2024-06-21
+  trace C1 SPY: 2020-01-02 S=324.10 sell 2020-01-31 324 credit 3.520 (3.52x3.55) -> 2020-01-27 dte cost 2.660 (2.65x2.66) pnl/contract $85.90
+  trace C1 SPY: 2020-01-27 S=323.95 sell 2020-02-26 323 credit 5.200 (5.2x5.24) -> 2020-02-21 dte cost 0.290 (0.28x0.29) pnl/contract $490.90
+  trace C1 SPY: 2020-02-21 S=332.91 sell 2020-03-23 332 credit 5.640 (5.64x5.69) -> 2020-03-23 expiry cost 109.320 (none) pnl/contract $-10368.05
+  trace C1 SPY: 2020-03-23 S=221.13 sell 2020-04-22 221 credit 14.440 (14.44x14.72) -> 2020-04-17 dte cost 0.010 (0x0.01) pnl/contract $1442.90
+  trace C1 SPY: 2020-04-17 S=285.55 sell 2020-05-18 285 credit 10.580 (10.58x10.66) -> 2020-05-13 dte cost 6.390 (6.33x6.39) pnl/contract $418.90
+  trace C1 SPY: 2020-05-13 S=280.53 sell 2020-06-12 280 credit 10.070 (10.07x10.14) -> 2020-06-08 dte cost 0.040 (0.03x0.04) pnl/contract $1002.90
+  trace C1 SPY: 2020-06-08 S=322.54 sell 2020-07-08 322 credit 8.040 (8.04x8.14) -> 2020-07-02 dte cost 9.680 (9.36x9.68) pnl/contract $-164.10
+  trace C1 SPY: 2020-07-02 S=312.68 sell 2020-07-31 312 credit 7.600 (7.6x7.64) -> 2020-07-27 dte cost 0.460 (0.45x0.46) pnl/contract $713.90
+  trace C1 SPY: 2020-07-27 S=323.21 sell 2020-08-26 323 credit 7.290 (7.29x7.33) -> 2020-08-21 dte cost 0.160 (0.15x0.16) pnl/contract $712.90
+  trace C1 SPY: 2020-08-21 S=339.21 sell 2020-09-21 339 credit 6.920 (6.92x6.99) -> 2020-09-16 dte cost 3.340 (3.29x3.34) pnl/contract $357.90
+  trace C1 SPY: 2020-09-16 S=339.72 sell 2020-10-16 339 credit 8.420 (8.42x8.47) -> 2020-10-12 dte cost 0.310 (0.3x0.31) pnl/contract $810.90
+  trace C1 SPY: 2020-10-12 S=352.89 sell 2020-11-11 352 credit 8.150 (8.15x8.23) -> 2020-11-06 dte cost 3.880 (3.86x3.88) pnl/contract $426.90
+  trace C1 SPY: 2020-11-06 S=350.92 sell 2020-12-07 350 credit 8.000 (8x8.09) -> 2020-12-02 dte cost 0.160 (0.15x0.16) pnl/contract $783.90
+  trace C1 SPY: 2020-12-02 S=366.74 sell 2020-12-31 366 credit 7.220 (7.22x7.25) -> 2020-12-24 dte cost 1.870 (1.85x1.87) pnl/contract $534.90
+  trace C1 SPY: 2020-12-24 S=368.33 sell 2021-01-22 368 credit 6.860 (6.86x6.89) -> 2021-01-15 dte cost 1.520 (1.51x1.52) pnl/contract $533.90
+  trace C1 SPY: 2021-01-15 S=375.69 sell 2021-02-12 375 credit 7.620 (7.62x7.67) -> 2021-02-08 dte cost 0.190 (0.18x0.19) pnl/contract $742.90
+  trace C1 SPY: 2021-02-08 S=389.70 sell 2021-03-10 389 credit 7.020 (7.02x7.09) -> 2021-03-05 dte cost 6.260 (6.21x6.26) pnl/contract $75.90
+  trace C1 SPY: 2021-03-05 S=384.02 sell 2021-04-05 380 credit 7.360 (7.36x7.47) -> 2021-03-31 dte cost 0.090 (0.08x0.09) pnl/contract $726.90
+  trace C1 SPY: 2021-03-31 S=396.72 sell 2021-04-30 396 credit 6.460 (6.46x6.5) -> 2021-04-26 dte cost 0.060 (0.05x0.06) pnl/contract $639.90
+  trace C1 SPY: 2021-04-26 S=417.79 sell 2021-05-26 417 credit 6.400 (6.4x6.49) -> 2021-05-21 dte cost 3.350 (3.32x3.35) pnl/contract $304.90
+  trace C1 SPY: 2021-05-21 S=415.13 sell 2021-06-21 415 credit 7.620 (7.62x7.8) -> 2021-06-16 dte cost 1.010 (1x1.01) pnl/contract $660.90
+  trace C1 SPY: 2021-06-16 S=422.80 sell 2021-07-16 422 credit 6.270 (6.27x6.34) -> 2021-07-12 dte cost 0.210 (0.2x0.21) pnl/contract $605.90
+  trace C1 SPY: 2021-07-12 S=436.99 sell 2021-08-11 436 credit 5.420 (5.42x5.46) -> 2021-08-06 dte cost 0.380 (0.37x0.38) pnl/contract $503.90
+  trace C1 SPY: 2021-08-06 S=442.18 sell 2021-09-03 442 credit 5.780 (5.78x5.79) -> 2021-08-30 dte cost 0.230 (0.22x0.23) pnl/contract $554.90
+  trace C1 SPY: 2021-08-30 S=452.45 sell 2021-09-29 450 credit 5.410 (5.41x5.52) -> 2021-09-24 dte cost 5.950 (5.92x5.95) pnl/contract $-54.10
+  trace C1 SPY: 2021-09-24 S=444.40 sell 2021-10-25 444 credit 6.570 (6.57x6.6) -> 2021-10-20 dte cost 0.360 (0.35x0.36) pnl/contract $620.90
+  trace C1 SPY: 2021-10-20 S=451.89 sell 2021-11-19 451 credit 5.880 (5.88x5.9) -> 2021-11-15 dte cost 0.120 (0.11x0.12) pnl/contract $575.90
+  trace C1 SPY: 2021-11-15 S=467.00 sell 2021-12-15 467 credit 6.860 (6.86x6.9) -> 2021-12-10 dte cost 1.800 (1.79x1.8) pnl/contract $505.90
+  trace C1 SPY: 2021-12-10 S=470.00 sell 2022-01-10 470 credit 8.000 (8x8.2) -> 2022-01-05 dte cost 2.840 (2.8x2.84) pnl/contract $515.90
+  trace C1 SPY: 2022-01-05 S=470.31 sell 2022-02-04 470 credit 7.990 (7.99x8.09) -> 2022-01-31 dte cost 22.020 (21.85x22.02) pnl/contract $-1403.10
+  trace C1 SPY: 2022-01-31 S=448.12 sell 2022-03-02 448 credit 10.520 (10.52x10.61) -> 2022-02-25 dte cost 11.850 (11.68x11.85) pnl/contract $-133.10
+  trace C1 SPY: 2022-02-25 S=436.95 sell 2022-03-28 436 credit 11.760 (11.76x11.84) -> 2022-03-23 dte cost 1.160 (1.15x1.16) pnl/contract $1059.90
+  trace C1 SPY: 2022-03-23 S=445.45 sell 2022-04-22 445 credit 9.510 (9.51x9.55) -> 2022-04-18 dte cost 9.440 (9.29x9.44) pnl/contract $6.90
+  trace C1 SPY: 2022-04-18 S=436.35 sell 2022-05-18 436 credit 9.690 (9.69x9.75) -> 2022-05-13 dte cost 34.670 (34.27x34.67) pnl/contract $-2498.10
+  trace C1 SPY: 2022-05-13 S=401.55 sell 2022-06-13 401 credit 11.800 (11.8x11.88) -> 2022-06-08 dte cost 0.810 (0.8x0.81) pnl/contract $1098.90
+  trace C1 SPY: 2022-06-08 S=411.96 sell 2022-07-08 411 credit 10.500 (10.5x10.54) -> 2022-07-01 dte cost 30.030 (29.32x30.03) pnl/contract $-1953.10
+  trace C1 SPY: 2022-07-01 S=381.33 sell 2022-08-01 381 credit 10.530 (10.53x10.6) -> 2022-07-27 dte cost 0.290 (0.28x0.29) pnl/contract $1023.90
+  trace C1 SPY: 2022-07-27 S=402.36 sell 2022-08-26 402 credit 9.140 (9.14x9.19) -> 2022-08-22 dte cost 1.030 (1.02x1.03) pnl/contract $810.90
+  trace C1 SPY: 2022-08-22 S=412.42 sell 2022-09-21 412 credit 10.300 (10.3x10.42) -> 2022-09-16 dte cost 26.360 (26.04x26.36) pnl/contract $-1606.10
+  trace C1 SPY: 2022-09-16 S=385.83 sell 2022-10-17 385 credit 10.190 (10.19x10.24) -> 2022-10-12 dte cost 27.070 (26.85x27.07) pnl/contract $-1688.10
+  trace C1 SPY: 2022-10-12 S=358.06 sell 2022-11-11 358 credit 12.150 (12.15x12.19) -> 2022-11-07 dte cost 0.240 (0.23x0.24) pnl/contract $1190.90
+  trace C1 SPY: 2022-11-07 S=380.13 sell 2022-12-07 380 credit 9.460 (9.46x9.5) -> 2022-12-02 dte cost 0.030 (0.02x0.03) pnl/contract $942.90
+  trace C1 SPY: 2022-12-02 S=406.31 sell 2022-12-30 406 credit 8.110 (8.11x8.15) -> 2022-12-23 dte cost 23.870 (23.72x23.87) pnl/contract $-1576.10
+  trace C1 SPY: 2022-12-23 S=382.19 sell 2023-01-20 382 credit 7.800 (7.8x7.83) -> 2023-01-13 dte cost 0.190 (0.18x0.19) pnl/contract $760.90
+  trace C1 SPY: 2023-01-13 S=398.78 sell 2023-02-10 398 credit 6.430 (6.43x6.46) -> 2023-02-06 dte cost 0.410 (0.4x0.41) pnl/contract $601.90
+  trace C1 SPY: 2023-02-06 S=409.71 sell 2023-03-10 409 credit 7.500 (7.5x7.52) -> 2023-03-06 dte cost 5.880 (5.87x5.88) pnl/contract $161.90
+  trace C1 SPY: 2023-03-06 S=404.62 sell 2023-04-06 404 credit 7.810 (7.81x7.84) -> 2023-03-31 dte cost 1.460 (1.45x1.46) pnl/contract $634.90
+  trace C1 SPY: 2023-03-31 S=408.13 sell 2023-04-28 408 credit 6.770 (6.77x6.79) -> 2023-04-24 dte cost 1.010 (1x1.01) pnl/contract $575.90
+  trace C1 SPY: 2023-04-24 S=412.29 sell 2023-05-26 412 credit 6.290 (6.29x6.31) -> 2023-05-22 dte cost 0.620 (0.61x0.62) pnl/contract $566.90
+  trace C1 SPY: 2023-05-22 S=418.77 sell 2023-06-23 418 credit 6.360 (6.36x6.39) -> 2023-06-16 dte cost 0.070 (0.06x0.07) pnl/contract $628.90
+  trace C1 SPY: 2023-06-16 S=439.90 sell 2023-07-14 439 credit 4.540 (4.54x4.55) -> 2023-07-10 dte cost 2.330 (2.32x2.33) pnl/contract $220.90
+  trace C1 SPY: 2023-07-10 S=438.87 sell 2023-08-11 438 credit 5.400 (5.4x5.41) -> 2023-08-07 dte cost 0.280 (0.27x0.28) pnl/contract $511.90
+  trace C1 SPY: 2023-08-07 S=450.05 sell 2023-09-08 450 credit 6.040 (6.04x6.06) -> 2023-09-01 dte cost 1.620 (1.61x1.62) pnl/contract $441.90
+  trace C1 SPY: 2023-09-01 S=450.97 sell 2023-09-29 450 credit 5.020 (5.02x5.03) -> 2023-09-25 dte cost 18.950 (18.71x18.95) pnl/contract $-1393.10
+  trace C1 SPY: 2023-09-25 S=431.17 sell 2023-10-27 431 credit 6.820 (6.82x6.84) -> 2023-10-23 dte cost 10.310 (10.19x10.31) pnl/contract $-349.10
+  trace C1 SPY: 2023-10-23 S=420.92 sell 2023-11-24 420 credit 7.630 (7.63x7.66) -> 2023-11-20 dte cost 0.030 (0.02x0.03) pnl/contract $759.90
+  trace C1 SPY: 2023-11-20 S=454.92 sell 2023-12-22 454 credit 5.410 (5.41x5.43) -> 2023-12-18 dte cost 0.070 (0.06x0.07) pnl/contract $533.90
+  trace C1 SPY: 2023-12-18 S=472.37 sell 2024-01-19 472 credit 4.750 (4.75x4.76) -> 2023-12-29 dte cost 2.840 (2.83x2.84) pnl/contract $190.90
+  trace C1 SPY: 2023-12-29 S=475.31 sell 2024-01-26 475 credit 4.560 (4.56x4.59) -> 2024-01-25 dte cost 0.020 (0.01x0.02) pnl/contract $453.90
+  trace C1 SPY: 2024-01-25 S=487.00 sell 2024-02-23 486 credit 4.770 (4.77x4.79) -> 2024-02-16 dte cost 0.310 (0.3x0.31) pnl/contract $445.90
+  trace C1 SPY: 2024-02-16 S=499.62 sell 2024-03-15 499 credit 5.880 (5.88x5.9) -> 2024-03-11 dte cost 0.680 (0.67x0.68) pnl/contract $519.90
+  trace C1 SPY: 2024-03-11 S=511.35 sell 2024-04-12 511 credit 7.190 (7.19x7.23) -> 2024-04-08 dte cost 1.040 (1.02x1.04) pnl/contract $614.90
+  trace C1 SPY: 2024-04-08 S=518.62 sell 2024-05-10 518 credit 6.700 (6.7x6.74) -> 2024-05-06 dte cost 3.650 (3.6x3.65) pnl/contract $304.90
+  trace C1 SPY: 2024-05-06 S=515.50 sell 2024-06-07 515 credit 6.160 (6.16x6.19) -> 2024-06-03 dte cost 0.310 (0.3x0.31) pnl/contract $584.90
+  trace C1 SPY: 2024-06-03 S=525.95 sell 2024-07-05 525 credit 6.430 (6.43x6.46) -> 2024-07-01 dte cost 0.040 (0.03x0.04) pnl/contract $638.90
+  trace C1 SPY: 2024-07-01 S=544.74 sell 2024-07-31 544 credit 5.100 (5.1x5.14) -> 2024-07-26 dte cost 3.700 (3.68x3.7) pnl/contract $139.90
+  trace C1 SPY: 2024-07-26 S=544.47 sell 2024-08-23 544 credit 7.630 (7.63x7.69) -> 2024-08-19 dte cost 0.270 (0.26x0.27) pnl/contract $735.90
+  trace C1 SPY: 2024-08-19 S=558.26 sell 2024-09-20 558 credit 7.370 (7.37x7.39) -> 2024-09-16 dte cost 2.880 (2.87x2.88) pnl/contract $448.90
+  trace C1 SPY: 2024-09-16 S=562.68 sell 2024-10-18 562 credit 8.570 (8.57x8.6) -> 2024-10-14 dte cost 0.190 (0.18x0.19) pnl/contract $837.90
+  trace C1 SPY: 2024-10-14 S=584.78 sell 2024-11-15 584 credit 9.320 (9.32x9.34) -> 2024-11-11 dte cost 0.330 (0.32x0.33) pnl/contract $898.90
+  trace C1 SPY: 2024-11-11 S=598.27 sell 2024-12-13 598 credit 7.230 (7.23x7.27) -> 2024-12-09 dte cost 0.780 (0.77x0.78) pnl/contract $644.90
+  trace C1 SPY: 2024-12-09 S=604.34 sell 2025-01-10 604 credit 7.070 (7.07x7.12) -> 2025-01-06 dte cost 9.690 (9.56x9.69) pnl/contract $-262.10
+  trace C1 SPY: 2025-01-06 S=594.58 sell 2025-02-07 594 credit 8.250 (8.25x8.3) -> 2025-02-03 dte cost 3.430 (3.4x3.43) pnl/contract $481.90
+  trace C1 SPY: 2025-02-03 S=598.27 sell 2025-03-07 598 credit 9.480 (9.48x9.53) -> 2025-03-03 dte cost 18.080 (17.67x18.08) pnl/contract $-860.10
+  trace C1 SPY: 2025-03-03 S=580.58 sell 2025-03-31 580 credit 12.220 (12.22x12.27) -> 2025-03-26 dte cost 12.030 (11.93x12.03) pnl/contract $18.90
+  trace C1 SPY: 2025-03-26 S=568.36 sell 2025-04-25 568 credit 9.600 (9.6x9.65) -> 2025-04-21 dte cost 56.610 (55.16x56.61) pnl/contract $-4701.10
+  trace C1 SPY: 2025-04-21 S=512.22 sell 2025-05-23 512 credit 17.080 (17.08x17.18) -> 2025-05-19 dte cost 0.030 (0.02x0.03) pnl/contract $1704.90
+  trace C1 SPY: 2025-05-19 S=593.75 sell 2025-06-20 593 credit 10.000 (10x10.03) -> 2025-06-16 dte cost 1.660 (1.64x1.66) pnl/contract $833.90
+  trace C1 SPY: 2025-06-16 S=602.25 sell 2025-07-18 602 credit 10.310 (10.31x10.34) -> 2025-07-14 dte cost 0.200 (0.19x0.2) pnl/contract $1010.90
+  trace C1 SPY: 2025-07-14 S=624.44 sell 2025-08-15 620 credit 7.950 (7.95x7.98) -> 2025-08-11 dte cost 0.600 (0.59x0.6) pnl/contract $734.90
+  trace C1 SPY: 2025-08-11 S=636.07 sell 2025-09-12 636 credit 8.620 (8.62x8.68) -> 2025-09-08 dte cost 0.620 (0.61x0.62) pnl/contract $799.90
+  trace C1 SPY: 2025-09-08 S=648.13 sell 2025-10-10 648 credit 8.930 (8.93x8.97) -> 2025-10-06 dte cost 0.270 (0.26x0.27) pnl/contract $865.90
+  trace C1 SPY: 2025-10-06 S=671.86 sell 2025-11-07 671 credit 9.220 (9.22x9.25) -> 2025-11-03 dte cost 0.900 (0.88x0.9) pnl/contract $831.90
+  trace C1 SPY: 2025-11-03 S=683.16 sell 2025-12-05 683 credit 10.510 (10.51x10.56) -> 2025-12-01 dte cost 4.570 (4.49x4.57) pnl/contract $593.90
+  trace C1 SPY: 2025-12-01 S=680.98 sell 2025-12-31 680 credit 10.220 (10.22x10.4) -> 2025-12-26 dte cost 0.360 (0.35x0.36) pnl/contract $985.90
+  trace C1 SPY: 2025-12-26 S=690.45 sell 2026-01-23 690 credit 7.140 (7.14x7.17) -> 2026-01-16 dte cost 2.680 (2.66x2.68) pnl/contract $445.90
+  trace C1 SPY: 2026-01-16 S=692.01 sell 2026-02-13 692 credit 8.800 (8.8x8.84) -> 2026-02-09 dte cost 3.090 (3.08x3.09) pnl/contract $570.90
+  trace C1 SPY: 2026-02-09 S=694.61 sell 2026-03-13 694 credit 10.390 (10.39x10.43) -> 2026-03-09 dte cost 16.650 (16.09x16.65) pnl/contract $-626.10
+  trace C1 SPY: 2026-03-09 S=677.88 sell 2026-04-10 677 credit 15.120 (15.12x15.24) -> 2026-04-06 dte cost 18.950 (18.74x18.95) pnl/contract $-383.10
+  trace C1 SPY: 2026-04-06 S=658.27 sell 2026-05-08 658 credit 14.690 (14.69x14.75) -> 2026-05-04 dte cost 0.060 (0.05x0.06) pnl/contract $1462.90
+  trace C1 SPY: 2026-05-04 S=717.75 sell 2026-06-05 717 credit 11.690 (11.69x11.73) -> 2026-06-01 dte cost 0.110 (0.1x0.11) pnl/contract $1157.90
+  trace C1 SPY: 2026-06-01 S=759.02 sell 2026-06-30 759 credit 10.900 (10.9x10.93) -> 2026-06-25 dte cost 28.730 (25.22x28.73) pnl/contract $-1783.10
+  trace C1 SPY: 2026-06-25 S=731.96 sell 2026-07-24 731 credit 11.720 (11.72x11.76) -> 2026-07-20 dte cost 1.520 (1.5x1.52) pnl/contract $1019.90
+  trace C1 SPY: 2026-07-20 S=742.99 sell 2026-08-21 742 credit 11.650 (11.65x11.7) -> 2026-08-17 dte cost 0.110 (0.1x0.11) pnl/contract $1153.90
+  trace C1 SPY: 2026-08-17 S=772.98 sell 2026-09-18 772 credit 10.510 (10.51x10.55) -> 2026-09-14 dte cost 12.500 (12.23x12.5) pnl/contract $-199.10
+  trace C1 SPY: 2026-09-14 S=761.60 sell 2026-10-16 761 credit 11.400 (11.4x11.44) -> 2026-10-12 dte cost 0.360 (0.35x0.36) pnl/contract $1103.90
+  trace C1 SPY: 2026-10-12 S=777.77 sell 2026-11-13 777 credit 9.900 (9.9x9.93) -> 2026-11-09 dte cost 24.200 (21.82x24.2) pnl/contract $-1430.10
+  trace C1 SPY: 2026-11-09 S=753.95 sell 2026-12-11 753 credit 12.700 (12.7x12.77) -> 2026-11-13 dte cost 11.840 (11.78x11.84) pnl/contract $85.90
+## SPY
+
+Chain files used through 2026-11-13; gaps inside the sample: 17. Spot source so far (all tickers): {"bar":1710,"earlier":0,"parity":0,"none":0}
+
+### Benchmarks
+
+| series | CAGR | Sharpe | vol | max DD monthly (daily) | worst month | Feb–Mar 2020 | 2022 | Apr 2025 | alpha/mo vs SPY (HC t) | beta |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SPY total return | 14.74% | 0.74 | 16.8% | -23.9% | -12.6% 2020-03 | -19.5% | -18.2% | -0.9% | 0.000% (n/a) | 1.00 |
+| 50/50 SPY/BIL | 8.97% | 0.74 | 8.4% | -12.1% | -6.2% 2020-03 | -9.9% | -8.3% | -0.3% | 0.000% (n/a) | 0.50 |
+| BIL | 2.76% | n/a | 0.6% | -0.2% | -0.0% 2022-02 | 0.3% | 1.4% | 0.3% | 0.000% (n/a) | 0.00 |
+
+### C1 — ATM, 30d (25–45), exit 5d before expiry, cash-secured
+
+| series | CAGR | Sharpe | vol | max DD monthly (daily) | worst month | Feb–Mar 2020 | 2022 | Apr 2025 | alpha/mo vs SPY (HC t) | beta |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| primary | 7.04% | 0.41 | 11.9% | -26.1% (-31.1%) | -17.8% 2020-03 | -26.1% | -9.4% | -4.6% | -0.215% (-0.82) | 0.59 |
+| stress | 6.97% | 0.40 | 11.9% | -26.2% (-31.1%) | -17.8% 2020-03 | -26.2% | -9.5% | -4.6% | -0.221% (-0.84) | 0.59 |
+| harsh | 6.91% | 0.40 | 11.9% | -26.2% (-31.1%) | -17.8% 2020-03 | -26.2% | -9.6% | -4.6% | -0.226% (-0.86) | 0.59 |
+
+| regression (primary) | n | alpha/mo | alpha/yr | HC1 t | NW(3) t | SE alpha/mo | beta (t) | R² | resid sd/mo | Sharpe | ETF Sharpe |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| all months | 82 | -0.215% | -2.59% | -0.82 | -0.66 | 0.263% | 0.59 (6.7) | 0.71 | 1.85% | 0.41 | 0.74 |
+| 2020-01 → 2022-12 | 36 | -0.517% | -6.20% | -1.18 | -0.89 | 0.437% | 0.68 (6.0) | 0.76 | 2.32% | -0.02 | 0.41 |
+| 2023-01 → 2026-10 | 46 | 0.236% | 2.83% | 1.31 | 1.31 | 0.180% | 0.39 (8.4) | 0.63 | 1.08% | 1.45 | 1.25 |
+| 2021-01 → 2026-10 (2020 excluded) | 70 | 0.143% | 1.71% | 1.08 | 1.11 | 0.132% | 0.47 (14.1) | 0.79 | 1.06% | 0.89 | 0.77 |
+| all, vs 15:45-aligned SPY TR (info) | 82 | -0.213% | -2.56% | -0.80 | -0.66 | 0.266% | 0.59 (7.0) | 0.70 | 1.89% | | |
+| all, stress costs | 82 | -0.221% | -2.65% | -0.84 | -0.68 | 0.263% | 0.59 | 0.71 | | 0.40 | |
+| all, harsh costs | 82 | -0.226% | -2.71% | -0.86 | -0.69 | 0.263% | 0.59 | 0.71 | | 0.40 | |
+
+Rolls (primary, closed by 2026-10-30): 96; mean hold 25.8 days; mean credit $8.304 (1.81% of strike); mean exit cost $6.311; P&L per contract mean $199.20, per roll on capital 0.395% (t 1.01), win 80%, worst -31.2%.
+Data: entry attempts 99, skipped (no expiry in window) 0, skipped (no usable strike within 1%) 0, strike fallbacks 0, stale marks 7, exits delayed (no quote) 3, settled at expiry 1, proxy exits 0. Coverage = rolls without a skip: 100.0%.
+
+| year | strategy | SPY | 50/50 | BIL |
+| --- | --- | --- | --- | --- |
+| 2020 | -10.5% | 17.4% | 9.4% | 0.4% |
+| 2021 | 19.2% | 28.6% | 13.6% | -0.1% |
+| 2022 | -9.4% | -18.2% | -8.3% | 1.4% |
+| 2023 | 18.0% | 26.2% | 15.4% | 4.9% |
+| 2024 | 18.3% | 24.9% | 14.8% | 5.2% |
+| 2025 | 9.8% | 17.7% | 10.9% | 4.1% |
+| 2026 | 7.4% | 11.7% | 7.5% | 3.0% |
+
+Implied vs realised, SPY ATM, primary entries with known expiry (97 of 97 with a finite IV and an exit):
+
+- Entry put: bid $8.321, mid $8.347, ask $8.374; mean spread $0.053 (0.63% of mid); bid = 1.809% of strike.
+- Payoff at expiry from the official close: $6.412 (1.459% of strike). Bid − payoff: mean $1.909, t 0.88, bid > payoff in 76%.
+- Ask paid at the exit snapshot: $6.496. Bid − exit ask: mean $1.825, t 0.96.
+- IV (mid, BS, r = BIL trailing 2.66% avg, q = trailing div yield 1.49% avg): mean 16.7%; RV entry→exit 16.4%, entry→expiry 16.7%.
+- IV − RV(to exit): mean 0.29 vol pts, median 1.64, t 0.32, positive 62%. IV − RV(to expiry): mean -0.00, t -0.00, positive 61%.
+- By entry year (IV − RV to exit, vol pts; bid − payoff as % of strike): 2020 -1.1 / -0.27% (n 15); 2021 1.5 / 1.25% (n 14); 2022 -1.6 / -1.02% (n 15); 2023 1.8 / 0.33% (n 15); 2024 0.3 / 0.96% (n 13); 2025 0.2 / 0.90% (n 14); 2026 1.2 / 0.52% (n 11)
+
+### C2 — 2% OTM, 30d (25–45), exit 5d before expiry, cash-secured
+
+| series | CAGR | Sharpe | vol | max DD monthly (daily) | worst month | Feb–Mar 2020 | 2022 | Apr 2025 | alpha/mo vs SPY (HC t) | beta |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| primary | 5.99% | 0.35 | 10.4% | -26.2% (-30.3%) | -18.3% 2020-03 | -26.2% | -4.4% | -4.0% | -0.184% (-0.62) | 0.47 |
+| stress | 5.92% | 0.35 | 10.4% | -26.2% (-30.3%) | -18.3% 2020-03 | -26.2% | -4.5% | -4.0% | -0.189% (-0.63) | 0.47 |
+| harsh | 5.85% | 0.34 | 10.4% | -26.2% (-30.3%) | -18.3% 2020-03 | -26.2% | -4.5% | -4.0% | -0.194% (-0.65) | 0.47 |
+
+| regression (primary) | n | alpha/mo | alpha/yr | HC1 t | NW(3) t | SE alpha/mo | beta (t) | R² | resid sd/mo | Sharpe | ETF Sharpe |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| all months | 82 | -0.184% | -2.21% | -0.62 | -0.51 | 0.299% | 0.47 (4.7) | 0.58 | 1.95% | 0.35 | 0.74 |
+| 2020-01 → 2022-12 | 36 | -0.476% | -5.71% | -0.96 | -0.76 | 0.494% | 0.58 (4.5) | 0.67 | 2.52% | -0.05 | 0.41 |
+| 2023-01 → 2026-10 | 46 | 0.308% | 3.69% | 2.11 | 2.28 | 0.146% | 0.22 (7.0) | 0.47 | 0.84% | 1.78 | 1.25 |
+| 2021-01 → 2026-10 (2020 excluded) | 70 | 0.214% | 2.56% | 1.82 | 1.89 | 0.118% | 0.31 (10.4) | 0.70 | 0.89% | 1.10 | 0.77 |
+| all, vs 15:45-aligned SPY TR (info) | 82 | -0.179% | -2.14% | -0.60 | -0.50 | 0.298% | 0.47 (5.0) | 0.56 | 1.99% | | |
+| all, stress costs | 82 | -0.189% | -2.27% | -0.63 | -0.53 | 0.299% | 0.47 | 0.58 | | 0.35 | |
+| all, harsh costs | 82 | -0.194% | -2.33% | -0.65 | -0.54 | 0.299% | 0.47 | 0.58 | | 0.34 | |
+
+Rolls (primary, closed by 2026-10-30): 96; mean hold 25.8 days; mean credit $5.424 (1.23% of strike); mean exit cost $3.838; P&L per contract mean $158.46, per roll on capital 0.304% (t 0.85), win 88%, worst -30.5%.
+Data: entry attempts 99, skipped (no expiry in window) 0, skipped (no usable strike within 1%) 0, strike fallbacks 0, stale marks 6, exits delayed (no quote) 3, settled at expiry 1, proxy exits 0. Coverage = rolls without a skip: 100.0%.
+
+### C3 — 5% OTM, 30d (25–45), exit 5d before expiry, cash-secured
+
+| series | CAGR | Sharpe | vol | max DD monthly (daily) | worst month | Feb–Mar 2020 | 2022 | Apr 2025 | alpha/mo vs SPY (HC t) | beta |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| primary | 4.39% | 0.23 | 9.0% | -25.4% (-28.7%) | -18.7% 2020-03 | -25.4% | 3.0% | -2.5% | -0.181% (-0.55) | 0.34 |
+| stress | 4.33% | 0.22 | 9.0% | -25.4% (-28.7%) | -18.7% 2020-03 | -25.4% | 3.0% | -2.5% | -0.186% (-0.57) | 0.34 |
+| harsh | 4.26% | 0.21 | 9.0% | -25.4% (-28.7%) | -18.7% 2020-03 | -25.4% | 2.9% | -2.5% | -0.192% (-0.58) | 0.34 |
+
+| regression (primary) | n | alpha/mo | alpha/yr | HC1 t | NW(3) t | SE alpha/mo | beta (t) | R² | resid sd/mo | Sharpe | ETF Sharpe |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| all months | 82 | -0.181% | -2.17% | -0.55 | -0.47 | 0.329% | 0.34 (3.0) | 0.40 | 2.02% | 0.23 | 0.74 |
+| 2020-01 → 2022-12 | 36 | -0.411% | -4.94% | -0.75 | -0.61 | 0.551% | 0.45 (3.1) | 0.51 | 2.72% | -0.08 | 0.41 |
+| 2023-01 → 2026-10 | 46 | 0.276% | 3.32% | 2.99 | 3.38 | 0.092% | 0.07 (3.5) | 0.19 | 0.52% | 2.20 | 1.25 |
+| 2021-01 → 2026-10 (2020 excluded) | 70 | 0.250% | 3.00% | 3.09 | 3.50 | 0.081% | 0.15 (6.8) | 0.52 | 0.62% | 1.52 | 0.77 |
+| all, vs 15:45-aligned SPY TR (info) | 82 | -0.171% | -2.05% | -0.53 | -0.45 | 0.323% | 0.33 (3.2) | 0.37 | 2.06% | | |
+| all, stress costs | 82 | -0.186% | -2.23% | -0.57 | -0.48 | 0.329% | 0.34 | 0.40 | | 0.22 | |
+| all, harsh costs | 82 | -0.192% | -2.30% | -0.58 | -0.50 | 0.329% | 0.34 | 0.40 | | 0.21 | |
+
+Rolls (primary, closed by 2026-10-30): 96; mean hold 25.8 days; mean credit $2.988 (0.72% of strike); mean exit cost $2.034; P&L per contract mean $95.32, per roll on capital 0.174% (t 0.54), win 91%, worst -28.9%.
+Data: entry attempts 99, skipped (no expiry in window) 0, skipped (no usable strike within 1%) 0, strike fallbacks 0, stale marks 4, exits delayed (no quote) 3, settled at expiry 1, proxy exits 0. Coverage = rolls without a skip: 100.0%.
+
+### C4 — ATM, 45d (38–60), exit 5d before expiry, cash-secured
+
+| series | CAGR | Sharpe | vol | max DD monthly (daily) | worst month | Feb–Mar 2020 | 2022 | Apr 2025 | alpha/mo vs SPY (HC t) | beta |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| primary | 8.42% | 0.57 | 10.3% | -19.3% (-32.2%) | -10.6% 2020-02 | -19.1% | -9.8% | 0.2% | -0.079% (-0.47) | 0.55 |
+| stress | 8.38% | 0.57 | 10.3% | -19.3% (-32.2%) | -10.7% 2020-02 | -19.1% | -9.8% | 0.2% | -0.083% (-0.49) | 0.55 |
+| harsh | 8.33% | 0.57 | 10.3% | -19.3% (-32.2%) | -10.7% 2020-02 | -19.1% | -9.9% | 0.2% | -0.086% (-0.51) | 0.55 |
+
+| regression (primary) | n | alpha/mo | alpha/yr | HC1 t | NW(3) t | SE alpha/mo | beta (t) | R² | resid sd/mo | Sharpe | ETF Sharpe |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| all months | 82 | -0.079% | -0.95% | -0.47 | -0.45 | 0.168% | 0.55 (11.4) | 0.80 | 1.32% | 0.57 | 0.74 |
+| 2020-01 → 2022-12 | 36 | -0.147% | -1.77% | -0.52 | -0.52 | 0.285% | 0.63 (10.7) | 0.85 | 1.61% | 0.25 | 0.41 |
+| 2023-01 → 2026-10 | 46 | 0.163% | 1.96% | 1.25 | 1.30 | 0.130% | 0.37 (8.8) | 0.78 | 0.70% | 1.48 | 1.25 |
+| 2021-01 → 2026-10 (2020 excluded) | 70 | 0.068% | 0.82% | 0.50 | 0.64 | 0.136% | 0.48 (11.7) | 0.81 | 0.99% | 0.79 | 0.77 |
+| all, vs 15:45-aligned SPY TR (info) | 82 | -0.091% | -1.09% | -0.57 | -0.52 | 0.159% | 0.56 (11.5) | 0.83 | 1.23% | | |
+| all, stress costs | 82 | -0.083% | -0.99% | -0.49 | -0.47 | 0.168% | 0.55 | 0.80 | | 0.57 | |
+| all, harsh costs | 82 | -0.086% | -1.03% | -0.51 | -0.49 | 0.168% | 0.55 | 0.81 | | 0.57 | |
+
+Rolls (primary, closed by 2026-10-30): 63; mean hold 39.1 days; mean credit $10.375 (2.29% of strike); mean exit cost $7.290; P&L per contract mean $308.41, per roll on capital 0.665% (t 1.36), win 76%, worst -22.1%.
+Data: entry attempts 66, skipped (no expiry in window) 0, skipped (no usable strike within 1%) 0, strike fallbacks 0, stale marks 11, exits delayed (no quote) 4, settled at expiry 1, proxy exits 0. Coverage = rolls without a skip: 100.0%.
+
+### C5 — ATM, 30d (25–45), exit 50% of credit else 5d before expiry, cash-secured
+
+| series | CAGR | Sharpe | vol | max DD monthly (daily) | worst month | Feb–Mar 2020 | 2022 | Apr 2025 | alpha/mo vs SPY (HC t) | beta |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| primary | 8.78% | 0.58 | 11.0% | -21.4% (-28.8%) | -10.9% 2020-02 | -15.3% | -17.5% | -0.6% | -0.095% (-0.59) | 0.60 |
+| stress | 8.49% | 0.55 | 11.0% | -21.5% (-28.8%) | -10.9% 2020-02 | -15.4% | -17.6% | -0.6% | -0.118% (-0.74) | 0.60 |
+| harsh | 8.36% | 0.54 | 11.0% | -21.5% (-28.8%) | -10.9% 2020-02 | -15.4% | -17.7% | -0.6% | -0.128% (-0.80) | 0.60 |
+
+| regression (primary) | n | alpha/mo | alpha/yr | HC1 t | NW(3) t | SE alpha/mo | beta (t) | R² | resid sd/mo | Sharpe | ETF Sharpe |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| all months | 82 | -0.095% | -1.14% | -0.59 | -0.67 | 0.161% | 0.60 (11.8) | 0.84 | 1.25% | 0.58 | 0.74 |
+| 2020-01 → 2022-12 | 36 | -0.388% | -4.66% | -1.34 | -1.80 | 0.289% | 0.63 (8.8) | 0.85 | 1.61% | 0.06 | 0.41 |
+| 2023-01 → 2026-10 | 46 | 0.221% | 2.65% | 1.81 | 1.90 | 0.122% | 0.52 (15.1) | 0.86 | 0.74% | 1.54 | 1.25 |
+| 2021-01 → 2026-10 (2020 excluded) | 70 | -0.008% | -0.10% | -0.07 | -0.06 | 0.121% | 0.62 (18.5) | 0.90 | 0.91% | 0.71 | 0.77 |
+| all, vs 15:45-aligned SPY TR (info) | 82 | -0.113% | -1.36% | -0.86 | -0.84 | 0.132% | 0.62 (13.8) | 0.89 | 1.07% | | |
+| all, stress costs | 82 | -0.118% | -1.42% | -0.74 | -0.84 | 0.160% | 0.60 | 0.85 | | 0.55 | |
+| all, harsh costs | 82 | -0.128% | -1.53% | -0.80 | -0.91 | 0.160% | 0.60 | 0.85 | | 0.54 | |
+
+Rolls (primary, closed by 2026-10-30): 175; mean hold 14.1 days; mean credit $8.169 (1.79% of strike); mean exit cost $6.871; P&L per contract mean $129.70, per roll on capital 0.260% (t 1.50), win 84%, worst -16.3%.
+Data: entry attempts 179, skipped (no expiry in window) 0, skipped (no usable strike within 1%) 0, strike fallbacks 0, stale marks 1, exits delayed (no quote) 0, settled at expiry 0, proxy exits 0, take-profit exits 144. Coverage = rolls without a skip: 100.0%.
+
+### C6 — ATM, 30d (25–45), exit 21d before expiry, cash-secured
+
+| series | CAGR | Sharpe | vol | max DD monthly (daily) | worst month | Feb–Mar 2020 | 2022 | Apr 2025 | alpha/mo vs SPY (HC t) | beta |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| primary | 8.46% | 0.64 | 9.1% | -15.1% (-23.9%) | -9.2% 2020-02 | -14.5% | -7.9% | -3.4% | -0.043% (-0.36) | 0.51 |
+| stress | 8.25% | 0.62 | 9.1% | -15.1% (-24.0%) | -9.2% 2020-02 | -14.6% | -8.1% | -3.4% | -0.060% (-0.50) | 0.51 |
+| harsh | 8.03% | 0.60 | 9.1% | -15.2% (-24.0%) | -9.2% 2020-02 | -14.6% | -8.3% | -3.4% | -0.076% (-0.63) | 0.51 |
+
+| regression (primary) | n | alpha/mo | alpha/yr | HC1 t | NW(3) t | SE alpha/mo | beta (t) | R² | resid sd/mo | Sharpe | ETF Sharpe |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| all months | 82 | -0.043% | -0.52% | -0.36 | -0.38 | 0.121% | 0.51 (17.4) | 0.88 | 0.91% | 0.64 | 0.74 |
+| 2020-01 → 2022-12 | 36 | -0.070% | -0.84% | -0.35 | -0.40 | 0.200% | 0.55 (14.4) | 0.91 | 1.06% | 0.32 | 0.41 |
+| 2023-01 → 2026-10 | 46 | 0.072% | 0.86% | 0.60 | 0.53 | 0.119% | 0.42 (17.0) | 0.83 | 0.69% | 1.28 | 1.25 |
+| 2021-01 → 2026-10 (2020 excluded) | 70 | 0.027% | 0.32% | 0.30 | 0.29 | 0.091% | 0.47 (24.0) | 0.89 | 0.70% | 0.77 | 0.77 |
+| all, vs 15:45-aligned SPY TR (info) | 82 | -0.055% | -0.66% | -0.53 | -0.48 | 0.104% | 0.52 (18.4) | 0.91 | 0.79% | | |
+| all, stress costs | 82 | -0.060% | -0.72% | -0.50 | -0.52 | 0.121% | 0.51 | 0.88 | | 0.62 | |
+| all, harsh costs | 82 | -0.076% | -0.92% | -0.63 | -0.66 | 0.121% | 0.51 | 0.88 | | 0.60 | |
+
+Rolls (primary, closed by 2026-10-30): 314; mean hold 7.9 days; mean credit $8.415 (1.79% of strike); mean exit cost $7.849; P&L per contract mean $56.46, per roll on capital 0.128% (t 1.52), win 69%, worst -13.1%.
+Data: entry attempts 317, skipped (no expiry in window) 0, skipped (no usable strike within 1%) 0, strike fallbacks 0, stale marks 1, exits delayed (no quote) 0, settled at expiry 0, proxy exits 0. Coverage = rolls without a skip: 100.0%.
+
+### C7 — ATM, 45d (38–60), exit 21d before expiry, cash-secured
+
+| series | CAGR | Sharpe | vol | max DD monthly (daily) | worst month | Feb–Mar 2020 | 2022 | Apr 2025 | alpha/mo vs SPY (HC t) | beta |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| primary | 8.76% | 0.67 | 9.2% | -15.6% (-28.3%) | -11.0% 2020-02 | -15.2% | -5.0% | -2.8% | 0.006% (0.04) | 0.48 |
+| stress | 8.68% | 0.66 | 9.2% | -15.7% (-28.3%) | -11.0% 2020-02 | -15.2% | -5.1% | -2.9% | -0.000% (-0.00) | 0.48 |
+| harsh | 8.60% | 0.65 | 9.2% | -15.7% (-28.3%) | -11.0% 2020-02 | -15.2% | -5.2% | -2.9% | -0.006% (-0.04) | 0.48 |
+
+| regression (primary) | n | alpha/mo | alpha/yr | HC1 t | NW(3) t | SE alpha/mo | beta (t) | R² | resid sd/mo | Sharpe | ETF Sharpe |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| all months | 82 | 0.006% | 0.07% | 0.04 | 0.04 | 0.157% | 0.48 (10.2) | 0.79 | 1.23% | 0.67 | 0.74 |
+| 2020-01 → 2022-12 | 36 | 0.037% | 0.45% | 0.13 | 0.14 | 0.291% | 0.51 (7.5) | 0.79 | 1.62% | 0.40 | 0.41 |
+| 2023-01 → 2026-10 | 46 | 0.034% | 0.41% | 0.25 | 0.19 | 0.140% | 0.43 (12.4) | 0.80 | 0.78% | 1.18 | 1.25 |
+| 2021-01 → 2026-10 (2020 excluded) | 70 | 0.109% | 1.31% | 1.13 | 0.97 | 0.097% | 0.47 (21.5) | 0.87 | 0.76% | 0.89 | 0.77 |
+| all, vs 15:45-aligned SPY TR (info) | 82 | -0.009% | -0.10% | -0.06 | -0.05 | 0.143% | 0.50 (10.6) | 0.82 | 1.11% | | |
+| all, stress costs | 82 | -0.000% | -0.00% | -0.00 | -0.00 | 0.157% | 0.48 | 0.79 | | 0.66 | |
+| all, harsh costs | 82 | -0.006% | -0.07% | -0.04 | -0.04 | 0.157% | 0.48 | 0.79 | | 0.65 | |
+
+Rolls (primary, closed by 2026-10-30): 113; mean hold 22.0 days; mean credit $10.342 (2.25% of strike); mean exit cost $8.613; P&L per contract mean $172.84, per roll on capital 0.375% (t 1.63), win 74%, worst -14.3%.
+Data: entry attempts 115, skipped (no expiry in window) 0, skipped (no usable strike within 1%) 0, strike fallbacks 0, stale marks 1, exits delayed (no quote) 0, settled at expiry 0, proxy exits 0. Coverage = rolls without a skip: 100.0%.
+
+### C8 — 5% OTM, 30d (25–45), exit 50% of credit else 5d before expiry, cash-secured
+
+| series | CAGR | Sharpe | vol | max DD monthly (daily) | worst month | Feb–Mar 2020 | 2022 | Apr 2025 | alpha/mo vs SPY (HC t) | beta |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| primary | 7.16% | 0.57 | 8.0% | -19.0% (-24.9%) | -10.6% 2020-03 | -19.0% | 3.2% | -2.9% | -0.012% (-0.06) | 0.37 |
+| stress | 6.73% | 0.52 | 7.9% | -19.0% (-24.9%) | -10.6% 2020-03 | -19.0% | 3.0% | -2.9% | -0.045% (-0.22) | 0.37 |
+| harsh | 6.55% | 0.50 | 7.9% | -19.1% (-25.0%) | -10.6% 2020-03 | -19.1% | 2.9% | -2.9% | -0.057% (-0.28) | 0.37 |
+
+| regression (primary) | n | alpha/mo | alpha/yr | HC1 t | NW(3) t | SE alpha/mo | beta (t) | R² | resid sd/mo | Sharpe | ETF Sharpe |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| all months | 82 | -0.012% | -0.15% | -0.06 | -0.05 | 0.199% | 0.37 (6.2) | 0.62 | 1.42% | 0.57 | 0.74 |
+| 2020-01 → 2022-12 | 36 | -0.026% | -0.31% | -0.08 | -0.07 | 0.322% | 0.47 (6.6) | 0.75 | 1.69% | 0.33 | 0.41 |
+| 2023-01 → 2026-10 | 46 | 0.237% | 2.84% | 1.97 | 1.66 | 0.120% | 0.15 (5.6) | 0.39 | 0.65% | 1.76 | 1.25 |
+| 2021-01 → 2026-10 (2020 excluded) | 70 | 0.230% | 2.76% | 2.22 | 2.48 | 0.103% | 0.25 (7.3) | 0.59 | 0.90% | 1.15 | 0.77 |
+| all, vs 15:45-aligned SPY TR (info) | 82 | -0.015% | -0.18% | -0.07 | -0.06 | 0.200% | 0.38 (6.2) | 0.62 | 1.41% | | |
+| all, stress costs | 82 | -0.045% | -0.54% | -0.22 | -0.19 | 0.199% | 0.37 | 0.62 | | 0.52 | |
+| all, harsh costs | 82 | -0.057% | -0.68% | -0.28 | -0.24 | 0.200% | 0.37 | 0.62 | | 0.50 | |
+
+Rolls (primary, closed by 2026-10-30): 217; mean hold 11.5 days; mean credit $2.803 (0.67% of strike); mean exit cost $2.139; P&L per contract mean $66.32, per roll on capital 0.152% (t 1.25), win 93%, worst -23.9%.
+Data: entry attempts 219, skipped (no expiry in window) 0, skipped (no usable strike within 1%) 0, strike fallbacks 0, stale marks 0, exits delayed (no quote) 0, settled at expiry 0, proxy exits 0, take-profit exits 198. Coverage = rolls without a skip: 100.0%.
+
+### D1 — ATM, 30d (25–45), exit 5d before expiry, long wing 10% further OTM, capital = width
+
+| series | CAGR | Sharpe | vol | max DD monthly (daily) | worst month | Feb–Mar 2020 | 2022 | Apr 2025 | alpha/mo vs SPY (HC t) | beta |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| primary | 3.76% | 0.51 | 91.8% | -90.4% (-91.4%) | -62.3% 2025-04 | -80.1% | -90.4% | -62.3% | -0.847% (-0.58) | 4.54 |
+| stress | 2.49% | 0.49 | 91.8% | -90.5% (-91.5%) | -62.4% 2025-04 | -80.2% | -90.5% | -62.4% | -0.944% (-0.65) | 4.54 |
+| harsh | 1.28% | 0.48 | 91.7% | -90.7% (-91.6%) | -62.5% 2025-04 | -80.3% | -90.7% | -62.5% | -1.039% (-0.72) | 4.54 |
+
+| regression (primary) | n | alpha/mo | alpha/yr | HC1 t | NW(3) t | SE alpha/mo | beta (t) | R² | resid sd/mo | Sharpe | ETF Sharpe |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| all months | 82 | -0.847% | -10.16% | -0.58 | -0.60 | 1.452% | 4.54 (9.3) | 0.69 | 14.67% | 0.51 | 0.74 |
+| 2020-01 → 2022-12 | 36 | -1.844% | -22.13% | -0.71 | -0.75 | 2.582% | 4.78 (6.9) | 0.75 | 17.18% | 0.16 | 0.41 |
+| 2023-01 → 2026-10 | 46 | 0.544% | 6.52% | 0.27 | 0.27 | 2.037% | 3.96 (8.0) | 0.57 | 12.27% | 1.04 | 1.25 |
+| 2021-01 → 2026-10 (2020 excluded) | 70 | -0.452% | -5.42% | -0.31 | -0.31 | 1.468% | 4.41 (13.0) | 0.71 | 12.06% | 0.58 | 0.77 |
+| all, vs 15:45-aligned SPY TR (info) | 82 | -0.938% | -11.25% | -0.68 | -0.65 | 1.387% | 4.64 (9.7) | 0.71 | 14.19% | | |
+| all, stress costs | 82 | -0.944% | -11.33% | -0.65 | -0.67 | 1.452% | 4.54 | 0.69 | | 0.49 | |
+| all, harsh costs | 82 | -1.039% | -12.46% | -0.72 | -0.73 | 1.452% | 4.54 | 0.69 | | 0.48 | |
+
+Rolls (primary, closed by 2026-10-30): 96; mean hold 25.8 days; mean credit $7.080 (14.71% of width); mean exit cost $5.390; P&L per contract mean $168.87, per roll on capital 3.548% (t 1.75), win 77%, worst -86.4%.
+Data: entry attempts 99, skipped (no expiry in window) 0, skipped (no usable strike within 1%) 0, strike fallbacks 0, stale marks 7, exits delayed (no quote) 3, settled at expiry 1, proxy exits 0. Coverage = rolls without a skip: 100.0%.
+
+### D2 — 5% OTM, 30d (25–45), exit 5d before expiry, long wing 10% further OTM, capital = width
+
+| series | CAGR | Sharpe | vol | max DD monthly (daily) | worst month | Feb–Mar 2020 | 2022 | Apr 2025 | alpha/mo vs SPY (HC t) | beta |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| primary | -4.43% | 0.37 | 51.6% | -93.6% (-95.3%) | -88.4% 2020-03 | -93.5% | -12.6% | -33.1% | -0.647% (-0.42) | 2.17 |
+| stress | -5.60% | 0.35 | 51.5% | -93.6% (-95.3%) | -88.5% 2020-03 | -93.6% | -13.8% | -33.2% | -0.741% (-0.48) | 2.17 |
+| harsh | -6.66% | 0.33 | 51.5% | -93.7% (-95.4%) | -88.7% 2020-03 | -93.6% | -14.9% | -33.3% | -0.825% (-0.54) | 2.17 |
+
+| regression (primary) | n | alpha/mo | alpha/yr | HC1 t | NW(3) t | SE alpha/mo | beta (t) | R² | resid sd/mo | Sharpe | ETF Sharpe |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| all months | 82 | -0.647% | -7.77% | -0.42 | -0.36 | 1.537% | 2.17 (4.2) | 0.50 | 10.52% | 0.37 | 0.74 |
+| 2020-01 → 2022-12 | 36 | -1.388% | -16.66% | -0.57 | -0.45 | 2.454% | 2.81 (4.4) | 0.65 | 12.80% | 0.10 | 0.41 |
+| 2023-01 → 2026-10 | 46 | 1.487% | 17.85% | 1.47 | 1.62 | 1.014% | 0.68 (3.4) | 0.16 | 5.59% | 1.34 | 1.25 |
+| 2021-01 → 2026-10 (2020 excluded) | 70 | 1.179% | 14.15% | 1.54 | 1.71 | 0.764% | 1.30 (6.8) | 0.48 | 5.85% | 1.03 | 0.77 |
+| all, vs 15:45-aligned SPY TR (info) | 82 | -0.632% | -7.58% | -0.41 | -0.36 | 1.528% | 2.16 (4.6) | 0.49 | 10.65% | | |
+| all, stress costs | 82 | -0.741% | -8.89% | -0.48 | -0.42 | 1.537% | 2.17 | 0.50 | | 0.35 | |
+| all, harsh costs | 82 | -0.825% | -9.90% | -0.54 | -0.46 | 1.538% | 2.17 | 0.50 | | 0.33 | |
+
+Rolls (primary, closed by 2026-10-30): 96; mean hold 25.8 days; mean credit $2.373 (5.10% of width); mean exit cost $1.408; P&L per contract mean $96.25, per roll on capital 1.943% (t 1.55), win 91%, worst -95.1%.
+Data: entry attempts 100, skipped (no expiry in window) 0, skipped (no usable strike within 1%) 1, strike fallbacks 0, stale marks 4, exits delayed (no quote) 3, settled at expiry 1, proxy exits 0. Coverage = rolls without a skip: 99.0%.
+
+### C1x — ATM, 30d (25–45), exit 5d before expiry, cash-secured
+
+| series | CAGR | Sharpe | vol | max DD monthly (daily) | worst month | Feb–Mar 2020 | 2022 | Apr 2025 | alpha/mo vs SPY (HC t) | beta |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| primary | 8.00% | 0.53 | 10.4% | -21.8% (-28.4%) | -13.0% 2020-03 | -21.8% | -9.4% | -4.6% | -0.098% (-0.49) | 0.54 |
+| stress | 7.93% | 0.53 | 10.4% | -21.8% (-28.4%) | -13.0% 2020-03 | -21.8% | -9.5% | -4.6% | -0.103% (-0.51) | 0.54 |
+| harsh | 7.87% | 0.52 | 10.4% | -21.9% (-28.4%) | -13.0% 2020-03 | -21.9% | -9.6% | -4.6% | -0.108% (-0.54) | 0.54 |
+
+| regression (primary) | n | alpha/mo | alpha/yr | HC1 t | NW(3) t | SE alpha/mo | beta (t) | R² | resid sd/mo | Sharpe | ETF Sharpe |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| all months | 82 | -0.098% | -1.18% | -0.49 | -0.40 | 0.201% | 0.54 (9.0) | 0.76 | 1.46% | 0.53 | 0.74 |
+| 2020-01 → 2022-12 | 36 | -0.323% | -3.88% | -1.02 | -0.80 | 0.318% | 0.60 (8.2) | 0.83 | 1.69% | 0.10 | 0.41 |
+| 2023-01 → 2026-10 | 46 | 0.236% | 2.83% | 1.31 | 1.31 | 0.180% | 0.39 (8.4) | 0.63 | 1.08% | 1.45 | 1.25 |
+| 2021-01 → 2026-10 (2020 excluded) | 70 | 0.143% | 1.72% | 1.09 | 1.12 | 0.132% | 0.47 (14.1) | 0.79 | 1.06% | 0.89 | 0.77 |
+| all, vs 15:45-aligned SPY TR (info) | 82 | -0.100% | -1.20% | -0.49 | -0.41 | 0.202% | 0.54 (9.0) | 0.76 | 1.46% | | |
+| all, stress costs | 82 | -0.103% | -1.24% | -0.51 | -0.42 | 0.201% | 0.54 | 0.76 | | 0.53 | |
+| all, harsh costs | 82 | -0.108% | -1.30% | -0.54 | -0.44 | 0.201% | 0.54 | 0.76 | | 0.52 | |
+
+Rolls (primary, closed by 2026-10-30): 96; mean hold 25.8 days; mean credit $8.434 (1.86% of strike); mean exit cost $6.295; P&L per contract mean $213.79, per roll on capital 0.450% (t 1.19), win 79%, worst -28.6%.
+Data: entry attempts 99, skipped (no expiry in window) 0, skipped (no usable strike within 1%) 0, strike fallbacks 0, stale marks 4, exits delayed (no quote) 0, settled at expiry 0, proxy exits 1. Coverage = rolls without a skip: 100.0%.
+
+### D1x — ATM, 30d (25–45), exit 5d before expiry, long wing 10% further OTM, capital = width
+
+| series | CAGR | Sharpe | vol | max DD monthly (daily) | worst month | Feb–Mar 2020 | 2022 | Apr 2025 | alpha/mo vs SPY (HC t) | beta |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| primary | -4.49% | 0.45 | 83.8% | -90.4% (-92.4%) | -72.9% 2020-03 | -87.9% | -90.4% | -62.3% | -1.331% (-0.95) | 4.28 |
+| stress | -5.80% | 0.43 | 83.8% | -90.5% (-92.5%) | -73.3% 2020-03 | -88.1% | -90.5% | -62.4% | -1.433% (-1.02) | 4.28 |
+| harsh | -7.04% | 0.42 | 83.8% | -90.7% (-92.6%) | -73.6% 2020-03 | -88.2% | -90.7% | -62.5% | -1.530% (-1.09) | 4.28 |
+
+| regression (primary) | n | alpha/mo | alpha/yr | HC1 t | NW(3) t | SE alpha/mo | beta (t) | R² | resid sd/mo | Sharpe | ETF Sharpe |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| all months | 82 | -1.331% | -15.97% | -0.95 | -0.89 | 1.397% | 4.28 (13.1) | 0.74 | 12.31% | 0.45 | 0.74 |
+| 2020-01 → 2022-12 | 36 | -3.279% | -39.35% | -1.62 | -1.55 | 2.021% | 4.39 (11.0) | 0.83 | 12.20% | -0.01 | 0.41 |
+| 2023-01 → 2026-10 | 46 | 0.544% | 6.52% | 0.27 | 0.27 | 2.037% | 3.96 (8.0) | 0.57 | 12.27% | 1.04 | 1.25 |
+| 2021-01 → 2026-10 (2020 excluded) | 70 | -0.448% | -5.38% | -0.31 | -0.31 | 1.468% | 4.41 (13.0) | 0.71 | 12.06% | 0.58 | 0.77 |
+| all, vs 15:45-aligned SPY TR (info) | 82 | -1.367% | -16.41% | -0.98 | -0.90 | 1.399% | 4.33 (12.9) | 0.75 | 12.21% | | |
+| all, stress costs | 82 | -1.433% | -17.19% | -1.02 | -0.96 | 1.399% | 4.28 | 0.74 | | 0.43 | |
+| all, harsh costs | 82 | -1.530% | -18.37% | -1.09 | -1.02 | 1.400% | 4.28 | 0.74 | | 0.42 | |
+
+Rolls (primary, closed by 2026-10-30): 96; mean hold 25.8 days; mean credit $7.125 (14.90% of width); mean exit cost $5.471; P&L per contract mean $165.17, per roll on capital 3.515% (t 1.67), win 75%, worst -92.0%.
+Data: entry attempts 99, skipped (no expiry in window) 0, skipped (no usable strike within 1%) 0, strike fallbacks 0, stale marks 4, exits delayed (no quote) 0, settled at expiry 0, proxy exits 1. Coverage = rolls without a skip: 100.0%.
+
