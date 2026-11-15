@@ -3,6 +3,14 @@ import { z } from 'zod';
 export const simulationConfigSchema = z.object({
   startingCash: z.number().positive().default(25_000),
   /**
+   * Which option price an order fills at, before the spread:
+   * `nextTrade` is the first trade at or after the order, as a market order would get. Orders with
+   * no trade within `maxPriceAgeMinutes` are rejected.
+   * `decision` is the last trade the engine saw when it decided. That flatters a momentum signal,
+   * because the option hasn't caught up with the move yet, so it's only for comparison.
+   */
+  fillAt: z.enum(['nextTrade', 'decision']).default('nextTrade'),
+  /**
    * Alpaca has no historical option quotes, so the bid/ask is modeled around each traded price:
    * a spread of this fraction of the price, split evenly either side.
    */

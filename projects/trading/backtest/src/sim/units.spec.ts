@@ -1,12 +1,16 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
+import { OrderIntent } from '@projects/trading-core';
+
 import { occSymbol, parseOccSymbol } from '../data/alpaca';
 import { optionSymbolsFor } from '../download/download';
 import { normalizeSkipReason } from '../report/stats';
 
+import { OptionBarIndex } from './backtest';
 import { HistoricalChains, lastClosedBar } from './historical-chains';
 import { modelQuote, roundToCent } from './quotes';
+import { SimulatedBroker } from './simulated-broker';
 import { simulationConfigSchema } from './simulation-config';
 
 const minute = (hhmm: string): number =>
@@ -149,5 +153,82 @@ describe('normalizeSkipReason', () => {
       normalizeSkipReason('blocked by cooldown'),
       'blocked by cooldown',
     );
+  });
+});
+
+describe('next-trade fills', () => {
+  const index = new OptionBarIndex();
+  index.load(
+    new Map([
+      [
+        'SPY261117C00100000',
+        [
+          { ...bar('09:39', 1.2), open: 1.1, low: 1.05, high: 1.3 },
+          { ...bar('09:42', 2), open: 1.9 },
+        ],
+      ],
+    ]),
+  );
+  const symbol = 'SPY261117C00100000';
+
+  it('finds the first replayed price at or after the order', () => {
+    // An order at the bar's start fills at its open; 10s in, at the low (15s); 50s in, at the next bar.
+    assert.deepEqual(
+      index.firstPriceAtOrAfter(symbol, minute('09:39'), 300_000),
+      { price: 1.1, time: minute('09:39') },
+    );
+    assert.deepEqual(
+      index.firstPriceAtOrAfter(symbol, minute('09:39') + 10_000, 300_000),
+      {
+        price: 1.05,
+        time: minute('09:39') + 15_000,
+      },
+    );
+    assert.deepEqual(
+      index.firstPriceAtOrAfter(symbol, minute('09:39') + 50_000, 300_000),
+      {
+        price: 1.9,
+        time: minute('09:42'),
+      },
+    );
+    assert.equal(
+      index.firstPriceAtOrAfter(symbol, minute('09:39') + 50_000, 60_000),
+      undefined,
+    );
+  });
+
+  const order: OrderIntent = {
+    id: 'o1',
+    action: 'open',
+    positionId: 'p1',
+    ticker: 'SPY',
+    symbol,
+    side: 'buy',
+    qty: 1,
+    refPrice: 1.0,
+    time: minute('09:39'),
+  };
+
+  it('buys at the ask around the next trade, not the price seen at the decision', () => {
+    const broker = new SimulatedBroker(
+      simulationConfigSchema.parse({ spreadPct: 0.02, feePerContract: 0 }),
+    );
+    const update = broker.fill(order, 100, {
+      price: 1.1,
+      time: minute('09:39'),
+    });
+    assert.equal(update.avgFillPrice, 1.12); // 1.10 + a 1% half-spread = 1.111, rounded up to 1.12
+    assert.equal(update.time, minute('09:39'));
+  });
+
+  it('rejects when nothing trades in time, and can still fill at the decision price', () => {
+    const next = new SimulatedBroker(simulationConfigSchema.parse({}));
+    assert.equal(next.fill(order, 100, undefined).status, 'rejected');
+    assert.equal(next.cash, 25_000);
+
+    const decision = new SimulatedBroker(
+      simulationConfigSchema.parse({ fillAt: 'decision', feePerContract: 0 }),
+    );
+    assert.equal(decision.fill(order, 100, undefined).avgFillPrice, 1);
   });
 });

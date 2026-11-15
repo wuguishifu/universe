@@ -6,12 +6,16 @@ import {
   multiplierOf,
 } from '@projects/trading-core';
 
-import { roundToCent } from './quotes';
+import { modelQuote, roundToCent } from './quotes';
 import { SimulationConfig } from './simulation-config';
 
+/** An option trade price and when it happened. */
+export type MarketPrice = { price: number; time: number };
+
 /**
- * Fills every order immediately at the price the engine saw when it decided (the modeled ask
- * when buying, the bid when selling), plus slippage, rounded to the cent against the trader.
+ * Fills orders at the modeled ask when buying or bid when selling, plus slippage, rounded to the
+ * cent against the trader. With `fillAt: 'nextTrade'` the quote is built around `market`, the first
+ * trade at or after the order; with `'decision'` it's the price the engine saw.
  */
 export class SimulatedBroker {
   private readonly simulation: SimulationConfig;
@@ -31,12 +35,30 @@ export class SimulatedBroker {
     return this.feesPaid;
   }
 
-  fill(order: OrderIntent, multiplier = DEFAULT_MULTIPLIER): OrderUpdate {
+  fill(
+    order: OrderIntent,
+    multiplier = DEFAULT_MULTIPLIER,
+    market?: MarketPrice,
+  ): OrderUpdate {
+    let base = order.refPrice;
+    let time = order.time;
+    if (this.simulation.fillAt === 'nextTrade') {
+      if (!market) {
+        return {
+          orderId: order.id,
+          status: 'rejected',
+          filledQty: 0,
+          avgFillPrice: 0,
+          time,
+        };
+      }
+      const quote = modelQuote(market.price, this.simulation);
+      base = order.side === 'buy' ? quote.ask : quote.bid;
+      time = market.time;
+    }
+
     const slip = this.simulation.slippagePct;
-    const raw =
-      order.side === 'buy'
-        ? order.refPrice * (1 + slip)
-        : order.refPrice * (1 - slip);
+    const raw = order.side === 'buy' ? base * (1 + slip) : base * (1 - slip);
     const price = roundToCent(raw, order.side);
     const notional = price * order.qty * multiplier;
     const fee = this.simulation.feePerContract * order.qty;
@@ -48,7 +70,7 @@ export class SimulatedBroker {
       status: 'filled',
       filledQty: order.qty,
       avgFillPrice: price,
-      time: order.time,
+      time,
     };
   }
 

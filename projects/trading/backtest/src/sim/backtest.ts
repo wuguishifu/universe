@@ -2,6 +2,7 @@ import {
   Bar,
   calendarFromDays,
   EngineEvent,
+  MINUTE_MS,
   multiplierOf,
   Position,
   StrategyConfig,
@@ -15,7 +16,7 @@ import { MarketData } from '../data/data-store';
 
 import { HistoricalChains } from './historical-chains';
 import { modelQuote } from './quotes';
-import { SimulatedBroker } from './simulated-broker';
+import { MarketPrice, SimulatedBroker } from './simulated-broker';
 import { SimulationConfig } from './simulation-config';
 
 export type BacktestTrade = Trade & {
@@ -113,6 +114,7 @@ export async function runBacktest(
   const summaries: DaySummary[] = [];
   engine.setEquity(broker.equity([]));
 
+  let options = new OptionBarIndex();
   const handle = async (batch: readonly EngineEvent[]): Promise<void> => {
     for (const event of batch) {
       if (event.type === 'bar') continue;
@@ -126,7 +128,17 @@ export async function runBacktest(
           ? multiplierOf(position.contract)
           : undefined;
         await handle(
-          await engine.onOrderUpdate(broker.fill(event.order, multiplier)),
+          await engine.onOrderUpdate(
+            broker.fill(
+              event.order,
+              multiplier,
+              options.firstPriceAtOrAfter(
+                event.order.symbol,
+                event.order.time,
+                simulation.maxPriceAgeMinutes * MINUTE_MS,
+              ),
+            ),
+          ),
         );
         const value = broker.equity(engine.getPositions());
         engine.setEquity(value);
@@ -145,7 +157,7 @@ export async function runBacktest(
 
   for (const date of days) {
     const stock = new Map<string, Map<number, Bar>>();
-    const options = new OptionBarIndex();
+    options = new OptionBarIndex();
     const minutes = new Set<number>();
 
     for (const ticker of tickers) {
@@ -223,7 +235,7 @@ export async function runBacktest(
 }
 
 /** Looks up an option's bar for a given minute, indexing each symbol only once it's needed. */
-class OptionBarIndex {
+export class OptionBarIndex {
   private raw = new Map<string, Bar[]>();
   private indexed = new Map<string, Map<number, Bar>>();
 
@@ -232,6 +244,31 @@ class OptionBarIndex {
       this.raw.set(symbol, bars);
       this.indexed.delete(symbol);
     }
+  }
+
+  /**
+   * The first replayed price (see PATH_OFFSETS_MS) at or after `time`, looking at most `maxWaitMs`
+   * ahead. This is where a market order sent at `time` would fill.
+   */
+  firstPriceAtOrAfter(
+    symbol: string,
+    time: number,
+    maxWaitMs: number,
+  ): MarketPrice | undefined {
+    const firstMinute = Math.floor(time / MINUTE_MS) * MINUTE_MS;
+    for (
+      let minute = firstMinute;
+      minute <= time + maxWaitMs;
+      minute += MINUTE_MS
+    ) {
+      const bar = this.at(symbol, minute);
+      if (!bar) continue;
+      for (const [i, price] of worstCasePricePath(bar).entries()) {
+        const at = minute + (PATH_OFFSETS_MS[i] ?? 0);
+        if (at >= time) return { price, time: at };
+      }
+    }
+    return undefined;
   }
 
   at(symbol: string, minute: number): Bar | undefined {
