@@ -65,6 +65,22 @@ public class SapphireVaultModule: Module {
       }
     }
 
+    // Public halves only; the SSH module decrypts the private key itself when it connects.
+    AsyncFunction("sshKeys") { () async throws -> [[String: Any]] in
+      try await bridged {
+        let vault = try self.vault.get()
+        let keys = try await Task.detached {
+          try vault.snapshot().sshKeySummaries(userKey: vault.userKey(prompt: "Show your SSH keys"))
+        }.value
+        return keys.map { key -> [String: Any] in
+          var result: [String: Any] = ["id": key.id, "name": key.name]
+          result["publicKey"] = key.publicKey
+          result["fingerprint"] = key.fingerprint
+          return result
+        }
+      }
+    }
+
     AsyncFunction("reveal") { (id: String) async throws -> [String: Any] in
       try await bridged {
         let secret = try await self.secret(id: id, prompt: "Show this password")

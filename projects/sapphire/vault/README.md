@@ -4,8 +4,9 @@ A read-only Vaultwarden client for [`sapphire-mobile`](../mobile) and its AutoFi
 app syncs the vault over the tailnet; the extension fills passwords from that synced copy, so it
 never needs the tailnet (or the VPN slot) itself.
 
-**Scope (v1):** iOS, personal login items (username, password, URIs, TOTP), PBKDF2 accounts without
-two-step login. Organization items, the trash, cards/identities/notes, passkeys, Argon2id and 2FA
+**Scope (v1):** iOS, personal login items (username, password, URIs, TOTP) and SSH keys (for
+[`sapphire-ssh`](../ssh); kept apart from logins, so they never show up in AutoFill), PBKDF2
+accounts without two-step login. Organization items, the trash, cards/identities/notes, passkeys, Argon2id and 2FA
 aren't supported. Nothing is written back to the server yet; `EncString.encrypt` exists (and is
 tested by round trip) for adding items later.
 
@@ -40,6 +41,8 @@ copy/reveal:   Face ID → user key → decrypt one password / TOTP secret
 - **Vaultwarden has no token revocation endpoint**, so logging out only wipes this device: the
   Keychain items, the cache, and the AutoFill suggestions. The device stays in the account's device
   list; the device identifier is kept, so logging in again reuses that entry.
+- SSH private keys never pass through JS either: `sshKeys` returns names, public keys and
+  fingerprints, and `sapphire-ssh` decrypts the private key natively when it connects.
 - Passwords copy to the pasteboard as `localOnly` (no Universal Clipboard) with a 60s expiry, and
   never pass through JS. `reveal` is the only call that hands secrets to JS.
 

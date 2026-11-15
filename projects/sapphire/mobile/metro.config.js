@@ -13,7 +13,14 @@ const defaultConfig = getDefaultConfig(__dirname);
  * @type {import('metro-config').MetroConfig}
  */
 const customConfig = {
-  cacheVersion: 'sapphire-mobile',
+  // babel/inline-raw.js inlines xterm into the terminal page, and Metro's transform cache doesn't
+  // know about that file, so an xterm upgrade has to bust the cache itself.
+  cacheVersion: [
+    'sapphire-mobile',
+    ...['@xterm/xterm', '@xterm/addon-fit'].map(
+      (name) => `${name}@${require(`${name}/package.json`).version}`,
+    ),
+  ].join(':'),
 };
 
 module.exports = withNxMetro(mergeConfig(defaultConfig, customConfig), {

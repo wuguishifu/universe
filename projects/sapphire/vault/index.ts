@@ -25,6 +25,16 @@ export type VaultItemSummary = {
   hasTotp: boolean;
 };
 
+/** An SSH key item. The private key never reaches JS; `@projects/sapphire-ssh` reads it natively. */
+export type VaultSshKey = {
+  id: string;
+  name: string;
+  /** authorized_keys format, e.g. `ssh-ed25519 AAAA…`. */
+  publicKey?: string;
+  /** `SHA256:…` */
+  fingerprint?: string;
+};
+
 export type VaultItemSecret = {
   password?: string;
   /** The raw TOTP field; pass it to `totp` for the current code. */
@@ -76,6 +86,7 @@ type NativeSapphireVault = {
   login(serverUrl: string, email: string, password: string): Promise<void>;
   sync(): Promise<SyncResult>;
   unlock(): Promise<VaultItemSummary[]>;
+  sshKeys(): Promise<VaultSshKey[]>;
   reveal(id: string): Promise<VaultItemSecret>;
   copyPassword(id: string): Promise<void>;
   copyTotp(id: string): Promise<void>;
@@ -124,6 +135,11 @@ export function sync(): Promise<SyncResult> {
  */
 export function unlock(): Promise<VaultItemSummary[]> {
   return native().unlock();
+}
+
+/** Face ID, then decrypts the SSH keys' names and public keys. */
+export function sshKeys(): Promise<VaultSshKey[]> {
+  return native().sshKeys();
 }
 
 /** Face ID, then decrypts one item's password and TOTP secret. */

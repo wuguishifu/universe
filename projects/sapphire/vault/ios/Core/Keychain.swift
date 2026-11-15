@@ -16,12 +16,16 @@ public struct Keychain {
     case missing
   }
 
-  static let service = "dev.wuguishifu.sapphire.vault"
+  public static let vaultService = "dev.wuguishifu.sapphire.vault"
 
   let accessGroup: String
+  let service: String
 
-  public init(accessGroup: String) {
+  /// `service` namespaces the items, so other features (e.g. saved SSH passwords) can share an
+  /// access group with the vault without their account names colliding.
+  public init(accessGroup: String, service: String = Keychain.vaultService) {
     self.accessGroup = accessGroup
+    self.service = service
   }
 
   public func set(_ data: Data, account: String, protection: Protection) throws {
@@ -92,7 +96,7 @@ public struct Keychain {
   static func teamPrefix() throws -> String {
     let query: [CFString: Any] = [
       kSecClass: kSecClassGenericPassword,
-      kSecAttrService: "\(service).probe",
+      kSecAttrService: "\(vaultService).probe",
       kSecAttrAccount: "teamPrefix",
       kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
       kSecReturnAttributes: true,
@@ -119,7 +123,7 @@ public struct Keychain {
   private func baseQuery(account: String) -> [CFString: Any] {
     [
       kSecClass: kSecClassGenericPassword,
-      kSecAttrService: Self.service,
+      kSecAttrService: service,
       kSecAttrAccount: account,
       kSecAttrAccessGroup: accessGroup,
       kSecUseDataProtectionKeychain: true,

@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { api } from '@platform/convex-contracts';
+import * as SapphireSsh from '@projects/sapphire-ssh';
 import * as SapphireVault from '@projects/sapphire-vault';
 
 import { usePushRegistration } from '../modules/notifications/push-registration';
@@ -36,6 +37,13 @@ export default function DashboardScreen() {
         <TailnetRow />
         <NotificationsRow />
         {SapphireVault.isAvailable && <VaultRow />}
+        {SapphireSsh.isAvailable && (
+          <StatusRow
+            label="SSH"
+            health="neutral"
+            onPress={() => router.push('/ssh')}
+          />
+        )}
         <Text style={[styles.sectionTitle, { color: colors.muted }]}>
           SERVICES
         </Text>

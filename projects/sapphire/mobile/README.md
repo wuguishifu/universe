@@ -47,6 +47,24 @@ service, or on the Tailnet screen tap a peer to fill in its URL (add a port if n
 Suggested ACL: tag the node (`tag:sapphire-mobile`) and only allow it the service ports you want
 reachable from the phone.
 
+## SSH
+
+**SSH** on the home screen lists saved machines and the tailnet's peers. Pick a peer, log in with a
+password or an SSH key from the vault, and the login is saved behind Face ID, so the next time it's
+one tap. See [`sapphire-ssh`](../ssh) for how credentials and host keys are handled.
+
+The terminal is xterm.js in a WebView (`src/modules/ssh`). `babel/inline-raw.js` inlines its JS and
+CSS into the page at bundle time (`import js from '…?raw'`), so nothing loads from a CDN. Touch is
+handled by the page: tap for the keyboard, drag to scroll back, and in full-screen apps (vim, less,
+htop) a drag sends arrow keys. Above the keyboard, the key bar adds:
+
+- **esc**, **tab**
+- **ctrl** / **alt**: sticky. Tap to apply to the next key, typed on the keyboard or the bar;
+  long-press to lock. While one is armed, a strip of common chords floats above the bar (^C ^D ^Z
+  ^R ^L ^A ^E ^U ^W ^K ^B, M-b M-f M-d M-.).
+- **← ↓ ↑ →**: repeat while held, and honor the app's cursor key mode.
+- **⋯**: paste, hide keyboard, home/end/pgup/pgdn/del, and the symbols buried on the iOS keyboard.
+
 ## Notifications
 
 The app also receives notifications from `notifications-service`. On launch (and whenever it comes

@@ -22,7 +22,7 @@
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoadsInWebContent": true
         },
-        "NSFaceIDUsageDescription": "Face ID unlocks your vault.",
+        "NSFaceIDUsageDescription": "Face ID unlocks your vault and saved SSH logins.",
         "SapphireVaultAppGroup": "group.dev.wuguishifu.sapphire",
         "SapphireVaultSharedKeychainGroup": "$(AppIdentifierPrefix)dev.wuguishifu.sapphire.shared",
         "SapphireVaultAppKeychainGroup": "$(AppIdentifierPrefix)dev.wuguishifu.sapphire"

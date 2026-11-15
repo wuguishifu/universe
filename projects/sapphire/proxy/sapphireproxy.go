@@ -24,6 +24,8 @@ var (
 	mu     sync.Mutex
 	server *tsnet.Server
 	proxy  *proxyServer
+	// stateDir is the dir passed to Start; SSH keeps known_hosts under it.
+	stateDir string
 )
 
 // Start brings up the tailnet node and the local proxy. dir must be a
@@ -61,7 +63,7 @@ func Start(dir, hostname string) error {
 		return err
 	}
 
-	server, proxy = s, p
+	server, proxy, stateDir = s, p, dir
 	return nil
 }
 

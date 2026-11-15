@@ -1,0 +1,8 @@
+{
+  "name": "sapphire-ssh",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/sapphire/ssh",
+  "projectType": "library",
+  "tags": ["scope:client"],
+  "targets": {}
+}
