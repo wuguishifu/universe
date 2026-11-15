@@ -14,7 +14,7 @@ import { CalendarDay, daysBetween, OptionType } from '@projects/trading-core';
 import { alpacaCalendarDaySchema, occSymbol } from '../data/alpaca';
 import { DataStore } from '../data/data-store';
 
-import { AlpacaClient } from './alpaca-client';
+import { AlpacaClient, DailyAdjustment } from './alpaca-client';
 
 export type DownloadOptions = {
   client: AlpacaClient;
@@ -159,25 +159,46 @@ export async function download(options: DownloadOptions): Promise<void> {
 export type DailyDownloadOptions = Pick<
   DownloadOptions,
   'client' | 'dir' | 'tickers' | 'from' | 'to' | 'log'
->;
+> & {
+  adjustment: DailyAdjustment;
+  /** Leave tickers already on disk alone, to resume a long download. */
+  skipExisting: boolean;
+};
+
+const DAILY_BATCH = 100;
 
 /**
- * Fetches adjusted daily bars for each ticker, replacing what's on disk. Adjusted prices change
- * whenever a ticker pays a dividend, so a partial update would mix two adjustments.
+ * Fetches daily bars, 100 tickers per request, replacing what's on disk unless `skipExisting`.
+ * Adjusted prices change whenever a ticker pays a dividend, so a partial update would mix two
+ * adjustments. Tickers Alpaca has no bars for are written as empty files, so a resume skips them.
  */
 export async function downloadDaily(
   options: DailyDownloadOptions,
 ): Promise<void> {
-  const { client, dir, tickers, from, to, log } = options;
-  for (const ticker of tickers) {
+  const { client, dir, from, to, adjustment, log } = options;
+  const tickers = options.skipExisting
+    ? options.tickers.filter(
+        (t) => !existsSync(DataStore.dailyPath(dir, t, adjustment)),
+      )
+    : options.tickers;
+  log(`${tickers.length} tickers to fetch (${adjustment})`);
+
+  for (let i = 0; i < tickers.length; i += DAILY_BATCH) {
+    const batch = tickers.slice(i, i + DAILY_BATCH);
     const bars = await client.dailyBars(
-      ticker,
+      batch,
       `${from}T00:00:00Z`,
       `${addDays(to, 1)}T00:00:00Z`,
+      adjustment,
     );
-    writeJsonAtomic(DataStore.dailyPath(dir, ticker), bars);
+    let found = 0;
+    for (const ticker of batch) {
+      const list = bars[ticker] ?? [];
+      if (list.length > 0) found++;
+      writeJsonAtomic(DataStore.dailyPath(dir, ticker, adjustment), list);
+    }
     log(
-      `${ticker}: ${bars.length} daily bars, ${bars[0]?.t.slice(0, 10) ?? '-'} to ${bars.at(-1)?.t.slice(0, 10) ?? '-'}`,
+      `${Math.min(i + DAILY_BATCH, tickers.length)}/${tickers.length}: ${found} of ${batch.length} had bars`,
     );
   }
 }

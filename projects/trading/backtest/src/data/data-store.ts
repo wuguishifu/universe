@@ -5,6 +5,8 @@ import { join } from 'node:path';
 
 import { Bar, CalendarDay, nyTime } from '@projects/trading-core';
 
+import { DailyAdjustment } from '../download/alpaca-client';
+
 import { alpacaBarSchema, alpacaCalendarDaySchema, toBar } from './alpaca';
 
 /**
@@ -15,6 +17,7 @@ import { alpacaBarSchema, alpacaCalendarDaySchema, toBar } from './alpaca';
  * stocks/<TICKER>/<DATE>.json    [AlpacaBar, ...]                 1-minute bars for that New York date
  * options/<TICKER>/<DATE>.json   { "<OCC symbol>": [AlpacaBar] }  1-minute bars for that date
  * daily/<TICKER>.json            [AlpacaBar, ...]                 daily bars, split- and dividend-adjusted
+ * daily-raw/<TICKER>.json        [AlpacaBar, ...]                 daily bars as traded, unadjusted
  * ```
  */
 export class DataStore {
@@ -29,8 +32,12 @@ export class DataStore {
     join(dir, 'stocks', ticker, `${date}.json`);
   static optionPath = (dir: string, ticker: string, date: string) =>
     join(dir, 'options', ticker, `${date}.json`);
-  static dailyPath = (dir: string, ticker: string) =>
-    join(dir, 'daily', `${ticker}.json`);
+  static dailyPath = (
+    dir: string,
+    ticker: string,
+    adjustment: DailyAdjustment = 'all',
+  ) =>
+    join(dir, adjustment === 'all' ? 'daily' : 'daily-raw', `${ticker}.json`);
 
   calendar(): CalendarDay[] {
     const path = DataStore.calendarPath(this.dir);
@@ -72,8 +79,11 @@ export class DataStore {
   }
 
   /** Adjusted daily bars sorted by date, or null if the ticker wasn't downloaded. */
-  dailyBars(ticker: string): DailyBar[] | null {
-    const path = DataStore.dailyPath(this.dir, ticker);
+  dailyBars(
+    ticker: string,
+    adjustment: DailyAdjustment = 'all',
+  ): DailyBar[] | null {
+    const path = DataStore.dailyPath(this.dir, ticker, adjustment);
     if (!existsSync(path)) return null;
     return z
       .array(alpacaBarSchema)

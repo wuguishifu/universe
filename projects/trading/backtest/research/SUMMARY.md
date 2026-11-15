@@ -1,5 +1,9 @@
 # Overnight research summary (2026-11-15)
 
+## Part 3: insider buying (2026-11-15)
+
+**Failed.** I tested 16,369 open-market purchases by officers and directors in 2016–2026, from SEC Form 4 data, holding each stock for six months after the filing, after realistic spreads. They matched small caps (IWM), with alpha +0.02% a month and t 0.2, and trailed SPY. None of the three predictions held: clustered buys, smaller stocks and CEO/CFO purchases were no better. Before costs there's a small first-month effect (+0.37% a month, t 2.1), but a month's round trip in these stocks costs about that much. The data side worked: delisted companies are covered, and the missing tickers are almost all OTC stocks and funds. Details are in `LOG.md`, part 3.
+
 ## Part 2: monthly ETF rotation (2026-11-15)
 
 Four published rules, run with their published parameters on 2017–2026, which is all after publication (`LOG.md`, part 2):

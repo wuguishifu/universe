@@ -10,6 +10,8 @@ import {
 
 const DATA_URL = 'https://data.alpaca.markets';
 
+export type DailyAdjustment = 'all' | 'raw';
+
 const barsPageSchema = z.object({
   bars: z.record(z.string(), z.array(alpacaBarSchema)).nullish(),
   next_page_token: z.string().nullish(),
@@ -71,23 +73,26 @@ export class AlpacaClient {
     return bars[symbol] ?? [];
   }
 
-  /** Daily SIP bars for one stock, adjusted for splits and dividends so returns include both. */
-  async dailyBars(
-    symbol: string,
+  /**
+   * Daily SIP bars for up to 100 stocks. `all` adjusts for splits and dividends, so returns include
+   * both; `raw` gives the prices that actually traded. Symbols with no bars are left out.
+   */
+  dailyBars(
+    symbols: readonly string[],
     start: string,
     end: string,
-  ): Promise<AlpacaBar[]> {
-    const bars = await this.paginate('/v2/stocks/bars', {
-      symbols: symbol,
+    adjustment: DailyAdjustment = 'all',
+  ): Promise<Record<string, AlpacaBar[]>> {
+    return this.paginate('/v2/stocks/bars', {
+      symbols: symbols.join(','),
       timeframe: '1Day',
       start,
       end,
-      adjustment: 'all',
+      adjustment,
       feed: 'sip',
       limit: '10000',
       sort: 'asc',
     });
-    return bars[symbol] ?? [];
   }
 
   /** 1-minute bars for up to 100 option symbols. Symbols with no trades are left out. */

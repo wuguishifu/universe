@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -36,7 +37,8 @@ const USAGE = `Usage:
   backtest download --from YYYY-MM-DD --to YYYY-MM-DD [--tickers SPY,QQQ] [--data <dir>] [--stocks-only]
                     [--expiry-days 7] [--strike-padding 10] [--strike-step 1] [--warmup-days 5]
   backtest sweep    --config <file> [--data <dir>] [--out <dir>] [--workers N]
-  backtest download-daily --from YYYY-MM-DD --to YYYY-MM-DD --tickers SPY,EFA,... [--data <dir>]
+  backtest download-daily --from YYYY-MM-DD --to YYYY-MM-DD (--tickers SPY,EFA | --tickers-file <file>)
+                    [--adjustment all|raw] [--skip-existing] [--data <dir>]
   backtest daily    --config <file> [--cost-bps N] [--data <dir>] [--out <dir>]
 
 Presets: ${Object.keys(PRESETS).join(', ')}
@@ -177,17 +179,37 @@ async function downloadDailyCommand(args: string[]): Promise<void> {
       from: { type: 'string' },
       to: { type: 'string' },
       tickers: { type: 'string' },
+      'tickers-file': { type: 'string' },
+      adjustment: { type: 'string', default: 'all' },
+      'skip-existing': { type: 'boolean', default: false },
       data: { type: 'string', default: 'data' },
     },
   });
-  if (!values.from || !values.to || !values.tickers)
-    throw new Error('download-daily needs --from, --to and --tickers');
+  const list = values['tickers-file']
+    ? readFileSync(values['tickers-file'], 'utf8')
+    : values.tickers;
+  if (!values.from || !values.to || !list)
+    throw new Error(
+      'download-daily needs --from, --to and --tickers or --tickers-file',
+    );
+  const { adjustment } = values;
+  if (adjustment !== 'all' && adjustment !== 'raw')
+    throw new Error('--adjustment is all or raw');
   await downloadDaily({
     client: AlpacaClient.fromEnv(),
     dir: resolve(values.data),
-    tickers: values.tickers.split(',').map((t) => t.trim().toUpperCase()),
+    tickers: [
+      ...new Set(
+        list
+          .split(/[\s,]+/)
+          .map((t) => t.trim().toUpperCase())
+          .filter(Boolean),
+      ),
+    ],
     from: values.from,
     to: values.to,
+    adjustment,
+    skipExisting: values['skip-existing'],
     log: print,
   });
   print('Done.');

@@ -65,6 +65,6 @@ nx run trading-backtest:download-daily --from=2016-01-01 --to=2026-11-13 --ticke
 nx run trading-backtest:daily --config=research/daily/01-rotation.json [--cost-bps=15]
 ```
 
-Daily bars are split- and dividend-adjusted and stored at `data/daily/<TICKER>.json`. Each download replaces the file, since adjusted prices change with every dividend. Their open and close are the official opening and closing prints.
+Daily bars are split- and dividend-adjusted and stored at `data/daily/<TICKER>.json`. `--adjustment=raw` stores bars as traded in `data/daily-raw/` instead. `--tickers-file` reads tickers from a file (whitespace or comma separated), and `--skip-existing` resumes a long download. Requests batch 100 tickers, and a ticker with no bars is saved as an empty file. Each download replaces the file, since adjusted prices change with every dividend. Their open and close are the official opening and closing prints.
 
 A suite file has `from`, `to`, `costBps`, a `cash` ticker and `strategies`, a map from label to rule. Weights are decided on each month-end close and filled at the next open with fractional shares, and cost is charged in basis points of the value traded. Sharpe ratios are in excess of the cash ticker. Each run writes `runs/<time>-daily-<name>-<cost>bp/` with `summary.json`, `equity.csv` and `rebalances.csv`.

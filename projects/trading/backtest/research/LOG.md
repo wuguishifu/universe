@@ -295,3 +295,135 @@ Suite: `daily/01-rotation.json`, 2017-03-01 → 2026-11-13. Outputs: `outputs/07
 **Asset rotation** passes every part of the rule. But its edge over equal weight is +1.2% a year with t 0.40, and at 15 bp the Sharpe gap is 0.006. That passes on paper, but it isn't evidence of an edge.
 
 **Overall:** nothing here is statistically distinguishable from holding its own universe at equal weight; every monthly-gap t is under 1. None of the rules beat SPY on return. That's partly the decade: 2017–2026 strongly favored US large caps over everything else these rules rotate into. The one clear, robust effect is trend following's drawdown control, which is what the long published histories also say it does. It's insurance, not extra return.
+
+---
+
+# Part 3: insider buying (data check, 2026-11-15)
+
+Before designing the study: does Alpaca serve price history for companies that later disappeared? Without it, an event study is biased toward survivors. Tools: `tools/check-delisted.ts`, `tools/check-segments.ts`.
+
+- **Mostly yes.** Acquired and failed companies keep their history, and it ends at the right date: TWTR (2022-10-27), ATVI, CELG, LNKD, SIVB (2023-03-09), FRC, EXPR. Bed Bath & Beyond's original history is under its final symbol BBBYQ and ends at delisting ($0.075).
+- **Hazard 1: reused tickers mix companies.**
+  - `BBBY` is the old company until 2023, then a gap, then Beyond Inc. from 2025-08.
+  - `FB` is Facebook until 2022-06-08, then a different security from 2025-06 (volume ~300 a day).
+  - `SHLD` is Sears until 2020-11, with stale, zero-volume prints after its 2018 bankruptcy, then a different security.
+  - The same company's history also shows up under its current symbol: META carries the full history.
+
+  So looking up a price by the ticker on a filing usually works, but it has to be checked. The plan is to compare the Form 4's reported transaction price with Alpaca's unadjusted close that day, and drop events that don't match.
+
+- **Hazard 2: some failures are missing.** Pre-bankruptcy Hertz (2016–2020) isn't under HTZ (which starts 2021-11), HTZGQ or HTZZ. Missing losers bias results upward. The study has to report what share of events have no usable price data, and run a bound with those events counted as heavy losses.
+- **Delisting returns:** when bars end before a planned exit, the last close can be too generous for a bankruptcy. Shumway (1997) puts the average delisting return for performance-related delistings at about −30%. The study needs a rule for this, set in advance.
+
+## Part 3 design (written 2026-11-15, before any insider data was read)
+
+**Hypothesis.** When officers and directors buy their own company's stock on the open market, with their own money, they're acting on what they know about the business. Prices adjust slowly, especially where few people are watching. So stocks bought by insiders should beat the market over the following months.
+
+- **Who's on the other side:** whoever sells to them, without that information.
+- **Why it persists:** the stocks are small, costly to trade and lightly followed.
+- **Sources:** Lakonishok & Lee (2001), Cohen, Malloy & Pomorski (2012).
+
+The period 2016–2026 is after both papers, so the whole period is out of sample.
+
+**Events.**
+
+- **Filings:** Form 4 filings (not amendments) in the SEC insider data sets, 2016-01 → 2026-09.
+- **Transactions:** non-derivative, code P (open-market purchase), shares acquired, by a reporting owner who is an officer or director. Owners who are only 10% holders or "other" are excluded, since they're funds and activists acting on different motives.
+- **Size:** at least $10,000 per filing.
+- **Event:** an issuer and a filing date with at least one qualifying purchase. A new event for the same issuer is ignored while an earlier one is still being held.
+
+**Prices and checks.**
+
+- **Prices:** Alpaca daily bars, split- and dividend-adjusted for returns, and unadjusted for the checks below.
+- **Ticker check:** the issuer's ticker as reported on the filing must have an unadjusted close on the transaction date within ×0.8–1.25 of the filing's average purchase price. Otherwise the event is dropped as a likely ticker mismatch.
+- **Tradeability**, using the day before entry:
+  - unadjusted close ≥ $2;
+  - median daily dollar volume over the previous 21 days ≥ $500k.
+- **Costs:** half the Abdi–Ranaldo (2017) spread estimate from the previous 63 days' high, low and close, charged on entry and again on exit. The floor is 5 bp per side and the cap 200 bp.
+
+**Trading.** Enter at the open of the first trading day after the filing date, since filings can arrive after the close. Exit at the close after the holding period. Primary hold: 126 trading days (6 months). Information only: 21 and 63 days.
+
+**Delistings.** If bars end before the exit:
+
+- a position whose last close is under $1, or under half its entry price, exits at 70% of its last close, following Shumway (1997);
+- otherwise it exits at the last close, as in an acquisition.
+
+**Measurement.**
+
+- **Portfolio:** a calendar-time portfolio, equal-weighting every open position each day, after costs, compounded to months.
+- **Alpha:** regress the monthly return in excess of BIL on IWM's excess return (primary: insider-bought stocks are mostly small), and separately on SPY's.
+- **Secondary:** the average return per event over the hold, minus IWM's.
+
+**Missing prices.** Report the share of events whose ticker has no usable bars. Many will be OTC stocks, which Alpaca doesn't cover and you couldn't trade there anyway; some will be listed companies with missing history, like Hertz. I'll look at 20 random unpriced events to estimate the split. Then I'll recompute the event average with the estimated listed-but-missing share counted at −30% relative to IWM.
+
+**Predictions** (direction only, no significance required). If the mechanism is real:
+
+1. clustered buys (at least 2 different insiders buying the same issuer within the 30 days up to the event) beat single-insider events;
+2. the lowest dollar-volume third beats the highest third;
+3. events with a CEO or CFO buying beat events with directors only.
+
+**Pass rule** (primary hold, after costs):
+
+- monthly alpha vs IWM > 0 with t ≥ 2;
+- alpha vs SPY > 0;
+- excess over IWM positive in at least 6 of the 10 full years (2016–2025);
+- event-average excess still > 0 under the missing-prices bound;
+- at least 2 of the 3 predictions hold.
+
+**If it passes:** the portfolio holds hundreds of positions at once, which you can't run. A tradeable version would hold a subset, such as clusters only. That subset would be a new test, and its rule must be chosen before seeing results.
+
+**Change before running (2026-11-15, no results seen yet):** the primary calendar-time portfolio holds each position at its own value since entry, instead of re-equalizing every position daily. Re-equalizing small, illiquid stocks every day overstates returns: it mechanically harvests bid-ask bounce (Blume & Stambaugh 1983). The daily equal-weight version is still reported, for information. Event-average returns include only holds that finished, either complete or ended by a delisting, not ones cut off by the end of the data.
+
+## Part 3 result (run once, 2026-11-15): **FAIL**
+
+Script: `tools/insider-study.mjs`. Output: `outputs/08-insider.out`, plus `08-insider-gross.out` with no costs, for information.
+
+**Coverage.**
+
+- **Filings:** 90,708 qualifying filings. Of these:
+  - 2,363 had no ticker, mostly "NONE" from issuers with no traded stock;
+  - 4,352 had a ticker with no Alpaca bars;
+  - 2,795 had no bar within a week of the trade;
+  - 3,622 (4%) failed the price check, meaning a likely ticker mismatch.
+- **Events:** after the overlap rule and the $2 and $500k dollar-volume filters, 16,369 six-month events remain.
+- **Costs:** the median estimated cost is 0.18% per side, and 0.93% at the 90th percentile.
+- **Delistings:** only 7 positions took the delisting haircut.
+
+**Missing prices.** Of 20 random unpriced tickers:
+
+- 17 were OTC stocks, mutual or interval funds, or SPAC units, none of which you can trade through Alpaca's exchange feed;
+- 3 were listed companies whose ticker changed or was mistyped on the filing: SMLP (now SMC), HHC (now HHH), and TCMI, which should be TMCI.
+
+None were failed companies, so the bias from missing data looks small. It doesn't matter here anyway: the result is already about zero, and the bound only lowers it.
+
+**Primary result (126-day hold, after costs, each position at its own value):**
+
+|                      | Events | Alpha per month vs IWM      | Alpha vs SPY     | Average per event vs IWM |
+| -------------------- | ------ | --------------------------- | ---------------- | ------------------------ |
+| **All events**       | 16,369 | **+0.02%** (t 0.20, β 1.04) | −0.42% (t −1.39) | +0.08%                   |
+| Re-equalized daily   | 16,369 | +0.16% (t 1.03)             | −0.30%           |                          |
+| 63-day hold          | 20,413 | −0.08% (t −0.55)            | −0.52%           | −0.16%                   |
+| 21-day hold          | 24,929 | −0.38% (t −2.12)            | −0.81%           | −0.25%                   |
+| _No costs, 126 days_ |        | _+0.15% (t 1.24)_           | _−0.29%_         | _+0.86%_                 |
+| _No costs, 21 days_  |        | _+0.37% (t 2.08)_           | _−0.07%_         | _+0.47%_                 |
+
+Excess over IWM by year: 2016 +7.4%, 2017 +4.5%, 2018 −1.2%, 2019 +2.0%, 2020 −1.8%, 2021 +2.4%, 2022 −4.5%, 2023 +2.3%, 2024 +1.4%, 2025 +0.5%. That's 7 of 10 positive, and the only part of the rule that passed.
+
+**Predictions:**
+
+| Prediction                   | For                       | Against                   | Holds? |
+| ---------------------------- | ------------------------- | ------------------------- | ------ |
+| 1. Clusters beat single buys | Cluster −0.07%/mo (2,962) | Single +0.05%/mo (13,407) | No     |
+| 2. Low volume beats high     | Lowest third +0.01%/mo    | Highest third +0.10%/mo   | No     |
+| 3. CEO/CFO beats directors   | CEO/CFO −0.01%/mo (4,726) | Directors only +0.02%/mo  | No     |
+
+**Pass rule:**
+
+- alpha vs IWM: t 0.20, needs ≥ 2 ✗;
+- alpha vs SPY: negative ✗;
+- years: 7/10 positive ✓;
+- bound: ✗;
+- predictions: 0/3 ✗.
+
+**Reading it:** after costs, stocks bought by insiders did exactly what other small caps did (β ≈ 1 against IWM, alpha ≈ 0), and worse than SPY. None of the three "where it should be stronger" predictions holds, so there's no sign of the mechanism either.
+
+The one trace of an effect is before costs and in the first month: +0.37% a month vs IWM, t 2.1. That's consistent with the literature's finding that most of the effect comes early, in small stocks. But it's one of six information-only cuts, and a round trip each month (about 0.36% at the median) wipes it out completely. The published effect may have been arbitraged away since the papers came out, or it may never have been big enough to survive real spreads.

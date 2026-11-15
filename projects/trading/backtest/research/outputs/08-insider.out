@@ -1,0 +1,49 @@
+# Coverage
+{"filings":90708,"noTicker":2363,"noBars":4352,"noBarNearTrade":2795,"priceMismatch":3622,"checked":83993}
+entry filters (126-day hold): {"tooEarly":1391,"noEntryBar":33,"price":5413,"dollarVolume":11584,"overlap":28338}
+
+# Hold 21 trading days
+All events, value-weighted          24929  α/mo vs IWM  -0.38% (t -2.12, NW -2.08, β 1.02)  vs SPY  -0.81% (t -2.45)  per-event excess  -0.25%
+All events, re-equalized daily      24929  α/mo vs IWM  -0.28% (t -1.53, NW -1.52, β 1.02)  vs SPY  -0.71% (t -2.12)  per-event excess  -0.25%
+
+# Hold 63 trading days
+All events, value-weighted          20413  α/mo vs IWM  -0.08% (t -0.55, NW -0.58, β 1.03)  vs SPY  -0.52% (t -1.70)  per-event excess  -0.16%
+All events, re-equalized daily      20413  α/mo vs IWM   0.00% (t  0.03, NW  0.03, β 1.05)  vs SPY  -0.45% (t -1.45)  per-event excess  -0.16%
+
+# Hold 126 trading days (primary)
+All events, value-weighted          16369  α/mo vs IWM   0.02% (t  0.20, NW  0.22, β 1.04)  vs SPY  -0.42% (t -1.39)  per-event excess   0.08%
+All events, re-equalized daily      16369  α/mo vs IWM   0.16% (t  1.03, NW  1.07, β 1.06)  vs SPY  -0.30% (t -0.94)  per-event excess   0.08%
+cost per side: median 0.18%, 90th pct 0.93%; delisted with haircut: 7; finished: 15829
+excess over IWM by year: 2016 7.4%  2017 4.5%  2018 -1.2%  2019 2.0%  2020 -1.8%  2021 2.4%  2022 -4.5%  2023 2.3%  2024 1.4%  2025 0.5%  2026 -3.7%
+
+Predictions (value-weighted, vs IWM):
+1. Cluster (≥2 insiders in 30d)      2962  α/mo vs IWM  -0.07% (t -0.34, NW -0.43, β 1.13)  vs SPY  -0.51% (t -1.29)  per-event excess  -0.36%
+1. Single insider                   13407  α/mo vs IWM   0.05% (t  0.44, NW  0.47, β 1.02)  vs SPY  -0.40% (t -1.38)  per-event excess   0.18%
+2. Lowest dollar-volume third        5456  α/mo vs IWM   0.01% (t  0.06, NW  0.07, β 1.03)  vs SPY  -0.38% (t -1.08)  per-event excess   0.11%
+2. Middle third                      5456  α/mo vs IWM  -0.07% (t -0.51, NW -0.64, β 1.08)  vs SPY  -0.50% (t -1.49)  per-event excess   0.03%
+2. Highest third                     5457  α/mo vs IWM   0.10% (t  0.67, NW  0.71, β 1.01)  vs SPY  -0.42% (t -1.61)  per-event excess   0.10%
+3. CEO or CFO buying                 4726  α/mo vs IWM  -0.01% (t -0.07, NW -0.07, β 1.12)  vs SPY  -0.49% (t -1.38)  per-event excess   0.60%
+3. Directors only                    9379  α/mo vs IWM   0.02% (t  0.20, NW  0.23, β 1.01)  vs SPY  -0.41% (t -1.40)  per-event excess  -0.15%
+dollar-volume tercile cutoffs: $3.6M, $24.9M
+
+# 20 random unpriced tickers
+ECIA.PK 2018-12-20  ENCISION INC
+HITC   2025-03-28  Healthcare Integrated Technologies Inc.
+CYDY   2020-05-05  CytoDyn Inc.
+SMLP   2016-03-31  Summit Midstream Partners, LP
+UAMA   2021-03-16  United American Corp
+AHNR   2021-01-07  ATHENA SILVER CORP
+RCRIX  2017-04-28  RiverPark Floating Rate CMBS Fund
+MONIX  2023-11-20  Monachil Credit Income Fund
+HHC    2016-01-04  Howard Hughes Corp
+XALFX  2025-01-28  Variant Alternative Lending Fund
+CLRD   2021-12-20  Clearday, Inc.
+GRX.C  2020-12-22  Gabelli Healthcare & WellnessRx Trust
+TCMI   2022-05-20  TREACE MEDICAL CONCEPTS, INC.
+TRNF   2020-04-01  Taronis Fuels, Inc.
+DSNY   2017-08-09  DESTINY MEDIA TECHNOLOGIES INC
+CWGL   2016-03-28  Crimson Wine Group, Ltd
+NWTOU  2024-11-04  Newbury Street II Acquisition Corp
+VCRDX  2024-05-30  Versus Capital Infrastructure Income Fund
+BTHI   2017-02-07  IRONCLAD ENCRYPTION Corp
+OCEL   2023-06-30  Organicell Regenerative Medicine, Inc.
