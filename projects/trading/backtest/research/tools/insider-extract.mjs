@@ -5,9 +5,23 @@ import { readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const [zipDir, outPath] = process.argv.slice(2);
-if (!zipDir || !outPath) throw new Error('usage: insider-extract.mjs <zip dir> <out.jsonl>');
+if (!zipDir || !outPath)
+  throw new Error('usage: insider-extract.mjs <zip dir> <out.jsonl>');
 
-const MONTHS = { JAN: '01', FEB: '02', MAR: '03', APR: '04', MAY: '05', JUN: '06', JUL: '07', AUG: '08', SEP: '09', OCT: '10', NOV: '11', DEC: '12' };
+const MONTHS = {
+  JAN: '01',
+  FEB: '02',
+  MAR: '03',
+  APR: '04',
+  MAY: '05',
+  JUN: '06',
+  JUL: '07',
+  AUG: '08',
+  SEP: '09',
+  OCT: '10',
+  NOV: '11',
+  DEC: '12',
+};
 /** `30-MAR-2016` → `2016-03-30`. */
 const isoDate = (s) => {
   const m = /^(\d{2})-([A-Z]{3})-(\d{4})/.exec(s ?? '');
@@ -16,7 +30,9 @@ const isoDate = (s) => {
 
 /** Rows of one TSV inside a zip, as objects. Lines are joined until they have every column, since free-text fields can hold newlines. */
 function readTsv(zip, name) {
-  const text = execFileSync('unzip', ['-p', zip, name], { maxBuffer: 1 << 30 }).toString('utf8');
+  const text = execFileSync('unzip', ['-p', zip, name], {
+    maxBuffer: 1 << 30,
+  }).toString('utf8');
   const lines = text.split('\n');
   const header = (lines.shift() ?? '').replace(/\r$/, '').split('\t');
   const rows = [];
@@ -31,11 +47,21 @@ function readTsv(zip, name) {
   return rows;
 }
 
-const stats = { filings: 0, form4: 0, withPurchase: 0, insiderOwner: 0, kept: 0 };
+const stats = {
+  filings: 0,
+  form4: 0,
+  withPurchase: 0,
+  insiderOwner: 0,
+  kept: 0,
+};
 const out = [];
-for (const file of readdirSync(zipDir).filter((f) => f.endsWith('_form345.zip')).sort()) {
+for (const file of readdirSync(zipDir)
+  .filter((f) => f.endsWith('_form345.zip'))
+  .sort()) {
   const zip = join(zipDir, file);
-  const submissions = new Map(readTsv(zip, 'SUBMISSION.tsv').map((r) => [r.ACCESSION_NUMBER, r]));
+  const submissions = new Map(
+    readTsv(zip, 'SUBMISSION.tsv').map((r) => [r.ACCESSION_NUMBER, r]),
+  );
   stats.filings += submissions.size;
 
   const purchases = new Map();
@@ -54,7 +80,12 @@ for (const file of readdirSync(zipDir).filter((f) => f.endsWith('_form345.zip'))
   for (const o of readTsv(zip, 'REPORTINGOWNER.tsv')) {
     if (!purchases.has(o.ACCESSION_NUMBER)) continue;
     const list = owners.get(o.ACCESSION_NUMBER) ?? [];
-    list.push({ cik: o.RPTOWNERCIK, name: o.RPTOWNERNAME, relationship: o.RPTOWNER_RELATIONSHIP, title: o.RPTOWNER_TITLE });
+    list.push({
+      cik: o.RPTOWNERCIK,
+      name: o.RPTOWNERNAME,
+      relationship: o.RPTOWNER_RELATIONSHIP,
+      title: o.RPTOWNER_TITLE,
+    });
     owners.set(o.ACCESSION_NUMBER, list);
   }
 

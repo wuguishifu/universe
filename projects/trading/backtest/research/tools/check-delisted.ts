@@ -20,11 +20,19 @@ const cases: Array<[string, string]> = [
 const client = AlpacaClient.fromEnv();
 for (const [symbol, note] of cases) {
   try {
-    const bars = await client.dailyBars(symbol, '2016-01-01T00:00:00Z', '2026-11-14T00:00:00Z');
+    const bars = await client.dailyBars(
+      symbol,
+      '2016-01-01T00:00:00Z',
+      '2026-11-14T00:00:00Z',
+    );
     const first = bars[0]?.t.slice(0, 10) ?? '-';
     const last = bars.at(-1)?.t.slice(0, 10) ?? '-';
-    console.log(`${symbol.padEnd(6)} ${String(bars.length).padStart(5)} bars  ${first} → ${last}   (${note})`);
+    console.log(
+      `${symbol.padEnd(6)} ${String(bars.length).padStart(5)} bars  ${first} → ${last}   (${note})`,
+    );
   } catch (error) {
-    console.log(`${symbol.padEnd(6)} error: ${String(error).slice(0, 120)}   (${note})`);
+    console.log(
+      `${symbol.padEnd(6)} error: ${String(error).slice(0, 120)}   (${note})`,
+    );
   }
 }

@@ -24,20 +24,44 @@ const nyDate = (t) => t.slice(0, 10);
 const loadBars = (ticker, adjustment) => {
   const path = `${dataDir}/${adjustment === 'raw' ? 'daily-raw' : 'daily'}/${ticker}.json`;
   if (!fs.existsSync(path)) return null;
-  return JSON.parse(fs.readFileSync(path, 'utf8')).map((b) => ({ date: nyDate(b.t), o: b.o, h: b.h, l: b.l, c: b.c, v: b.v }));
+  return JSON.parse(fs.readFileSync(path, 'utf8')).map((b) => ({
+    date: nyDate(b.t),
+    o: b.o,
+    h: b.h,
+    l: b.l,
+    c: b.c,
+    v: b.v,
+  }));
 };
-const benchmark = Object.fromEntries(['SPY', 'IWM', 'BIL'].map((t) => [t, loadBars(t, 'all')]));
+const benchmark = Object.fromEntries(
+  ['SPY', 'IWM', 'BIL'].map((t) => [t, loadBars(t, 'all')]),
+);
 const dates = benchmark.BIL.map((b) => b.date);
 const lastDate = dates.at(-1);
 const dateIndex = new Map(dates.map((d, i) => [d, i]));
-const benchClose = Object.fromEntries(Object.entries(benchmark).map(([t, bars]) => [t, new Map(bars.map((b) => [b.date, b]))]));
+const benchClose = Object.fromEntries(
+  Object.entries(benchmark).map(([t, bars]) => [
+    t,
+    new Map(bars.map((b) => [b.date, b])),
+  ]),
+);
 
 // --- Filings → candidate events -----------------------------------------------------------------
 const purchases = readPurchases(fs, `${dataDir}/sec/purchases.jsonl`);
-const isCeoCfo = (o) => /Officer/i.test(o.relationship) && /\b(CEO|CFO|CHIEF EXECUTIVE|CHIEF FINANCIAL)\b/i.test(o.title ?? '');
-const insiders = (p) => p.owners.filter((o) => /Director|Officer/i.test(o.relationship));
+const isCeoCfo = (o) =>
+  /Officer/i.test(o.relationship) &&
+  /\b(CEO|CFO|CHIEF EXECUTIVE|CHIEF FINANCIAL)\b/i.test(o.title ?? '');
+const insiders = (p) =>
+  p.owners.filter((o) => /Director|Officer/i.test(o.relationship));
 
-const coverage = { filings: purchases.length, noTicker: 0, noBars: 0, noBarNearTrade: 0, priceMismatch: 0, checked: 0 };
+const coverage = {
+  filings: purchases.length,
+  noTicker: 0,
+  noBars: 0,
+  noBarNearTrade: 0,
+  priceMismatch: 0,
+  checked: 0,
+};
 const unpricedSamples = [];
 const bySymbol = new Map();
 for (const p of purchases) {
@@ -60,7 +84,9 @@ function halfSpread(bars, end, window = 63) {
     const b = bars[t + 1];
     if (!(a.h > 0 && a.l > 0 && b.h > 0 && b.l > 0 && a.c > 0)) continue;
     const c = Math.log(a.c);
-    sum += (c - (Math.log(a.h) + Math.log(a.l)) / 2) * (c - (Math.log(b.h) + Math.log(b.l)) / 2);
+    sum +=
+      (c - (Math.log(a.h) + Math.log(a.l)) / 2) *
+      (c - (Math.log(b.h) + Math.log(b.l)) / 2);
     n++;
   }
   if (n < 10) return MAX_COST;
@@ -85,10 +111,18 @@ function barOnOrBefore(bars, date, maxDays) {
       lo = mid + 1;
     } else hi = mid - 1;
   }
-  return found >= 0 && day(date) - day(bars[found].date) <= maxDays ? found : -1;
+  return found >= 0 && day(date) - day(bars[found].date) <= maxDays
+    ? found
+    : -1;
 }
 
-const skipped = { tooEarly: 0, noEntryBar: 0, price: 0, dollarVolume: 0, overlap: 0 };
+const skipped = {
+  tooEarly: 0,
+  noEntryBar: 0,
+  price: 0,
+  dollarVolume: 0,
+  overlap: 0,
+};
 const positions = Object.fromEntries(HOLDS.map((h) => [h, []]));
 
 for (const [symbol, filings] of bySymbol) {
@@ -96,7 +130,11 @@ for (const [symbol, filings] of bySymbol) {
   const adj = loadBars(symbol, 'all') ?? [];
   if (raw.length === 0 || adj.length === 0) {
     coverage.noBars += filings.length;
-    unpricedSamples.push({ symbol, issuer: filings[0].issuer, filed: filings[0].filed });
+    unpricedSamples.push({
+      symbol,
+      issuer: filings[0].issuer,
+      filed: filings[0].filed,
+    });
     continue;
   }
   const rawByDate = new Map(raw.map((b) => [b.date, b]));
@@ -120,20 +158,27 @@ for (const [symbol, filings] of bySymbol) {
 
   // Group same-day filings into events.
   const byFiled = new Map();
-  for (const f of valid) byFiled.set(f.filed, [...(byFiled.get(f.filed) ?? []), f]);
-  const events = [...byFiled.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([filed, fs_]) => {
-    const recent = valid.filter((f) => f.filed <= filed && day(filed) - day(f.filed) <= CLUSTER_DAYS);
-    const recentInsiders = new Set(recent.flatMap((f) => insiders(f).map((o) => o.cik)));
-    const owners = fs_.flatMap(insiders);
-    return {
-      symbol,
-      filed,
-      value: fs_.reduce((a, f) => a + f.value, 0),
-      cluster: recentInsiders.size >= 2,
-      ceoCfo: owners.some(isCeoCfo),
-      directorsOnly: owners.every((o) => !/Officer/i.test(o.relationship)),
-    };
-  });
+  for (const f of valid)
+    byFiled.set(f.filed, [...(byFiled.get(f.filed) ?? []), f]);
+  const events = [...byFiled.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([filed, fs_]) => {
+      const recent = valid.filter(
+        (f) => f.filed <= filed && day(filed) - day(f.filed) <= CLUSTER_DAYS,
+      );
+      const recentInsiders = new Set(
+        recent.flatMap((f) => insiders(f).map((o) => o.cik)),
+      );
+      const owners = fs_.flatMap(insiders);
+      return {
+        symbol,
+        filed,
+        value: fs_.reduce((a, f) => a + f.value, 0),
+        cluster: recentInsiders.size >= 2,
+        ceoCfo: owners.some(isCeoCfo),
+        directorsOnly: owners.every((o) => !/Officer/i.test(o.relationship)),
+      };
+    });
 
   for (const hold of HOLDS) {
     let busyUntil = '';
@@ -173,11 +218,18 @@ for (const [symbol, filings] of bySymbol) {
 
       // Walk the hold. A gap of more than MAX_GAP_DAYS ends the series there.
       let x = e;
-      while (x + 1 < adj.length && x + 1 <= e + hold - 1 && day(adj[x + 1].date) - day(adj[x].date) <= MAX_GAP_DAYS) x++;
+      while (
+        x + 1 < adj.length &&
+        x + 1 <= e + hold - 1 &&
+        day(adj[x + 1].date) - day(adj[x].date) <= MAX_GAP_DAYS
+      )
+        x++;
       const complete = x === e + hold - 1;
-      const endedEarly = !complete && (x + 1 < adj.length || adj[x].date < lastDate);
+      const endedEarly =
+        !complete && (x + 1 < adj.length || adj[x].date < lastDate);
       const lastRaw = rawByDate.get(adj[x].date);
-      const delisted = endedEarly && ((lastRaw && lastRaw.c < 1) || adj[x].c < 0.5 * entry.o);
+      const delisted =
+        endedEarly && ((lastRaw && lastRaw.c < 1) || adj[x].c < 0.5 * entry.o);
 
       // Daily returns on the market calendar; days the stock didn't trade count as 0.
       const startIndex = dateIndex.get(entry.date);
@@ -187,10 +239,13 @@ for (const [symbol, filings] of bySymbol) {
       returns[0] = adj[e].c / adj[e].o / (1 + cost) - 1;
       for (let t = e + 1; t <= x; t++) {
         const k = dateIndex.get(adj[t].date);
-        if (k !== undefined) returns[k - startIndex] = adj[t].c / adj[t - 1].c - 1;
+        if (k !== undefined)
+          returns[k - startIndex] = adj[t].c / adj[t - 1].c - 1;
       }
       const lastIdx = returns.length - 1;
-      const exitFactor = (complete || endedEarly ? 1 - cost : 1) * (delisted ? DELIST_HAIRCUT : 1);
+      const exitFactor =
+        (complete || endedEarly ? 1 - cost : 1) *
+        (delisted ? DELIST_HAIRCUT : 1);
       returns[lastIdx] = (1 + returns[lastIdx]) * exitFactor - 1;
 
       const total = returns.reduce((v, r) => v * (1 + r), 1) - 1;
@@ -203,7 +258,8 @@ for (const [symbol, filings] of bySymbol) {
         startIndex,
         returns,
         total,
-        excess: iwmStart && iwmEnd ? total - (iwmEnd.c / iwmStart.o - 1) : undefined,
+        excess:
+          iwmStart && iwmEnd ? total - (iwmEnd.c / iwmStart.o - 1) : undefined,
         finished: complete || endedEarly,
         delisted,
         cost,
@@ -228,11 +284,20 @@ function portfolio(list, weighting) {
       value *= 1 + p.returns[k];
     }
   }
-  return dates.map((d, i) => ({ date: d, r: den[i] > 0 ? num[i] / den[i] : undefined, n: den[i] }));
+  return dates.map((d, i) => ({
+    date: d,
+    r: den[i] > 0 ? num[i] / den[i] : undefined,
+    n: den[i],
+  }));
 }
 
 const benchDaily = Object.fromEntries(
-  Object.entries(benchmark).map(([t, bars]) => [t, new Map(bars.map((b, i) => [b.date, i === 0 ? 0 : b.c / bars[i - 1].c - 1]))]),
+  Object.entries(benchmark).map(([t, bars]) => [
+    t,
+    new Map(
+      bars.map((b, i) => [b.date, i === 0 ? 0 : b.c / bars[i - 1].c - 1]),
+    ),
+  ]),
 );
 
 /** Compounds daily returns to months; days with no positions earn BIL. */
@@ -243,11 +308,20 @@ function monthly(daily) {
     const m = months.get(key) ?? { p: 1, SPY: 1, IWM: 1, BIL: 1, days: 0 };
     const bil = benchDaily.BIL.get(date) ?? 0;
     m.p *= 1 + (r ?? bil);
-    for (const t of ['SPY', 'IWM', 'BIL']) m[t] *= 1 + (benchDaily[t].get(date) ?? 0);
+    for (const t of ['SPY', 'IWM', 'BIL'])
+      m[t] *= 1 + (benchDaily[t].get(date) ?? 0);
     m.days += r === undefined ? 0 : 1;
     months.set(key, m);
   }
-  return [...months.entries()].filter(([, m]) => m.days > 0).map(([month, m]) => ({ month, p: m.p - 1, SPY: m.SPY - 1, IWM: m.IWM - 1, BIL: m.BIL - 1 }));
+  return [...months.entries()]
+    .filter(([, m]) => m.days > 0)
+    .map(([month, m]) => ({
+      month,
+      p: m.p - 1,
+      SPY: m.SPY - 1,
+      IWM: m.IWM - 1,
+      BIL: m.BIL - 1,
+    }));
 }
 
 /** OLS of y on x with plain and Newey–West (3 lags) t-stats for the intercept. */
@@ -281,8 +355,14 @@ function regress(y, x) {
 function analyze(list, weighting = 'value') {
   const months = monthly(portfolio(list, weighting));
   const y = months.map((m) => m.p - m.BIL);
-  const vsIwm = regress(y, months.map((m) => m.IWM - m.BIL));
-  const vsSpy = regress(y, months.map((m) => m.SPY - m.BIL));
+  const vsIwm = regress(
+    y,
+    months.map((m) => m.IWM - m.BIL),
+  );
+  const vsSpy = regress(
+    y,
+    months.map((m) => m.SPY - m.BIL),
+  );
   const years = {};
   for (const m of months) {
     const yk = m.month.slice(0, 4);
@@ -295,8 +375,11 @@ function analyze(list, weighting = 'value') {
     events: list.length,
     vsIwm,
     vsSpy,
-    years: Object.fromEntries(Object.entries(years).map(([k, v]) => [k, v.p - v.IWM])),
-    eventExcess: finished.reduce((a, p) => a + p.excess, 0) / (finished.length || 1),
+    years: Object.fromEntries(
+      Object.entries(years).map(([k, v]) => [k, v.p - v.IWM]),
+    ),
+    eventExcess:
+      finished.reduce((a, p) => a + p.excess, 0) / (finished.length || 1),
     finished: finished.length,
   };
 }
@@ -312,17 +395,29 @@ console.log(`entry filters (126-day hold): ${JSON.stringify(skipped)}`);
 
 for (const hold of HOLDS) {
   const list = positions[hold];
-  console.log(`\n# Hold ${hold} trading days${hold === PRIMARY ? ' (primary)' : ''}`);
+  console.log(
+    `\n# Hold ${hold} trading days${hold === PRIMARY ? ' (primary)' : ''}`,
+  );
   const main = analyze(list);
   console.log(line('All events, value-weighted', main));
   console.log(line('All events, re-equalized daily', analyze(list, 'equal')));
   if (hold === PRIMARY) {
     const costs = list.map((p) => p.cost).sort((a, b) => a - b);
-    console.log(`cost per side: median ${pct(median(costs))}, 90th pct ${pct(costs[Math.floor(costs.length * 0.9)])}; delisted with haircut: ${list.filter((p) => p.delisted).length}; finished: ${main.finished}`);
-    console.log('excess over IWM by year: ' + Object.entries(main.years).map(([y, v]) => `${y} ${pct(v, 1)}`).join('  '));
+    console.log(
+      `cost per side: median ${pct(median(costs))}, 90th pct ${pct(costs[Math.floor(costs.length * 0.9)])}; delisted with haircut: ${list.filter((p) => p.delisted).length}; finished: ${main.finished}`,
+    );
+    console.log(
+      'excess over IWM by year: ' +
+        Object.entries(main.years)
+          .map(([y, v]) => `${y} ${pct(v, 1)}`)
+          .join('  '),
+    );
 
     const dv = list.map((p) => p.dollarVolume).sort((a, b) => a - b);
-    const [t1, t2] = [dv[Math.floor(dv.length / 3)], dv[Math.floor((2 * dv.length) / 3)]];
+    const [t1, t2] = [
+      dv[Math.floor(dv.length / 3)],
+      dv[Math.floor((2 * dv.length) / 3)],
+    ];
     console.log('\nPredictions (value-weighted, vs IWM):');
     for (const [label, filter] of [
       ['1. Cluster (≥2 insiders in 30d)', (p) => p.cluster],
@@ -332,13 +427,35 @@ for (const hold of HOLDS) {
       ['2. Highest third', (p) => p.dollarVolume >= t2],
       ['3. CEO or CFO buying', (p) => p.ceoCfo],
       ['3. Directors only', (p) => p.directorsOnly],
-    ]) console.log(line(label, analyze(list.filter(filter))));
-    console.log(`dollar-volume tercile cutoffs: $${(t1 / 1e6).toFixed(1)}M, $${(t2 / 1e6).toFixed(1)}M`);
+    ])
+      console.log(line(label, analyze(list.filter(filter))));
+    console.log(
+      `dollar-volume tercile cutoffs: $${(t1 / 1e6).toFixed(1)}M, $${(t2 / 1e6).toFixed(1)}M`,
+    );
 
     fs.writeFileSync(
       `${dataDir}/sec/positions-${hold}.csv`,
-      ['symbol,filed,entry,exit,total,excess,cost,dollarVolume,cluster,ceoCfo,directorsOnly,delisted']
-        .concat(list.map((p) => [p.symbol, p.filed, p.entryDate, p.exitDate, p.total.toFixed(4), p.excess?.toFixed(4) ?? '', p.cost.toFixed(4), Math.round(p.dollarVolume), p.cluster, p.ceoCfo, p.directorsOnly, p.delisted].join(',')))
+      [
+        'symbol,filed,entry,exit,total,excess,cost,dollarVolume,cluster,ceoCfo,directorsOnly,delisted',
+      ]
+        .concat(
+          list.map((p) =>
+            [
+              p.symbol,
+              p.filed,
+              p.entryDate,
+              p.exitDate,
+              p.total.toFixed(4),
+              p.excess?.toFixed(4) ?? '',
+              p.cost.toFixed(4),
+              Math.round(p.dollarVolume),
+              p.cluster,
+              p.ceoCfo,
+              p.directorsOnly,
+              p.delisted,
+            ].join(','),
+          ),
+        )
         .join('\n') + '\n',
     );
   }
@@ -347,7 +464,8 @@ for (const hold of HOLDS) {
 if (process.argv.includes('--sample-unpriced')) {
   // A fixed-seed sample, so the same 20 come out every run.
   let seed = 42;
-  const rand = () => ((seed = (seed * 1_103_515_245 + 12_345) % 2 ** 31) / 2 ** 31);
+  const rand = () =>
+    (seed = (seed * 1_103_515_245 + 12_345) % 2 ** 31) / 2 ** 31;
   const pool = [...unpricedSamples];
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
@@ -355,5 +473,6 @@ if (process.argv.includes('--sample-unpriced')) {
   }
   const sample = pool.slice(0, 20);
   console.log('\n# 20 random unpriced tickers');
-  for (const s of sample) console.log(`${s.symbol.padEnd(6)} ${s.filed}  ${s.issuer}`);
+  for (const s of sample)
+    console.log(`${s.symbol.padEnd(6)} ${s.filed}  ${s.issuer}`);
 }

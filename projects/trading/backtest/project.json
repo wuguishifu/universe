@@ -3,9 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "projects/trading/backtest/src",
   "projectType": "application",
-  "tags": [
-    "scope:server"
-  ],
+  "tags": ["scope:server"],
   "targets": {
     "backtest": {
       "executor": "nx:run-commands",

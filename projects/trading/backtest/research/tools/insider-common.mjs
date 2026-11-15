@@ -9,7 +9,10 @@ export function normalizeSymbol(raw) {
   if (/^\s*(N\/?A|N\.A\.?|NONE|NULL)\s*$/i.test(raw ?? '')) return undefined;
   const first = (raw ?? '')
     .toUpperCase()
-    .replace(/\b(NYSE|NASDAQ|NYSEAMERICAN|NYSEMKT|AMEX|OTC|OTCQB|OTCQX|NYSE AMERICAN)\s*:\s*/g, '')
+    .replace(
+      /\b(NYSE|NASDAQ|NYSEAMERICAN|NYSEMKT|AMEX|OTC|OTCQB|OTCQX|NYSE AMERICAN)\s*:\s*/g,
+      '',
+    )
     .replace(/[()]/g, ' ')
     .trim()
     .split(/[\s,;/]+/)[0]
@@ -18,4 +21,8 @@ export function normalizeSymbol(raw) {
 }
 
 export const readPurchases = (fs, path) =>
-  fs.readFileSync(path, 'utf8').trim().split('\n').map((line) => JSON.parse(line));
+  fs
+    .readFileSync(path, 'utf8')
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line));
