@@ -1,0 +1,63 @@
+{
+  "name": "late-momentum-c1",
+  "description": "Candidate 1: open-to-10:00 move of at least 0.5% \u2192 buy the 0DTE ATM option that way at 15:00; +100% target, else flat at 15:58.",
+  "from": "2024-02-01",
+  "to": "2026-04-30",
+  "strategy": {
+    "tickers": ["SPY", "QQQ", "IWM"],
+    "timeframeMinutes": 5,
+    "session": "regular",
+    "indicators": {},
+    "signal": {
+      "type": "timedMomentum",
+      "reference": "open",
+      "measureMinutes": 30,
+      "entryBeforeCloseMinutes": 60,
+      "minMovePct": 0.005,
+      "invert": false
+    },
+    "entryFilters": [],
+    "exits": [
+      {
+        "type": "flatBeforeClose",
+        "minutes": 2
+      },
+      {
+        "type": "profitTarget",
+        "pct": 1
+      }
+    ],
+    "contract": {
+      "expiry": {
+        "type": "nearest",
+        "minDte": 0,
+        "maxDte": 0
+      },
+      "strike": {
+        "type": "atm"
+      },
+      "filters": []
+    },
+    "sizing": {
+      "type": "contracts",
+      "count": 1
+    },
+    "risk": [
+      {
+        "type": "maxPositions",
+        "count": 3
+      }
+    ],
+    "markPrice": "mid"
+  },
+  "simulation": {
+    "startingCash": 25000,
+    "fillAt": "nextTrade",
+    "spreadPct": 0.01,
+    "minSpread": 0.01,
+    "slippagePct": 0,
+    "feePerContract": 0.05,
+    "maxPriceAgeMinutes": 5,
+    "warmupDays": 5
+  }
+}

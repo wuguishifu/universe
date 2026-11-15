@@ -1,0 +1,60 @@
+Sweeping 04-opening-range with 13 workers
+216 configs
+  train 2024-02-01 → 2026-04-30: 605/6048
+  train 2024-02-01 → 2026-04-30: 1210/6048
+  train 2024-02-01 → 2026-04-30: 1815/6048
+  train 2024-02-01 → 2026-04-30: 2420/6048
+  train 2024-02-01 → 2026-04-30: 3024/6048
+  train 2024-02-01 → 2026-04-30: 3629/6048
+  train 2024-02-01 → 2026-04-30: 4234/6048
+  train 2024-02-01 → 2026-04-30: 4839/6048
+  train 2024-02-01 → 2026-04-30: 5444/6048
+  train 2024-02-01 → 2026-04-30: 6048/6048
+
+Average effect of each setting on the training range (216 configs):
+
+range  mean P&L  median  profitable  trades
+or5      -$6091  -$6222          7%    2265
+or15      +$657   +$499         58%    2025
+or30     -$5692  -$6289          8%    1796
+
+breakouts  mean P&L  median  profitable  trades
+first        -$3967  -$4454         21%    1622
+every        -$3451  -$3582         28%    2436
+
+stop   mean P&L  median  profitable  trades
+range    -$1862  -$2819         38%    1921
+vwap     -$3796  -$4387         22%    2511
+none     -$5469  -$5364         14%    1654
+
+target  mean P&L  median  profitable  trades
+tp50      -$6115  -$5990          7%    2069
+tp100     -$4125  -$5205         25%    2017
+none       -$887  -$1403         42%    2000
+
+window   mean P&L  median  profitable  trades
+morning    -$4280  -$4559         20%    1804
+allday     -$3138  -$3674         29%    2254
+
+expiry  mean P&L  median  profitable  trades
+0dte      -$3793  -$4242         24%    2034
+1dte      -$3624  -$4228         25%    2024
+
+Top 10 by training netPnl (of 216 with ≥300 trades):
+
+#                                          config  train trades      net    PF    t   max DD    2024     2025    2026
+1     or15 · every · range · none · allday · 0dte          2322  +$10375  1.07  1.0  -$10075  -$1900  +$10425  +$1850
+2     or15 · every · range · none · allday · 1dte          2344   +$9525  1.08  1.1   -$9060  -$2635   +$9342  +$2818
+3      or15 · every · vwap · none · allday · 0dte          4156   +$8291  1.06  0.8   -$9895   +$871   +$6069  +$1352
+4     or5 · every · range · none · morning · 0dte          2205   +$8195  1.06  0.8   -$9945  -$6926  +$13101  +$2019
+5      or5 · every · range · none · allday · 0dte          2797   +$7343  1.04  0.7  -$10655  -$5101  +$12405    +$39
+6    or15 · every · range · tp100 · allday · 1dte          2368   +$7280  1.06  1.0   -$7678  -$5013   +$7186  +$5108
+7    or15 · every · range · none · morning · 0dte          1820   +$6305  1.05  0.7   -$9157  -$1454   +$5579  +$2180
+8      or15 · first · vwap · none · allday · 0dte          1655   +$5834  1.09  0.9   -$4772  +$2435   +$4005   -$607
+9    or15 · every · range · none · morning · 1dte          1839   +$5697  1.05  0.7   -$7950  -$1913   +$4752  +$2858
+10  or15 · every · range · tp100 · morning · 1dte          1842   +$5590  1.05  0.8   -$5973  -$3161   +$4342  +$4409
+
+53 of 216 configs were profitable on the training range.
+Warning: 18 configs ended a day with a position still open, e.g. range=or5 breakouts=first stop=none target=none window=morning expiry=1dte on 1 days.
+
+Finished in 102s. Wrote /Users/bo/Developer/wuguishifu/universe/projects/trading/backtest/runs/2026-11-15T08-22-58-sweep-04-opening-range

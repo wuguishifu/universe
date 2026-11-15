@@ -113,6 +113,8 @@ export const indicatorBreakConfigSchema = z.object({
    * `wick`: any part of a bar reaches the wrong side (the low for calls, the high for puts).
    */
   trigger: z.enum(['close', 'wick']).default('close'),
+  /** A different indicator for puts, e.g. the lower edge of a band when `indicator` is the upper. */
+  bearishIndicator: z.string().min(1).optional(),
 });
 
 /** Exits when the underlying breaks through an indicator against the position. Not checked on the entry bar. */
@@ -127,7 +129,11 @@ export class IndicatorBreak implements ExitRule {
   shouldExit(position: Position, event: ExitEvent): boolean {
     if (event.kind !== 'bar') return false;
     const { bar, index, indicators } = event.snapshot;
-    const level = indicators[this.config.indicator];
+    const name =
+      position.direction === 'bearish'
+        ? (this.config.bearishIndicator ?? this.config.indicator)
+        : this.config.indicator;
+    const level = indicators[name];
     if (level === undefined || index <= position.entryBarIndex) return false;
 
     const wick = this.config.trigger === 'wick';

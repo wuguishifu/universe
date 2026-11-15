@@ -1,0 +1,77 @@
+{
+  "startingCash": 25000,
+  "endingEquity": 27056.400000000125,
+  "netPnl": 2056.400000000125,
+  "returnPct": 0.082256000000005,
+  "fees": 8.599999999999985,
+  "trades": 86,
+  "wins": 46,
+  "losses": 40,
+  "winRate": 0.5348837209302325,
+  "avgWin": 83.50869565217397,
+  "avgLoss": -44.62499999999998,
+  "largestWin": 311.90000000000003,
+  "largestLoss": -138.1,
+  "profitFactor": 2.1520448179271736,
+  "expectancy": 23.911627906976786,
+  "tStat": 2.6712849340992895,
+  "avgPnlPct": 0.16919655380886492,
+  "maxDrawdown": 303.4499999999789,
+  "maxDrawdownPct": 0.011495014849383983,
+  "tradingDays": 137,
+  "winningDays": 30,
+  "losingDays": 33,
+  "bestDay": 670.7,
+  "worstDay": -244.2,
+  "byReason": {
+    "profitTarget": {
+      "trades": 40,
+      "netPnl": 3705.0000000000023,
+      "winRate": 1,
+      "tStat": 8.922223791039734
+    },
+    "flatBeforeClose": {
+      "trades": 46,
+      "netPnl": -1648.5999999999995,
+      "winRate": 0.13043478260869565,
+      "tStat": -6.419769816991314
+    }
+  },
+  "byDirection": {
+    "bullish": {
+      "trades": 45,
+      "netPnl": 325.49999999999966,
+      "winRate": 0.4666666666666667,
+      "tStat": 0.6827749015463039
+    },
+    "bearish": {
+      "trades": 41,
+      "netPnl": 1730.9000000000003,
+      "winRate": 0.6097560975609756,
+      "tStat": 2.9439795469854855
+    }
+  },
+  "byTicker": {
+    "QQQ": {
+      "trades": 41,
+      "netPnl": 1733.9000000000024,
+      "winRate": 0.6341463414634146,
+      "tStat": 2.7240033043365552
+    },
+    "IWM": {
+      "trades": 37,
+      "netPnl": 101.30000000000001,
+      "winRate": 0.43243243243243246,
+      "tStat": 0.4039787776765153
+    },
+    "SPY": {
+      "trades": 8,
+      "netPnl": 221.20000000000007,
+      "winRate": 0.5,
+      "tStat": 0.6585617068557117
+    }
+  },
+  "signals": 86,
+  "skipped": {},
+  "daysLeftOpen": 0
+}

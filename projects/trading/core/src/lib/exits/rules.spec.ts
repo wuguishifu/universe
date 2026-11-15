@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { at, bar, DAY, NEXT_DAY, position } from '../../testing/fixtures';
+import { EntryContext } from '../filters/entry-filter';
+import { IndicatorSide } from '../filters/filters';
 import { REGULAR_HOURS } from '../market/calendar';
 import { nyTime } from '../market/ny-time';
 import { Clock, Direction, IndicatorValues } from '../strategy/types';
@@ -159,6 +161,53 @@ describe('IndicatorBreak', () => {
       close.shouldExit(position({ entryBarIndex: 11 }), barEvent(90)),
       false,
     );
+  });
+
+  it('checks puts against bearishIndicator when given', () => {
+    const band = new IndicatorBreak({
+      type: 'indicatorBreak',
+      indicator: 'upper',
+      bearishIndicator: 'lower',
+      trigger: 'close',
+    });
+    const indicators = { upper: 105, lower: 95 };
+    const put = position({ direction: 'bearish' });
+    assert.equal(band.shouldExit(put, barEvent(94, { indicators })), false);
+    assert.equal(band.shouldExit(put, barEvent(96, { indicators })), true);
+    assert.equal(
+      band.shouldExit(position(), barEvent(104, { indicators })),
+      true,
+    );
+  });
+});
+
+describe('IndicatorSide', () => {
+  const filter = new IndicatorSide({
+    type: 'indicatorSide',
+    fast: 'price',
+    slow: 'vwap',
+  });
+  const context = (
+    direction: Direction,
+    indicators: IndicatorValues,
+  ): EntryContext => ({
+    ticker: 'SPY',
+    direction,
+    clock: now,
+    barIndex: 11,
+    entriesToday: 0,
+    indicators,
+  });
+
+  it('lets calls through above and puts below, and nothing while warming up', () => {
+    const above = { price: 101, vwap: 100 };
+    assert.equal(filter.allow(context('bullish', above)), true);
+    assert.equal(filter.allow(context('bearish', above)), false);
+    assert.equal(
+      filter.allow(context('bearish', { price: 99, vwap: 100 })),
+      true,
+    );
+    assert.equal(filter.allow(context('bullish', { price: 101 })), false);
   });
 });
 

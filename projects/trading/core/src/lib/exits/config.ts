@@ -47,5 +47,8 @@ export function createExitRule(config: ExitRuleConfig): ExitRule {
 
 /** Indicator names the rule reads, so the config can check they exist. */
 export function exitRuleIndicators(config: ExitRuleConfig): string[] {
-  return config.type === 'indicatorBreak' ? [config.indicator] : [];
+  if (config.type !== 'indicatorBreak') return [];
+  return config.bearishIndicator
+    ? [config.indicator, config.bearishIndicator]
+    : [config.indicator];
 }

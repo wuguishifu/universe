@@ -2,6 +2,14 @@ import { z } from 'zod';
 
 import { Ema, emaConfigSchema } from './ema';
 import { Indicator } from './indicator';
+import {
+  NoiseBand,
+  noiseBandConfigSchema,
+  OpeningRange,
+  openingRangeConfigSchema,
+  Price,
+  priceConfigSchema,
+} from './session-levels';
 import { Vwap, vwapConfigSchema } from './vwap';
 
 // To add an indicator: write a class implementing `Indicator` with its own config schema,
@@ -9,6 +17,9 @@ import { Vwap, vwapConfigSchema } from './vwap';
 export const indicatorConfigSchema = z.discriminatedUnion('type', [
   emaConfigSchema,
   vwapConfigSchema,
+  priceConfigSchema,
+  openingRangeConfigSchema,
+  noiseBandConfigSchema,
 ]);
 export type IndicatorConfig = z.infer<typeof indicatorConfigSchema>;
 
@@ -18,5 +29,11 @@ export function createIndicator(config: IndicatorConfig): Indicator {
       return new Ema(config);
     case 'vwap':
       return new Vwap(config);
+    case 'price':
+      return new Price(config);
+    case 'openingRange':
+      return new OpeningRange(config);
+    case 'noiseBand':
+      return new NoiseBand(config);
   }
 }

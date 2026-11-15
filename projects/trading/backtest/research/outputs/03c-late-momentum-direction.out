@@ -1,0 +1,45 @@
+Sweeping 03c-late-momentum-direction with 13 workers
+12 configs
+  train 2024-02-01 → 2026-04-30: 34/336
+  train 2024-02-01 → 2026-04-30: 68/336
+  train 2024-02-01 → 2026-04-30: 101/336
+  train 2024-02-01 → 2026-04-30: 135/336
+  train 2024-02-01 → 2026-04-30: 168/336
+  train 2024-02-01 → 2026-04-30: 202/336
+  train 2024-02-01 → 2026-04-30: 236/336
+  train 2024-02-01 → 2026-04-30: 269/336
+  train 2024-02-01 → 2026-04-30: 303/336
+  train 2024-02-01 → 2026-04-30: 336/336
+
+Average effect of each setting on the training range (12 configs):
+
+direction  mean P&L  median  profitable  trades
+with         +$3708  +$3792        100%     298
+against      -$3125  -$2568          0%     298
+
+minMove  mean P&L  median  profitable  trades
+0.4%         +$57   +$534         50%     450
+0.5%        +$412   +$583         50%     328
+0.75%       +$404   +$167         50%     117
+
+exit   mean P&L  median  profitable  trades
+hold      +$970   +$892         50%     298
+tp100     -$387    -$84         50%     298
+
+Top 10 by training netPnl (of 12 with ≥100 trades):
+
+#                    config  train trades     net    PF     t  max DD   2024    2025   2026
+1        with · 0.5% · hold           328  +$5127  1.60   2.4  -$1653  -$208  +$5202  +$133
+2        with · 0.4% · hold           450  +$4042  1.34   1.8  -$1773  -$651  +$4520  +$172
+3       with · 0.5% · tp100           328  +$4006  1.54   2.8  -$1707   +$90  +$2998  +$918
+4       with · 0.75% · hold           117  +$3578  2.24   2.2   -$682   +$58  +$3568   -$48
+5       with · 0.4% · tp100           450  +$3364  1.32   2.2  -$1887   +$80  +$2627  +$656
+6      with · 0.75% · tp100           117  +$2128  1.83   2.3   -$688   +$53  +$1698  +$377
+7    against · 0.75% · hold           117  -$1794  0.65  -1.5  -$3291  -$412  -$1921  +$539
+8   against · 0.75% · tp100           117  -$2296  0.51  -2.6  -$2629  -$131  -$2143   -$22
+9     against · 0.4% · hold           450  -$2296  0.85  -1.1  -$4994  -$127  -$3024  +$854
+10    against · 0.5% · hold           328  -$2841  0.77  -1.5  -$4936   -$63  -$3052  +$274
+
+6 of 12 configs were profitable on the training range.
+
+Finished in 19s. Wrote /Users/bo/Developer/wuguishifu/universe/projects/trading/backtest/runs/2026-11-15T08-15-52-sweep-03c-late-momentum-direction

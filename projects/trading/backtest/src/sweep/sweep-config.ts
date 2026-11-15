@@ -35,7 +35,9 @@ export const sweepConfigSchema = z.object({
         message: 'every axis needs at least one value',
       },
     ),
-  rankBy: z.enum(['netPnl', 'profitFactor', 'expectancy']).default('netPnl'),
+  rankBy: z
+    .enum(['netPnl', 'profitFactor', 'expectancy', 'tStat'])
+    .default('netPnl'),
   /** Configs with fewer training trades than this aren't ranked. */
   minTrades: z.number().int().nonnegative().default(30),
   top: z.number().int().positive().default(10),

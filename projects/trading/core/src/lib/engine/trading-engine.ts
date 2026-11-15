@@ -231,7 +231,10 @@ export class TradingEngine {
       indicators[name] = indicator.update(bar);
     }
     state.barIndex += 1;
-    const signal = state.signal.update(indicators, bar);
+    const clock = this.clockAt(
+      bar.time + this.config.timeframeMinutes * MINUTE_MS,
+    );
+    const signal = state.signal.update(indicators, bar, clock);
     if (!live) return;
 
     const snapshot: BarSnapshot = {
@@ -240,9 +243,6 @@ export class TradingEngine {
       indicators,
       signal,
     };
-    const clock = this.clockAt(
-      bar.time + this.config.timeframeMinutes * MINUTE_MS,
-    );
     events.push({ type: 'bar', ticker: state.ticker, snapshot });
     // Exits first, so an opposite signal can close the old position and open the new one on the same bar.
     this.checkExits(state.ticker, { kind: 'bar', clock, snapshot }, events);
@@ -292,6 +292,7 @@ export class TradingEngine {
       barIndex: snapshot.index,
       lastExit: state.lastExit,
       entriesToday: state.entriesToday,
+      indicators: snapshot.indicators,
     };
     const blocked = this.filters.find((filter) => !filter.allow(context));
     if (blocked) return skip(`blocked by ${blocked.name}`);

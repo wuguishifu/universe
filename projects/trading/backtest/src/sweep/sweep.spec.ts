@@ -118,8 +118,10 @@ const stats = (netPnl: number): BacktestStats => ({
   worstDay: 0,
   byReason: {},
   byDirection: {},
+  byTicker: {},
   signals: 0,
   skipped: {},
+  daysLeftOpen: 0,
 });
 
 describe('computeMarginals', () => {
@@ -184,6 +186,26 @@ describe('chunkRange', () => {
       const prev = dates.indexOf(chunks[i - 1]?.to ?? '');
       assert.equal(dates.indexOf(chunks[i]?.from ?? ''), prev + 1);
     }
+  });
+
+  it('splits chunks that would span a new year', () => {
+    const days = [
+      '2025-12-29',
+      '2025-12-30',
+      '2025-12-31',
+      '2026-01-02',
+      '2026-01-05',
+    ];
+    const chunks = chunkRange(
+      days,
+      { from: '2025-12-29', to: '2026-01-05' },
+      1,
+      5,
+    );
+    assert.deepEqual(chunks, [
+      { from: '2025-12-29', to: '2025-12-31' },
+      { from: '2026-01-02', to: '2026-01-05' },
+    ]);
   });
 
   it('never makes more chunks than days', () => {

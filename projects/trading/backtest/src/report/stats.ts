@@ -1,6 +1,11 @@
 import { BacktestResult } from '../sim/backtest';
 
-export type Breakdown = { trades: number; netPnl: number; winRate: number };
+export type Breakdown = {
+  trades: number;
+  netPnl: number;
+  winRate: number;
+  tStat: number;
+};
 
 export type BacktestStats = {
   startingCash: number;
@@ -41,12 +46,15 @@ export type BacktestStats = {
 
   byReason: Record<string, Breakdown>;
   byDirection: Record<string, Breakdown>;
+  byTicker: Record<string, Breakdown>;
   signals: number;
   /** Why signals didn't become trades, with contract symbols and dates stripped so they group. */
   skipped: Record<string, number>;
+  /** Days that ended with a position still open. Every strategy here is flat overnight, so this should be 0. */
+  daysLeftOpen: number;
 };
 
-type Tally = { trades: number; netPnl: number; wins: number };
+type Tally = { trades: number; netPnl: number; wins: number; sumSq: number };
 
 /**
  * Running totals for a stretch of time. Totals from back-to-back stretches merge exactly, so a
@@ -64,6 +72,7 @@ export type StatsPartial = {
   fees: number;
   byReason: Record<string, Tally>;
   byDirection: Record<string, Tally>;
+  byTicker: Record<string, Tally>;
 
   days: number;
   winningDays: number;
@@ -81,6 +90,7 @@ export type StatsPartial = {
 
   signals: number;
   skipped: Record<string, number>;
+  daysLeftOpen: number;
 };
 
 export const normalizeSkipReason = (reason: string): string =>
@@ -90,9 +100,10 @@ export const normalizeSkipReason = (reason: string): string =>
     .replace(/ on \d{4}-\d{2}-\d{2}$/, '');
 
 const tally = (tallies: Record<string, Tally>, key: string, netPnl: number) => {
-  const entry = (tallies[key] ??= { trades: 0, netPnl: 0, wins: 0 });
+  const entry = (tallies[key] ??= { trades: 0, netPnl: 0, wins: 0, sumSq: 0 });
   entry.trades += 1;
   entry.netPnl += netPnl;
+  entry.sumSq += netPnl * netPnl;
   if (netPnl > 0) entry.wins += 1;
 };
 
@@ -109,6 +120,7 @@ export function partialFromResult(result: BacktestResult): StatsPartial {
     fees: 0,
     byReason: {},
     byDirection: {},
+    byTicker: {},
     days: result.days.length,
     winningDays: 0,
     losingDays: 0,
@@ -121,6 +133,8 @@ export function partialFromResult(result: BacktestResult): StatsPartial {
     maxDrawdownPeak: 0,
     signals: 0,
     skipped: {},
+    daysLeftOpen: result.warnings.filter((w) => /still open after/.test(w))
+      .length,
   };
 
   for (const trade of result.trades) {
@@ -139,6 +153,7 @@ export function partialFromResult(result: BacktestResult): StatsPartial {
     partial.fees += trade.fees;
     tally(partial.byReason, trade.reason, net);
     tally(partial.byDirection, trade.direction, net);
+    tally(partial.byTicker, trade.ticker, net);
   }
 
   for (const day of result.days) {
@@ -181,6 +196,7 @@ const mergeTallies = (a: Record<string, Tally>, b: Record<string, Tally>) => {
           trades: current.trades + t.trades,
           netPnl: current.netPnl + t.netPnl,
           wins: current.wins + t.wins,
+          sumSq: current.sumSq + t.sumSq,
         }
       : t;
   }
@@ -221,6 +237,7 @@ export function mergePartials(
       fees: a.fees + b.fees,
       byReason: mergeTallies(a.byReason, b.byReason),
       byDirection: mergeTallies(a.byDirection, b.byDirection),
+      byTicker: mergeTallies(a.byTicker, b.byTicker),
       days: a.days + b.days,
       winningDays: a.winningDays + b.winningDays,
       losingDays: a.losingDays + b.losingDays,
@@ -233,8 +250,18 @@ export function mergePartials(
       maxDrawdownPeak,
       signals: a.signals + b.signals,
       skipped,
+      daysLeftOpen: a.daysLeftOpen + b.daysLeftOpen,
     };
   }, first);
+}
+
+/** Mean divided by its standard error, from a count, sum and sum of squares. */
+export function tStatOf(n: number, sum: number, sumSq: number): number {
+  if (n < 2) return 0;
+  const mean = sum / n;
+  const variance = Math.max(0, (sumSq - n * mean ** 2) / (n - 1));
+  const stdError = Math.sqrt(variance / n);
+  return stdError > 0 ? mean / stdError : 0;
 }
 
 const breakdowns = (
@@ -247,6 +274,7 @@ const breakdowns = (
         trades: t.trades,
         netPnl: t.netPnl,
         winRate: t.trades ? t.wins / t.trades : 0,
+        tStat: tStatOf(t.trades, t.netPnl, t.sumSq),
       },
     ]),
   );
@@ -259,11 +287,6 @@ export function finalizeStats(
   const losses = trades - wins;
   const netSum = partial.sumWins + partial.sumLosses;
   const expectancy = trades ? netSum / trades : 0;
-  const variance =
-    trades > 1
-      ? (partial.sumNetSq - trades * expectancy ** 2) / (trades - 1)
-      : 0;
-  const stdError = Math.sqrt(Math.max(0, variance) / (trades || 1));
   const grossLoss = -partial.sumLosses;
   const endingEquity = startingCash + partial.equityEnd;
 
@@ -285,7 +308,7 @@ export function finalizeStats(
     profitFactor:
       grossLoss === 0 ? (wins ? Infinity : 0) : partial.sumWins / grossLoss,
     expectancy,
-    tStat: stdError > 0 ? expectancy / stdError : 0,
+    tStat: tStatOf(trades, netSum, partial.sumNetSq),
     avgPnlPct: trades ? partial.sumPnlPct / trades : 0,
 
     maxDrawdown: partial.maxDrawdown,
@@ -300,8 +323,10 @@ export function finalizeStats(
 
     byReason: breakdowns(partial.byReason),
     byDirection: breakdowns(partial.byDirection),
+    byTicker: breakdowns(partial.byTicker),
     signals: partial.signals,
     skipped: partial.skipped,
+    daysLeftOpen: partial.daysLeftOpen,
   };
 }
 

@@ -109,10 +109,11 @@ describe('runBacktest', () => {
     assert.equal(trade?.reason, 'profitTarget');
     // 1.00 + half of a 3% spread = 1.015, rounded up to 1.02.
     assert.equal(trade?.entryPrice, 1.02);
-    // 1.60 - 0.024 = 1.576, rounded down to 1.57.
-    assert.equal(trade?.exitPrice, 1.57);
-    assert.equal(trade?.pnl.toFixed(2), '55.00');
-    assert.equal(trade?.netPnl.toFixed(2), '54.90');
+    // The target fires on the 1.60 print, but the sell fills on the next one, the 1.55 close:
+    // 1.55 - 0.02325 = 1.52675, rounded down to 1.52.
+    assert.equal(trade?.exitPrice, 1.52);
+    assert.equal(trade?.pnl.toFixed(2), '50.00');
+    assert.equal(trade?.netPnl.toFixed(2), '49.90');
   });
 
   it('takes the next signal and reports what was left open', () => {
@@ -128,12 +129,17 @@ describe('runBacktest', () => {
   it('tracks cash, fees and equity through the fills', () => {
     const stats = computeStats(result);
     // +55.00 on the call, less three fills' fees, and the put bought at 1.02 is now marked at 1.00.
-    assert.equal(stats.endingEquity.toFixed(2), '25052.85');
+    assert.equal(stats.endingEquity.toFixed(2), '25047.85');
     assert.equal(stats.trades, 1);
     assert.equal(stats.winRate, 1);
     assert.equal(stats.signals, 2);
     assert.deepEqual(stats.byReason, {
-      profitTarget: { trades: 1, netPnl: result.trades[0]?.netPnl, winRate: 1 },
+      profitTarget: {
+        trades: 1,
+        netPnl: result.trades[0]?.netPnl,
+        winRate: 1,
+        tStat: 0,
+      },
     });
   });
 
@@ -149,7 +155,39 @@ describe('runBacktest', () => {
     assert.equal(trades.length, 2);
     assert.match(
       trades[1] ?? '',
-      /^2026-11-16 09:39,2026-11-16 09:42,SPY,bullish,SPY261117C00100000,1,1.02,1.57,profitTarget,55.00,0.10,54.90,/,
+      /^2026-11-16 09:39,2026-11-16 09:42,SPY,bullish,SPY261117C00100000,1,1.02,1.52,profitTarget,50.00,0.10,49.90,/,
     );
+  });
+});
+
+describe('runBacktest at expiry', () => {
+  it('settles an expiring option that stopped trading at intrinsic value, instead of holding it forever', async () => {
+    // The same-day 100 call trades at 0.50 until 09:41 and never again. Going flat at 09:42 finds
+    // no trade, so it settles at intrinsic: SPY's 09:41 close of 103 makes it worth 3.00.
+    const result = await runBacktest({
+      strategy: {
+        ...strategy,
+        exits: [{ type: 'flatBeforeClose', minutes: 378 }],
+        contract: {
+          expiry: { type: 'nearest', minDte: 0, maxDte: 0 },
+          strike: { type: 'atm' },
+        },
+      },
+      simulation: simulationConfigSchema.parse({
+        spreadPct: 0,
+        minSpread: 0,
+        feePerContract: 0,
+        warmupDays: 1,
+      }),
+      store: new DataStore(writeFixture()),
+      from: DAY,
+      to: DAY,
+    });
+    const [trade] = result.trades;
+    assert.equal(trade?.symbol, 'SPY261116C00100000');
+    assert.equal(trade?.reason, 'flatBeforeClose');
+    assert.equal(trade?.entryPrice, 0.5);
+    assert.equal(trade?.exitPrice, 3);
+    assert.deepEqual(result.openPositions, []);
   });
 });

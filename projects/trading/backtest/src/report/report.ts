@@ -103,6 +103,8 @@ export function formatSummary(
   };
   lines.push(...breakdownRows('Exit reason', stats.byReason));
   lines.push(...breakdownRows('Direction', stats.byDirection));
+  if (Object.keys(stats.byTicker).length > 1)
+    lines.push(...breakdownRows('Ticker', stats.byTicker));
 
   const skips = Object.entries(stats.skipped).sort((a, b) => b[1] - a[1]);
   lines.push('', `${stats.signals} signals, ${stats.trades} trades`);

@@ -1,0 +1,59 @@
+Sweeping 02-noise-breakout with 13 workers
+144 configs
+  train 2024-02-01 → 2026-04-30: 404/4032
+  train 2024-02-01 → 2026-04-30: 807/4032
+  train 2024-02-01 → 2026-04-30: 1210/4032
+  train 2024-02-01 → 2026-04-30: 1613/4032
+  train 2024-02-01 → 2026-04-30: 2016/4032
+  train 2024-02-01 → 2026-04-30: 2420/4032
+  train 2024-02-01 → 2026-04-30: 2823/4032
+  train 2024-02-01 → 2026-04-30: 3226/4032
+  train 2024-02-01 → 2026-04-30: 3629/4032
+  train 2024-02-01 → 2026-04-30: 4032/4032
+
+Average effect of each setting on the training range (144 configs):
+
+timeframe  mean P&L  median  profitable  trades
+10m          +$1303  +$1039         65%    1308
+15m           -$304   -$607         42%    1160
+30m           +$226   +$190         54%    1030
+
+band  mean P&L  median  profitable  trades
+x1       -$363   -$607         42%    1385
+x1.5    +$1179   +$960         65%     948
+
+exit       mean P&L  median  profitable  trades
+band+vwap     -$371   -$384         40%    1279
+vwap         +$1853  +$1504         75%     940
+band          -$258   -$399         46%    1279
+
+expiry  mean P&L  median  profitable  trades
+0dte       +$880   +$636         60%    1163
+1dte        -$63   -$276         47%    1170
+
+strike  mean P&L  median  profitable  trades
+atm        +$188    -$46         50%    1167
+itm1       +$628   +$584         57%    1166
+
+target     mean P&L  median  profitable  trades
+no-target    +$1120   +$880         63%    1164
+tp100         -$304   -$422         44%    1169
+
+Top 10 by training netPnl (of 144 with ≥300 trades):
+
+#                                             config  train trades     net    PF    t  max DD    2024    2025    2026
+1        10m · x1.5 · vwap · 0dte · itm1 · no-target           766  +$7661  1.17  1.2  -$3526  +$1835  +$7183  -$1357
+2          10m · x1 · vwap · 0dte · itm1 · no-target          1165  +$7059  1.11  0.9  -$4329  +$3182  +$4998  -$1122
+3          10m · x1 · band · 0dte · itm1 · no-target          1710  +$6643  1.10  0.9  -$5078  +$1405  +$6831  -$1593
+4           10m · x1 · vwap · 0dte · atm · no-target          1155  +$5701  1.11  0.8  -$4720  +$2439  +$4558  -$1297
+5         10m · x1.5 · vwap · 0dte · atm · no-target           763  +$5521  1.15  0.9  -$3471   +$672  +$6078  -$1229
+6        15m · x1.5 · vwap · 0dte · itm1 · no-target           726  +$5239  1.12  1.0  -$4149  +$2554  +$3569   -$884
+7            10m · x1.5 · vwap · 1dte · itm1 · tp100           772  +$5204  1.13  1.1  -$2931   +$959  +$4683   -$438
+8     10m · x1 · band+vwap · 0dte · itm1 · no-target          1710  +$5008  1.08  0.7  -$5484  +$2542  +$4564  -$2098
+9           10m · x1 · band · 0dte · atm · no-target          1689  +$4948  1.09  0.7  -$5108   +$174  +$6257  -$1483
+10  10m · x1.5 · band+vwap · 0dte · itm1 · no-target          1250  +$4710  1.11  0.8  -$4024   +$783  +$5092  -$1165
+
+77 of 144 configs were profitable on the training range.
+Warning: 31 configs ended a day with a position still open, e.g. timeframe=10m band=x1 exit=band+vwap expiry=1dte strike=itm1 target=no-target on 2 days.
+
+Finished in 72s. Wrote /Users/bo/Developer/wuguishifu/universe/projects/trading/backtest/runs/2026-11-15T08-21-07-sweep-02-noise-breakout

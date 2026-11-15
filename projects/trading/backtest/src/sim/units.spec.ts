@@ -197,6 +197,27 @@ describe('next-trade fills', () => {
     );
   });
 
+  it('fills a price-triggered exit on the next print, never better than the trigger', () => {
+    // The 09:39 path is 1.10 (0s), 1.05 (15s), 1.30 (30s), 1.20 (45s).
+    const t = minute('09:39');
+    assert.deepEqual(index.priceAfterTrigger(symbol, t + 30_000, 300_000), {
+      price: 1.2,
+      time: t + 45_000,
+    });
+    assert.deepEqual(index.priceAfterTrigger(symbol, t + 15_000, 300_000), {
+      price: 1.05,
+      time: t + 30_000,
+    });
+    assert.deepEqual(index.priceAfterTrigger(symbol, t + 45_000, 300_000), {
+      price: 1.2,
+      time: minute('09:42'),
+    });
+    assert.deepEqual(index.priceAfterTrigger(symbol, t + 45_000, 60_000), {
+      price: 1.2,
+      time: t + 45_000,
+    });
+  });
+
   const order: OrderIntent = {
     id: 'o1',
     action: 'open',

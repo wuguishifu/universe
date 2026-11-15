@@ -2,7 +2,10 @@ import { z } from 'zod';
 
 import { contractConfigSchema } from '../contracts/contract-selector';
 import { exitRuleConfigSchema, exitRuleIndicators } from '../exits/config';
-import { entryFilterConfigSchema } from '../filters/config';
+import {
+  entryFilterConfigSchema,
+  entryFilterIndicators,
+} from '../filters/config';
 import { indicatorConfigSchema } from '../indicators/config';
 import { riskRuleConfigSchema } from '../risk/risk-rules';
 import { signalConfigSchema, signalIndicators } from '../signals/config';
@@ -44,6 +47,12 @@ export const strategyConfigSchema = z
         name,
         path: ['signal'],
       })),
+      ...config.entryFilters.flatMap((filter, i) =>
+        entryFilterIndicators(filter).map((name) => ({
+          name,
+          path: ['entryFilters', i],
+        })),
+      ),
       ...config.exits.flatMap((exit, i) =>
         exitRuleIndicators(exit).map((name) => ({ name, path: ['exits', i] })),
       ),

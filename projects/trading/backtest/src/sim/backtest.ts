@@ -4,6 +4,8 @@ import {
   EngineEvent,
   MINUTE_MS,
   multiplierOf,
+  nyTime,
+  OptionContract,
   Position,
   StrategyConfig,
   StrategyConfigInput,
@@ -60,6 +62,16 @@ export type BacktestResult = {
   warnings: string[];
 };
 
+/**
+ * Exits that fire on an option price. They're decided on a replayed print, so the order can't
+ * fill on that same print; see `OptionBarIndex.priceAfterTrigger`.
+ */
+const PRICE_TRIGGERED = new Set<string>([
+  'pnlStop',
+  'profitTarget',
+  'trailingStop',
+]);
+
 /** Offsets within a minute for the four prices replayed from each option bar. */
 const PATH_OFFSETS_MS = [0, 15_000, 30_000, 45_000];
 
@@ -115,6 +127,8 @@ export async function runBacktest(
   engine.setEquity(broker.equity([]));
 
   let options = new OptionBarIndex();
+  /** Each ticker's latest 1-minute close, for settling options that expire without a last trade. */
+  const lastUnderlying = new Map<string, number>();
   const handle = async (batch: readonly EngineEvent[]): Promise<void> => {
     for (const event of batch) {
       if (event.type === 'bar') continue;
@@ -127,19 +141,29 @@ export async function runBacktest(
         const multiplier = position
           ? multiplierOf(position.contract)
           : undefined;
-        await handle(
-          await engine.onOrderUpdate(
-            broker.fill(
-              event.order,
-              multiplier,
-              options.firstPriceAtOrAfter(
-                event.order.symbol,
-                event.order.time,
-                simulation.maxPriceAgeMinutes * MINUTE_MS,
-              ),
-            ),
-          ),
-        );
+        const { order } = event;
+        const maxWait = simulation.maxPriceAgeMinutes * MINUTE_MS;
+        const market =
+          order.reason && PRICE_TRIGGERED.has(order.reason)
+            ? options.priceAfterTrigger(order.symbol, order.time, maxWait)
+            : options.firstPriceAtOrAfter(order.symbol, order.time, maxWait);
+        let update = broker.fill(order, multiplier, market);
+        const spot = position && lastUnderlying.get(position.ticker);
+        if (
+          update.status === 'rejected' &&
+          order.action === 'close' &&
+          position &&
+          spot !== undefined &&
+          position.contract.expiration <= nyTime(order.time).date
+        ) {
+          // Nothing traded before the expiring option's close went out. Rather than leave it open
+          // forever, settle it the way expiry does: at intrinsic value.
+          update = broker.fill(order, multiplier, {
+            price: intrinsicValue(position.contract, spot),
+            time: order.time,
+          });
+        }
+        await handle(await engine.onOrderUpdate(update));
         const value = broker.equity(engine.getPositions());
         engine.setEquity(value);
         equity.push({ time: event.order.time, equity: value });
@@ -198,7 +222,9 @@ export async function runBacktest(
 
       for (const ticker of tickers) {
         const bar = stock.get(ticker)?.get(minute);
-        if (bar) await handle(await engine.onBar(ticker, bar));
+        if (!bar) continue;
+        lastUnderlying.set(ticker, bar.close);
+        await handle(await engine.onBar(ticker, bar));
       }
     }
 
@@ -233,6 +259,16 @@ export async function runBacktest(
     warnings,
   };
 }
+
+/** What an option is worth at expiry with the underlying at `spot`. */
+export const intrinsicValue = (
+  contract: Pick<OptionContract, 'type' | 'strike'>,
+  spot: number,
+): number =>
+  Math.max(
+    0,
+    contract.type === 'call' ? spot - contract.strike : contract.strike - spot,
+  );
 
 /** Looks up an option's bar for a given minute, indexing each symbol only once it's needed. */
 export class OptionBarIndex {
@@ -269,6 +305,23 @@ export class OptionBarIndex {
       }
     }
     return undefined;
+  }
+
+  /**
+   * Where a sell sent in reaction to the print at `time` fills: the next print after it, but no
+   * better than the print that triggered it. Taking the triggering print itself would sell a
+   * profit target at the top of a spike that a real order couldn't catch.
+   */
+  priceAfterTrigger(
+    symbol: string,
+    time: number,
+    maxWaitMs: number,
+  ): MarketPrice | undefined {
+    const trigger = this.firstPriceAtOrAfter(symbol, time, maxWaitMs);
+    if (!trigger) return undefined;
+    const next = this.firstPriceAtOrAfter(symbol, trigger.time + 1, maxWaitMs);
+    if (!next) return trigger;
+    return { price: Math.min(trigger.price, next.price), time: next.time };
   }
 
   at(symbol: string, minute: number): Bar | undefined {

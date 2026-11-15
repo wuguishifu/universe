@@ -42,11 +42,16 @@ It prints the average result for each label across every config that used it, th
 
 Each range is cut into chunks of about `chunkDays` trading days, and each chunk is pinned to one worker, so no worker holds more than its share of the data. Each chunk is backtested on its own after the usual warmup, and the chunks' totals are merged. Positions are always flat overnight, so this matches one continuous run; a full-history check matched to the cent.
 
+Chunks never span a new year, so every config also gets a result per year, and multi-ticker strategies get one per ticker. Both are columns in `results.csv`; `results.jsonl` has each config's full breakdown for scripts like `research/tools/analyze.mjs`. If any config ends a day still holding a position, the sweep prints a warning: every strategy here should be flat overnight, so it usually means an exit couldn't fill.
+
 Every result includes a t-stat: average P&L per trade divided by its standard error. An |t| under about 2 can't be told apart from luck, and after trying thousands of configs even the best training t means little. Trust the per-setting averages and the test column more than the #1 row. Out of thousands of configs, the best training result is mostly luck.
 
 ## How fills are modeled
 
 - Alpaca has no historical option quotes, so each traded price is treated as the midpoint, with `spreadPct` of spread around it. Entries pay the ask, exits get the bid, then `slippagePct`, then rounding to the cent against you.
 - Held options are replayed open → low → high → close each minute, so a stop and a target inside the same bar resolve as the stop.
+- Entries and exits decided at a bar close fill on the first replayed print at or after the decision. Exits that fire on an option price (`pnlStop`, `profitTarget`, `trailingStop`) fill on the print after the one that triggered them, and never better than it, since an order sent in reaction can't trade on the print that triggered it.
+- If nothing trades when an expiring option's closing order goes out, it settles at intrinsic value from the underlying's last price, as expiry would.
+- Fills round to the cent against you, so with the default $0.01 minimum spread a cheap option already pays a full cent each way.
 - Chains only include contracts that traded in the last `maxPriceAgeMinutes`, priced from bars that had closed by the decision time.
 - Open interest isn't in the data, so don't use `minOpenInterest` here. `maxSpreadPct` only compares against the modeled spread.

@@ -2,7 +2,12 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { DataStore } from '../data/data-store';
-import { BacktestStats, finalizeStats, mergePartials } from '../report/stats';
+import {
+  BacktestStats,
+  finalizeStats,
+  mergePartials,
+  StatsPartial,
+} from '../report/stats';
 
 import { runInWorkers } from './pool';
 import {
@@ -15,6 +20,8 @@ import {
 export type SweepRow = {
   combo: Combo;
   train: BacktestStats | undefined;
+  /** The training result for each calendar year in the range. */
+  trainYears?: Record<string, BacktestStats>;
   test?: BacktestStats;
   error?: string;
   /** Other configs whose training results were identical, so the setting that differs didn't matter. */
@@ -130,7 +137,8 @@ export function twinSummary(row: SweepRow): string {
 
 /**
  * Splits a range's trading days into back-to-back chunks of about `targetDays`, making the count
- * a multiple of `workers` so the work divides evenly.
+ * a multiple of `workers` so the work divides evenly. Chunks never span a new year, so results
+ * can also be broken down by year.
  */
 export function chunkRange(
   dates: readonly string[],
@@ -149,9 +157,24 @@ export function chunkRange(
   for (let i = 0; i < count; i++) {
     const from = days[Math.floor((i * days.length) / count)];
     const to = days[Math.floor(((i + 1) * days.length) / count) - 1];
-    if (from && to && from <= to) chunks.push({ from, to });
+    if (from && to && from <= to) chunks.push(...splitAtYears(days, from, to));
   }
   return chunks;
+}
+
+function splitAtYears(
+  days: readonly string[],
+  from: string,
+  to: string,
+): Array<{ from: string; to: string }> {
+  const inside = days.filter((d) => d >= from && d <= to);
+  const pieces: Array<{ from: string; to: string }> = [];
+  for (const day of inside) {
+    const last = pieces.at(-1);
+    if (last && last.from.slice(0, 4) === day.slice(0, 4)) last.to = day;
+    else pieces.push({ from: day, to: day });
+  }
+  return pieces;
 }
 
 export async function runSweep(
@@ -186,7 +209,13 @@ export async function runSweep(
     items: readonly Combo[],
     range: { from: string; to: string },
     phase: string,
-  ): Promise<Array<{ stats?: BacktestStats; error?: string }>> => {
+  ): Promise<
+    Array<{
+      stats?: BacktestStats;
+      years?: Record<string, BacktestStats>;
+      error?: string;
+    }>
+  > => {
     const chunks = chunkRange(dates, range, options.workers, config.chunkDays);
     const jobs = items.flatMap((combo, i) =>
       chunks.map((chunk, c) => ({
@@ -205,12 +234,27 @@ export async function runSweep(
       const parts = results.slice(i * chunks.length, (i + 1) * chunks.length);
       const error = parts.find((part) => part?.error)?.error;
       if (error) return { error };
-      const merged = mergePartials(
-        parts.flatMap((part) => (part?.partial ? [part.partial] : [])),
-      );
-      return merged
-        ? { stats: finalizeStats(merged, config.simulation.startingCash) }
-        : {};
+      const finalize = (partials: StatsPartial[]) => {
+        const merged = mergePartials(partials);
+        return merged
+          ? finalizeStats(merged, config.simulation.startingCash)
+          : undefined;
+      };
+      const byYear = new Map<string, StatsPartial[]>();
+      const all: StatsPartial[] = [];
+      parts.forEach((part, c) => {
+        const year = chunks[c]?.from.slice(0, 4);
+        if (!part?.partial || !year) return;
+        all.push(part.partial);
+        byYear.set(year, [...(byYear.get(year) ?? []), part.partial]);
+      });
+      const stats = finalize(all);
+      const years: Record<string, BacktestStats> = {};
+      for (const [year, partials] of byYear) {
+        const yearStats = finalize(partials);
+        if (yearStats) years[year] = yearStats;
+      }
+      return stats ? { stats, years } : {};
     });
   };
 
@@ -220,6 +264,7 @@ export async function runSweep(
     return {
       combo,
       train: result?.stats,
+      ...(result?.years ? { trainYears: result.years } : {}),
       ...(result?.error ? { error: result.error } : {}),
     };
   });
@@ -305,7 +350,19 @@ export function formatSweep(
     `Top ${outcome.top.length} by training ${config.rankBy} (of ${outcome.ranked.length} with ≥${config.minTrades} trades):`,
     '',
   );
-  const header = ['#', 'config', 'train trades', 'net', 'PF', 't', 'max DD'];
+  const years = [
+    ...new Set(outcome.top.flatMap((row) => Object.keys(row.trainYears ?? {}))),
+  ].sort();
+  const header = [
+    '#',
+    'config',
+    'train trades',
+    'net',
+    'PF',
+    't',
+    'max DD',
+    ...years,
+  ];
   if (config.test) header.push('test trades', 'net', 'PF', 't');
   lines.push(
     ...table([
@@ -320,6 +377,10 @@ export function formatSweep(
           factor(train?.profitFactor ?? 0),
           (train?.tStat ?? 0).toFixed(1),
           money(-(train?.maxDrawdown ?? 0)),
+          ...years.map((y) => {
+            const stats = row.trainYears?.[y];
+            return stats ? money(stats.netPnl) : '-';
+          }),
         ];
         if (config.test) {
           cells.push(
@@ -347,12 +408,20 @@ export function formatSweep(
     '',
     `${profitable} of ${outcome.rows.length} configs were profitable on the training range.`,
   );
+  const leftOpen = outcome.rows.filter((r) => (r.train?.daysLeftOpen ?? 0) > 0);
+  if (leftOpen.length > 0)
+    lines.push(
+      `Warning: ${leftOpen.length} configs ended a day with a position still open, e.g. ${describeChoices(leftOpen[0]?.combo.choices ?? {})} on ${leftOpen[0]?.train?.daysLeftOpen} days.`,
+    );
   const errors = outcome.rows.filter((r) => r.error);
   if (errors.length > 0)
     lines.push(`${errors.length} configs failed, e.g. ${errors[0]?.error}`);
   if (outcome.invalid.length > 0) lines.push(`Invalid: ${outcome.invalid[0]}`);
   return lines.join('\n');
 }
+
+const round2 = (n: number) =>
+  Number.isFinite(n) ? Math.round(n * 100) / 100 : n;
 
 const csvCell = (value: string | number): string => {
   const text = String(value);
@@ -386,11 +455,24 @@ export function writeSweep(
   ] as const;
   const statCells = (stats: BacktestStats | undefined) =>
     statColumns.map((key) => (stats ? Number(stats[key].toFixed(4)) : ''));
+  const years = [
+    ...new Set(
+      outcome.rows.flatMap((row) => Object.keys(row.trainYears ?? {})),
+    ),
+  ].sort();
+  const tickers = [
+    ...new Set(
+      outcome.rows.flatMap((row) => Object.keys(row.train?.byTicker ?? {})),
+    ),
+  ].sort();
+  const multiTicker = tickers.length > 1;
   const rows = [
     [
       'id',
       ...axes,
       ...statColumns.map((c) => `train_${c}`),
+      ...years.map((y) => `train_${y}_netPnl`),
+      ...(multiTicker ? tickers.map((t) => `train_${t}_netPnl`) : []),
       ...statColumns.map((c) => `test_${c}`),
       'error',
     ],
@@ -398,10 +480,46 @@ export function writeSweep(
       row.combo.id,
       ...axes.map((axis) => row.combo.choices[axis] ?? ''),
       ...statCells(row.train),
+      ...years.map((y) => row.trainYears?.[y]?.netPnl.toFixed(2) ?? ''),
+      ...(multiTicker
+        ? tickers.map((t) => row.train?.byTicker[t]?.netPnl.toFixed(2) ?? '')
+        : []),
       ...statCells(row.test),
       row.error ?? '',
     ]),
   ];
+  const compact = (stats: BacktestStats | undefined) =>
+    stats && {
+      trades: stats.trades,
+      netPnl: round2(stats.netPnl),
+      tStat: round2(stats.tStat),
+      profitFactor: round2(stats.profitFactor),
+      winRate: round2(stats.winRate),
+      maxDrawdown: round2(stats.maxDrawdown),
+      daysLeftOpen: stats.daysLeftOpen,
+      byTicker: stats.byTicker,
+      byReason: stats.byReason,
+    };
+  writeFileSync(
+    join(dir, 'results.jsonl'),
+    outcome.rows
+      .map((row) =>
+        JSON.stringify({
+          id: row.combo.id,
+          choices: row.combo.choices,
+          train: compact(row.train),
+          years: Object.fromEntries(
+            Object.entries(row.trainYears ?? {}).map(([y, s]) => [
+              y,
+              compact(s),
+            ]),
+          ),
+          test: compact(row.test),
+          error: row.error,
+        }),
+      )
+      .join('\n') + '\n',
+  );
   writeFileSync(
     join(dir, 'results.csv'),
     rows.map((r) => r.map(csvCell).join(',')).join('\n') + '\n',

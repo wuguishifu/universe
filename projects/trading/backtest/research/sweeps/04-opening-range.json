@@ -1,0 +1,185 @@
+{
+  "name": "04-opening-range",
+  "train": {
+    "from": "2024-02-01",
+    "to": "2026-04-30"
+  },
+  "simulation": {
+    "startingCash": 25000,
+    "spreadPct": 0.01,
+    "minSpread": 0.01,
+    "feePerContract": 0.05,
+    "fillAt": "nextTrade",
+    "warmupDays": 5
+  },
+  "base": {
+    "tickers": ["SPY", "QQQ", "IWM"],
+    "timeframeMinutes": 5,
+    "session": "regular",
+    "indicators": {
+      "orHigh": {
+        "type": "openingRange",
+        "side": "high",
+        "minutes": 15
+      },
+      "orLow": {
+        "type": "openingRange",
+        "side": "low",
+        "minutes": 15
+      },
+      "vwap": {
+        "type": "vwap",
+        "source": "hlc3"
+      }
+    },
+    "signal": {
+      "type": "breakout",
+      "upper": "orHigh",
+      "lower": "orLow"
+    },
+    "entryFilters": [],
+    "exits": [
+      {
+        "type": "flatBeforeClose",
+        "minutes": 5
+      }
+    ],
+    "contract": {
+      "expiry": {
+        "type": "nearest",
+        "minDte": 0,
+        "maxDte": 0
+      },
+      "strike": {
+        "type": "atm"
+      }
+    },
+    "sizing": {
+      "type": "contracts",
+      "count": 1
+    },
+    "risk": [
+      {
+        "type": "maxPositions",
+        "count": 3
+      }
+    ],
+    "markPrice": "mid"
+  },
+  "axes": {
+    "range": {
+      "or5": {
+        "indicators": {
+          "orHigh": {
+            "minutes": 5
+          },
+          "orLow": {
+            "minutes": 5
+          }
+        }
+      },
+      "or15": {
+        "indicators": {
+          "orHigh": {
+            "minutes": 15
+          },
+          "orLow": {
+            "minutes": 15
+          }
+        }
+      },
+      "or30": {
+        "indicators": {
+          "orHigh": {
+            "minutes": 30
+          },
+          "orLow": {
+            "minutes": 30
+          }
+        }
+      }
+    },
+    "breakouts": {
+      "first": {
+        "signal": {
+          "maxPerSession": 1
+        }
+      },
+      "every": {}
+    },
+    "stop": {
+      "range": {
+        "exits": [
+          {
+            "type": "indicatorBreak",
+            "indicator": "orLow",
+            "bearishIndicator": "orHigh",
+            "trigger": "close"
+          }
+        ]
+      },
+      "vwap": {
+        "exits": [
+          {
+            "type": "indicatorBreak",
+            "indicator": "vwap",
+            "trigger": "close"
+          }
+        ]
+      },
+      "none": {}
+    },
+    "target": {
+      "tp50": {
+        "exits": [
+          {
+            "type": "profitTarget",
+            "pct": 0.5
+          }
+        ]
+      },
+      "tp100": {
+        "exits": [
+          {
+            "type": "profitTarget",
+            "pct": 1
+          }
+        ]
+      },
+      "none": {}
+    },
+    "window": {
+      "morning": {
+        "entryFilters": [
+          {
+            "type": "timeWindow",
+            "endBeforeCloseMinutes": 270
+          }
+        ]
+      },
+      "allday": {
+        "entryFilters": [
+          {
+            "type": "timeWindow",
+            "endBeforeCloseMinutes": 30
+          }
+        ]
+      }
+    },
+    "expiry": {
+      "0dte": {},
+      "1dte": {
+        "contract": {
+          "expiry": {
+            "type": "nearest",
+            "minDte": 1,
+            "maxDte": 7
+          }
+        }
+      }
+    }
+  },
+  "rankBy": "netPnl",
+  "minTrades": 300,
+  "top": 10
+}

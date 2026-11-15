@@ -58,6 +58,32 @@ export class Cooldown implements EntryFilter {
   }
 }
 
+// --- indicatorSide -----------------------------------------------------------------------------
+
+export const indicatorSideConfigSchema = z.object({
+  type: z.literal('indicatorSide'),
+  /** Indicator names. Calls need `fast` above `slow`, puts need it below. */
+  fast: z.string().min(1),
+  slow: z.string().min(1),
+});
+
+/** Only trades in the direction two indicators agree on, e.g. price above VWAP for calls. */
+export class IndicatorSide implements EntryFilter {
+  readonly name = 'indicatorSide';
+  private readonly config: z.infer<typeof indicatorSideConfigSchema>;
+
+  constructor(config: z.infer<typeof indicatorSideConfigSchema>) {
+    this.config = config;
+  }
+
+  allow({ direction, indicators }: EntryContext): boolean {
+    const fast = indicators[this.config.fast];
+    const slow = indicators[this.config.slow];
+    if (fast === undefined || slow === undefined) return false;
+    return direction === 'bullish' ? fast > slow : fast < slow;
+  }
+}
+
 // --- maxEntriesPerDay --------------------------------------------------------------------------
 
 export const maxEntriesPerDayConfigSchema = z.object({
