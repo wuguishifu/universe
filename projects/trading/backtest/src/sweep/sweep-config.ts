@@ -39,6 +39,11 @@ export const sweepConfigSchema = z.object({
   /** Configs with fewer training trades than this aren't ranked. */
   minTrades: z.number().int().nonnegative().default(30),
   top: z.number().int().positive().default(10),
+  /**
+   * Each range is cut into chunks of about this many trading days, each backtested on its own
+   * (after the usual warmup) and pinned to one worker, so no worker holds all the data.
+   */
+  chunkDays: z.number().int().positive().default(20),
 });
 export type SweepConfig = z.infer<typeof sweepConfigSchema>;
 

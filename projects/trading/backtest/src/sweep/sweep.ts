@@ -1,7 +1,8 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { BacktestStats } from '../report/stats';
+import { DataStore } from '../data/data-store';
+import { BacktestStats, finalizeStats, mergePartials } from '../report/stats';
 
 import { runInWorkers } from './pool';
 import {
@@ -127,6 +128,32 @@ export function twinSummary(row: SweepRow): string {
     .join(', ');
 }
 
+/**
+ * Splits a range's trading days into back-to-back chunks of about `targetDays`, making the count
+ * a multiple of `workers` so the work divides evenly.
+ */
+export function chunkRange(
+  dates: readonly string[],
+  range: { from: string; to: string },
+  workers: number,
+  targetDays: number,
+): Array<{ from: string; to: string }> {
+  const days = dates.filter((d) => d >= range.from && d <= range.to);
+  if (days.length === 0) return [];
+  const perWorker = Math.max(
+    1,
+    Math.round(days.length / (workers * targetDays)),
+  );
+  const count = Math.min(days.length, workers * perWorker);
+  const chunks: Array<{ from: string; to: string }> = [];
+  for (let i = 0; i < count; i++) {
+    const from = days[Math.floor((i * days.length) / count)];
+    const to = days[Math.floor(((i + 1) * days.length) / count) - 1];
+    if (from && to && from <= to) chunks.push({ from, to });
+  }
+  return chunks;
+}
+
 export async function runSweep(
   config: SweepConfig,
   options: { dataDir: string; workers: number; log: (line: string) => void },
@@ -147,21 +174,47 @@ export async function runSweep(
     };
   };
 
-  const trainResults = await runInWorkers(
-    combos.map((combo) => ({
-      id: combo.id,
-      strategy: combo.strategy,
-      simulation: config.simulation,
-      ...config.train,
-    })),
-    {
+  const dates = new DataStore(options.dataDir)
+    .calendar()
+    .map((day) => day.date);
+
+  /**
+   * Runs every combo over a range, cut into back-to-back chunks with each chunk pinned to one
+   * worker, then merges each combo's chunks into one result.
+   */
+  const evaluate = async (
+    items: readonly Combo[],
+    range: { from: string; to: string },
+    phase: string,
+  ): Promise<Array<{ stats?: BacktestStats; error?: string }>> => {
+    const chunks = chunkRange(dates, range, options.workers, config.chunkDays);
+    const jobs = items.flatMap((combo, i) =>
+      chunks.map((chunk, c) => ({
+        id: i * chunks.length + c,
+        worker: c,
+        strategy: combo.strategy,
+        simulation: config.simulation,
+        ...chunk,
+      })),
+    );
+    const results = await runInWorkers(jobs, {
       ...options,
-      onProgress: progress(
-        `train ${config.train.from} → ${config.train.to}`,
-        combos.length,
-      ),
-    },
-  );
+      onProgress: progress(`${phase} ${range.from} → ${range.to}`, jobs.length),
+    });
+    return items.map((_, i) => {
+      const parts = results.slice(i * chunks.length, (i + 1) * chunks.length);
+      const error = parts.find((part) => part?.error)?.error;
+      if (error) return { error };
+      const merged = mergePartials(
+        parts.flatMap((part) => (part?.partial ? [part.partial] : [])),
+      );
+      return merged
+        ? { stats: finalizeStats(merged, config.simulation.startingCash) }
+        : {};
+    });
+  };
+
+  const trainResults = await evaluate(combos, config.train, 'train');
   const rows: SweepRow[] = combos.map((combo, i) => {
     const result = trainResults[i];
     return {
@@ -181,17 +234,10 @@ export async function runSweep(
 
   const { test } = config;
   if (test && top.length > 0) {
-    const testResults = await runInWorkers(
-      top.map((row) => ({
-        id: row.combo.id,
-        strategy: row.combo.strategy,
-        simulation: config.simulation,
-        ...test,
-      })),
-      {
-        ...options,
-        onProgress: progress(`test ${test.from} → ${test.to}`, top.length),
-      },
+    const testResults = await evaluate(
+      top.map((row) => row.combo),
+      test,
+      'test',
     );
     top.forEach((row, i) => {
       const stats = testResults[i]?.stats;
@@ -259,8 +305,8 @@ export function formatSweep(
     `Top ${outcome.top.length} by training ${config.rankBy} (of ${outcome.ranked.length} with ≥${config.minTrades} trades):`,
     '',
   );
-  const header = ['#', 'config', 'train trades', 'net', 'PF', 'max DD'];
-  if (config.test) header.push('test trades', 'net', 'PF');
+  const header = ['#', 'config', 'train trades', 'net', 'PF', 't', 'max DD'];
+  if (config.test) header.push('test trades', 'net', 'PF', 't');
   lines.push(
     ...table([
       header,
@@ -272,6 +318,7 @@ export function formatSweep(
           String(train?.trades ?? 0),
           money(train?.netPnl ?? 0),
           factor(train?.profitFactor ?? 0),
+          (train?.tStat ?? 0).toFixed(1),
           money(-(train?.maxDrawdown ?? 0)),
         ];
         if (config.test) {
@@ -279,6 +326,7 @@ export function formatSweep(
             String(row.test?.trades ?? '-'),
             row.test ? money(row.test.netPnl) : '-',
             row.test ? factor(row.test.profitFactor) : '-',
+            row.test ? row.test.tStat.toFixed(1) : '-',
           );
         }
         return cells;
@@ -329,6 +377,7 @@ export function writeSweep(
   const axes = Object.keys(config.axes);
   const statColumns = [
     'trades',
+    'tStat',
     'netPnl',
     'profitFactor',
     'winRate',

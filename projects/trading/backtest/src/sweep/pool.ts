@@ -2,7 +2,7 @@ import { Worker } from 'node:worker_threads';
 
 import { StrategyConfig } from '@projects/trading-core';
 
-import { BacktestStats } from '../report/stats';
+import { StatsPartial } from '../report/stats';
 import { SimulationConfig } from '../sim/simulation-config';
 
 export type BacktestJob = {
@@ -13,11 +13,14 @@ export type BacktestJob = {
   to: string;
 };
 
-export type JobResult = { id: number; stats?: BacktestStats; error?: string };
+export type JobResult = { id: number; partial?: StatsPartial; error?: string };
 
-/** Runs backtests across worker threads. Results come back in the same order as `jobs`. */
+/**
+ * Runs backtests on worker threads. Each job names the worker it must run on, so a worker only
+ * ever reads (and keeps in memory) the days of its own jobs. Results come back in job order.
+ */
 export async function runInWorkers(
-  jobs: readonly BacktestJob[],
+  jobs: ReadonlyArray<BacktestJob & { worker: number }>,
   options: {
     dataDir: string;
     workers: number;
@@ -27,11 +30,16 @@ export async function runInWorkers(
   const results: JobResult[] = new Array(jobs.length);
   if (jobs.length === 0) return results;
 
-  const workerCount = Math.max(1, Math.min(options.workers, jobs.length));
-  const indexById = new Map(jobs.map((job, i) => [job.id, i]));
-  let next = 0;
-  let done = 0;
+  const queues: Array<Array<{ job: BacktestJob; index: number }>> = Array.from(
+    { length: options.workers },
+    () => [],
+  );
+  jobs.forEach(({ worker, ...job }, index) => {
+    const queue = queues[worker % options.workers];
+    queue?.push({ job, index });
+  });
 
+  let done = 0;
   await new Promise<void>((resolve, reject) => {
     const workers: Worker[] = [];
     const finish = (error?: Error) => {
@@ -39,27 +47,29 @@ export async function runInWorkers(
       if (error) reject(error);
       else resolve();
     };
-    const feed = (worker: Worker) => {
-      const job = jobs[next++];
-      if (job) worker.postMessage(job);
-    };
 
-    for (let i = 0; i < workerCount; i++) {
+    queues.forEach((queue) => {
+      if (queue.length === 0) return;
       const worker = new Worker(new URL('./worker.ts', import.meta.url), {
         workerData: options.dataDir,
       });
       workers.push(worker);
+      let next = 0;
+      const feed = () => {
+        const entry = queue[next];
+        if (entry) worker.postMessage(entry.job);
+      };
       worker.on('message', (result: JobResult) => {
-        const index = indexById.get(result.id);
-        if (index !== undefined) results[index] = result;
+        const entry = queue[next++];
+        if (entry) results[entry.index] = result;
         done += 1;
         options.onProgress?.(done);
         if (done === jobs.length) finish();
-        else feed(worker);
+        else feed();
       });
       worker.on('error', finish);
-      feed(worker);
-    }
+      feed();
+    });
   });
   return results;
 }

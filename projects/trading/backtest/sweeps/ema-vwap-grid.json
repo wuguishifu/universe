@@ -1,11 +1,11 @@
 {
   "name": "ema-vwap-grid",
   "train": {
-    "from": "2026-08-03",
-    "to": "2026-10-09"
+    "from": "2024-02-01",
+    "to": "2025-09-30"
   },
   "test": {
-    "from": "2026-10-12",
+    "from": "2025-10-01",
     "to": "2026-11-13"
   },
   "simulation": {
@@ -213,6 +213,6 @@
     }
   },
   "rankBy": "netPnl",
-  "minTrades": 30,
+  "minTrades": 100,
   "top": 10
 }

@@ -71,6 +71,10 @@ export function formatSummary(
         'Expectancy',
         `${signedUsd(stats.expectancy)} per trade (${pct(stats.avgPnlPct)} of premium)`,
       ],
+      [
+        't-stat',
+        `${stats.tStat.toFixed(2)} (under 2 is indistinguishable from luck)`,
+      ],
       ['Days up / down', `${stats.winningDays} / ${stats.losingDays}`],
       [
         'Best / worst day',

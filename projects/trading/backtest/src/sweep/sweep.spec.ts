@@ -3,7 +3,13 @@ import { describe, it } from 'node:test';
 
 import { BacktestStats } from '../report/stats';
 
-import { computeMarginals, distinctTop, SweepRow, twinSummary } from './sweep';
+import {
+  chunkRange,
+  computeMarginals,
+  distinctTop,
+  SweepRow,
+  twinSummary,
+} from './sweep';
 import { applyPatch, expandCombos, sweepConfigSchema } from './sweep-config';
 
 const config = sweepConfigSchema.parse({
@@ -101,6 +107,7 @@ const stats = (netPnl: number): BacktestStats => ({
   largestLoss: 0,
   profitFactor: 0,
   expectancy: 0,
+  tStat: 0,
   avgPnlPct: 0,
   maxDrawdown: 0,
   maxDrawdownPct: 0,
@@ -153,6 +160,36 @@ describe('distinctTop', () => {
     assert.equal(
       twinSummary(top[0] ?? { combo: a, train: undefined }),
       'timeframe: 1m/5m',
+    );
+  });
+});
+
+describe('chunkRange', () => {
+  const dates = Array.from(
+    { length: 30 },
+    (_, i) => `2026-01-${String(i + 1).padStart(2, '0')}`,
+  );
+
+  it('cuts the range into back-to-back chunks, a multiple of the worker count', () => {
+    const chunks = chunkRange(
+      dates,
+      { from: '2026-01-03', to: '2026-01-28' },
+      4,
+      3,
+    );
+    assert.equal(chunks.length, 8);
+    assert.equal(chunks[0]?.from, '2026-01-03');
+    assert.equal(chunks.at(-1)?.to, '2026-01-28');
+    for (let i = 1; i < chunks.length; i++) {
+      const prev = dates.indexOf(chunks[i - 1]?.to ?? '');
+      assert.equal(dates.indexOf(chunks[i]?.from ?? ''), prev + 1);
+    }
+  });
+
+  it('never makes more chunks than days', () => {
+    assert.equal(
+      chunkRange(dates, { from: '2026-01-01', to: '2026-01-02' }, 8, 20).length,
+      2,
     );
   });
 });

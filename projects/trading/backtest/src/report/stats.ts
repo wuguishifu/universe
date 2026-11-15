@@ -1,6 +1,4 @@
-import { EngineEvent } from '@projects/trading-core';
-
-import { BacktestResult, BacktestTrade } from '../sim/backtest';
+import { BacktestResult } from '../sim/backtest';
 
 export type Breakdown = { trades: number; netPnl: number; winRate: number };
 
@@ -23,6 +21,11 @@ export type BacktestStats = {
   profitFactor: number;
   /** Average net P&L per trade, in dollars. */
   expectancy: number;
+  /**
+   * Expectancy divided by its standard error. Roughly, |t| under 2 means the result can't be told
+   * apart from luck. Before trusting a big t, remember how many configs were tried to find it.
+   */
+  tStat: number;
   /** Average P&L per trade as a fraction of premium paid. */
   avgPnlPct: number;
 
@@ -43,27 +46,42 @@ export type BacktestStats = {
   skipped: Record<string, number>;
 };
 
-const sum = (values: readonly number[]): number =>
-  values.reduce((a, b) => a + b, 0);
-const mean = (values: readonly number[]): number =>
-  values.length === 0 ? 0 : sum(values) / values.length;
+type Tally = { trades: number; netPnl: number; wins: number };
 
-function breakdown(
-  trades: readonly BacktestTrade[],
-  key: (t: BacktestTrade) => string,
-) {
-  const groups: Record<string, BacktestTrade[]> = {};
-  for (const trade of trades) (groups[key(trade)] ??= []).push(trade);
-  const result: Record<string, Breakdown> = {};
-  for (const [name, group] of Object.entries(groups)) {
-    result[name] = {
-      trades: group.length,
-      netPnl: sum(group.map((t) => t.netPnl)),
-      winRate: group.filter((t) => t.netPnl > 0).length / group.length,
-    };
-  }
-  return result;
-}
+/**
+ * Running totals for a stretch of time. Totals from back-to-back stretches merge exactly, so a
+ * long range can be split across workers and recombined.
+ */
+export type StatsPartial = {
+  trades: number;
+  wins: number;
+  sumWins: number;
+  sumLosses: number;
+  sumNetSq: number;
+  sumPnlPct: number;
+  largestWin: number;
+  largestLoss: number;
+  fees: number;
+  byReason: Record<string, Tally>;
+  byDirection: Record<string, Tally>;
+
+  days: number;
+  winningDays: number;
+  losingDays: number;
+  bestDay: number;
+  worstDay: number;
+
+  /** Equity, relative to the start of the stretch: where it ended, its high and low points. */
+  equityEnd: number;
+  equityHigh: number;
+  equityLow: number;
+  /** The largest drawdown inside the stretch, and the relative peak it fell from. */
+  maxDrawdown: number;
+  maxDrawdownPeak: number;
+
+  signals: number;
+  skipped: Record<string, number>;
+};
 
 export const normalizeSkipReason = (reason: string): string =>
   reason
@@ -71,70 +89,225 @@ export const normalizeSkipReason = (reason: string): string =>
     .replace(/^\S+ has no ask$/, 'contract has no ask')
     .replace(/ on \d{4}-\d{2}-\d{2}$/, '');
 
-function countSkips(events: readonly EngineEvent[]): Record<string, number> {
-  const counts: Record<string, number> = {};
-  for (const event of events) {
-    if (event.type !== 'entrySkipped') continue;
-    const reason = normalizeSkipReason(event.reason);
-    counts[reason] = (counts[reason] ?? 0) + 1;
+const tally = (tallies: Record<string, Tally>, key: string, netPnl: number) => {
+  const entry = (tallies[key] ??= { trades: 0, netPnl: 0, wins: 0 });
+  entry.trades += 1;
+  entry.netPnl += netPnl;
+  if (netPnl > 0) entry.wins += 1;
+};
+
+export function partialFromResult(result: BacktestResult): StatsPartial {
+  const partial: StatsPartial = {
+    trades: 0,
+    wins: 0,
+    sumWins: 0,
+    sumLosses: 0,
+    sumNetSq: 0,
+    sumPnlPct: 0,
+    largestWin: 0,
+    largestLoss: 0,
+    fees: 0,
+    byReason: {},
+    byDirection: {},
+    days: result.days.length,
+    winningDays: 0,
+    losingDays: 0,
+    bestDay: 0,
+    worstDay: 0,
+    equityEnd: 0,
+    equityHigh: 0,
+    equityLow: 0,
+    maxDrawdown: 0,
+    maxDrawdownPeak: 0,
+    signals: 0,
+    skipped: {},
+  };
+
+  for (const trade of result.trades) {
+    const net = trade.netPnl;
+    partial.trades += 1;
+    if (net > 0) {
+      partial.wins += 1;
+      partial.sumWins += net;
+      partial.largestWin = Math.max(partial.largestWin, net);
+    } else {
+      partial.sumLosses += net;
+      partial.largestLoss = Math.min(partial.largestLoss, net);
+    }
+    partial.sumNetSq += net * net;
+    partial.sumPnlPct += trade.pnlPct;
+    partial.fees += trade.fees;
+    tally(partial.byReason, trade.reason, net);
+    tally(partial.byDirection, trade.direction, net);
   }
-  return counts;
-}
 
-export function computeStats(result: BacktestResult): BacktestStats {
-  const { trades, simulation, days } = result;
-  const startingCash = simulation.startingCash;
-  const endingEquity = result.equity.at(-1)?.equity ?? startingCash;
+  for (const day of result.days) {
+    if (day.netPnl > 0) partial.winningDays += 1;
+    if (day.netPnl < 0) partial.losingDays += 1;
+    partial.bestDay = Math.max(partial.bestDay, day.netPnl);
+    partial.worstDay = Math.min(partial.worstDay, day.netPnl);
+  }
 
-  const wins = trades.filter((t) => t.netPnl > 0).map((t) => t.netPnl);
-  const losses = trades.filter((t) => t.netPnl <= 0).map((t) => t.netPnl);
-  const grossLoss = -sum(losses);
-
-  let peak = startingCash;
-  let maxDrawdown = 0;
-  let maxDrawdownPct = 0;
-  for (const { equity } of result.equity) {
-    peak = Math.max(peak, equity);
-    const drawdown = peak - equity;
-    if (drawdown > maxDrawdown) {
-      maxDrawdown = drawdown;
-      maxDrawdownPct = drawdown / peak;
+  const start = result.simulation.startingCash;
+  let peak = 0;
+  for (const point of result.equity) {
+    const value = point.equity - start;
+    peak = Math.max(peak, value);
+    partial.equityHigh = Math.max(partial.equityHigh, value);
+    partial.equityLow = Math.min(partial.equityLow, value);
+    if (peak - value > partial.maxDrawdown) {
+      partial.maxDrawdown = peak - value;
+      partial.maxDrawdownPeak = peak;
     }
   }
+  partial.equityEnd = (result.equity.at(-1)?.equity ?? start) - start;
 
-  const dayPnls = days.map((day) => day.netPnl);
+  for (const event of result.events) {
+    if (event.type === 'signal') partial.signals += 1;
+    if (event.type === 'entrySkipped') {
+      const reason = normalizeSkipReason(event.reason);
+      partial.skipped[reason] = (partial.skipped[reason] ?? 0) + 1;
+    }
+  }
+  return partial;
+}
+
+const mergeTallies = (a: Record<string, Tally>, b: Record<string, Tally>) => {
+  const merged: Record<string, Tally> = { ...a };
+  for (const [key, t] of Object.entries(b)) {
+    const current = merged[key];
+    merged[key] = current
+      ? {
+          trades: current.trades + t.trades,
+          netPnl: current.netPnl + t.netPnl,
+          wins: current.wins + t.wins,
+        }
+      : t;
+  }
+  return merged;
+};
+
+/** Combines totals from back-to-back stretches, given in time order, as if they were one run. */
+export function mergePartials(
+  parts: readonly StatsPartial[],
+): StatsPartial | undefined {
+  const [first, ...rest] = parts;
+  if (!first) return undefined;
+  return rest.reduce((a, b) => {
+    // b's equity values are relative to where a ended.
+    const offset = a.equityEnd;
+    const crossDrawdown = a.equityHigh - (offset + b.equityLow);
+    const inside = b.maxDrawdown;
+    const [maxDrawdown, maxDrawdownPeak] =
+      Math.max(a.maxDrawdown, crossDrawdown, inside) === a.maxDrawdown
+        ? [a.maxDrawdown, a.maxDrawdownPeak]
+        : crossDrawdown >= inside
+          ? [crossDrawdown, a.equityHigh]
+          : [inside, offset + b.maxDrawdownPeak];
+
+    const skipped = { ...a.skipped };
+    for (const [reason, n] of Object.entries(b.skipped))
+      skipped[reason] = (skipped[reason] ?? 0) + n;
+
+    return {
+      trades: a.trades + b.trades,
+      wins: a.wins + b.wins,
+      sumWins: a.sumWins + b.sumWins,
+      sumLosses: a.sumLosses + b.sumLosses,
+      sumNetSq: a.sumNetSq + b.sumNetSq,
+      sumPnlPct: a.sumPnlPct + b.sumPnlPct,
+      largestWin: Math.max(a.largestWin, b.largestWin),
+      largestLoss: Math.min(a.largestLoss, b.largestLoss),
+      fees: a.fees + b.fees,
+      byReason: mergeTallies(a.byReason, b.byReason),
+      byDirection: mergeTallies(a.byDirection, b.byDirection),
+      days: a.days + b.days,
+      winningDays: a.winningDays + b.winningDays,
+      losingDays: a.losingDays + b.losingDays,
+      bestDay: Math.max(a.bestDay, b.bestDay),
+      worstDay: Math.min(a.worstDay, b.worstDay),
+      equityEnd: offset + b.equityEnd,
+      equityHigh: Math.max(a.equityHigh, offset + b.equityHigh),
+      equityLow: Math.min(a.equityLow, offset + b.equityLow),
+      maxDrawdown,
+      maxDrawdownPeak,
+      signals: a.signals + b.signals,
+      skipped,
+    };
+  }, first);
+}
+
+const breakdowns = (
+  tallies: Record<string, Tally>,
+): Record<string, Breakdown> =>
+  Object.fromEntries(
+    Object.entries(tallies).map(([key, t]) => [
+      key,
+      {
+        trades: t.trades,
+        netPnl: t.netPnl,
+        winRate: t.trades ? t.wins / t.trades : 0,
+      },
+    ]),
+  );
+
+export function finalizeStats(
+  partial: StatsPartial,
+  startingCash: number,
+): BacktestStats {
+  const { trades, wins } = partial;
+  const losses = trades - wins;
+  const netSum = partial.sumWins + partial.sumLosses;
+  const expectancy = trades ? netSum / trades : 0;
+  const variance =
+    trades > 1
+      ? (partial.sumNetSq - trades * expectancy ** 2) / (trades - 1)
+      : 0;
+  const stdError = Math.sqrt(Math.max(0, variance) / (trades || 1));
+  const grossLoss = -partial.sumLosses;
+  const endingEquity = startingCash + partial.equityEnd;
+
   return {
     startingCash,
     endingEquity,
     netPnl: endingEquity - startingCash,
     returnPct: (endingEquity - startingCash) / startingCash,
-    fees: sum(trades.map((t) => t.fees)),
+    fees: partial.fees,
 
-    trades: trades.length,
-    wins: wins.length,
-    losses: losses.length,
-    winRate: trades.length === 0 ? 0 : wins.length / trades.length,
-    avgWin: mean(wins),
-    avgLoss: mean(losses),
-    largestWin: Math.max(0, ...wins),
-    largestLoss: Math.min(0, ...losses),
+    trades,
+    wins,
+    losses,
+    winRate: trades ? wins / trades : 0,
+    avgWin: wins ? partial.sumWins / wins : 0,
+    avgLoss: losses ? partial.sumLosses / losses : 0,
+    largestWin: partial.largestWin,
+    largestLoss: partial.largestLoss,
     profitFactor:
-      grossLoss === 0 ? (wins.length ? Infinity : 0) : sum(wins) / grossLoss,
-    expectancy: mean(trades.map((t) => t.netPnl)),
-    avgPnlPct: mean(trades.map((t) => t.pnlPct)),
+      grossLoss === 0 ? (wins ? Infinity : 0) : partial.sumWins / grossLoss,
+    expectancy,
+    tStat: stdError > 0 ? expectancy / stdError : 0,
+    avgPnlPct: trades ? partial.sumPnlPct / trades : 0,
 
-    maxDrawdown,
-    maxDrawdownPct,
+    maxDrawdown: partial.maxDrawdown,
+    maxDrawdownPct:
+      partial.maxDrawdown / (startingCash + partial.maxDrawdownPeak),
 
-    tradingDays: days.length,
-    winningDays: dayPnls.filter((p) => p > 0).length,
-    losingDays: dayPnls.filter((p) => p < 0).length,
-    bestDay: Math.max(0, ...dayPnls),
-    worstDay: Math.min(0, ...dayPnls),
+    tradingDays: partial.days,
+    winningDays: partial.winningDays,
+    losingDays: partial.losingDays,
+    bestDay: partial.bestDay,
+    worstDay: partial.worstDay,
 
-    byReason: breakdown(trades, (t) => t.reason),
-    byDirection: breakdown(trades, (t) => t.direction),
-    signals: result.events.filter((e) => e.type === 'signal').length,
-    skipped: countSkips(result.events),
+    byReason: breakdowns(partial.byReason),
+    byDirection: breakdowns(partial.byDirection),
+    signals: partial.signals,
+    skipped: partial.skipped,
   };
+}
+
+export function computeStats(result: BacktestResult): BacktestStats {
+  return finalizeStats(
+    partialFromResult(result),
+    result.simulation.startingCash,
+  );
 }

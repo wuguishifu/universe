@@ -1,19 +1,19 @@
 import { parentPort, workerData } from 'node:worker_threads';
 
 import { CachedDataStore } from '../data/data-store';
-import { computeStats } from '../report/stats';
+import { partialFromResult } from '../report/stats';
 import { runBacktest } from '../sim/backtest';
 
 import { BacktestJob, JobResult } from './pool';
 
-// Each worker keeps its own copy of the data in memory and runs jobs one at a time.
+// Each worker keeps the days it has read in memory and runs jobs one at a time.
 const store = new CachedDataStore(String(workerData));
 
 parentPort?.on('message', async (job: BacktestJob) => {
   let result: JobResult;
   try {
     const backtest = await runBacktest({ ...job, store });
-    result = { id: job.id, stats: computeStats(backtest) };
+    result = { id: job.id, partial: partialFromResult(backtest) };
   } catch (error) {
     result = {
       id: job.id,

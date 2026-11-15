@@ -40,7 +40,9 @@ A sweep file has a `base` strategy and `axes`. Each axis maps labels to patches,
 
 It prints the average result for each label across every config that used it, then the top configs by training result with how they did on the `test` range. The test range is never used for ranking. Output goes to `runs/<time>-sweep-<name>/`: `results.csv` (every config), `marginals.csv`, and a `top-NN.json` per top config that `backtest run --config` accepts.
 
-Trust the per-setting averages and the test column more than the #1 row. Out of thousands of configs, the best training result is mostly luck.
+Each range is cut into chunks of about `chunkDays` trading days, and each chunk is pinned to one worker, so no worker holds more than its share of the data. Each chunk is backtested on its own after the usual warmup, and the chunks' totals are merged. Positions are always flat overnight, so this matches one continuous run; a full-history check matched to the cent.
+
+Every result includes a t-stat: average P&L per trade divided by its standard error. An |t| under about 2 can't be told apart from luck, and after trying thousands of configs even the best training t means little. Trust the per-setting averages and the test column more than the #1 row. Out of thousands of configs, the best training result is mostly luck.
 
 ## How fills are modeled
 
