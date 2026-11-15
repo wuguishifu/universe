@@ -19,22 +19,24 @@ An automation is a window (days, start and end in the house's timezone) with a m
 temperature and a buffer. Per thermostat, on each tick (see `decide` in
 [control.ts](../contracts/src/lib/control.ts), and its tests):
 
-- **HEAT, COOL or emergency heat** means someone's driving it by hand: it's never touched.
-  **AUTO or OFF** means it can be automated. Equipment that can't run AUTO is only monitored.
-- **Paused** thermostats are never touched (readings are still recorded).
-- **Inside a window**: out of range while OFF ─► AUTO with its setpoints aimed inside the range by
-  the buffer (a missing bound goes to the thermostat's limit). Once it reaches them ─► OFF.
-  Setpoints changed while in AUTO are set back. Overlapping windows: the tightest bounds and the
+- **Emergency heat** is never touched. Equipment that can't run AUTO is only monitored.
+- **Paused** thermostats are never touched (readings are still recorded). Pausing is how to keep
+  HEAT or COOL set by hand during a window.
+- **Inside a window**: out of range while OFF ─► AUTO with its setpoints on the range's bounds (a
+  missing bound goes to the thermostat's limit). Once the temperature is the buffer inside the
+  range ─► OFF. Setpoints changed while in AUTO are set back. HEAT or COOL set by hand is taken
+  over: AUTO if out of range, otherwise OFF. Overlapping windows: the tightest bounds and the
   largest buffer win, with the buffer shrunk if the range is too narrow for it.
 - **When a window ends**: AUTO ─► OFF, once. `thermo.device_states.was_in_window` catches the moment
   (adjacent windows have none), so a window ending while the service is down is still handled.
-- **Outside every window**: never touched, so a thermostat put in AUTO by hand stays that way.
+- **Outside every window**: never touched, so a thermostat put in AUTO, HEAT or COOL by hand stays
+  that way until a window starts.
 - A write that fails shows on the device ("Couldn't start") and is tried again next tick.
 
 The SPA can also set a thermostat's mode and setpoints by hand (`POST /api/devices/:id/control`).
 Only the fields that changed are sent. They're merged into a fresh read of the thermostat, checked
 against its limits, and written in the same queue as ticks, so the two never overlap. Nothing is
-paused: during a window, the next tick treats a hand-set OFF or AUTO like any other.
+paused: during a window, the next tick takes over whatever mode was set (except emergency heat).
 
 Every write to a thermostat is tracked as `thermo_automation-action` (hand-made ones as
 `thermo_automation-manual_change`), and failed ticks as `thermo_automation-tick_failed`. The SPA shows the last tick's status from `/api/status` (also in

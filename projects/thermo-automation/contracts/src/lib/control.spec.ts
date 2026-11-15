@@ -401,16 +401,61 @@ describe('decide', () => {
     for (const [name, mode] of [
       ['HEAT', Mode.Heat],
       ['COOL', Mode.Cool],
-      ['emergency heat', Mode.EmergencyHeat],
     ] as const) {
-      it(`never touches a device in ${name}`, () => {
+      it(`switches a device in ${name} to AUTO when it is out of range`, () => {
         const decision = decide(
           input({ reading: reading({ mode, indoorTemperatureC: 15 }) }),
         );
-        assert.equal(decision.state, 'manual');
-        assert.equal(decision.action, null);
+        assert.equal(decision.state, 'automating');
+        assert.deepEqual(decision.action, {
+          kind: 'start',
+          mode: Mode.Auto,
+          heatSetpointC: 20,
+          coolSetpointC: 25,
+        });
+      });
+
+      it(`turns a device in ${name} off when it is in range, even inside the buffer`, () => {
+        const decision = decide(
+          input({
+            reading: reading({ mode, indoorTemperatureC: 20.5 }),
+          }),
+        );
+        assert.equal(decision.state, 'idle');
+        assert.deepEqual(decision.action, {
+          kind: 'stop',
+          mode: Mode.Off,
+          heatSetpointC: 18,
+          coolSetpointC: 28,
+        });
       });
     }
+
+    it('never touches a device in emergency heat', () => {
+      const decision = decide(
+        input({
+          reading: reading({
+            mode: Mode.EmergencyHeat,
+            indoorTemperatureC: 15,
+          }),
+        }),
+      );
+      assert.equal(decision.state, 'manual');
+      assert.equal(decision.action, null);
+    });
+
+    it('never touches a paused device in HEAT or COOL', () => {
+      for (const mode of [Mode.Heat, Mode.Cool]) {
+        const decision = decide(
+          input({
+            paused: true,
+            reading: reading({ mode, indoorTemperatureC: 15 }),
+          }),
+        );
+        assert.equal(decision.state, 'paused');
+        assert.equal(decision.action, null);
+      }
+    });
 
     it('never touches a paused device', () => {
       const decision = decide(
@@ -542,6 +587,20 @@ describe('decide', () => {
       );
       assert.equal(decision.state, 'inactive');
       assert.equal(decision.action, null);
+    });
+
+    it('leaves a device in HEAT or COOL alone', () => {
+      for (const mode of [Mode.Heat, Mode.Cool]) {
+        const decision = decide(
+          input({
+            clock: at(3, '22:00'),
+            wasInWindow: false,
+            reading: reading({ mode, indoorTemperatureC: 30 }),
+          }),
+        );
+        assert.equal(decision.state, 'manual');
+        assert.equal(decision.action, null);
+      }
     });
   });
 });

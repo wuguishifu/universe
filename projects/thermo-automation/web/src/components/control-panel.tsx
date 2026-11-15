@@ -141,7 +141,7 @@ export function ControlPanel({
     : null;
   const mayBeOverridden =
     dirty &&
-    (mode === Mode.Off || mode === Mode.Auto) &&
+    mode !== Mode.EmergencyHeat &&
     device.inWindow &&
     !device.pausedUntil &&
     device.state !== 'unsupported';

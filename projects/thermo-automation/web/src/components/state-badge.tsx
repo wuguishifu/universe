@@ -14,6 +14,7 @@ import { cn } from '@libs/ui-web';
 import {
   type ControlActionKind,
   type DeviceSnapshot,
+  Mode,
   modeLabels,
 } from '@projects/thermo-automation-contracts';
 
@@ -67,7 +68,10 @@ function describe(device: DeviceSnapshot): {
         label: `Manual${mode ? ` (${mode})` : ''}`,
         icon: Hand,
         tone: 'muted',
-        title: 'Set it to Auto or Off to hand control back to the automations.',
+        title:
+          device.reading?.mode === Mode.EmergencyHeat
+            ? 'Automations never change emergency heat.'
+            : 'The next automation window will take over. Pause automations to keep it.',
       };
     }
     case 'paused':

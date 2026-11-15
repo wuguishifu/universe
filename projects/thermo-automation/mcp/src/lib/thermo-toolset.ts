@@ -39,7 +39,9 @@ const AUTOMATIONS =
   'An automation is a window in which a thermostat is kept in a temperature range: when it is OFF ' +
   "and out of range the service switches it to AUTO with setpoints on the range's bounds, and back " +
   'to OFF once the temperature is `bufferC` inside the range (past the setpoint, since some ' +
-  'thermostats never stop on their own). Thermostats in HEAT, COOL or emergency heat are never touched. ' +
+  'thermostats never stop on their own). Inside a window, a thermostat set to HEAT or COOL is taken ' +
+  'over the same way (AUTO if out of range, otherwise OFF); pause it to keep HEAT or COOL. ' +
+  'Emergency heat is never touched. ' +
   '`daysMask` has bit `1 << weekday` set for each day the window starts on (0 = Sunday, so ' +
   'weekdays are 62 and every day is 127). `startsAt` and `endsAt` are "HH:MM" in the house\'s ' +
   'timezone: equal means all day, and an `endsAt` before `startsAt` runs overnight. Set ' +
@@ -104,9 +106,9 @@ export function createThermoToolset({
             "Change a thermostat's mode and/or setpoints by hand. Fields left out keep the " +
             "thermostat's current value. A change outside the thermostat's limits is rejected, " +
             'not adjusted. Automations are not paused: inside an automation window the next ' +
-            'check (every few minutes) can switch an OFF or AUTO thermostat again, so pause it ' +
-            'with thermo_pause_device to make the change stick. HEAT, COOL and emergency heat ' +
-            `are never changed by automations. ${CELSIUS}`,
+            'check (every few minutes) can switch the thermostat again, HEAT and COOL included, so ' +
+            'pause it with thermo_pause_device to make the change stick. Emergency heat is never ' +
+            `changed by automations. ${CELSIUS}`,
           inputSchema: z.object({
             deviceId,
             mode: z

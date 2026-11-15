@@ -63,7 +63,7 @@ export type ControlState =
   /** The equipment can't run AUTO, so the device is only monitored. */
   | 'unsupported'
   | 'paused'
-  /** In HEAT, COOL or emergency heat: someone is driving it by hand. */
+  /** In emergency heat, or in HEAT or COOL outside every window: someone is driving it by hand. */
   | 'manual'
   /** In a window and running AUTO. */
   | 'automating'
@@ -360,12 +360,19 @@ export function decide({
   if (paused) {
     return result('paused');
   }
-  if (reading.mode !== Mode.Off && reading.mode !== Mode.Auto) {
+  // Emergency heat (or a mode this doesn't know) is never touched: it's for when the heat pump
+  // can't be relied on, which AUTO would use.
+  const handSet = reading.mode === Mode.Heat || reading.mode === Mode.Cool;
+  if (reading.mode !== Mode.Off && reading.mode !== Mode.Auto && !handSet) {
     return result('manual');
   }
 
-  // Only the moment a window ends: after that, a device left in AUTO is the user's business.
+  // Only the moment a window ends: after that, a device left in AUTO is the user's business. So is
+  // HEAT or COOL outside a window, until one starts.
   if (!target) {
+    if (handSet) {
+      return result('manual');
+    }
     if (wasInWindow && reading.mode === Mode.Auto) {
       return result('inactive', {
         kind: 'window_end',
@@ -394,17 +401,27 @@ export function decide({
     coolSetpointC: target.coolSetpointC,
   });
 
+  const turnOff: ControlAction = {
+    kind: 'stop',
+    mode: Mode.Off,
+    heatSetpointC: reading.heatSetpointC,
+    coolSetpointC: reading.coolSetpointC,
+  };
+
   if (reading.mode === Mode.Off) {
     return outOfRange ? result('automating', runAuto('start')) : result('idle');
   }
 
+  // HEAT or COOL set by hand inside a window is taken over as if it were OFF. The buffer doesn't
+  // apply: it's only there to stop AUTO the service started from flapping. Pause to keep it.
+  if (handSet) {
+    return outOfRange
+      ? result('automating', runAuto('start'))
+      : result('idle', turnOff);
+  }
+
   if (comfortable) {
-    return result('idle', {
-      kind: 'stop',
-      mode: Mode.Off,
-      heatSetpointC: reading.heatSetpointC,
-      coolSetpointC: reading.coolSetpointC,
-    });
+    return result('idle', turnOff);
   }
 
   const drifted =
