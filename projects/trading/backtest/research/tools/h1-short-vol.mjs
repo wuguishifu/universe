@@ -133,7 +133,7 @@ function strikesFor(cfg, S) {
 }
 
 function runDay(ticker, day, configs, dump = false) {
-  const log = dump ? console.log : () => {};
+  const log = dump ? console.log : () => undefined;
   const open = hm(day.open);
   const close = hm(day.close);
   const { stock, chain } = loadDay(ticker, day.date);
@@ -200,7 +200,7 @@ function runDay(ticker, day, configs, dump = false) {
       let exitReason = 'expiry';
       // value owed to close each leg (per share, positive = we pay), and which legs settle at expiry
       let closeDebit = 0;
-      let open4 = legs.map(() => true);
+      const open4 = legs.map(() => true);
       const stop = close - 10;
       if (cfg.exit === 'tp50') {
         const marks = legs.map((l) => l.fill.o);

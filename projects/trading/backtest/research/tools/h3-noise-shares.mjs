@@ -430,7 +430,7 @@ for (const lo of [false, true]) {
   for (const t of TICKERS) {
     const r = results[key][t];
     say(`--- ${t} (skipped fills ${r.skippedFills}, days not ready ${r.notReady}, days skipped for a data gap ${r.staleGap})`);
-    for (const [sk, smp] of Object.entries(SAMPLES)) {
+    for (const smp of Object.values(SAMPLES)) {
       const days = slice(r.days, smp.from, smp.to);
       say(`  ${smp.label}: ${days[0]?.date} → ${days.at(-1)?.date}`);
       say(`  ${header}`);

@@ -14,6 +14,8 @@ import { dailyStats } from './daily/daily-stats';
 import { DataStore } from './data/data-store';
 import { AlpacaClient } from './download/alpaca-client';
 import { download, downloadDaily } from './download/download';
+import { downloadQuotes } from './download/download-quotes';
+import { ThetaClient } from './download/theta-client';
 import { formatSummary, writeRun } from './report/report';
 import { computeStats } from './report/stats';
 import {
@@ -36,6 +38,9 @@ const USAGE = `Usage:
                     [--data <dir>] [--out <dir>] [--daily]
   backtest download --from YYYY-MM-DD --to YYYY-MM-DD [--tickers SPY,QQQ] [--data <dir>] [--stocks-only]
                     [--expiry-days 7] [--strike-padding 10] [--strike-step 1] [--warmup-days 5]
+  backtest download-quotes --from YYYY-MM-DD --to YYYY-MM-DD [--tickers SPY,QQQ] [--data <dir>]
+                    [--expiry-days 7] [--strike-padding 10] [--strike-step 1] [--concurrency 2]
+                    [--full-chain] [--probe]
   backtest sweep    --config <file> [--data <dir>] [--out <dir>] [--workers N]
   backtest download-daily --from YYYY-MM-DD --to YYYY-MM-DD (--tickers SPY,EFA | --tickers-file <file>)
                     [--adjustment all|raw] [--skip-existing] [--data <dir>]
@@ -132,6 +137,71 @@ async function downloadCommand(args: string[]): Promise<void> {
     strikeStep: Number(values['strike-step']),
     warmupDays: Number(values['warmup-days']),
     stocksOnly: values['stocks-only'],
+    log: print,
+  });
+  print('Done.');
+}
+
+async function downloadQuotesCommand(args: string[]): Promise<void> {
+  const { values } = parseArgs({
+    args,
+    options: {
+      from: { type: 'string' },
+      to: { type: 'string' },
+      tickers: { type: 'string', default: 'SPY' },
+      data: { type: 'string', default: 'data' },
+      'expiry-days': { type: 'string', default: '7' },
+      'strike-padding': { type: 'string', default: '10' },
+      'strike-step': { type: 'string', default: '1' },
+      concurrency: { type: 'string', default: '2' },
+      'full-chain': { type: 'boolean', default: false },
+      probe: { type: 'boolean', default: false },
+    },
+  });
+  if (!values.from || !values.to)
+    throw new Error('download-quotes needs --from and --to');
+  const tickers = values.tickers.split(',').map((t) => t.trim().toUpperCase());
+  const client = ThetaClient.fromEnv();
+
+  if (values.probe) {
+    // Shows what Theta Data actually sends for one small request, without writing anything.
+    const [symbol = 'SPY'] = tickers;
+    const request = {
+      symbol,
+      date: values.from,
+      maxDte: 0,
+      strikeRange: 1,
+      startTime: '15:00:00',
+      endTime: '15:02:00',
+    };
+    print(`GET ${client.optionQuotesUrl(request).toString()}`);
+    let lines = 0;
+    const found = await client.optionQuotes(
+      request,
+      () => {
+        lines = 0;
+      },
+      (line) => {
+        if (lines++ < 12) print(line);
+      },
+    );
+    print(
+      found ? `${lines} lines in all.` : 'Theta Data has no data for that.',
+    );
+    return;
+  }
+
+  await downloadQuotes({
+    client,
+    dir: resolve(values.data),
+    tickers,
+    from: values.from,
+    to: values.to,
+    expiryDays: Number(values['expiry-days']),
+    strikePadding: Number(values['strike-padding']),
+    strikeStep: Number(values['strike-step']),
+    narrowRequest: !values['full-chain'],
+    concurrency: Number(values.concurrency),
     log: print,
   });
   print('Done.');
@@ -276,6 +346,7 @@ async function main(): Promise<void> {
   const [command, ...args] = process.argv.slice(2);
   if (command === 'run') await run(args);
   else if (command === 'download') await downloadCommand(args);
+  else if (command === 'download-quotes') await downloadQuotesCommand(args);
   else if (command === 'sweep') await sweepCommand(args);
   else if (command === 'download-daily') await downloadDailyCommand(args);
   else if (command === 'daily') dailyCommand(args);

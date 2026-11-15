@@ -33,6 +33,13 @@
         "cwd": "projects/trading/backtest"
       }
     },
+    "download-quotes": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --env-file-if-exists=.env.local --import @swc-node/register/esm-register src/main.ts download-quotes",
+        "cwd": "projects/trading/backtest"
+      }
+    },
     "download-daily": {
       "executor": "nx:run-commands",
       "options": {
@@ -44,6 +51,13 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "node --import @swc-node/register/esm-register --test \"src/**/*.spec.ts\"",
+        "cwd": "projects/trading/backtest"
+      }
+    },
+    "theta": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "java -jar bin/ThetaTerminalv3.jar --api-key \"$TD_API_KEY\"",
         "cwd": "projects/trading/backtest"
       }
     },

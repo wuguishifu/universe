@@ -2,7 +2,7 @@
 // Reads raw stock and option bars directly. Design is pre-registered in research/hypotheses/h5.md.
 // usage: node h5-spreads.mjs <dev|holdout> [configIds,comma] [--trace=TICKER:YYYY-MM-DD] [--tickers=SPY,QQQ,IWM]
 import {
-  tradingWeeks, stockDay, spotAt, officialClose, expirations, occ, firstPrint, msAt, daysBetween,
+  tradingWeeks, stockDay, spotAt, expirations, occ, firstPrint, msAt, daysBetween,
   hhmm, MIN, DATA, nyMinute, settlement,
 } from './h5-common.mjs';
 import { readFileSync, existsSync, writeFileSync } from 'node:fs';
@@ -176,6 +176,7 @@ function runTrade(cfg, ticker, entryDay, weekDays) {
 
   const etf = closePx / s.S - 1;
   const out = { ...s, expiryDate: s.expiry, closePx, spot55, nearShort, etf, iv, rv, byCost: {} };
+  let tpInfo;
   for (const [name, cost] of Object.entries(COSTS)) {
     const shortIn = fill(s.shortEntry.price, 'sell', cost);
     const longIn = fill(s.longEntry.price, 'buy', cost);
@@ -190,7 +191,7 @@ function runTrade(cfg, ticker, entryDay, weekDays) {
         exitCost = r.exitCost;
         fees += 2 * FEE;
         how = 'tp';
-        var tpInfo = r;
+        tpInfo = r;
       }
     }
     if (exitCost === undefined) {

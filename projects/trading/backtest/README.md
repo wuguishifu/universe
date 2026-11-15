@@ -16,9 +16,33 @@ This writes `data/` (gitignored) and skips days already on disk, so it can be re
 data/calendar.json                    /v2/calendar days
 data/stocks/<TICKER>/<DATE>.json      [AlpacaBar]                       1-minute SIP bars, 04:00–20:00
 data/options/<TICKER>/<DATE>.json     { "<OCC symbol>": [AlpacaBar] }   1-minute bars that day
+data/quotes/<TICKER>/<DATE>.json      { "<OCC symbol>": [QuoteRow] }    bid/ask changes that day (see "Option quotes")
 ```
 
 Options cover expirations 0–7 days out and whole-dollar strikes from 10 below the day's low to 10 above its high. Alpaca's option history starts in February 2024. For earlier years, add `--stocks-only` to fetch just the stock bars.
+
+## Option quotes
+
+Alpaca has no historical option quotes, so `download` only gets trade bars. Real bid/ask history comes from [Theta Data](https://thetadata.net), whose Value plan covers 1-minute option quotes from 2020. Theta Data serves it through the Theta Terminal, a Java program that runs on this machine and holds the login. Start it (Java 21 or newer) and leave it running:
+
+```sh
+java -jar ThetaTerminalv3.jar --api-key <key>
+```
+
+Then, with the stock and option bars for those days already downloaded:
+
+```sh
+nx run trading-backtest:download-quotes --from=2024-02-01 --to=2026-11-13 --tickers=SPY,QQQ,IWM
+```
+
+This writes `data/quotes/<TICKER>/<DATE>.json`, `{ "<OCC symbol>": [[time, bid, ask], ...] }`, for the same expirations and strikes as the option bars. `time` is epoch milliseconds, and only changes are stored: a contract's quote at any moment is its last row at or before it (`quoteAt` in `src/data/theta.ts`). Days already on disk are skipped.
+
+- `--probe` prints the first lines of one tiny request and writes nothing. Run it first to check the terminal answers.
+- Each day's log line says how many of that day's traded contracts got quotes. If that's well under 100%, delete those days and rerun with `--full-chain`, which asks for every strike instead of only those near the money.
+- `--concurrency` is how many ticker-days to fetch at once: 2 on the Value plan (the default), 4 on Standard, 8 on Pro.
+- `THETA_URL` points at a terminal somewhere other than `http://127.0.0.1:25503`.
+
+The simulator doesn't read these yet; fills are still modeled from trades as described below.
 
 ## Run
 

@@ -8,6 +8,7 @@ import { Bar, CalendarDay, nyTime } from '@projects/trading-core';
 import { DailyAdjustment } from '../download/alpaca-client';
 
 import { alpacaBarSchema, alpacaCalendarDaySchema, toBar } from './alpaca';
+import { QuoteFile } from './theta';
 
 /**
  * Reads historical data laid out as:
@@ -16,6 +17,7 @@ import { alpacaBarSchema, alpacaCalendarDaySchema, toBar } from './alpaca';
  * calendar.json                  Alpaca /v2/calendar response
  * stocks/<TICKER>/<DATE>.json    [AlpacaBar, ...]                 1-minute bars for that New York date
  * options/<TICKER>/<DATE>.json   { "<OCC symbol>": [AlpacaBar] }  1-minute bars for that date
+ * quotes/<TICKER>/<DATE>.json    { "<OCC symbol>": [QuoteRow] }   bid/ask changes that date, from Theta Data
  * daily/<TICKER>.json            [AlpacaBar, ...]                 daily bars, split- and dividend-adjusted
  * daily-raw/<TICKER>.json        [AlpacaBar, ...]                 daily bars as traded, unadjusted
  * ```
@@ -32,6 +34,8 @@ export class DataStore {
     join(dir, 'stocks', ticker, `${date}.json`);
   static optionPath = (dir: string, ticker: string, date: string) =>
     join(dir, 'options', ticker, `${date}.json`);
+  static quotePath = (dir: string, ticker: string, date: string) =>
+    join(dir, 'quotes', ticker, `${date}.json`);
   static dailyPath = (
     dir: string,
     ticker: string,
@@ -78,6 +82,13 @@ export class DataStore {
     );
   }
 
+  /** Each option symbol's bid/ask changes, sorted by time, or null if that day wasn't downloaded. */
+  optionQuotes(ticker: string, date: string): QuoteFile | null {
+    const path = DataStore.quotePath(this.dir, ticker, date);
+    if (!existsSync(path)) return null;
+    return quoteFileSchema.parse(readJson(path));
+  }
+
   /** Adjusted daily bars sorted by date, or null if the ticker wasn't downloaded. */
   dailyBars(
     ticker: string,
@@ -92,6 +103,11 @@ export class DataStore {
       .sort(byTime);
   }
 }
+
+const quoteFileSchema = z.record(
+  z.string(),
+  z.array(z.tuple([z.number(), z.number(), z.number()])),
+);
 
 /** A daily bar, labelled with its New York date. */
 export type DailyBar = Bar & { date: string };

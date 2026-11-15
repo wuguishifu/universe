@@ -67,10 +67,6 @@ const nyMs = (date, hm) => {
   throw new Error(`bad time ${date} ${hm}`);
 };
 const MIN = 60000;
-const addMin = (hm, n) => {
-  const t = hhmm(hm) + n;
-  return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
-};
 
 // ---------- data ----------
 const calendar = JSON.parse(readFileSync(`${DATA}/calendar.json`, 'utf8'));
