@@ -1,7 +1,16 @@
 import { RefreshCw } from 'lucide-react';
 import { type ReactNode, useCallback, useEffect, useId, useState } from 'react';
 
-import { Button, Switch } from '@libs/ui-web';
+import {
+  Button,
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Switch,
+} from '@libs/ui-web';
 
 import { LevelMeter, useLevels } from '../../components/level-meter';
 import { TrackStateNote } from '../../components/track-list';
@@ -13,7 +22,8 @@ import {
 import { selectSettings, useAppDispatch, useAppSelector } from '../../store';
 import { setAudioTrack, setMicrophoneDevice } from '../../store/settings';
 
-const WINDOWS_DEFAULT = '';
+/** The option for Windows' default device. Not '': Radix's Select doesn't allow empty values. */
+const WINDOWS_DEFAULT = 'windows-default';
 
 function Section({
   title,
@@ -91,13 +101,15 @@ function MicrophonePicker({ status }: { status: CaptureStatus | undefined }) {
         Microphone
       </label>
       <div className="flex items-center gap-2">
-        <select
-          id={id}
-          className="bg-background focus-visible:ring-ring h-9 min-w-0 flex-1 rounded-md border px-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
+        <Select
           value={audio.microphoneDevice ?? WINDOWS_DEFAULT}
-          onFocus={refresh}
-          onChange={(e) => {
-            const device = devices.find((d) => d.id === e.target.value);
+          // Devices come and go: list them afresh each time it opens.
+          onOpenChange={(open) => open && refresh()}
+          onValueChange={(value) => {
+            // Picking the chosen device again changes nothing. (It may be unplugged, so not in
+            // `devices`; looking it up would make it Windows' default instead.)
+            if (value === audio.microphoneDevice) return;
+            const device = devices.find((d) => d.id === value);
             dispatch(
               setMicrophoneDevice(
                 device ? { id: device.id, name: device.name } : null,
@@ -105,22 +117,29 @@ function MicrophonePicker({ status }: { status: CaptureStatus | undefined }) {
             );
           }}
         >
-          <option value={WINDOWS_DEFAULT}>
-            Windows default
-            {windowsDefault ? ` (${windowsDefault.name})` : ''}
-          </option>
-          {devices.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-          {chosenMissing && audio.microphoneDevice && (
-            <option value={audio.microphoneDevice}>
-              {audio.microphoneDeviceName ?? 'Chosen microphone'} (not
-              connected)
-            </option>
-          )}
-        </select>
+          <SelectTrigger id={id} className="min-w-0 flex-1">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value={WINDOWS_DEFAULT}>
+                Windows default
+                {windowsDefault ? ` (${windowsDefault.name})` : ''}
+              </SelectItem>
+              {devices.map((d) => (
+                <SelectItem key={d.id} value={d.id}>
+                  {d.name}
+                </SelectItem>
+              ))}
+              {chosenMissing && audio.microphoneDevice && (
+                <SelectItem value={audio.microphoneDevice}>
+                  {audio.microphoneDeviceName ?? 'Chosen microphone'} (not
+                  connected)
+                </SelectItem>
+              )}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
         <Button
           variant="outline"
           size="icon-lg"

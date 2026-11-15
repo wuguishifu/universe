@@ -1,7 +1,15 @@
 import { RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
-import { Button } from '@libs/ui-web';
+import {
+  Button,
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@libs/ui-web';
 
 import { type CaptureSource, commands, type WindowInfo } from '../lib/commands';
 
@@ -35,23 +43,24 @@ export function SourcePicker({ source }: { source: CaptureSource }) {
 
   return (
     <div className="flex items-center gap-2">
-      <select
-        aria-label="What to record"
-        className="bg-background focus-visible:ring-ring h-9 min-w-0 flex-1 rounded-md border px-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
-        value={source.kind === 'window' ? String(source.hwnd) : DISPLAY}
-        onFocus={refresh}
-        onChange={(e) => choose(e.target.value)}
-      >
-        <option value={DISPLAY}>Entire display</option>
-        {options.map((w) => (
-          <option key={w.hwnd} value={String(w.hwnd)}>
-            {label(w)}
-          </option>
-        ))}
-      </select>
+      <Select onValueChange={choose}>
+        <SelectTrigger className="w-full" onFocus={refresh} size="default">
+          <SelectValue placeholder="Entire display" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectItem value={DISPLAY}>Entire display</SelectItem>
+            {options.map((w) => (
+              <SelectItem key={w.hwnd} value={String(w.hwnd)}>
+                {label(w)}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
       <Button
         variant="outline"
-        size="icon-lg"
+        size="icon"
         aria-label="Refresh windows"
         onClick={refresh}
       >
