@@ -2,9 +2,17 @@ import { availableParallelism } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
+import { alignDaily, runDaily } from './daily/daily-backtest';
+import {
+  loadDailySuite,
+  suiteAllocations,
+  suiteTickers,
+} from './daily/daily-config';
+import { formatDailySuite, writeDailySuite } from './daily/daily-report';
+import { dailyStats } from './daily/daily-stats';
 import { DataStore } from './data/data-store';
 import { AlpacaClient } from './download/alpaca-client';
-import { download } from './download/download';
+import { download, downloadDaily } from './download/download';
 import { formatSummary, writeRun } from './report/report';
 import { computeStats } from './report/stats';
 import {
@@ -28,6 +36,8 @@ const USAGE = `Usage:
   backtest download --from YYYY-MM-DD --to YYYY-MM-DD [--tickers SPY,QQQ] [--data <dir>] [--stocks-only]
                     [--expiry-days 7] [--strike-padding 10] [--strike-step 1] [--warmup-days 5]
   backtest sweep    --config <file> [--data <dir>] [--out <dir>] [--workers N]
+  backtest download-daily --from YYYY-MM-DD --to YYYY-MM-DD --tickers SPY,EFA,... [--data <dir>]
+  backtest daily    --config <file> [--cost-bps N] [--data <dir>] [--out <dir>]
 
 Presets: ${Object.keys(PRESETS).join(', ')}
 Paths are relative to projects/trading/backtest. Data defaults to ./data, runs to ./runs.`;
@@ -160,11 +170,93 @@ async function sweepCommand(args: string[]): Promise<void> {
   );
 }
 
+async function downloadDailyCommand(args: string[]): Promise<void> {
+  const { values } = parseArgs({
+    args,
+    options: {
+      from: { type: 'string' },
+      to: { type: 'string' },
+      tickers: { type: 'string' },
+      data: { type: 'string', default: 'data' },
+    },
+  });
+  if (!values.from || !values.to || !values.tickers)
+    throw new Error('download-daily needs --from, --to and --tickers');
+  await downloadDaily({
+    client: AlpacaClient.fromEnv(),
+    dir: resolve(values.data),
+    tickers: values.tickers.split(',').map((t) => t.trim().toUpperCase()),
+    from: values.from,
+    to: values.to,
+    log: print,
+  });
+  print('Done.');
+}
+
+function dailyCommand(args: string[]): void {
+  const { values } = parseArgs({
+    args,
+    options: {
+      config: { type: 'string' },
+      'cost-bps': { type: 'string' },
+      data: { type: 'string', default: 'data' },
+      out: { type: 'string', default: 'runs' },
+    },
+  });
+  if (!values.config) throw new Error('daily needs --config');
+  const loaded = loadDailySuite(values.config);
+  const suite =
+    values['cost-bps'] === undefined
+      ? loaded
+      : { ...loaded, costBps: Number(values['cost-bps']) };
+
+  const store = new DataStore(resolve(values.data));
+  const bars = Object.fromEntries(
+    suiteTickers(suite).map((ticker) => {
+      const list = store.dailyBars(ticker);
+      if (!list) {
+        throw new Error(
+          `No daily bars for ${ticker}. Run download-daily with --tickers=${ticker}.`,
+        );
+      }
+      return [ticker, list];
+    }),
+  );
+  const series = alignDaily(bars);
+  if (series.dropped.length > 0) {
+    print(
+      `Dropped ${series.dropped.length} dates that some ticker is missing: ${series.dropped.slice(0, 5).join(', ')}${series.dropped.length > 5 ? ', ...' : ''}`,
+    );
+  }
+
+  const options = {
+    from: suite.from,
+    to: suite.to,
+    startingCash: suite.startingCash,
+    costBps: suite.costBps,
+  };
+  const outcomes = suiteAllocations(suite).map(([label, config]) => {
+    const result = runDaily(config, series, options);
+    return { label, result, stats: dailyStats(result) };
+  });
+
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const outDir = resolve(
+    join(values.out, `${stamp}-daily-${suite.name}-${suite.costBps}bp`),
+  );
+  writeDailySuite(outDir, suite, outcomes);
+  print(formatDailySuite(suite, outcomes));
+  print();
+  print(`Wrote ${outDir}`);
+}
+
 async function main(): Promise<void> {
   const [command, ...args] = process.argv.slice(2);
   if (command === 'run') await run(args);
   else if (command === 'download') await downloadCommand(args);
   else if (command === 'sweep') await sweepCommand(args);
+  else if (command === 'download-daily') await downloadDailyCommand(args);
+  else if (command === 'daily') dailyCommand(args);
   else {
     print(USAGE);
     process.exitCode = command ? 1 : 0;

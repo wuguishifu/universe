@@ -1,5 +1,17 @@
 # Overnight research summary (2026-11-15)
 
+## Part 2: monthly ETF rotation (2026-11-15)
+
+Four published rules, run with their published parameters on 2017–2026, which is all after publication (`LOG.md`, part 2):
+
+- **None beat SPY.** SPY made 14.3% a year with a Sharpe of 0.70; the best rule matched its Sharpe and didn't beat its return.
+- **None reliably beat holding its own universe at equal weight.** Every gap is well within noise (t < 1).
+- **Asset rotation** (top 3 of 9 asset classes by 12-month return) technically passed the pre-registered rule, by margins too small to mean anything.
+- **Trend following** (200-day average, 5 assets) is the one robust effect. It had the same risk-adjusted return as its benchmark with a third of the drawdown (−8.7% vs −26%, against −34% for SPY), but only 6.1% a year.
+- **Dual momentum and sector momentum failed.**
+
+Bottom line: in this decade, buying and holding the index beat every rotation rule on return. Trend following works as drawdown insurance, not as extra return.
+
 ## Update: the 2016–2023 stock test failed
 
 The direction check recommended below (step 1) has been run, and it **fails**. On eight years of fresh stock data, C1's rule called the 15:00 → 15:58 direction right 49.9% of the time: mean −2.0 bp, day-clustered t −0.64, negative on all three tickers and in 5 of 8 years. The same script shows the effect in 2024–2026 (+6.9 bp, t 1.5), so the options result is most likely specific to that period, or luck. Don't pay for data or paper-trade on the strength of C1. Details are in `LOG.md`, idea 6.

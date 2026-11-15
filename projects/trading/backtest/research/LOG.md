@@ -219,3 +219,79 @@ Pass rule: t −0.64 (needs ≥ 2), 0/3 tickers positive (needs 2), 3/8 years po
 - None of the 36 grid settings reaches t 2. The best is +5.3 bp, t 1.63 (entry at close − 120, measure 15 minutes, ≥ 0.5%), and is one of 36. There's nothing special about 15:00 in the long sample.
 
 Conclusion: C1's edge is most likely specific to 2024–2026, or luck. The options holdout was a genuine out-of-sample pass, but it was 86 trades in the same two-and-a-half-year regime the rule was found in. Eight earlier years show nothing. Output: `outputs/06-stock-momentum.out`.
+
+---
+
+# Part 2: daily ETF rotation (written 2026-11-15, before any data was downloaded or run)
+
+Part 1 searched intraday options for an edge and found none that survived. Part 2 tests a different kind of strategy: monthly rotation between ETFs, held for weeks. The point is to test rules that are already published with fixed parameters, not to search for new ones. Every parameter below comes from the literature, so there's nothing to tune, and all of 2017–2026 is after the papers were published. That makes the whole period out of sample, and there's no separate holdout.
+
+## Setup
+
+- **Data:** Alpaca daily SIP bars, adjusted for splits and dividends, from 2016-01-04. Before using them, check that the daily open and close match the regular-session open and close built from the 1-minute bars for SPY, QQQ and IWM.
+- **Period:** decisions from the end of February 2017, which is the first month-end with 12 months of history behind it, to 2026-11-13.
+- **Trading:** decide on the close of the last trading day of each month, and trade at the next day's open. Fractional shares. Uninvested money sits in BIL (T-bills).
+- **Costs:** primary 5 bp of traded value per side; stress 15 bp. Alpaca charges no commission, so this stands in for spread and slippage.
+- **Universes:**
+  - _Asset classes (10):_ SPY, IWM, EFA, EEM, TLT, IEF, GLD, DBC, VNQ, plus BIL as cash.
+  - _Sectors (9):_ XLB, XLE, XLF, XLI, XLK, XLP, XLU, XLV, XLY, the original Select Sector SPDRs.
+
+## Rules (4 rules × 3 lookbacks = 12 configs)
+
+Each rule runs at its published lookback (marked ★), plus two others as a stability check, not as a choice.
+
+1. **Trend (Faber 2007):** SPY, EFA, IEF, DBC, VNQ at 20% each. Hold an asset only while its close is above its N-day average, otherwise that 20% sits in cash. N = 100, 150, 200★.
+2. **Dual momentum (Antonacci 2014):** hold whichever of SPY or EFA has the higher return over the lookback. If that return doesn't beat BIL's, hold AGG instead. Lookback = 6, 9, 12★ months.
+3. **Asset-class rotation:** hold the top 3 of the 10 asset classes by lookback return, a third each. Any pick whose return doesn't beat BIL's sits in cash. Lookback = 6, 9, 12★ months.
+4. **Sector momentum:** hold the top 3 sectors by lookback return, skipping the latest month (the usual "12-1" momentum). Lookback = 6, 9, 12★ months.
+
+Months are 21 trading days.
+
+## Benchmarks (same period, same costs)
+
+- SPY, bought and held.
+- 60/40: SPY/IEF, rebalanced monthly.
+- Each rule's own universe at equal weight, rebalanced monthly. That's the fair comparison: does the rule add anything over just holding everything it chooses from?
+
+## What counts as working
+
+Ten years can't statistically prove a monthly strategy. The standard error of a Sharpe ratio over ten years is about 0.3. So these criteria ask "did the published rule behave as published?", not "is it proven?".
+
+A rule **works** if, at its ★ lookback, all of these hold:
+
+- its Sharpe (excess over BIL) beats its equal-weight benchmark's;
+- its maximum drawdown is smaller;
+- both other lookbacks also beat the benchmark's Sharpe;
+- it still beats the benchmark's Sharpe at stress costs.
+
+A rule that loses to its benchmark on Sharpe but cuts the drawdown by at least a third counts as **risk control only**. Otherwise it **doesn't add value**. Beating SPY isn't required: 2017–2026 was an unusually strong decade for US large caps, and few diversified strategies beat it. It's reported anyway.
+
+## Part 2 data check
+
+Daily bars for all 21 ETFs cover 2016-01-04 → 2026-11-13, with the same 2,733 dates for each, so nothing was dropped. For SPY, QQQ and IWM I compared the daily bars against the 1-minute bars (`tools/check-daily.mjs`):
+
+- The daily open is the 09:30 opening print.
+- The daily close is the official closing-auction price, which shows up in the 16:00 minute bar. It differs from the 15:59 trade by a few basis points on most days, and by more on fast days. That accounts for the close-to-close mismatches.
+
+Both are prices you can trade at, with market-on-open and market-on-close orders. As a further check, SPY's yearly returns match its published total returns: 2020 +18%, 2021 +29%, 2022 −18%, 2023 +26%, 2024 +25%.
+
+One clarification of the setup: "12-1" momentum means the return from 12 months ago to 1 month ago, so the sector rules use `lookbackDays` = 21 × (J − 1) with `skipDays` 21.
+
+## Part 2 result (run once, 2026-11-15)
+
+Suite: `daily/01-rotation.json`, 2017-03-01 → 2026-11-13. Outputs: `outputs/07-rotation-{5,15}bp.out`.
+
+| Rule (★ lookback)     | CAGR  | Sharpe | Max DD | vs its equal-weight benchmark              | Other lookbacks | 15 bp         | Monthly gap vs benchmark | Verdict                            |
+| --------------------- | ----- | ------ | ------ | ------------------------------------------ | --------------- | ------------- | ------------------------ | ---------------------------------- |
+| Trend 200d            | 6.1%  | 0.544  | −8.7%  | 0.538, −26.2% → drawdown cut by two-thirds | 0.41, 0.62      | 0.488 < 0.535 | −2.4%/yr, t −0.95        | **Risk control only** (see below)  |
+| Dual momentum 12m     | 7.5%  | 0.378  | −33.8% | 0.549, −23.6% → worse on both              | 0.41, 0.33      | 0.353 < 0.546 | −0.5%/yr, t −0.22        | **Doesn't add value**              |
+| Asset rotation 12m    | 9.2%  | 0.569  | −20.6% | 0.525, −23.0%                              | 0.62, 0.71      | 0.528 > 0.522 | +1.2%/yr, t 0.40         | **Works (by the rule), barely**    |
+| Sector momentum 12-1m | 14.6% | 0.702  | −30.3% | 0.654, −36.7%                              | **0.46**, 0.57  | 0.674 > 0.651 | +1.6%/yr, t 0.67         | **Doesn't add value** (not stable) |
+| _SPY buy & hold_      | 14.3% | 0.70   | −33.8% |                                            |                 |               |                          |                                    |
+| _60/40_               | 9.1%  | 0.65   | −21.2% |                                            |                 |               |                          |                                    |
+
+**Trend:** at 5 bp its Sharpe ties its benchmark's (0.544 vs 0.538), and it loses at 15 bp. The rule as written didn't anticipate a tie. What it clearly did is deliver the same risk-adjusted return as holding all five assets, with a third of the drawdown: −8.7% vs −26.2%, and −34% for SPY, in a decade that included 2020, 2022 and April 2025. The cost was a lot of return: 6.1% a year vs 8.2% for the benchmark and 14.3% for SPY. It sat 32% in T-bills on average, and the 100-day version was clearly worse (0.41).
+
+**Asset rotation** passes every part of the rule. But its edge over equal weight is +1.2% a year with t 0.40, and at 15 bp the Sharpe gap is 0.006. That passes on paper, but it isn't evidence of an edge.
+
+**Overall:** nothing here is statistically distinguishable from holding its own universe at equal weight; every monthly-gap t is under 1. None of the rules beat SPY on return. That's partly the decade: 2017–2026 strongly favored US large caps over everything else these rules rotate into. The one clear, robust effect is trend following's drawdown control, which is what the long published histories also say it does. It's insurance, not extra return.

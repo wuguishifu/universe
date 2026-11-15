@@ -71,6 +71,25 @@ export class AlpacaClient {
     return bars[symbol] ?? [];
   }
 
+  /** Daily SIP bars for one stock, adjusted for splits and dividends so returns include both. */
+  async dailyBars(
+    symbol: string,
+    start: string,
+    end: string,
+  ): Promise<AlpacaBar[]> {
+    const bars = await this.paginate('/v2/stocks/bars', {
+      symbols: symbol,
+      timeframe: '1Day',
+      start,
+      end,
+      adjustment: 'all',
+      feed: 'sip',
+      limit: '10000',
+      sort: 'asc',
+    });
+    return bars[symbol] ?? [];
+  }
+
   /** 1-minute bars for up to 100 option symbols. Symbols with no trades are left out. */
   optionBars(symbols: readonly string[], start: string, end: string) {
     return this.paginate('/v1beta1/options/bars', {

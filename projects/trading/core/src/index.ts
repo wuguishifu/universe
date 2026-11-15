@@ -1,3 +1,4 @@
+export * from './lib/allocation/allocation';
 export * from './lib/config/strategy-config';
 export * from './lib/contracts/contract-filters';
 export * from './lib/contracts/contract-selector';

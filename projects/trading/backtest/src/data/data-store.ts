@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { Bar, CalendarDay } from '@projects/trading-core';
+import { Bar, CalendarDay, nyTime } from '@projects/trading-core';
 
 import { alpacaBarSchema, alpacaCalendarDaySchema, toBar } from './alpaca';
 
@@ -14,6 +14,7 @@ import { alpacaBarSchema, alpacaCalendarDaySchema, toBar } from './alpaca';
  * calendar.json                  Alpaca /v2/calendar response
  * stocks/<TICKER>/<DATE>.json    [AlpacaBar, ...]                 1-minute bars for that New York date
  * options/<TICKER>/<DATE>.json   { "<OCC symbol>": [AlpacaBar] }  1-minute bars for that date
+ * daily/<TICKER>.json            [AlpacaBar, ...]                 daily bars, split- and dividend-adjusted
  * ```
  */
 export class DataStore {
@@ -28,6 +29,8 @@ export class DataStore {
     join(dir, 'stocks', ticker, `${date}.json`);
   static optionPath = (dir: string, ticker: string, date: string) =>
     join(dir, 'options', ticker, `${date}.json`);
+  static dailyPath = (dir: string, ticker: string) =>
+    join(dir, 'daily', `${ticker}.json`);
 
   calendar(): CalendarDay[] {
     const path = DataStore.calendarPath(this.dir);
@@ -67,7 +70,21 @@ export class DataStore {
       ]),
     );
   }
+
+  /** Adjusted daily bars sorted by date, or null if the ticker wasn't downloaded. */
+  dailyBars(ticker: string): DailyBar[] | null {
+    const path = DataStore.dailyPath(this.dir, ticker);
+    if (!existsSync(path)) return null;
+    return z
+      .array(alpacaBarSchema)
+      .parse(readJson(path))
+      .map((bar) => ({ date: nyTime(Date.parse(bar.t)).date, ...toBar(bar) }))
+      .sort(byTime);
+  }
 }
+
+/** A daily bar, labelled with its New York date. */
+export type DailyBar = Bar & { date: string };
 
 const byTime = (a: Bar, b: Bar) => a.time - b.time;
 

@@ -155,3 +155,29 @@ export async function download(options: DownloadOptions): Promise<void> {
     }
   }
 }
+
+export type DailyDownloadOptions = Pick<
+  DownloadOptions,
+  'client' | 'dir' | 'tickers' | 'from' | 'to' | 'log'
+>;
+
+/**
+ * Fetches adjusted daily bars for each ticker, replacing what's on disk. Adjusted prices change
+ * whenever a ticker pays a dividend, so a partial update would mix two adjustments.
+ */
+export async function downloadDaily(
+  options: DailyDownloadOptions,
+): Promise<void> {
+  const { client, dir, tickers, from, to, log } = options;
+  for (const ticker of tickers) {
+    const bars = await client.dailyBars(
+      ticker,
+      `${from}T00:00:00Z`,
+      `${addDays(to, 1)}T00:00:00Z`,
+    );
+    writeJsonAtomic(DataStore.dailyPath(dir, ticker), bars);
+    log(
+      `${ticker}: ${bars.length} daily bars, ${bars[0]?.t.slice(0, 10) ?? '-'} to ${bars.at(-1)?.t.slice(0, 10) ?? '-'}`,
+    );
+  }
+}

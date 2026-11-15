@@ -1,0 +1,150 @@
+{
+  "name": "rotation",
+  "from": "2017-02-01",
+  "to": "2026-11-13",
+  "startingCash": 100000,
+  "costBps": 5,
+  "cash": "BIL",
+  "strategies": {
+    "SPY buy & hold": {
+      "type": "fixed",
+      "weights": {
+        "SPY": 1
+      }
+    },
+    "60/40 SPY/IEF": {
+      "type": "fixed",
+      "weights": {
+        "SPY": 0.6,
+        "IEF": 0.4
+      }
+    },
+    "EW trend universe": {
+      "type": "fixed",
+      "weights": {
+        "SPY": 0.2,
+        "EFA": 0.2,
+        "IEF": 0.2,
+        "DBC": 0.2,
+        "VNQ": 0.2
+      }
+    },
+    "trend 100d": {
+      "type": "trend",
+      "assets": ["SPY", "EFA", "IEF", "DBC", "VNQ"],
+      "smaDays": 100
+    },
+    "trend 150d": {
+      "type": "trend",
+      "assets": ["SPY", "EFA", "IEF", "DBC", "VNQ"],
+      "smaDays": 150
+    },
+    "trend 200d *": {
+      "type": "trend",
+      "assets": ["SPY", "EFA", "IEF", "DBC", "VNQ"],
+      "smaDays": 200
+    },
+    "EW SPY/EFA/AGG": {
+      "type": "fixed",
+      "weights": {
+        "SPY": 0.3333333333333333,
+        "EFA": 0.3333333333333333,
+        "AGG": 0.3333333333333333
+      }
+    },
+    "dual momentum 6m": {
+      "type": "momentum",
+      "assets": ["SPY", "EFA"],
+      "top": 1,
+      "lookbackDays": 126,
+      "absolute": true,
+      "fallback": "AGG"
+    },
+    "dual momentum 9m": {
+      "type": "momentum",
+      "assets": ["SPY", "EFA"],
+      "top": 1,
+      "lookbackDays": 189,
+      "absolute": true,
+      "fallback": "AGG"
+    },
+    "dual momentum 12m *": {
+      "type": "momentum",
+      "assets": ["SPY", "EFA"],
+      "top": 1,
+      "lookbackDays": 252,
+      "absolute": true,
+      "fallback": "AGG"
+    },
+    "EW asset classes": {
+      "type": "fixed",
+      "weights": {
+        "SPY": 0.1111111111111111,
+        "IWM": 0.1111111111111111,
+        "EFA": 0.1111111111111111,
+        "EEM": 0.1111111111111111,
+        "TLT": 0.1111111111111111,
+        "IEF": 0.1111111111111111,
+        "GLD": 0.1111111111111111,
+        "DBC": 0.1111111111111111,
+        "VNQ": 0.1111111111111111
+      }
+    },
+    "asset rotation 6m": {
+      "type": "momentum",
+      "assets": ["SPY", "IWM", "EFA", "EEM", "TLT", "IEF", "GLD", "DBC", "VNQ"],
+      "top": 3,
+      "lookbackDays": 126,
+      "absolute": true
+    },
+    "asset rotation 9m": {
+      "type": "momentum",
+      "assets": ["SPY", "IWM", "EFA", "EEM", "TLT", "IEF", "GLD", "DBC", "VNQ"],
+      "top": 3,
+      "lookbackDays": 189,
+      "absolute": true
+    },
+    "asset rotation 12m *": {
+      "type": "momentum",
+      "assets": ["SPY", "IWM", "EFA", "EEM", "TLT", "IEF", "GLD", "DBC", "VNQ"],
+      "top": 3,
+      "lookbackDays": 252,
+      "absolute": true
+    },
+    "EW sectors": {
+      "type": "fixed",
+      "weights": {
+        "XLB": 0.1111111111111111,
+        "XLE": 0.1111111111111111,
+        "XLF": 0.1111111111111111,
+        "XLI": 0.1111111111111111,
+        "XLK": 0.1111111111111111,
+        "XLP": 0.1111111111111111,
+        "XLU": 0.1111111111111111,
+        "XLV": 0.1111111111111111,
+        "XLY": 0.1111111111111111
+      }
+    },
+    "sector momentum 6-1m": {
+      "type": "momentum",
+      "assets": ["XLB", "XLE", "XLF", "XLI", "XLK", "XLP", "XLU", "XLV", "XLY"],
+      "top": 3,
+      "lookbackDays": 105,
+      "skipDays": 21
+    },
+    "sector momentum 9-1m": {
+      "type": "momentum",
+      "assets": ["XLB", "XLE", "XLF", "XLI", "XLK", "XLP", "XLU", "XLV", "XLY"],
+      "top": 3,
+      "lookbackDays": 168,
+      "skipDays": 21
+    },
+    "sector momentum 12-1m *": {
+      "type": "momentum",
+      "assets": ["XLB", "XLE", "XLF", "XLI", "XLK", "XLP", "XLU", "XLV", "XLY"],
+      "top": 3,
+      "lookbackDays": 231,
+      "skipDays": 21
+    }
+  }
+}

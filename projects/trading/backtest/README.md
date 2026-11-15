@@ -55,3 +55,16 @@ Every result includes a t-stat: average P&L per trade divided by its standard er
 - Fills round to the cent against you, so with the default $0.01 minimum spread a cheap option already pays a full cent each way.
 - Chains only include contracts that traded in the last `maxPriceAgeMinutes`, priced from bars that had closed by the decision time.
 - Open interest isn't in the data, so don't use `minOpenInterest` here. `maxSpreadPct` only compares against the modeled spread.
+
+## Daily rotation
+
+Monthly ETF rotation rules (fixed weights, trend, momentum) from `@projects/trading-core`'s `allocation` module, run side by side:
+
+```sh
+nx run trading-backtest:download-daily --from=2016-01-01 --to=2026-11-13 --tickers=SPY,EFA,IEF,BIL
+nx run trading-backtest:daily --config=research/daily/01-rotation.json [--cost-bps=15]
+```
+
+Daily bars are split- and dividend-adjusted and stored at `data/daily/<TICKER>.json`. Each download replaces the file, since adjusted prices change with every dividend. Their open and close are the official opening and closing prints.
+
+A suite file has `from`, `to`, `costBps`, a `cash` ticker and `strategies`, a map from label to rule. Weights are decided on each month-end close and filled at the next open with fractional shares, and cost is charged in basis points of the value traded. Sharpe ratios are in excess of the cash ticker. Each run writes `runs/<time>-daily-<name>-<cost>bp/` with `summary.json`, `equity.csv` and `rebalances.csv`.

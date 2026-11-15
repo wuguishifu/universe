@@ -20,7 +20,7 @@ export function nyLabel(time: number): string {
   return `${date} ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-function table(rows: ReadonlyArray<readonly string[]>): string[] {
+export function table(rows: ReadonlyArray<readonly string[]>): string[] {
   const widths: number[] = [];
   for (const row of rows) {
     row.forEach(
