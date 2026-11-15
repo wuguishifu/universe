@@ -1,0 +1,276 @@
+h5 credit spreads — sample dev (2024-02-01 → 2026-04-30), entries in range and expiry ≤ 2026-04-30; settlement o1600; only structures with every leg within $10 of spot at entry
+ret = weekly return on max-loss capital; portfolio = mean over tickers traded that week; ETF = same-window underlying return; mdd on cumulative sums
+
+Skips / coverage:
+  P1 SPY    traded 8 {"no data":1,"leg > $10 from spot":103,"short no print":4,"expiry not a trading day":1}
+  P2 SPY    traded 87 {"no data":1,"leg > $10 from spot":28,"expiry not a trading day":1}
+  P3 SPY    traded 0 {"no data":1,"leg > $10 from spot":48,"long no print":43,"short no print":25}
+  P4 SPY    traded 100 {"no data":1,"short no print":4,"leg > $10 from spot":11,"expiry not a trading day":1}
+  P5 SPY    traded 0 {"no data":1,"leg > $10 from spot":111,"short no print":4,"expiry not a trading day":1}
+  P6 SPY    traded 11 {"leg > $10 from spot":105,"short no print":1}
+  P7 SPY    traded 92 {"leg > $10 from spot":25}
+  P8 SPY    traded 8 {"no data":1,"leg > $10 from spot":103,"short no print":4,"expiry not a trading day":1}
+  P9 SPY    traded 11 {"leg > $10 from spot":105,"short no print":1}
+  P1u SPY   traded 110 {"no data":1,"short no print":4,"long no print":1,"expiry not a trading day":1}
+  C1u SPY   traded 110 {"no data":1,"short no print":5,"expiry not a trading day":1}
+  P8u SPY   traded 110 {"no data":1,"short no print":4,"long no print":1,"expiry not a trading day":1}
+  P8b SPY   traded 8 {"no data":1,"leg > $10 from spot":103,"short no print":4,"expiry not a trading day":1}
+  C1 SPY    traded 8 {"no data":1,"leg > $10 from spot":102,"short no print":5,"expiry not a trading day":1}
+  C2 SPY    traded 89 {"no data":1,"leg > $10 from spot":26,"expiry not a trading day":1}
+  C3 SPY    traded 0 {"no data":1,"long no print":56,"leg > $10 from spot":33,"short no print":27}
+  C4 SPY    traded 11 {"leg > $10 from spot":104,"short no print":2}
+  C5 SPY    traded 8 {"no data":1,"leg > $10 from spot":102,"short no print":5,"expiry not a trading day":1}
+  P1 QQQ    traded 50 {"no data":1,"leg > $10 from spot":61,"short no print":4,"expiry not a trading day":1}
+  P2 QQQ    traded 109 {"no data":1,"short no print":6,"expiry not a trading day":1}
+  P3 QQQ    traded 0 {"no data":1,"leg > $10 from spot":77,"long no print":27,"short no print":11,"expiry not a trading day":1}
+  P4 QQQ    traded 102 {"no data":1,"long no print":10,"short no print":4}
+  P5 QQQ    traded 3 {"no data":1,"leg > $10 from spot":108,"short no print":4,"expiry not a trading day":1}
+  P6 QQQ    traded 45 {"short no print":5,"leg > $10 from spot":67}
+  P7 QQQ    traded 112 {"short no print":4,"leg > $10 from spot":1}
+  P8 QQQ    traded 50 {"no data":1,"leg > $10 from spot":61,"short no print":4,"expiry not a trading day":1}
+  P9 QQQ    traded 45 {"short no print":5,"leg > $10 from spot":67}
+  P1u QQQ   traded 111 {"no data":1,"short no print":4,"expiry not a trading day":1}
+  C1u QQQ   traded 108 {"no data":1,"short no print":6,"long no print":1,"expiry not a trading day":1}
+  P8u QQQ   traded 111 {"no data":1,"short no print":4,"expiry not a trading day":1}
+  P8b QQQ   traded 50 {"no data":1,"leg > $10 from spot":61,"short no print":4,"expiry not a trading day":1}
+  C1 QQQ    traded 48 {"no data":1,"short no print":6,"leg > $10 from spot":60,"long no print":1,"expiry not a trading day":1}
+  C2 QQQ    traded 107 {"no data":1,"long no print":1,"short no print":7,"expiry not a trading day":1}
+  C3 QQQ    traded 0 {"no data":1,"leg > $10 from spot":67,"long no print":29,"short no print":20}
+  C4 QQQ    traded 57 {"short no print":6,"leg > $10 from spot":53,"long no print":1}
+  C5 QQQ    traded 48 {"no data":1,"short no print":6,"leg > $10 from spot":60,"long no print":1,"expiry not a trading day":1}
+  P1 IWM    traded 94 {"no data":1,"long no print":4,"short no print":17,"expiry not a trading day":1}
+  P2 IWM    traded 98 {"no data":1,"short no print":16,"long no print":1,"expiry not a trading day":1}
+  P3 IWM    traded 88 {"no data":1,"short no print":24,"long no print":3,"expiry not a trading day":1}
+  P4 IWM    traded 82 {"no data":1,"long no print":16,"short no print":17,"expiry not a trading day":1}
+  P5 IWM    traded 98 {"no data":1,"short no print":17,"expiry not a trading day":1}
+  P6 IWM    traded 98 {"short no print":17,"long no print":2}
+  P7 IWM    traded 96 {"short no print":15,"long no print":6}
+  P8 IWM    traded 94 {"no data":1,"long no print":4,"short no print":17,"expiry not a trading day":1}
+  P9 IWM    traded 98 {"short no print":17,"long no print":2}
+  P1u IWM   traded 94 {"no data":1,"long no print":4,"short no print":17,"expiry not a trading day":1}
+  C1u IWM   traded 99 {"no data":1,"short no print":15,"long no print":1,"expiry not a trading day":1}
+  P8u IWM   traded 94 {"no data":1,"long no print":4,"short no print":17,"expiry not a trading day":1}
+  P8b IWM   traded 94 {"no data":1,"long no print":4,"short no print":17,"expiry not a trading day":1}
+  C1 IWM    traded 99 {"no data":1,"short no print":15,"long no print":1,"expiry not a trading day":1}
+  C2 IWM    traded 101 {"no data":1,"short no print":11,"long no print":3,"expiry not a trading day":1}
+  C3 IWM    traded 100 {"no data":1,"short no print":15,"long no print":1}
+  C4 IWM    traded 105 {"short no print":10,"long no print":2}
+  C5 IWM    traded 99 {"no data":1,"short no print":15,"long no print":1,"expiry not a trading day":1}
+
+=== P1 {"id":"P1","type":"P","k":0.01,"w":0.01,"entry":"fri","exit":"expiry"} ===
+P1 SPY+QQQ       primary wk  50 tr  58 | mean  -9.52% t -1.10 | $ -1570 win 67% | alpha -16.63% tA -2.97 beta  15.1 R2 0.60 | tot  -476% mdd  778% r/dd -0.61 | ETF tot 23.5% mdd 21.9% r/dd 1.07 | vol-matched mdd 39.8%
+    per year: 2024 n=36 sum 25% mean 0.70% t 0.08 | 2025 n=14 sum -501% mean -35.81% t -1.75
+    worst week -139.8% (2025-03-07), best 47.7%; without 5 best weeks: mean -15.67% t -1.72; weeks < -50%: 14
+    April 2025 episode: 2025-03-28 ret -123% etf -9.8%; 2025-04-04 ret 6% etf 6.1%; 2025-04-11 ret -84% etf -2.3%; 2025-04-17 ret 47% etf 5.2% | sum -154%
+    exits: expire 36 (62%), close1555 20 (34%), close1555-intrinsic 2 (3%); narrowed wing 11; mean credit $1.00 on mean width $4.45 (credit/width 22.6%)
+P1 SPY+QQQ       stress  wk  50 tr  58 | mean -10.98% t -1.26 | $ -1833 win 67% | alpha -18.17% tA -3.24 beta  15.3 R2 0.60 | tot  -549% mdd  807% r/dd -0.68 | ETF tot 23.5% mdd 21.9% r/dd 1.07 | vol-matched mdd 40.9%
+P1 SPY+QQQ       harsh   wk  50 tr  58 | mean  -9.83% t -1.14 | $ -1646 win 67% | alpha -16.94% tA -3.03 beta  15.1 R2 0.60 | tot  -492% mdd  780% r/dd -0.63 | ETF tot 23.5% mdd 21.9% r/dd 1.07 | vol-matched mdd 39.9%
+P1 SPY           primary wk   8 tr   8 | mean  13.79% t  3.30 | $   473 win 88% | alpha  11.96% tA  2.85 beta   5.7 R2 0.23 | tot   110% mdd   12% r/dd  9.29 | ETF tot 2.6% mdd 1.3% r/dd 1.95 | vol-matched mdd 1.0%
+    per year: 2024 n=8 sum 110% mean 13.79% t 3.30
+    worst week -11.9% (2024-07-19), best 25.4%; without 5 best weeks: mean 3.16% t 0.41; weeks < -50%: 0
+    April 2025 episode:  | sum 0%
+    exits: expire 5 (63%), close1555 3 (38%); narrowed wing 1; mean credit $0.74 on mean width $4.88 (credit/width 15.2%)
+P1 QQQ           primary wk  50 tr  50 | mean -10.78% t -1.24 | $ -2043 win 64% | alpha -17.33% tA -3.12 beta  15.2 R2 0.61 | tot  -539% mdd  778% r/dd -0.69 | ETF tot 21.5% mdd 21.9% r/dd 0.98 | vol-matched mdd 39.9%
+    per year: 2024 n=36 sum -38% mean -1.04% t -0.12 | 2025 n=14 sum -501% mean -35.81% t -1.75
+    worst week -139.8% (2025-03-07), best 47.7%; without 5 best weeks: mean -17.07% t -1.85; weeks < -50%: 15
+    April 2025 episode: 2025-03-28 ret -123% etf -9.8%; 2025-04-04 ret 6% etf 6.1%; 2025-04-11 ret -84% etf -2.3%; 2025-04-17 ret 47% etf 5.2% | sum -154%
+    exits: close1555 17 (34%), expire 31 (62%), close1555-intrinsic 2 (4%); narrowed wing 10; mean credit $1.04 on mean width $4.38 (credit/width 23.8%)
+P1 IWM           primary wk  94 tr  94 | mean   3.33% t  0.54 | $   912 win 73% | alpha  -2.42% tA -0.64 beta  17.6 R2 0.63 | tot   313% mdd  753% r/dd  0.42 | ETF tot 30.7% mdd 27.6% r/dd 1.11 | vol-matched mdd 34.1%
+
+=== P2 {"id":"P2","type":"P","k":0.005,"w":0.01,"entry":"fri","exit":"expiry"} ===
+P2 SPY+QQQ       primary wk 113 tr 196 | mean  -1.75% t -0.32 | $ -1733 win 69% | alpha  -9.21% tA -2.81 beta  19.4 R2 0.65 | tot  -198% mdd  696% r/dd -0.28 | ETF tot 43.4% mdd 19.5% r/dd 2.23 | vol-matched mdd 28.9%
+P2 SPY+QQQ       stress  wk 113 tr 196 | mean  -3.17% t -0.58 | $ -2801 win 69% | alpha -10.71% tA -3.26 beta  19.6 R2 0.65 | tot  -359% mdd  764% r/dd -0.47 | ETF tot 43.4% mdd 19.5% r/dd 2.23 | vol-matched mdd 31.4%
+P2 SPY+QQQ       harsh   wk 113 tr 196 | mean  -1.96% t -0.36 | $ -1902 win 69% | alpha  -9.41% tA -2.88 beta  19.4 R2 0.65 | tot  -221% mdd  700% r/dd -0.32 | ETF tot 43.4% mdd 19.5% r/dd 2.23 | vol-matched mdd 29.1%
+P2 SPY           primary wk  87 tr  87 | mean  -0.75% t -0.13 | $  -306 win 74% | alpha  -8.65% tA -2.29 beta  20.3 R2 0.62 | tot   -65% mdd  728% r/dd -0.09 | ETF tot 33.9% mdd 17.0% r/dd 1.99 | vol-matched mdd 28.3%
+P2 QQQ           primary wk 109 tr 109 | mean  -3.22% t -0.54 | $ -1428 win 66% | alpha  -9.50% tA -2.63 beta  18.8 R2 0.65 | tot  -351% mdd  783% r/dd -0.45 | ETF tot 36.3% mdd 24.7% r/dd 1.47 | vol-matched mdd 33.5%
+P2 IWM           primary wk  98 tr  98 | mean   2.37% t  0.34 | $   390 win 66% | alpha  -4.87% tA -1.20 beta  20.8 R2 0.67 | tot   232% mdd  526% r/dd  0.44 | ETF tot 34.1% mdd 21.3% r/dd 1.60 | vol-matched mdd 20.7%
+
+=== P3 {"id":"P3","type":"P","k":0.02,"w":0.01,"entry":"fri","exit":"expiry"} ===
+P3 IWM           primary wk  88 tr  88 | mean   7.15% t  1.64 | $  1039 win 88% | alpha   2.23% tA  0.68 beta  11.2 R2 0.46 | tot   629% mdd  365% r/dd  1.73 | ETF tot 38.8% mdd 13.9% r/dd 2.79 | vol-matched mdd 22.3%
+
+=== P4 {"id":"P4","type":"P","k":0.01,"w":0.005,"entry":"fri","exit":"expiry"} ===
+P4 SPY+QQQ       primary wk 113 tr 202 | mean  -4.11% t -0.75 | $ -2643 win 71% | alpha -11.11% tA -3.39 beta  19.8 R2 0.66 | tot  -464% mdd  658% r/dd -0.71 | ETF tot 39.8% mdd 17.9% r/dd 2.22 | vol-matched mdd 26.9%
+P4 SPY+QQQ       stress  wk 113 tr 202 | mean  -6.57% t -1.19 | $ -3606 win 71% | alpha -13.63% tA -4.23 beta  20.0 R2 0.67 | tot  -743% mdd  894% r/dd -0.83 | ETF tot 39.8% mdd 17.9% r/dd 2.22 | vol-matched mdd 36.4%
+P4 SPY+QQQ       harsh   wk 113 tr 202 | mean  -4.54% t -0.83 | $ -2854 win 71% | alpha -11.54% tA -3.54 beta  19.8 R2 0.66 | tot  -513% mdd  674% r/dd -0.76 | ETF tot 39.8% mdd 17.9% r/dd 2.22 | vol-matched mdd 27.5%
+P4 SPY           primary wk 100 tr 100 | mean  -3.14% t -0.48 | $ -1329 win 74% | alpha -10.16% tA -2.32 beta  23.3 R2 0.57 | tot  -314% mdd  633% r/dd -0.50 | ETF tot 30.2% mdd 15.9% r/dd 1.90 | vol-matched mdd 20.5%
+P4 QQQ           primary wk 102 tr 102 | mean  -7.33% t -1.19 | $ -1314 win 69% | alpha -11.62% tA -2.85 beta  17.4 R2 0.57 | tot  -748% mdd 1017% r/dd -0.74 | ETF tot 25.2% mdd 20.4% r/dd 1.23 | vol-matched mdd 44.2%
+P4 IWM           primary wk  82 tr  82 | mean   1.73% t  0.24 | $    98 win 72% | alpha  -5.89% tA -1.31 beta  19.4 R2 0.61 | tot   142% mdd  822% r/dd  0.17 | ETF tot 32.2% mdd 27.9% r/dd 1.15 | vol-matched mdd 33.2%
+
+=== P5 {"id":"P5","type":"P","k":0.01,"w":0.02,"entry":"fri","exit":"expiry"} ===
+P5 SPY+QQQ       primary wk   3 tr   3 | mean -45.73% t -1.16 | $  -441 win 33% | alpha -52.59% tA -4.07 beta  16.0 R2 0.95 | tot  -137% mdd  137% r/dd -1.00 | ETF tot 1.3% mdd 2.2% r/dd 0.59 | vol-matched mdd 8.3%
+P5 SPY+QQQ       stress  wk   3 tr   3 | mean -47.00% t -1.20 | $  -455 win 33% | alpha -53.82% tA -4.04 beta  15.9 R2 0.94 | tot  -141% mdd  141% r/dd -1.00 | ETF tot 1.3% mdd 2.2% r/dd 0.59 | vol-matched mdd 8.6%
+P5 SPY+QQQ       harsh   wk   3 tr   3 | mean -45.86% t -1.16 | $  -446 win 33% | alpha -52.73% tA -4.12 beta  16.1 R2 0.95 | tot  -138% mdd  138% r/dd -1.00 | ETF tot 1.3% mdd 2.2% r/dd 0.59 | vol-matched mdd 8.3%
+P5 QQQ           primary wk   3 tr   3 | mean -45.73% t -1.16 | $  -441 win 33% | alpha -52.59% tA -4.07 beta  16.0 R2 0.95 | tot  -137% mdd  137% r/dd -1.00 | ETF tot 1.3% mdd 2.2% r/dd 0.59 | vol-matched mdd 8.3%
+P5 IWM           primary wk  98 tr  98 | mean   5.20% t  1.10 | $  1551 win 78% | alpha   0.55% tA  0.19 beta  13.7 R2 0.62 | tot   510% mdd  479% r/dd  1.06 | ETF tot 33.3% mdd 21.9% r/dd 1.52 | vol-matched mdd 27.6%
+
+=== P6 {"id":"P6","type":"P","k":0.01,"w":0.01,"entry":"mon","exit":"expiry"} ===
+P6 SPY+QQQ       primary wk  45 tr  56 | mean  -1.60% t -0.20 | $   298 win 80% | alpha  -9.64% tA -1.89 beta  12.7 R2 0.61 | tot   -72% mdd  393% r/dd -0.18 | ETF tot 28.5% mdd 17.4% r/dd 1.64 | vol-matched mdd 24.3%
+P6 SPY+QQQ       stress  wk  45 tr  56 | mean  -2.92% t -0.36 | $    80 win 80% | alpha -11.02% tA -2.12 beta  12.8 R2 0.61 | tot  -131% mdd  421% r/dd -0.31 | ETF tot 28.5% mdd 17.4% r/dd 1.64 | vol-matched mdd 25.7%
+P6 SPY+QQQ       harsh   wk  45 tr  56 | mean  -2.00% t -0.25 | $   212 win 80% | alpha -10.05% tA -1.99 beta  12.7 R2 0.62 | tot   -90% mdd  394% r/dd -0.23 | ETF tot 28.5% mdd 17.4% r/dd 1.64 | vol-matched mdd 24.4%
+P6 SPY           primary wk  11 tr  11 | mean  18.55% t 10.45 | $   812 win 100% | alpha  17.03% tA  7.79 beta   1.1 R2 0.13 | tot   204% mdd    0% r/dd     - | ETF tot 15.6% mdd 0.7% r/dd 23.37 | vol-matched mdd 0.0%
+P6 QQQ           primary wk  45 tr  45 | mean  -0.25% t -0.03 | $  -514 win 76% | alpha  -8.91% tA -1.75 beta  12.9 R2 0.63 | tot   -11% mdd  365% r/dd -0.03 | ETF tot 30.1% mdd 17.4% r/dd 1.73 | vol-matched mdd 22.4%
+P6 IWM           primary wk  98 tr  98 | mean   1.18% t  0.20 | $   120 win 70% | alpha   0.58% tA  0.15 beta  17.3 R2 0.59 | tot   115% mdd  419% r/dd  0.28 | ETF tot 3.4% mdd 24.1% r/dd 0.14 | vol-matched mdd 18.7%
+
+=== P7 {"id":"P7","type":"P","k":0.005,"w":0.01,"entry":"mon","exit":"expiry"} ===
+P7 SPY+QQQ       primary wk 115 tr 204 | mean  -5.52% t -1.04 | $ -2844 win 70% | alpha -10.45% tA -3.48 beta  19.1 R2 0.69 | tot  -635% mdd  995% r/dd -0.64 | ETF tot 29.7% mdd 19.6% r/dd 1.52 | vol-matched mdd 43.1%
+P7 SPY+QQQ       stress  wk 115 tr 204 | mean  -6.84% t -1.28 | $ -3868 win 70% | alpha -11.83% tA -3.90 beta  19.3 R2 0.69 | tot  -787% mdd 1126% r/dd -0.70 | ETF tot 29.7% mdd 19.6% r/dd 1.52 | vol-matched mdd 48.3%
+P7 SPY+QQQ       harsh   wk 115 tr 204 | mean  -5.77% t -1.09 | $ -3069 win 70% | alpha -10.70% tA -3.57 beta  19.1 R2 0.69 | tot  -663% mdd 1010% r/dd -0.66 | ETF tot 29.7% mdd 19.6% r/dd 1.52 | vol-matched mdd 43.8%
+P7 SPY           primary wk  92 tr  92 | mean   1.13% t  0.21 | $   235 win 74% | alpha  -6.50% tA -1.89 beta  19.0 R2 0.63 | tot   104% mdd  437% r/dd  0.24 | ETF tot 36.9% mdd 16.1% r/dd 2.29 | vol-matched mdd 18.2%
+P7 QQQ           primary wk 112 tr 112 | mean  -5.47% t -0.96 | $ -3080 win 66% | alpha -10.79% tA -3.21 beta  17.9 R2 0.66 | tot  -612% mdd  953% r/dd -0.64 | ETF tot 33.2% mdd 19.7% r/dd 1.69 | vol-matched mdd 43.3%
+P7 IWM           primary wk  96 tr  96 | mean  -0.36% t -0.05 | $   224 win 66% | alpha  -2.39% tA -0.57 beta  20.3 R2 0.65 | tot   -35% mdd  706% r/dd -0.05 | ETF tot 9.6% mdd 28.8% r/dd 0.33 | vol-matched mdd 28.1%
+
+=== P8 {"id":"P8","type":"P","k":0.01,"w":0.01,"entry":"fri","exit":"tp50"} ===
+P8 SPY+QQQ       primary wk  50 tr  58 | mean   9.15% t  2.22 | $  1871 win 93% | alpha   9.07% tA  2.15 beta   0.2 R2 0.00 | tot   458% mdd  157% r/dd  2.91 | ETF tot 23.5% mdd 21.9% r/dd 1.07 | vol-matched mdd 16.8%
+    per year: 2024 n=36 sum 477% mean 13.24% t 5.91 | 2025 n=14 sum -19% mean -1.37% t -0.10
+    worst week -139.8% (2025-03-07), best 43.6%; without 5 best weeks: mean 6.51% t 1.48; weeks < -50%: 3
+    April 2025 episode: 2025-03-28 ret 26% etf -9.8%; 2025-04-04 ret -92% etf 6.1%; 2025-04-11 ret 21% etf -2.3%; 2025-04-17 ret -6% etf 5.2% | sum -51%
+    exits: tp 55 (95%), close1555 2 (3%), expire 1 (2%); narrowed wing 11; mean credit $1.00 on mean width $4.45 (credit/width 22.6%)
+    take-profit exits 55: triggered in the first 5 minutes of a session 16, on the entry day 1, exit cost above credit 2; mean ret of open-triggered 18.7% vs others 10.7%
+P8 SPY+QQQ       stress  wk  50 tr  58 | mean   9.13% t  2.19 | $  1776 win 95% | alpha   8.84% tA  2.08 beta   0.6 R2 0.00 | tot   456% mdd  167% r/dd  2.73 | ETF tot 23.5% mdd 21.9% r/dd 1.07 | vol-matched mdd 17.7%
+P8 SPY+QQQ       harsh   wk  50 tr  58 | mean   8.00% t  1.94 | $  1553 win 91% | alpha   7.88% tA  1.87 beta   0.2 R2 0.00 | tot   400% mdd  159% r/dd  2.51 | ETF tot 23.5% mdd 21.9% r/dd 1.07 | vol-matched mdd 17.0%
+P8 SPY           primary wk   8 tr   8 | mean  10.52% t  6.12 | $   343 win 100% | alpha  10.37% tA  5.30 beta   0.5 R2 0.01 | tot    84% mdd    0% r/dd     - | ETF tot 2.6% mdd 1.3% r/dd 1.95 | vol-matched mdd 0.0%
+    per year: 2024 n=8 sum 84% mean 10.52% t 6.12
+    worst week 5.4% (2024-05-24), best 20.1%; without 5 best weeks: mean 6.26% t 14.87; weeks < -50%: 0
+    April 2025 episode:  | sum 0%
+    exits: tp 8 (100%); narrowed wing 1; mean credit $0.74 on mean width $4.88 (credit/width 15.2%)
+    take-profit exits 8: triggered in the first 5 minutes of a session 3, on the entry day 0, exit cost above credit 0; mean ret of open-triggered 13.5% vs others 8.8%
+P8 QQQ           primary wk  50 tr  50 | mean   9.58% t  2.32 | $  1528 win 92% | alpha   9.51% tA  2.26 beta   0.2 R2 0.00 | tot   479% mdd  157% r/dd  3.05 | ETF tot 21.5% mdd 21.9% r/dd 0.98 | vol-matched mdd 17.0%
+    per year: 2024 n=36 sum 498% mean 13.84% t 6.12 | 2025 n=14 sum -19% mean -1.37% t -0.10
+    worst week -139.8% (2025-03-07), best 43.6%; without 5 best weeks: mean 6.92% t 1.57; weeks < -50%: 3
+    April 2025 episode: 2025-03-28 ret 26% etf -9.8%; 2025-04-04 ret -92% etf 6.1%; 2025-04-11 ret 21% etf -2.3%; 2025-04-17 ret -6% etf 5.2% | sum -51%
+    exits: tp 47 (94%), close1555 2 (4%), expire 1 (2%); narrowed wing 10; mean credit $1.04 on mean width $4.38 (credit/width 23.8%)
+    take-profit exits 47: triggered in the first 5 minutes of a session 13, on the entry day 1, exit cost above credit 2; mean ret of open-triggered 19.8% vs others 10.9%
+P8 IWM           primary wk  94 tr  94 | mean   0.51% t  0.11 | $   462 win 82% | alpha  -2.81% tA -0.72 beta  10.2 R2 0.35 | tot    48% mdd  526% r/dd  0.09 | ETF tot 30.7% mdd 27.6% r/dd 1.11 | vol-matched mdd 30.6%
+
+=== P9 {"id":"P9","type":"P","k":0.01,"w":0.01,"entry":"mon","exit":"tp50"} ===
+P9 SPY+QQQ       primary wk  45 tr  56 | mean   2.44% t  0.45 | $   538 win 88% | alpha  -0.83% tA -0.17 beta   5.2 R2 0.22 | tot   110% mdd  231% r/dd  0.47 | ETF tot 28.5% mdd 17.4% r/dd 1.64 | vol-matched mdd 20.9%
+P9 SPY+QQQ       stress  wk  45 tr  56 | mean   1.87% t  0.34 | $   443 win 88% | alpha  -1.41% tA -0.28 beta   5.2 R2 0.21 | tot    84% mdd  250% r/dd  0.34 | ETF tot 28.5% mdd 17.4% r/dd 1.64 | vol-matched mdd 22.3%
+P9 SPY+QQQ       harsh   wk  45 tr  56 | mean   2.09% t  0.38 | $   457 win 88% | alpha  -1.24% tA -0.25 beta   5.2 R2 0.22 | tot    94% mdd  235% r/dd  0.40 | ETF tot 28.5% mdd 17.4% r/dd 1.64 | vol-matched mdd 21.2%
+P9 SPY           primary wk  11 tr  11 | mean   5.92% t  1.15 | $   308 win 91% | alpha  16.00% tA  4.10 beta  -7.1 R2 0.67 | tot    65% mdd   44% r/dd  1.48 | ETF tot 15.6% mdd 0.7% r/dd 23.37 | vol-matched mdd 5.1%
+P9 QQQ           primary wk  45 tr  45 | mean   3.89% t  0.70 | $   230 win 87% | alpha   0.10% tA  0.02 beta   5.7 R2 0.26 | tot   175% mdd  190% r/dd  0.92 | ETF tot 30.1% mdd 17.4% r/dd 1.73 | vol-matched mdd 17.2%
+P9 IWM           primary wk  98 tr  98 | mean  -2.82% t -0.63 | $  -455 win 80% | alpha  -3.20% tA -0.95 beta  11.2 R2 0.44 | tot  -276% mdd  547% r/dd -0.50 | ETF tot 3.4% mdd 24.1% r/dd 0.14 | vol-matched mdd 32.4%
+
+=== P1u {"id":"P1u","type":"P","k":0.01,"w":0.01,"entry":"fri","exit":"expiry","cap10":true} ===
+P1u SPY+QQQ      primary wk 114 tr 221 | mean  -4.07% t -0.84 | $ -3011 win 73% | alpha -10.21% tA -3.40 beta  17.3 R2 0.63 | tot  -464% mdd  706% r/dd -0.66 | ETF tot 40.5% mdd 19.9% r/dd 2.04 | vol-matched mdd 32.4%
+    per year: 2024 n=47 sum -54% mean -1.15% t -0.16 | 2025 n=52 sum -329% mean -6.32% t -0.81 | 2026 n=15 sum -82% mean -5.45% t -0.43
+    worst week -125.6% (2025-03-28), best 47.0%; without 5 best weeks: mean -6.32% t -1.27; weeks < -50%: 25
+    April 2025 episode: 2025-03-28 ret -126% etf -9.4%; 2025-04-04 ret 22% etf 5.3%; 2025-04-11 ret -69% etf -1.9%; 2025-04-17 ret 47% etf 5.2% | sum -126%
+    exits: expire 147 (67%), close1555 68 (31%), close1555-intrinsic 6 (3%); narrowed wing 174; mean credit $0.80 on mean width $3.71 (credit/width 21.3%)
+P1u SPY+QQQ      stress  wk 114 tr 221 | mean  -5.63% t -1.15 | $ -3981 win 73% | alpha -11.84% tA -3.90 beta  17.5 R2 0.63 | tot  -642% mdd  840% r/dd -0.76 | ETF tot 40.5% mdd 19.9% r/dd 2.04 | vol-matched mdd 38.1%
+P1u SPY+QQQ      harsh   wk 114 tr 221 | mean  -4.43% t -0.91 | $ -3258 win 73% | alpha -10.57% tA -3.53 beta  17.3 R2 0.63 | tot  -505% mdd  718% r/dd -0.70 | ETF tot 40.5% mdd 19.9% r/dd 2.04 | vol-matched mdd 33.0%
+P1u SPY          primary wk 110 tr 110 | mean  -4.81% t -0.99 | $ -1380 win 75% | alpha -10.14% tA -3.30 beta  19.3 R2 0.61 | tot  -529% mdd  727% r/dd -0.73 | ETF tot 30.4% mdd 15.9% r/dd 1.91 | vol-matched mdd 29.4%
+P1u QQQ          primary wk 111 tr 111 | mean  -3.41% t -0.64 | $ -1631 win 71% | alpha  -9.28% tA -2.67 beta  15.8 R2 0.58 | tot  -378% mdd  796% r/dd -0.48 | ETF tot 41.2% mdd 21.9% r/dd 1.89 | vol-matched mdd 38.5%
+P1u IWM          primary wk  94 tr  94 | mean   3.33% t  0.54 | $   912 win 73% | alpha  -2.42% tA -0.64 beta  17.6 R2 0.63 | tot   313% mdd  753% r/dd  0.42 | ETF tot 30.7% mdd 27.6% r/dd 1.11 | vol-matched mdd 34.1%
+
+=== C1u {"id":"C1u","type":"C","k":0.01,"w":0.01,"entry":"fri","exit":"expiry","cap10":true} ===
+C1u SPY+QQQ      primary wk 113 tr 218 | mean  -4.87% t -0.83 | $ -3341 win 63% | alpha   1.89% tA  0.55 beta -21.5 R2 0.66 | tot  -551% mdd  863% r/dd -0.64 | ETF tot 35.5% mdd 19.9% r/dd 1.79 | vol-matched mdd 32.5%
+C1u SPY+QQQ      stress  wk 113 tr 218 | mean  -6.86% t -1.16 | $ -4385 win 63% | alpha   0.05% tA  0.02 beta -22.0 R2 0.67 | tot  -776% mdd  998% r/dd -0.78 | ETF tot 35.5% mdd 19.9% r/dd 1.79 | vol-matched mdd 37.0%
+C1u SPY+QQQ      harsh   wk 113 tr 218 | mean  -5.40% t -0.93 | $ -3652 win 63% | alpha   1.35% tA  0.39 beta -21.5 R2 0.66 | tot  -611% mdd  906% r/dd -0.67 | ETF tot 35.5% mdd 19.9% r/dd 1.79 | vol-matched mdd 34.2%
+C1u SPY          primary wk 110 tr 110 | mean  -4.18% t -0.72 | $ -1798 win 65% | alpha   1.90% tA  0.52 beta -23.5 R2 0.61 | tot  -460% mdd  961% r/dd -0.48 | ETF tot 28.5% mdd 15.9% r/dd 1.79 | vol-matched mdd 32.1%
+C1u QQQ          primary wk 108 tr 108 | mean  -5.21% t -0.79 | $ -1543 win 60% | alpha   2.29% tA  0.57 beta -20.1 R2 0.63 | tot  -562% mdd  786% r/dd -0.71 | ETF tot 40.2% mdd 23.1% r/dd 1.74 | vol-matched mdd 31.1%
+C1u IWM          primary wk  99 tr  99 | mean  -2.04% t -0.32 | $   236 win 64% | alpha   1.87% tA  0.47 beta -20.2 R2 0.62 | tot  -202% mdd  525% r/dd -0.38 | ETF tot 19.2% mdd 20.8% r/dd 0.92 | vol-matched mdd 20.5%
+
+=== P8u {"id":"P8u","type":"P","k":0.01,"w":0.01,"entry":"fri","exit":"tp50","cap10":true} ===
+P8u SPY+QQQ      primary wk 114 tr 221 | mean   6.38% t  2.53 | $  3976 win 92% | alpha   5.23% tA  2.13 beta   3.2 R2 0.08 | tot   727% mdd  191% r/dd  3.80 | ETF tot 40.5% mdd 19.9% r/dd 2.04 | vol-matched mdd 16.9%
+    per year: 2024 n=47 sum 370% mean 7.87% t 2.24 | 2025 n=52 sum 214% mean 4.12% t 0.95 | 2026 n=15 sum 143% mean 9.52% t 2.12
+    worst week -111.6% (2025-03-07), best 43.0%; without 5 best weeks: mean 5.20% t 2.02; weeks < -50%: 8
+    April 2025 episode: 2025-03-28 ret 21% etf -9.4%; 2025-04-04 ret -82% etf 5.3%; 2025-04-11 ret 14% etf -1.9%; 2025-04-17 ret -6% etf 5.2% | sum -53%
+    exits: tp 197 (89%), expire 10 (5%), close1555 12 (5%), close1555-intrinsic 2 (1%); narrowed wing 174; mean credit $0.80 on mean width $3.71 (credit/width 21.3%)
+    take-profit exits 197: triggered in the first 5 minutes of a session 61, on the entry day 2, exit cost above credit 4; mean ret of open-triggered 14.9% vs others 10.4%
+P8u SPY+QQQ      stress  wk 114 tr 221 | mean   5.33% t  2.00 | $  3207 win 91% | alpha   3.95% tA  1.54 beta   3.9 R2 0.11 | tot   607% mdd  171% r/dd  3.55 | ETF tot 40.5% mdd 19.9% r/dd 2.04 | vol-matched mdd 14.3%
+P8u SPY+QQQ      harsh   wk 114 tr 221 | mean   4.72% t  1.83 | $  2945 win 90% | alpha   3.45% tA  1.38 beta   3.6 R2 0.10 | tot   538% mdd  197% r/dd  2.74 | ETF tot 40.5% mdd 19.9% r/dd 2.04 | vol-matched mdd 16.9%
+P8u SPY          primary wk 110 tr 110 | mean   4.61% t  1.74 | $  1405 win 93% | alpha   3.47% tA  1.36 beta   4.1 R2 0.09 | tot   507% mdd  190% r/dd  2.66 | ETF tot 30.4% mdd 15.9% r/dd 1.91 | vol-matched mdd 14.1%
+P8u QQQ          primary wk 111 tr 111 | mean   7.68% t  2.78 | $  2570 win 91% | alpha   6.63% tA  2.45 beta   2.8 R2 0.07 | tot   853% mdd  213% r/dd  4.00 | ETF tot 41.2% mdd 21.9% r/dd 1.89 | vol-matched mdd 19.8%
+P8u IWM          primary wk  94 tr  94 | mean   0.51% t  0.11 | $   462 win 82% | alpha  -2.81% tA -0.72 beta  10.2 R2 0.35 | tot    48% mdd  526% r/dd  0.09 | ETF tot 30.7% mdd 27.6% r/dd 1.11 | vol-matched mdd 30.6%
+
+=== P8b {"id":"P8b","type":"P","k":0.01,"w":0.01,"entry":"fri","exit":"tp50","noOpen":true} ===
+P8b SPY+QQQ      primary wk  50 tr  58 | mean   9.03% t  2.20 | $  1855 win 93% | alpha   8.95% tA  2.13 beta   0.2 R2 0.00 | tot   452% mdd  163% r/dd  2.77 | ETF tot 23.5% mdd 21.9% r/dd 1.07 | vol-matched mdd 17.5%
+    per year: 2024 n=36 sum 480% mean 13.34% t 5.96 | 2025 n=14 sum -28% mean -2.03% t -0.15
+    worst week -139.8% (2025-03-07), best 43.6%; without 5 best weeks: mean 6.51% t 1.48; weeks < -50%: 3
+    April 2025 episode: 2025-03-28 ret 26% etf -9.8%; 2025-04-04 ret -92% etf 6.1%; 2025-04-11 ret 21% etf -2.3%; 2025-04-17 ret -6% etf 5.2% | sum -51%
+    exits: tp 55 (95%), close1555 2 (3%), expire 1 (2%); narrowed wing 11; mean credit $1.00 on mean width $4.45 (credit/width 22.6%)
+    take-profit exits 55: triggered in the first 5 minutes of a session 0, on the entry day 1, exit cost above credit 2; mean ret of open-triggered 0.0% vs others 12.9%
+P8b SPY+QQQ      stress  wk  50 tr  58 | mean   9.04% t  2.18 | $  1764 win 95% | alpha   8.75% tA  2.07 beta   0.6 R2 0.00 | tot   452% mdd  174% r/dd  2.60 | ETF tot 23.5% mdd 21.9% r/dd 1.07 | vol-matched mdd 18.4%
+P8b SPY+QQQ      harsh   wk  50 tr  58 | mean   7.91% t  1.92 | $  1542 win 91% | alpha   7.80% tA  1.86 beta   0.2 R2 0.00 | tot   396% mdd  165% r/dd  2.39 | ETF tot 23.5% mdd 21.9% r/dd 1.07 | vol-matched mdd 17.7%
+P8b SPY          primary wk   8 tr   8 | mean  10.35% t  7.44 | $   338 win 100% | alpha  10.18% tA  6.46 beta   0.5 R2 0.02 | tot    83% mdd    0% r/dd     - | ETF tot 2.6% mdd 1.3% r/dd 1.95 | vol-matched mdd 0.0%
+    per year: 2024 n=8 sum 83% mean 10.35% t 7.44
+    worst week 5.4% (2024-05-24), best 17.7%; without 5 best weeks: mean 6.86% t 8.28; weeks < -50%: 0
+    April 2025 episode:  | sum 0%
+    exits: tp 8 (100%); narrowed wing 1; mean credit $0.74 on mean width $4.88 (credit/width 15.2%)
+    take-profit exits 8: triggered in the first 5 minutes of a session 0, on the entry day 0, exit cost above credit 0; mean ret of open-triggered 0.0% vs others 10.3%
+P8b QQQ          primary wk  50 tr  50 | mean   9.49% t  2.30 | $  1517 win 92% | alpha   9.42% tA  2.24 beta   0.2 R2 0.00 | tot   474% mdd  163% r/dd  2.90 | ETF tot 21.5% mdd 21.9% r/dd 0.98 | vol-matched mdd 17.7%
+    per year: 2024 n=36 sum 503% mean 13.96% t 6.17 | 2025 n=14 sum -28% mean -2.03% t -0.15
+    worst week -139.8% (2025-03-07), best 43.6%; without 5 best weeks: mean 6.89% t 1.57; weeks < -50%: 3
+    April 2025 episode: 2025-03-28 ret 26% etf -9.8%; 2025-04-04 ret -92% etf 6.1%; 2025-04-11 ret 21% etf -2.3%; 2025-04-17 ret -6% etf 5.2% | sum -51%
+    exits: tp 47 (94%), close1555 2 (4%), expire 1 (2%); narrowed wing 10; mean credit $1.04 on mean width $4.38 (credit/width 23.8%)
+    take-profit exits 47: triggered in the first 5 minutes of a session 0, on the entry day 1, exit cost above credit 2; mean ret of open-triggered 0.0% vs others 13.3%
+P8b IWM          primary wk  94 tr  94 | mean   1.17% t  0.24 | $   525 win 83% | alpha  -2.15% tA -0.55 beta  10.1 R2 0.35 | tot   110% mdd  526% r/dd  0.21 | ETF tot 30.7% mdd 27.6% r/dd 1.11 | vol-matched mdd 30.5%
+
+=== C1 {"id":"C1","type":"C","k":0.01,"w":0.01,"entry":"fri","exit":"expiry"} ===
+C1 SPY+QQQ       primary wk  49 tr  56 | mean -13.93% t -1.47 | $ -2960 win 54% | alpha  -2.10% tA -0.38 beta -19.5 R2 0.69 | tot  -683% mdd  706% r/dd -0.97 | ETF tot 29.7% mdd 10.6% r/dd 2.81 | vol-matched mdd 30.0%
+    per year: 2024 n=37 sum -293% mean -7.92% t -0.76 | 2025 n=11 sum -281% mean -25.57% t -1.15 | 2026 n=1 sum -108% mean -108.44% t -
+    worst week -128.1% (2024-11-15), best 84.4%; without 5 best weeks: mean -23.01% t -2.39; weeks < -50%: 16
+    April 2025 episode: 2025-04-04 ret -100% etf 6.1%; 2025-04-11 ret 84% etf -2.3% | sum -16%
+    exits: expire 25 (45%), close1555 23 (41%), close1555-intrinsic 8 (14%); narrowed wing 11; mean credit $1.30 on mean width $4.48 (credit/width 29.0%)
+C1 SPY+QQQ       stress  wk  49 tr  56 | mean -15.79% t -1.64 | $ -3274 win 54% | alpha  -3.67% tA -0.67 beta -20.0 R2 0.70 | tot  -774% mdd  797% r/dd -0.97 | ETF tot 29.7% mdd 10.6% r/dd 2.81 | vol-matched mdd 33.3%
+C1 SPY+QQQ       harsh   wk  49 tr  56 | mean -14.34% t -1.51 | $ -3040 win 54% | alpha  -2.55% tA -0.46 beta -19.4 R2 0.69 | tot  -703% mdd  725% r/dd -0.97 | ETF tot 29.7% mdd 10.6% r/dd 2.81 | vol-matched mdd 30.9%
+C1 SPY           primary wk   8 tr   8 | mean -31.44% t -1.41 | $ -1018 win 50% | alpha -12.44% tA -1.44 beta -31.5 R2 0.88 | tot  -251% mdd  314% r/dd -0.80 | ETF tot 4.8% mdd 2.5% r/dd 1.97 | vol-matched mdd 9.4%
+C1 QQQ           primary wk  48 tr  48 | mean -14.62% t -1.49 | $ -1941 win 54% | alpha  -1.95% tA -0.35 beta -19.5 R2 0.69 | tot  -702% mdd  730% r/dd -0.96 | ETF tot 31.2% mdd 10.6% r/dd 2.95 | vol-matched mdd 31.1%
+C1 IWM           primary wk  99 tr  99 | mean  -2.04% t -0.32 | $   236 win 64% | alpha   1.87% tA  0.47 beta -20.2 R2 0.62 | tot  -202% mdd  525% r/dd -0.38 | ETF tot 19.2% mdd 20.8% r/dd 0.92 | vol-matched mdd 20.5%
+
+=== C2 {"id":"C2","type":"C","k":0.005,"w":0.01,"entry":"fri","exit":"expiry"} ===
+C2 SPY+QQQ       primary wk 114 tr 196 | mean  -4.67% t -0.67 | $ -3089 win 58% | alpha   3.87% tA  0.94 beta -25.5 R2 0.66 | tot  -532% mdd 1100% r/dd -0.48 | ETF tot 38.2% mdd 19.4% r/dd 1.97 | vol-matched mdd 35.1%
+C2 SPY+QQQ       stress  wk 114 tr 196 | mean  -6.62% t -0.95 | $ -4291 win 57% | alpha   2.05% tA  0.50 beta -25.9 R2 0.67 | tot  -754% mdd 1248% r/dd -0.60 | ETF tot 38.2% mdd 19.4% r/dd 1.97 | vol-matched mdd 39.4%
+C2 SPY+QQQ       harsh   wk 114 tr 196 | mean  -4.91% t -0.71 | $ -3283 win 57% | alpha   3.61% tA  0.88 beta -25.5 R2 0.66 | tot  -560% mdd 1121% r/dd -0.50 | ETF tot 38.2% mdd 19.4% r/dd 1.97 | vol-matched mdd 35.8%
+C2 SPY           primary wk  89 tr  89 | mean  -9.29% t -1.22 | $ -2644 win 58% | alpha  -0.04% tA -0.01 beta -26.7 R2 0.62 | tot  -827% mdd  994% r/dd -0.83 | ETF tot 30.9% mdd 17.0% r/dd 1.81 | vol-matched mdd 29.3%
+C2 QQQ           primary wk 107 tr 107 | mean  -2.08% t -0.28 | $  -446 win 57% | alpha   4.09% tA  0.93 beta -23.1 R2 0.65 | tot  -222% mdd  939% r/dd -0.24 | ETF tot 28.6% mdd 21.9% r/dd 1.31 | vol-matched mdd 32.8%
+C2 IWM           primary wk 101 tr 101 | mean  -6.53% t -0.83 | $  -611 win 57% | alpha  -0.99% tA -0.21 beta -23.2 R2 0.64 | tot  -659% mdd  940% r/dd -0.70 | ETF tot 24.1% mdd 25.2% r/dd 0.95 | vol-matched mdd 32.3%
+
+=== C3 {"id":"C3","type":"C","k":0.02,"w":0.01,"entry":"fri","exit":"expiry"} ===
+C3 IWM           primary wk 100 tr 100 | mean  -1.22% t -0.24 | $    15 win 77% | alpha   2.02% tA  0.57 beta -13.3 R2 0.52 | tot  -122% mdd  520% r/dd -0.23 | ETF tot 24.3% mdd 30.2% r/dd 0.81 | vol-matched mdd 28.2%
+
+=== C4 {"id":"C4","type":"C","k":0.01,"w":0.01,"entry":"mon","exit":"expiry"} ===
+C4 SPY+QQQ       primary wk  58 tr  68 | mean  -9.75% t -1.21 | $ -1156 win 66% | alpha  -5.83% tA -1.11 beta -16.0 R2 0.59 | tot  -566% mdd  719% r/dd -0.79 | ETF tot 14.2% mdd 15.6% r/dd 0.91 | vol-matched mdd 34.5%
+C4 SPY+QQQ       stress  wk  58 tr  68 | mean -11.43% t -1.38 | $ -1514 win 66% | alpha  -7.34% tA -1.41 beta -16.7 R2 0.61 | tot  -663% mdd  814% r/dd -0.81 | ETF tot 14.2% mdd 15.6% r/dd 0.91 | vol-matched mdd 38.3%
+C4 SPY+QQQ       harsh   wk  58 tr  68 | mean -10.22% t -1.27 | $ -1265 win 66% | alpha  -6.31% tA -1.21 beta -16.0 R2 0.59 | tot  -593% mdd  741% r/dd -0.80 | ETF tot 14.2% mdd 15.6% r/dd 0.91 | vol-matched mdd 35.7%
+C4 SPY           primary wk  11 tr  11 | mean  -0.29% t -0.02 | $    89 win 73% | alpha   8.74% tA  1.40 beta -11.3 R2 0.80 | tot    -3% mdd  148% r/dd -0.02 | ETF tot 8.8% mdd 3.6% r/dd 2.45 | vol-matched mdd 11.8%
+C4 QQQ           primary wk  57 tr  57 | mean -10.06% t -1.20 | $ -1246 win 65% | alpha  -5.07% tA -0.93 beta -16.0 R2 0.60 | tot  -573% mdd  714% r/dd -0.80 | ETF tot 17.8% mdd 15.6% r/dd 1.14 | vol-matched mdd 34.4%
+C4 IWM           primary wk 105 tr 105 | mean  -4.86% t -0.74 | $  -605 win 68% | alpha  -1.04% tA -0.24 beta -20.3 R2 0.58 | tot  -510% mdd  712% r/dd -0.72 | ETF tot 19.8% mdd 24.2% r/dd 0.82 | vol-matched mdd 26.8%
+
+=== C5 {"id":"C5","type":"C","k":0.01,"w":0.01,"entry":"fri","exit":"tp50"} ===
+C5 SPY+QQQ       primary wk  49 tr  56 | mean  -8.46% t -1.11 | $ -2390 win 68% | alpha  -1.58% tA -0.25 beta -11.4 R2 0.36 | tot  -415% mdd  517% r/dd -0.80 | ETF tot 29.7% mdd 10.6% r/dd 2.81 | vol-matched mdd 27.3%
+C5 SPY+QQQ       stress  wk  49 tr  56 | mean -10.00% t -1.29 | $ -2610 win 68% | alpha  -2.66% tA -0.43 beta -12.1 R2 0.39 | tot  -490% mdd  582% r/dd -0.84 | ETF tot 29.7% mdd 10.6% r/dd 2.81 | vol-matched mdd 30.2%
+C5 SPY+QQQ       harsh   wk  49 tr  56 | mean  -9.14% t -1.20 | $ -2512 win 68% | alpha  -2.32% tA -0.37 beta -11.2 R2 0.36 | tot  -448% mdd  537% r/dd -0.83 | ETF tot 29.7% mdd 10.6% r/dd 2.81 | vol-matched mdd 28.5%
+C5 SPY           primary wk   8 tr   8 | mean -37.22% t -1.86 | $ -1157 win 50% | alpha -20.67% tA -2.22 beta -27.5 R2 0.83 | tot  -298% mdd  334% r/dd -0.89 | ETF tot 4.8% mdd 2.5% r/dd 1.97 | vol-matched mdd 11.1%
+C5 QQQ           primary wk  48 tr  48 | mean  -8.93% t -1.13 | $ -1234 win 71% | alpha  -1.39% tA -0.21 beta -11.6 R2 0.37 | tot  -428% mdd  536% r/dd -0.80 | ETF tot 31.2% mdd 10.6% r/dd 2.95 | vol-matched mdd 28.2%
+C5 IWM           primary wk  99 tr  99 | mean  -3.77% t -0.76 | $   -68 win 76% | alpha  -1.38% tA -0.35 beta -12.3 R2 0.38 | tot  -373% mdd  649% r/dd -0.58 | ETF tot 19.2% mdd 20.8% r/dd 0.92 | vol-matched mdd 32.7%
+
+=== IC (P1 + C1 held together, capital = larger max loss) ===
+IC SPY+QQQ       primary wk  50 tr  58 | mean -22.11% t -2.69 | $ -3548 win 47% | alpha -24.09% tA -2.94 beta   4.2 R2 0.05 | tot -1105% mdd 1105% r/dd -1.00 | ETF tot 23.5% mdd 21.9% r/dd 1.07 | vol-matched mdd 59.3%
+IC SPY+QQQ       stress  wk  50 tr  58 | mean -24.70% t -2.96 | $ -4032 win 47% | alpha -26.62% tA -3.20 beta   4.1 R2 0.05 | tot -1235% mdd 1235% r/dd -1.00 | ETF tot 23.5% mdd 21.9% r/dd 1.07 | vol-matched mdd 65.2%
+IC SPY+QQQ       harsh   wk  50 tr  58 | mean -22.58% t -2.75 | $ -3667 win 47% | alpha -24.57% tA -3.01 beta   4.2 R2 0.05 | tot -1129% mdd 1129% r/dd -1.00 | ETF tot 23.5% mdd 21.9% r/dd 1.07 | vol-matched mdd 60.7%
+IC SPY           primary wk   8 tr   8 | mean  13.79% t  3.30 | $   473 win 88% | alpha  11.96% tA  2.85 beta   5.7 R2 0.23 | tot   110% mdd   12% r/dd  9.29 | ETF tot 2.6% mdd 1.3% r/dd 1.95 | vol-matched mdd 1.0%
+IC QQQ           primary wk  50 tr  50 | mean -23.12% t -2.77 | $ -4021 win 40% | alpha -24.80% tA -2.97 beta   3.9 R2 0.04 | tot -1156% mdd 1156% r/dd -1.00 | ETF tot 21.5% mdd 21.9% r/dd 0.98 | vol-matched mdd 61.6%
+IC IWM           primary wk  94 tr  94 | mean   0.10% t  0.02 | $   432 win 49% | alpha  -0.67% tA -0.11 beta   2.3 R2 0.01 | tot     9% mdd  562% r/dd  0.02 | ETF tot 30.7% mdd 27.6% r/dd 1.11 | vol-matched mdd 25.8%
+
+=== Diagnostic: short-leg implied vol (from entry trade price) vs realised vol to expiry ===
+  P1 SPY  n 8 mean IV 12.1% mean RV 12.8% IV−RV -0.7% (t -0.52) IV>RV in 38%; var premium t -0.79
+  P1 QQQ  n 50 mean IV 21.0% mean RV 20.6% IV−RV 0.4% (t 0.32) IV>RV in 58%; var premium t -0.85
+  P1 IWM  n 94 mean IV 22.9% mean RV 19.2% IV−RV 3.6% (t 4.16) IV>RV in 72%; var premium t 1.90
+  P2 SPY  n 87 mean IV 15.5% mean RV 14.0% IV−RV 1.5% (t 2.10) IV>RV in 69%; var premium t -0.10
+  P2 QQQ  n 109 mean IV 19.5% mean RV 17.5% IV−RV 1.9% (t 2.95) IV>RV in 66%; var premium t 0.96
+  P2 IWM  n 98 mean IV 23.2% mean RV 19.3% IV−RV 3.8% (t 4.52) IV>RV in 73%; var premium t 2.35
+  P3 IWM  n 88 mean IV 24.1% mean RV 19.1% IV−RV 5.0% (t 5.70) IV>RV in 80%; var premium t 3.69
+  P6 SPY  n 11 mean IV 16.1% mean RV 18.7% IV−RV -2.5% (t -0.92) IV>RV in 55%; var premium t -1.02
+  P6 QQQ  n 45 mean IV 21.0% mean RV 21.1% IV−RV -0.1% (t -0.07) IV>RV in 62%; var premium t -1.02
+  P6 IWM  n 98 mean IV 22.2% mean RV 19.2% IV−RV 3.0% (t 3.35) IV>RV in 70%; var premium t 1.30
+  C1 SPY  n 8 mean IV 11.4% mean RV 11.1% IV−RV 0.2% (t 0.28) IV>RV in 50%; var premium t 0.41
+  C1 QQQ  n 48 mean IV 18.7% mean RV 19.3% IV−RV -0.6% (t -0.53) IV>RV in 46%; var premium t -1.07
+  C1 IWM  n 99 mean IV 21.2% mean RV 18.9% IV−RV 2.3% (t 3.14) IV>RV in 67%; var premium t 1.50
+  C2 SPY  n 89 mean IV 14.0% mean RV 13.8% IV−RV 0.2% (t 0.29) IV>RV in 60%; var premium t -0.97
+  C2 QQQ  n 107 mean IV 18.2% mean RV 17.6% IV−RV 0.6% (t 0.88) IV>RV in 60%; var premium t -0.81
+  C2 IWM  n 101 mean IV 21.8% mean RV 19.5% IV−RV 2.3% (t 2.76) IV>RV in 67%; var premium t 0.92
+  C3 IWM  n 100 mean IV 21.2% mean RV 19.5% IV−RV 1.7% (t 2.11) IV>RV in 65%; var premium t 0.29
+  C4 SPY  n 11 mean IV 17.0% mean RV 19.0% IV−RV -2.0% (t -0.91) IV>RV in 64%; var premium t -1.13
+  C4 QQQ  n 57 mean IV 19.0% mean RV 19.7% IV−RV -0.7% (t -0.59) IV>RV in 51%; var premium t -1.40
+  C4 IWM  n 105 mean IV 21.1% mean RV 19.2% IV−RV 1.9% (t 2.15) IV>RV in 64%; var premium t 0.14

@@ -1,0 +1,280 @@
+
+=== entry: last trading day of week, 30 min before close ===
+
+SPY: entry days 117, no usable expiry 0, days-to-expiry {"6":4,"7":113}
+  lowest put strike in file, % from spot: p10 -3.13 median -2.35 p90 -1.85
+  highest strike in file, % from spot:   p10 1.71 median 2.17 p90 3.24
+  P short 0.5%                                  117/117 100%
+  P short 0.5% wing 0.5%: in file               117/117 100%
+  P short 0.5% wing 0.5%: both legs trade       114/117 97%
+  P short 0.5% wing 1%: in file                 117/117 100%
+  P short 0.5% wing 1%: both legs trade         115/117 98%
+  P short 0.5% wing 2%: in file                  54/117 46%
+  P short 0.5% wing 2%: both legs trade          51/117 44%
+  C short 0.5%                                  116/117 99%
+  C short 0.5% wing 0.5%: in file               116/117 99%
+  C short 0.5% wing 0.5%: both legs trade       111/117 95%
+  C short 0.5% wing 1%: in file                 115/117 98%
+  C short 0.5% wing 1%: both legs trade         110/117 94%
+  C short 0.5% wing 2%: in file                  39/117 33%
+  C short 0.5% wing 2%: both legs trade          36/117 31%
+  P short 1%                                    113/117 97%
+  P short 1% wing 0.5%: in file                 117/117 100%
+  P short 1% wing 0.5%: both legs trade         112/117 96%
+  P short 1% wing 1%: in file                   102/117 87%
+  P short 1% wing 1%: both legs trade            93/117 79%
+  P short 1% wing 2%: in file                    22/117 19%
+  P short 1% wing 2%: both legs trade            20/117 17%
+  C short 1%                                    111/117 95%
+  C short 1% wing 0.5%: in file                 115/117 98%
+  C short 1% wing 0.5%: both legs trade         106/117 91%
+  C short 1% wing 1%: in file                    89/117 76%
+  C short 1% wing 1%: both legs trade            82/117 70%
+  C short 1% wing 2%: in file                    21/117 18%
+  C short 1% wing 2%: both legs trade            20/117 17%
+  P short 2%                                     92/117 79%
+  P short 2% wing 0.5%: in file                  52/117 44%
+  P short 2% wing 0.5%: both legs trade          46/117 39%
+  P short 2% wing 1%: in file                    20/117 17%
+  P short 2% wing 1%: both legs trade            17/117 15%
+  P short 2% wing 2%: in file                     1/117 1%
+  P short 2% wing 2%: both legs trade             1/117 1%
+  C short 2%                                     89/117 76%
+  C short 2% wing 0.5%: in file                  35/117 30%
+  C short 2% wing 0.5%: both legs trade          32/117 27%
+  C short 2% wing 1%: in file                    22/117 19%
+  C short 2% wing 1%: both legs trade            21/117 18%
+  C short 2% wing 2%: in file                     3/117 3%
+  C short 2% wing 2%: both legs trade             3/117 3%
+
+QQQ: entry days 117, no usable expiry 0, days-to-expiry {"6":4,"7":113}
+  lowest put strike in file, % from spot: p10 -3.75 median -2.84 p90 -2.20
+  highest strike in file, % from spot:   p10 1.87 median 2.53 p90 3.83
+  P short 0.5%                                  111/117 95%
+  P short 0.5% wing 0.5%: in file               117/117 100%
+  P short 0.5% wing 0.5%: both legs trade       107/117 91%
+  P short 0.5% wing 1%: in file                 117/117 100%
+  P short 0.5% wing 1%: both legs trade         103/117 88%
+  P short 0.5% wing 2%: in file                  92/117 79%
+  P short 0.5% wing 2%: both legs trade          80/117 68%
+  C short 0.5%                                  110/117 94%
+  C short 0.5% wing 0.5%: in file               115/117 98%
+  C short 0.5% wing 0.5%: both legs trade       104/117 89%
+  C short 0.5% wing 1%: in file                 116/117 99%
+  C short 0.5% wing 1%: both legs trade         106/117 91%
+  C short 0.5% wing 2%: in file                  71/117 61%
+  C short 0.5% wing 2%: both legs trade          57/117 49%
+  P short 1%                                    113/117 97%
+  P short 1% wing 0.5%: in file                 117/117 100%
+  P short 1% wing 0.5%: both legs trade         103/117 88%
+  P short 1% wing 1%: in file                   112/117 96%
+  P short 1% wing 1%: both legs trade           101/117 86%
+  P short 1% wing 2%: in file                    51/117 44%
+  P short 1% wing 2%: both legs trade            42/117 36%
+  C short 1%                                    111/117 95%
+  C short 1% wing 0.5%: in file                 116/117 99%
+  C short 1% wing 0.5%: both legs trade         107/117 91%
+  C short 1% wing 1%: in file                   105/117 90%
+  C short 1% wing 1%: both legs trade            90/117 77%
+  C short 1% wing 2%: in file                    36/117 31%
+  C short 1% wing 2%: both legs trade            26/117 22%
+  P short 2%                                    105/117 90%
+  P short 2% wing 0.5%: in file                  90/117 77%
+  P short 2% wing 0.5%: both legs trade          72/117 62%
+  P short 2% wing 1%: in file                    53/117 45%
+  P short 2% wing 1%: both legs trade            40/117 34%
+  P short 2% wing 2%: in file                     9/117 8%
+  P short 2% wing 2%: both legs trade             7/117 6%
+  C short 2%                                     96/117 82%
+  C short 2% wing 0.5%: in file                  76/117 65%
+  C short 2% wing 0.5%: both legs trade          65/117 56%
+  C short 2% wing 1%: in file                    38/117 32%
+  C short 2% wing 1%: both legs trade            31/117 26%
+  C short 2% wing 2%: in file                    13/117 11%
+  C short 2% wing 2%: both legs trade             8/117 7%
+
+IWM: entry days 117, no usable expiry 0, days-to-expiry {"6":5,"7":112}
+  lowest put strike in file, % from spot: p10 -6.76 median -5.56 p90 -4.55
+  highest strike in file, % from spot:   p10 4.08 median 5.23 p90 6.73
+  P short 0.5%                                  100/117 85%
+  P short 0.5% wing 0.5%: in file               117/117 100%
+  P short 0.5% wing 0.5%: both legs trade        89/117 76%
+  P short 0.5% wing 1%: in file                 117/117 100%
+  P short 0.5% wing 1%: both legs trade          86/117 74%
+  P short 0.5% wing 2%: in file                 117/117 100%
+  P short 0.5% wing 2%: both legs trade          85/117 73%
+  C short 0.5%                                  105/117 90%
+  C short 0.5% wing 0.5%: in file               117/117 100%
+  C short 0.5% wing 0.5%: both legs trade        91/117 78%
+  C short 0.5% wing 1%: in file                 117/117 100%
+  C short 0.5% wing 1%: both legs trade          96/117 82%
+  C short 0.5% wing 2%: in file                 117/117 100%
+  C short 0.5% wing 2%: both legs trade          94/117 80%
+  P short 1%                                     99/117 85%
+  P short 1% wing 0.5%: in file                 117/117 100%
+  P short 1% wing 0.5%: both legs trade          83/117 71%
+  P short 1% wing 1%: in file                   117/117 100%
+  P short 1% wing 1%: both legs trade            81/117 69%
+  P short 1% wing 2%: in file                   117/117 100%
+  P short 1% wing 2%: both legs trade            78/117 67%
+  C short 1%                                    101/117 86%
+  C short 1% wing 0.5%: in file                 117/117 100%
+  C short 1% wing 0.5%: both legs trade          94/117 80%
+  C short 1% wing 1%: in file                   117/117 100%
+  C short 1% wing 1%: both legs trade            90/117 77%
+  C short 1% wing 2%: in file                   117/117 100%
+  C short 1% wing 2%: both legs trade            83/117 71%
+  P short 2%                                     92/117 79%
+  P short 2% wing 0.5%: in file                 117/117 100%
+  P short 2% wing 0.5%: both legs trade          74/117 63%
+  P short 2% wing 1%: in file                   117/117 100%
+  P short 2% wing 1%: both legs trade            73/117 62%
+  P short 2% wing 2%: in file                   117/117 100%
+  P short 2% wing 2%: both legs trade            63/117 54%
+  C short 2%                                    101/117 86%
+  C short 2% wing 0.5%: in file                 117/117 100%
+  C short 2% wing 0.5%: both legs trade          90/117 77%
+  C short 2% wing 1%: in file                   117/117 100%
+  C short 2% wing 1%: both legs trade            84/117 72%
+  C short 2% wing 2%: in file                   117/117 100%
+  C short 2% wing 2%: both legs trade            65/117 56%
+
+=== entry: first trading day of week, 30 min before close ===
+
+SPY: entry days 118, no usable expiry 0, days-to-expiry {"1":1,"3":14,"4":103}
+  lowest put strike in file, % from spot: p10 -3.21 median -2.36 p90 -1.79
+  highest strike in file, % from spot:   p10 1.72 median 2.14 p90 2.74
+  P short 0.5%                                  118/118 100%
+  P short 0.5% wing 0.5%: in file               118/118 100%
+  P short 0.5% wing 0.5%: both legs trade       117/118 99%
+  P short 0.5% wing 1%: in file                 118/118 100%
+  P short 0.5% wing 1%: both legs trade         114/118 97%
+  P short 0.5% wing 2%: in file                  54/118 46%
+  P short 0.5% wing 2%: both legs trade          50/118 42%
+  C short 0.5%                                  118/118 100%
+  C short 0.5% wing 0.5%: in file               118/118 100%
+  C short 0.5% wing 0.5%: both legs trade       116/118 98%
+  C short 0.5% wing 1%: in file                 118/118 100%
+  C short 0.5% wing 1%: both legs trade         115/118 97%
+  C short 0.5% wing 2%: in file                  38/118 32%
+  C short 0.5% wing 2%: both legs trade          33/118 28%
+  P short 1%                                    117/118 99%
+  P short 1% wing 0.5%: in file                 118/118 100%
+  P short 1% wing 0.5%: both legs trade         113/118 96%
+  P short 1% wing 1%: in file                    98/118 83%
+  P short 1% wing 1%: both legs trade            93/118 79%
+  P short 1% wing 2%: in file                    24/118 20%
+  P short 1% wing 2%: both legs trade            21/118 18%
+  C short 1%                                    116/118 98%
+  C short 1% wing 0.5%: in file                 117/118 99%
+  C short 1% wing 0.5%: both legs trade         114/118 97%
+  C short 1% wing 1%: in file                    87/118 74%
+  C short 1% wing 1%: both legs trade            79/118 67%
+  C short 1% wing 2%: in file                    11/118 9%
+  C short 1% wing 2%: both legs trade            10/118 8%
+  P short 2%                                     95/118 81%
+  P short 2% wing 0.5%: in file                  51/118 43%
+  P short 2% wing 0.5%: both legs trade          47/118 40%
+  P short 2% wing 1%: in file                    23/118 19%
+  P short 2% wing 1%: both legs trade            19/118 16%
+  P short 2% wing 2%: in file                     4/118 3%
+  P short 2% wing 2%: both legs trade             3/118 3%
+  C short 2%                                     78/118 66%
+  C short 2% wing 0.5%: in file                  29/118 25%
+  C short 2% wing 0.5%: both legs trade          25/118 21%
+  C short 2% wing 1%: in file                    11/118 9%
+  C short 2% wing 1%: both legs trade             9/118 8%
+  C short 2% wing 2%: in file                     6/118 5%
+  C short 2% wing 2%: both legs trade             5/118 4%
+
+QQQ: entry days 118, no usable expiry 0, days-to-expiry {"1":1,"3":14,"4":103}
+  lowest put strike in file, % from spot: p10 -3.91 median -2.90 p90 -2.16
+  highest strike in file, % from spot:   p10 1.91 median 2.51 p90 3.54
+  P short 0.5%                                  114/118 97%
+  P short 0.5% wing 0.5%: in file               118/118 100%
+  P short 0.5% wing 0.5%: both legs trade       109/118 92%
+  P short 0.5% wing 1%: in file                 117/118 99%
+  P short 0.5% wing 1%: both legs trade         104/118 88%
+  P short 0.5% wing 2%: in file                  93/118 79%
+  P short 0.5% wing 2%: both legs trade          73/118 62%
+  C short 0.5%                                  116/118 98%
+  C short 0.5% wing 0.5%: in file               118/118 100%
+  C short 0.5% wing 0.5%: both legs trade       111/118 94%
+  C short 0.5% wing 1%: in file                 118/118 100%
+  C short 0.5% wing 1%: both legs trade         106/118 90%
+  C short 0.5% wing 2%: in file                  73/118 62%
+  C short 0.5% wing 2%: both legs trade          61/118 52%
+  P short 1%                                    113/118 96%
+  P short 1% wing 0.5%: in file                 117/118 99%
+  P short 1% wing 0.5%: both legs trade         100/118 85%
+  P short 1% wing 1%: in file                   114/118 97%
+  P short 1% wing 1%: both legs trade           101/118 86%
+  P short 1% wing 2%: in file                    56/118 47%
+  P short 1% wing 2%: both legs trade            46/118 39%
+  C short 1%                                    112/118 95%
+  C short 1% wing 0.5%: in file                 118/118 100%
+  C short 1% wing 0.5%: both legs trade         101/118 86%
+  C short 1% wing 1%: in file                   108/118 92%
+  C short 1% wing 1%: both legs trade            87/118 74%
+  C short 1% wing 2%: in file                    36/118 31%
+  C short 1% wing 2%: both legs trade            29/118 25%
+  P short 2%                                    103/118 87%
+  P short 2% wing 0.5%: in file                  90/118 76%
+  P short 2% wing 0.5%: both legs trade          71/118 60%
+  P short 2% wing 1%: in file                    56/118 47%
+  P short 2% wing 1%: both legs trade            40/118 34%
+  P short 2% wing 2%: in file                    14/118 12%
+  P short 2% wing 2%: both legs trade            12/118 10%
+  C short 2%                                     91/118 77%
+  C short 2% wing 0.5%: in file                  72/118 61%
+  C short 2% wing 0.5%: both legs trade          54/118 46%
+  C short 2% wing 1%: in file                    34/118 29%
+  C short 2% wing 1%: both legs trade            26/118 22%
+  C short 2% wing 2%: in file                    12/118 10%
+  C short 2% wing 2%: both legs trade            12/118 10%
+
+IWM: entry days 118, no usable expiry 0, days-to-expiry {"1":1,"3":14,"4":103}
+  lowest put strike in file, % from spot: p10 -6.91 median -5.56 p90 -4.67
+  highest strike in file, % from spot:   p10 3.86 median 5.10 p90 6.31
+  P short 0.5%                                  103/118 87%
+  P short 0.5% wing 0.5%: in file               118/118 100%
+  P short 0.5% wing 0.5%: both legs trade        88/118 75%
+  P short 0.5% wing 1%: in file                 118/118 100%
+  P short 0.5% wing 1%: both legs trade          85/118 72%
+  P short 0.5% wing 2%: in file                 117/118 99%
+  P short 0.5% wing 2%: both legs trade          76/118 64%
+  C short 0.5%                                  111/118 94%
+  C short 0.5% wing 0.5%: in file               118/118 100%
+  C short 0.5% wing 0.5%: both legs trade        99/118 84%
+  C short 0.5% wing 1%: in file                 118/118 100%
+  C short 0.5% wing 1%: both legs trade         100/118 85%
+  C short 0.5% wing 2%: in file                 118/118 100%
+  C short 0.5% wing 2%: both legs trade          87/118 74%
+  P short 1%                                    101/118 86%
+  P short 1% wing 0.5%: in file                 118/118 100%
+  P short 1% wing 0.5%: both legs trade          85/118 72%
+  P short 1% wing 1%: in file                   118/118 100%
+  P short 1% wing 1%: both legs trade            73/118 62%
+  P short 1% wing 2%: in file                   117/118 99%
+  P short 1% wing 2%: both legs trade            78/118 66%
+  C short 1%                                    108/118 92%
+  C short 1% wing 0.5%: in file                 118/118 100%
+  C short 1% wing 0.5%: both legs trade         100/118 85%
+  C short 1% wing 1%: in file                   118/118 100%
+  C short 1% wing 1%: both legs trade            81/118 69%
+  C short 1% wing 2%: in file                   118/118 100%
+  C short 1% wing 2%: both legs trade            73/118 62%
+  P short 2%                                     90/118 76%
+  P short 2% wing 0.5%: in file                 117/118 99%
+  P short 2% wing 0.5%: both legs trade          62/118 53%
+  P short 2% wing 1%: in file                   117/118 99%
+  P short 2% wing 1%: both legs trade            70/118 59%
+  P short 2% wing 2%: in file                   115/118 97%
+  P short 2% wing 2%: both legs trade            46/118 39%
+  C short 2%                                     89/118 75%
+  C short 2% wing 0.5%: in file                 118/118 100%
+  C short 2% wing 0.5%: both legs trade          73/118 62%
+  C short 2% wing 1%: in file                   118/118 100%
+  C short 2% wing 1%: both legs trade            59/118 50%
+  C short 2% wing 2%: in file                   117/118 99%
+  C short 2% wing 2%: both legs trade            49/118 42%

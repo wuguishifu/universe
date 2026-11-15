@@ -1,0 +1,177 @@
+H2 overnight option premium — sample dev 2024-02-01 -> 2026-04-30, tickers SPY,QQQ,IWM
+configs run: 25
+
+## All configs (daily P&L summed over tickers; $ per 1-lot structure)
+config | cost | structs | nights | total | mean/night | t | SPY | QQQ | IWM | no-5-best | worst night | maxDD | avg credit | mean pnl/maxloss
+ON fly 15:30->09:35 w1% | gross | 1608 | 548 | +668 | 1.22 | 0.19 | +374 | -1441 | +1735 | -758 | -1942 (2025-04-02) | +3442 | 279.01 | 2.33%
+ON fly 15:30->09:35 w1% | primary | 1608 | 548 | -16658 | -30.40 | -4.62 | -5663 | -7986 | -3009 | -17936 | -2017 (2025-04-02) | +17680 | 273.80 | -8.13%
+ON fly 15:30->09:35 w1% | stress | 1608 | 548 | -24506 | -44.72 | -6.65 | -8509 | -11451 | -4546 | -25720 | -2076 (2025-04-02) | +25381 | 271.28 | -15.90%
+ON fly 15:30->09:35 w1% | harsh | 1608 | 548 | -26665 | -48.66 | -7.46 | -8876 | -10921 | -6868 | -27846 | -2024 (2025-04-02) | +27500 | 270.69 | -13.38%
+ON fly 15:30->09:35 w1.5% | gross | 1556 | 547 | +1919 | 3.51 | 0.38 | +517 | -1611 | +3013 | -145 | -2050 (2025-04-02) | +4675 | 335.66 | 0.97%
+ON fly 15:30->09:35 w1.5% | primary | 1556 | 547 | -14633 | -26.75 | -2.87 | -5112 | -7914 | -1607 | -16539 | -2121 (2025-04-02) | +16926 | 330.49 | -3.68%
+ON fly 15:30->09:35 w1.5% | stress | 1556 | 547 | -21617 | -39.52 | -4.18 | -7639 | -10965 | -3013 | -23452 | -2176 (2025-04-02) | +23142 | 328.17 | -5.55%
+ON fly 15:30->09:35 w1.5% | harsh | 1556 | 547 | -24089 | -44.04 | -4.74 | -7949 | -10815 | -5325 | -25906 | -2130 (2025-04-02) | +25555 | 327.34 | -6.29%
+ON fly 15:30->09:35 w2% | gross | 1219 | 530 | -1058 | -2.00 | -0.20 | -2275 | -2365 | +3582 | -3519 | -2258 (2025-04-02) | +6034 | 369.75 | 0.80%
+ON fly 15:30->09:35 w2% | primary | 1219 | 530 | -14008 | -26.43 | -2.56 | -5626 | -7746 | -636 | -16290 | -2326 (2025-04-02) | +15381 | 364.51 | -2.40%
+ON fly 15:30->09:35 w2% | stress | 1219 | 530 | -19474 | -36.74 | -3.51 | -7227 | -10322 | -1925 | -21664 | -2377 (2025-04-02) | +20730 | 362.20 | -3.69%
+ON fly 15:30->09:35 w2% | harsh | 1219 | 530 | -21027 | -39.67 | -3.85 | -7053 | -10076 | -3898 | -23234 | -2336 (2025-04-02) | +22206 | 361.40 | -4.16%
+ON fly 15:30->09:45 w1% | gross | 1608 | 548 | +53 | 0.10 | 0.01 | -20 | -1740 | +1813 | -1527 | -1719 (2025-04-02) | +3160 | 279.01 | 1.53%
+ON fly 15:30->09:45 w1% | primary | 1608 | 548 | -17343 | -31.65 | -4.57 | -6086 | -8312 | -2945 | -18774 | -1797 (2025-04-02) | +18629 | 273.80 | -8.96%
+ON fly 15:30->09:45 w1% | stress | 1608 | 548 | -25210 | -46.00 | -6.48 | -8923 | -11797 | -4490 | -26577 | -1857 (2025-04-02) | +26359 | 271.28 | -14.87%
+ON fly 15:30->09:45 w1% | harsh | 1608 | 548 | -27324 | -49.86 | -7.25 | -9296 | -11240 | -6788 | -28660 | -1804 (2025-04-02) | +28431 | 270.69 | -14.14%
+ON fly 15:30->09:45 w1.5% | gross | 1556 | 547 | +751 | 1.37 | 0.14 | -401 | -2405 | +3557 | -1632 | -1804 (2025-04-02) | +4871 | 335.66 | 0.61%
+ON fly 15:30->09:45 w1.5% | primary | 1556 | 547 | -15851 | -28.98 | -2.88 | -6052 | -8723 | -1076 | -18071 | -1877 (2025-04-02) | +17995 | 330.49 | -4.01%
+ON fly 15:30->09:45 w1.5% | stress | 1556 | 547 | -22853 | -41.78 | -4.09 | -8568 | -11803 | -2482 | -24988 | -1935 (2025-04-02) | +24844 | 328.17 | -5.90%
+ON fly 15:30->09:45 w1.5% | harsh | 1556 | 547 | -25292 | -46.24 | -4.61 | -8904 | -11628 | -4760 | -27425 | -1885 (2025-04-02) | +27186 | 327.34 | -6.62%
+ON fly 15:30->09:45 w2% | gross | 1219 | 530 | -1989 | -3.75 | -0.34 | -3628 | -3044 | +4683 | -4758 | -2028 (2025-04-02) | +6517 | 369.75 | 0.84%
+ON fly 15:30->09:45 w2% | primary | 1219 | 530 | -14970 | -28.24 | -2.51 | -6987 | -8434 | +451 | -17568 | -2098 (2025-04-02) | +16694 | 364.51 | -2.35%
+ON fly 15:30->09:45 w2% | stress | 1219 | 530 | -20468 | -38.62 | -3.39 | -8600 | -11021 | -847 | -22972 | -2151 (2025-04-02) | +22075 | 362.20 | -3.65%
+ON fly 15:30->09:45 w2% | harsh | 1219 | 530 | -21969 | -41.45 | -3.70 | -8426 | -10766 | -2777 | -24487 | -2107 (2025-04-02) | +23501 | 361.40 | -4.11%
+ON fly 15:30->10:00 w1% | gross | 1608 | 548 | +354 | 0.65 | 0.09 | +1448 | -2493 | +1399 | -1457 | -1580 (2025-04-02) | +3744 | 279.01 | -0.17%
+ON fly 15:30->10:00 w1% | primary | 1608 | 548 | -17062 | -31.14 | -4.17 | -4625 | -9075 | -3362 | -18730 | -1659 (2025-04-02) | +18560 | 273.80 | -10.01%
+ON fly 15:30->10:00 w1% | stress | 1608 | 548 | -24893 | -45.43 | -5.96 | -7445 | -12557 | -4891 | -26500 | -1720 (2025-04-02) | +26103 | 271.28 | -8.00%
+ON fly 15:30->10:00 w1% | harsh | 1608 | 548 | -27053 | -49.37 | -6.67 | -7840 | -12020 | -7193 | -28619 | -1666 (2025-04-02) | +28218 | 270.69 | -15.12%
+ON fly 15:30->10:00 w1.5% | gross | 1556 | 547 | +1048 | 1.92 | 0.18 | +463 | -3260 | +3845 | -1663 | -1632 (2025-04-02) | +4847 | 335.66 | 1.03%
+ON fly 15:30->10:00 w1.5% | primary | 1556 | 547 | -15573 | -28.47 | -2.66 | -5191 | -9590 | -792 | -18123 | -1707 (2025-04-02) | +18417 | 330.49 | -3.47%
+ON fly 15:30->10:00 w1.5% | stress | 1556 | 547 | -22525 | -41.18 | -3.80 | -7697 | -12655 | -2173 | -24995 | -1766 (2025-04-02) | +24537 | 328.17 | -5.12%
+ON fly 15:30->10:00 w1.5% | harsh | 1556 | 547 | -24951 | -45.61 | -4.28 | -8029 | -12497 | -4425 | -27413 | -1715 (2025-04-02) | +26919 | 327.34 | -5.99%
+ON fly 15:30->10:00 w2% | gross | 1219 | 530 | -625 | -1.18 | -0.10 | -3071 | -1964 | +4410 | -3347 | -2014 (2025-04-02) | +6409 | 369.75 | 0.55%
+ON fly 15:30->10:00 w2% | primary | 1219 | 530 | -13601 | -25.66 | -2.17 | -6433 | -7351 | +183 | -16158 | -2085 (2025-04-02) | +15331 | 364.51 | -2.58%
+ON fly 15:30->10:00 w2% | stress | 1219 | 530 | -19050 | -35.94 | -3.01 | -8031 | -9925 | -1094 | -21533 | -2139 (2025-04-02) | +20668 | 362.20 | -3.81%
+ON fly 15:30->10:00 w2% | harsh | 1219 | 530 | -20538 | -38.75 | -3.29 | -7867 | -9664 | -3007 | -23014 | -2094 (2025-04-02) | +22084 | 361.40 | -4.31%
+ON fly 15:50->09:35 w1% | gross | 1611 | 548 | -1237 | -2.26 | -0.35 | -641 | -1521 | +925 | -2725 | -2024 (2025-04-02) | +4977 | 276.11 | 1.85%
+ON fly 15:50->09:35 w1% | primary | 1611 | 548 | -18459 | -33.69 | -5.15 | -6611 | -7977 | -3872 | -19801 | -2103 (2025-04-02) | +19362 | 270.94 | -8.58%
+ON fly 15:50->09:35 w1% | stress | 1611 | 548 | -26193 | -47.80 | -7.13 | -9395 | -11388 | -5411 | -27473 | -2166 (2025-04-02) | +26866 | 268.49 | -12.37%
+ON fly 15:50->09:35 w1% | harsh | 1611 | 548 | -28569 | -52.13 | -8.03 | -9854 | -10954 | -7762 | -29812 | -2111 (2025-04-02) | +29166 | 267.79 | -13.86%
+ON fly 15:50->09:35 w1.5% | gross | 1586 | 548 | -1098 | -2.00 | -0.22 | -828 | -1770 | +1500 | -3321 | -2200 (2025-04-02) | +5647 | 330.00 | 0.77%
+ON fly 15:50->09:35 w1.5% | primary | 1586 | 548 | -17822 | -32.52 | -3.57 | -6548 | -8041 | -3233 | -19889 | -2275 (2025-04-02) | +19413 | 324.87 | -4.09%
+ON fly 15:50->09:35 w1.5% | stress | 1586 | 548 | -24790 | -45.24 | -4.89 | -9085 | -11077 | -4628 | -26786 | -2335 (2025-04-02) | +26172 | 322.62 | -5.93%
+ON fly 15:50->09:35 w1.5% | harsh | 1586 | 548 | -27527 | -50.23 | -5.54 | -9518 | -10986 | -7023 | -29504 | -2285 (2025-04-02) | +28821 | 321.69 | -6.65%
+ON fly 15:50->09:35 w2% | gross | 1308 | 547 | -2699 | -4.93 | -0.51 | -2102 | -2854 | +2257 | -5062 | -2470 (2025-04-02) | +6252 | 357.89 | 0.53%
+ON fly 15:50->09:35 w2% | primary | 1308 | 547 | -16384 | -29.95 | -3.08 | -5545 | -8487 | -2353 | -18583 | -2540 (2025-04-02) | +17171 | 352.72 | -2.82%
+ON fly 15:50->09:35 w2% | stress | 1308 | 547 | -22010 | -40.24 | -4.08 | -7158 | -11169 | -3684 | -24133 | -2593 (2025-04-02) | +22672 | 350.53 | -4.06%
+ON fly 15:50->09:35 w2% | harsh | 1308 | 547 | -23986 | -43.85 | -4.52 | -7073 | -11016 | -5898 | -26102 | -2550 (2025-04-02) | +24603 | 349.56 | -4.54%
+ON fly 15:50->09:45 w1% | gross | 1611 | 548 | -2175 | -3.97 | -0.59 | -801 | -2402 | +1028 | -3869 | -1745 (2025-04-02) | +5390 | 276.11 | -1.56%
+ON fly 15:50->09:45 w1% | primary | 1611 | 548 | -19442 | -35.48 | -5.13 | -6793 | -8883 | -3767 | -20989 | -1826 (2025-04-02) | +20548 | 270.94 | -10.10%
+ON fly 15:50->09:45 w1% | stress | 1611 | 548 | -27185 | -49.61 | -6.98 | -9576 | -12299 | -5311 | -28672 | -1892 (2025-04-02) | +28069 | 268.49 | -13.63%
+ON fly 15:50->09:45 w1% | harsh | 1611 | 548 | -29540 | -53.91 | -7.85 | -10034 | -11851 | -7656 | -30990 | -1833 (2025-04-02) | +30351 | 267.79 | -15.33%
+ON fly 15:50->09:45 w1.5% | gross | 1586 | 548 | -2272 | -4.15 | -0.42 | -1296 | -3238 | +2262 | -4776 | -1959 (2025-04-02) | +6565 | 330.00 | 0.13%
+ON fly 15:50->09:45 w1.5% | primary | 1586 | 548 | -19031 | -34.73 | -3.50 | -7033 | -9529 | -2469 | -21369 | -2036 (2025-04-02) | +20908 | 324.87 | -4.54%
+ON fly 15:50->09:45 w1.5% | stress | 1586 | 548 | -25993 | -47.43 | -4.70 | -9560 | -12561 | -3872 | -28254 | -2098 (2025-04-02) | +27634 | 322.62 | -6.30%
+ON fly 15:50->09:45 w1.5% | harsh | 1586 | 548 | -28737 | -52.44 | -5.30 | -10018 | -12477 | -6242 | -30990 | -2045 (2025-04-02) | +30287 | 321.69 | -7.11%
+ON fly 15:50->09:45 w2% | gross | 1308 | 547 | -4149 | -7.59 | -0.72 | -3394 | -3769 | +3014 | -6749 | -2219 (2025-04-02) | +7157 | 357.89 | 0.14%
+ON fly 15:50->09:45 w2% | primary | 1308 | 547 | -17866 | -32.66 | -3.08 | -6855 | -9418 | -1594 | -20305 | -2290 (2025-04-02) | +18899 | 352.72 | -3.09%
+ON fly 15:50->09:45 w2% | stress | 1308 | 547 | -23513 | -42.99 | -4.00 | -8474 | -12097 | -2943 | -25874 | -2346 (2025-04-02) | +24403 | 350.53 | -4.32%
+ON fly 15:50->09:45 w2% | harsh | 1308 | 547 | -25467 | -46.56 | -4.40 | -8392 | -11957 | -5119 | -27821 | -2300 (2025-04-02) | +26251 | 349.56 | -4.81%
+ON fly 15:50->10:00 w1% | gross | 1611 | 548 | -2139 | -3.90 | -0.54 | -138 | -3095 | +1094 | -3987 | -1618 (2025-04-02) | +5898 | 276.11 | 0.23%
+ON fly 15:50->10:00 w1% | primary | 1611 | 548 | -19500 | -35.58 | -4.79 | -6156 | -9619 | -3726 | -21202 | -1702 (2025-04-02) | +20715 | 270.94 | -9.80%
+ON fly 15:50->10:00 w1% | stress | 1611 | 548 | -27225 | -49.68 | -6.52 | -8932 | -13046 | -5248 | -28859 | -1768 (2025-04-02) | +28221 | 268.49 | -13.47%
+ON fly 15:50->10:00 w1% | harsh | 1611 | 548 | -29579 | -53.98 | -7.32 | -9400 | -12592 | -7588 | -31181 | -1709 (2025-04-02) | +30497 | 267.79 | -15.01%
+ON fly 15:50->10:00 w1.5% | gross | 1586 | 548 | -3169 | -5.78 | -0.55 | -1713 | -3580 | +2124 | -5971 | -1867 (2025-04-02) | +7636 | 330.00 | -0.21%
+ON fly 15:50->10:00 w1.5% | primary | 1586 | 548 | -20004 | -36.50 | -3.44 | -7467 | -9907 | -2630 | -22644 | -1946 (2025-04-02) | +21997 | 324.87 | -4.86%
+ON fly 15:50->10:00 w1.5% | stress | 1586 | 548 | -26953 | -49.19 | -4.56 | -10001 | -12953 | -3999 | -29511 | -2008 (2025-04-02) | +28747 | 322.62 | -6.60%
+ON fly 15:50->10:00 w1.5% | harsh | 1586 | 548 | -29613 | -54.04 | -5.11 | -10428 | -12849 | -6336 | -32166 | -1955 (2025-04-02) | +31316 | 321.69 | -7.38%
+ON fly 15:50->10:00 w2% | gross | 1308 | 547 | -4884 | -8.93 | -0.80 | -3651 | -4493 | +3260 | -7595 | -2128 (2025-04-02) | +7415 | 357.89 | -0.13%
+ON fly 15:50->10:00 w2% | primary | 1308 | 547 | -18663 | -34.12 | -3.01 | -7127 | -10171 | -1366 | -21218 | -2202 (2025-04-02) | +19830 | 352.72 | -3.24%
+ON fly 15:50->10:00 w2% | stress | 1308 | 547 | -24280 | -44.39 | -3.86 | -8743 | -12858 | -2680 | -26766 | -2259 (2025-04-02) | +25311 | 350.53 | -4.43%
+ON fly 15:50->10:00 w2% | harsh | 1308 | 547 | -26163 | -47.83 | -4.22 | -8654 | -12676 | -4834 | -28631 | -2212 (2025-04-02) | +27096 | 349.56 | -4.94%
+ON strangle 15:50->09:45 w1% | gross | 1585 | 548 | -1421 | -2.59 | -0.33 | -1551 | -2518 | +2648 | -3444 | -1883 (2025-04-02) | +4858 | 152.06 | -5.40%
+ON strangle 15:50->09:45 w1% | primary | 1585 | 548 | -16207 | -29.57 | -3.67 | -6436 | -7838 | -1933 | -18089 | -1950 (2025-04-02) | +17603 | 147.55 | -4.21%
+ON strangle 15:50->09:45 w1% | stress | 1585 | 548 | -19788 | -36.11 | -4.39 | -7594 | -9616 | -2578 | -21623 | -2004 (2025-04-02) | +21091 | 146.47 | -5.72%
+ON strangle 15:50->09:45 w1% | harsh | 1585 | 548 | -27386 | -49.97 | -6.23 | -10039 | -11489 | -5858 | -29165 | -1961 (2025-04-02) | +28378 | 143.82 | -7.55%
+ON strangle 15:50->09:45 w1.5% | gross | 1307 | 548 | -3639 | -6.64 | -0.72 | -4281 | -2806 | +3448 | -5849 | -2133 (2025-04-02) | +6481 | 189.00 | -0.62%
+ON strangle 15:50->09:45 w1.5% | primary | 1307 | 548 | -15738 | -28.72 | -3.09 | -7250 | -7485 | -1002 | -17810 | -2196 (2025-04-02) | +16358 | 184.46 | -5.66%
+ON strangle 15:50->09:45 w1.5% | stress | 1307 | 548 | -18720 | -34.16 | -3.61 | -8113 | -9014 | -1592 | -20739 | -2247 (2025-04-02) | +19300 | 183.37 | -2.76%
+ON strangle 15:50->09:45 w1.5% | harsh | 1307 | 548 | -24486 | -44.68 | -4.82 | -9224 | -10603 | -4658 | -26472 | -2207 (2025-04-02) | +24936 | 180.75 | -7.68%
+ON strangle 15:50->09:45 w2% | gross | 751 | 477 | -4125 | -8.65 | -0.94 | -4069 | -3284 | +3228 | -6172 | -2504 (2025-04-02) | +6633 | 210.85 | 0.04%
+ON strangle 15:50->09:45 w2% | primary | 751 | 477 | -11172 | -23.42 | -2.49 | -4828 | -5717 | -627 | -13083 | -2565 (2025-04-02) | +11218 | 206.23 | -2.59%
+ON strangle 15:50->09:45 w2% | stress | 751 | 477 | -13008 | -27.27 | -2.85 | -5183 | -6647 | -1178 | -14876 | -2611 (2025-04-02) | +13051 | 205.08 | -3.27%
+ON strangle 15:50->09:45 w2% | harsh | 751 | 477 | -15977 | -33.50 | -3.56 | -5180 | -7149 | -3648 | -17795 | -2576 (2025-04-02) | +15990 | 202.58 | -4.32%
+MIRROR fly 09:45->15:50 w1% | gross | 1627 | 553 | +9743 | 17.62 | 1.93 | +4642 | +3799 | +1302 | +4829 | -1590 (2025-04-07) | +1732 | 306.42 | 45.35%
+MIRROR fly 09:45->15:50 w1% | primary | 1627 | 553 | -9518 | -17.21 | -1.90 | -2112 | -3577 | -3829 | -14158 | -1712 (2025-04-07) | +9764 | 300.63 | -8.84%
+MIRROR fly 09:45->15:50 w1% | stress | 1627 | 553 | -19788 | -35.78 | -3.95 | -5678 | -8077 | -6033 | -24235 | -1818 (2025-04-07) | +19918 | 297.41 | -12.41%
+MIRROR fly 09:45->15:50 w1% | harsh | 1627 | 553 | -18602 | -33.64 | -3.71 | -5022 | -6053 | -7527 | -23166 | -1715 (2025-04-07) | +18737 | 297.96 | -10.87%
+MIRROR fly 09:45->15:50 w1.5% | gross | 1606 | 553 | +12386 | 22.40 | 2.11 | +5933 | +4777 | +1676 | +7075 | -1822 (2025-04-07) | +2543 | 378.57 | 4.44%
+MIRROR fly 09:45->15:50 w1.5% | primary | 1606 | 553 | -6222 | -11.25 | -1.06 | -542 | -2313 | -3367 | -11233 | -1940 (2025-04-07) | +6837 | 372.86 | -1.37%
+MIRROR fly 09:45->15:50 w1.5% | stress | 1606 | 553 | -15300 | -27.67 | -2.59 | -3756 | -6241 | -5303 | -20094 | -2043 (2025-04-07) | +15680 | 370.00 | -4.45%
+MIRROR fly 09:45->15:50 w1.5% | harsh | 1606 | 553 | -15379 | -27.81 | -2.62 | -3392 | -4920 | -7067 | -20324 | -1943 (2025-04-07) | +15754 | 370.11 | -4.25%
+MIRROR fly 09:45->15:50 w2% | gross | 1373 | 550 | +15218 | 27.67 | 2.55 | +5886 | +7537 | +1795 | +9938 | -1965 (2025-04-07) | +2665 | 419.10 | 3.91%
+MIRROR fly 09:45->15:50 w2% | primary | 1373 | 550 | -616 | -1.12 | -0.10 | +1569 | +896 | -3081 | -5591 | -2077 (2025-04-07) | +4365 | 413.41 | 0.56%
+MIRROR fly 09:45->15:50 w2% | stress | 1373 | 550 | -8052 | -14.64 | -1.35 | -592 | -2589 | -4871 | -12811 | -2176 (2025-04-07) | +8671 | 410.65 | -1.45%
+MIRROR fly 09:45->15:50 w2% | harsh | 1373 | 550 | -8411 | -15.29 | -1.41 | -199 | -1592 | -6620 | -13331 | -2081 (2025-04-07) | +8906 | 410.63 | -1.38%
+MIRROR strangle 09:45->15:50 w1.5% | gross | 1390 | 550 | +7039 | 12.80 | 1.64 | +3505 | +2716 | +818 | +5508 | -1982 (2025-04-07) | +2845 | 239.54 | -1.46%
+MIRROR strangle 09:45->15:50 w1.5% | primary | 1390 | 550 | -6796 | -12.36 | -1.56 | -181 | -2831 | -3784 | -8171 | -2090 (2025-04-07) | +7307 | 234.71 | -3.97%
+MIRROR strangle 09:45->15:50 w1.5% | stress | 1390 | 550 | -11608 | -21.11 | -2.60 | -1533 | -5246 | -4829 | -12921 | -2185 (2025-04-07) | +12019 | 232.96 | -4.73%
+MIRROR strangle 09:45->15:50 w1.5% | harsh | 1390 | 550 | -16184 | -29.43 | -3.73 | -2505 | -6059 | -7620 | -17468 | -2095 (2025-04-07) | +16405 | 231.24 | -6.28%
+
+## Fill / skip counts per config (per ticker-night)
+ON fly 15:30->09:35 w1%: {"no data":6,"ok":1608,"stale legs":57,"legs settled at expiry":29,"entry unfilled":16,"nights with stale exit leg":28,"nights with a leg settled at expiry":19,"early close":36,"no expiry":20}
+ON fly 15:30->09:35 w1.5%: {"no data":6,"entry unfilled":68,"ok":1556,"stale legs":98,"legs settled at expiry":55,"nights with stale exit leg":71,"nights with a leg settled at expiry":47,"early close":36,"no expiry":20}
+ON fly 15:30->09:35 w2%: {"no data":6,"entry unfilled":405,"ok":1219,"stale legs":266,"legs settled at expiry":201,"nights with stale exit leg":243,"nights with a leg settled at expiry":193,"early close":36,"no expiry":20}
+ON fly 15:30->09:45 w1%: {"no data":6,"ok":1608,"stale legs":51,"legs settled at expiry":29,"entry unfilled":16,"nights with stale exit leg":26,"nights with a leg settled at expiry":19,"early close":36,"no expiry":20}
+ON fly 15:30->09:45 w1.5%: {"no data":6,"entry unfilled":68,"ok":1556,"stale legs":95,"legs settled at expiry":55,"nights with stale exit leg":72,"nights with a leg settled at expiry":47,"early close":36,"no expiry":20}
+ON fly 15:30->09:45 w2%: {"no data":6,"entry unfilled":405,"ok":1219,"stale legs":271,"legs settled at expiry":201,"nights with stale exit leg":253,"nights with a leg settled at expiry":193,"early close":36,"no expiry":20}
+ON fly 15:30->10:00 w1%: {"no data":6,"ok":1608,"stale legs":54,"legs settled at expiry":29,"entry unfilled":16,"nights with stale exit leg":29,"nights with a leg settled at expiry":19,"early close":36,"no expiry":20}
+ON fly 15:30->10:00 w1.5%: {"no data":6,"entry unfilled":68,"ok":1556,"stale legs":121,"legs settled at expiry":55,"nights with stale exit leg":97,"nights with a leg settled at expiry":47,"early close":36,"no expiry":20}
+ON fly 15:30->10:00 w2%: {"no data":6,"entry unfilled":405,"ok":1219,"stale legs":332,"legs settled at expiry":202,"nights with stale exit leg":309,"nights with a leg settled at expiry":194,"early close":36,"no expiry":20}
+ON fly 15:50->09:35 w1%: {"no data":6,"ok":1611,"stale legs":54,"legs settled at expiry":26,"entry unfilled":13,"nights with stale exit leg":26,"early close":36,"nights with a leg settled at expiry":17,"no expiry":20}
+ON fly 15:50->09:35 w1.5%: {"no data":6,"ok":1586,"stale legs":97,"legs settled at expiry":53,"nights with stale exit leg":70,"nights with a leg settled at expiry":45,"entry unfilled":38,"early close":36,"no expiry":20}
+ON fly 15:50->09:35 w2%: {"no data":6,"entry unfilled":316,"ok":1308,"stale legs":281,"legs settled at expiry":197,"nights with stale exit leg":252,"nights with a leg settled at expiry":189,"early close":36,"no expiry":20}
+ON fly 15:50->09:45 w1%: {"no data":6,"ok":1611,"stale legs":48,"legs settled at expiry":26,"entry unfilled":13,"nights with stale exit leg":24,"early close":36,"nights with a leg settled at expiry":17,"no expiry":20}
+ON fly 15:50->09:45 w1.5%: {"no data":6,"ok":1586,"stale legs":87,"legs settled at expiry":53,"nights with stale exit leg":64,"nights with a leg settled at expiry":45,"entry unfilled":38,"early close":36,"no expiry":20}
+ON fly 15:50->09:45 w2%: {"no data":6,"entry unfilled":316,"ok":1308,"stale legs":295,"legs settled at expiry":197,"nights with stale exit leg":269,"nights with a leg settled at expiry":189,"early close":36,"no expiry":20}
+ON fly 15:50->10:00 w1%: {"no data":6,"ok":1611,"stale legs":51,"legs settled at expiry":26,"entry unfilled":13,"nights with stale exit leg":27,"early close":36,"nights with a leg settled at expiry":17,"no expiry":20}
+ON fly 15:50->10:00 w1.5%: {"no data":6,"ok":1586,"stale legs":119,"legs settled at expiry":53,"nights with stale exit leg":94,"nights with a leg settled at expiry":45,"entry unfilled":38,"early close":36,"no expiry":20}
+ON fly 15:50->10:00 w2%: {"no data":6,"entry unfilled":316,"ok":1308,"stale legs":374,"legs settled at expiry":198,"nights with stale exit leg":342,"nights with a leg settled at expiry":190,"early close":36,"no expiry":20}
+ON strangle 15:50->09:45 w1%: {"no data":6,"ok":1585,"stale legs":84,"legs settled at expiry":51,"entry unfilled":39,"nights with stale exit leg":61,"nights with a leg settled at expiry":44,"early close":36,"no expiry":20}
+ON strangle 15:50->09:45 w1.5%: {"no data":6,"entry unfilled":317,"ok":1307,"stale legs":301,"legs settled at expiry":200,"nights with stale exit leg":274,"nights with a leg settled at expiry":193,"early close":36,"no expiry":20}
+ON strangle 15:50->09:45 w2%: {"no data":6,"ok":751,"nights with stale exit leg":252,"nights with a leg settled at expiry":154,"stale legs":283,"legs settled at expiry":162,"entry unfilled":873,"early close":36,"no expiry":20}
+MIRROR fly 09:45->15:50 w1%: {"ok":1627,"stale legs":48,"legs settled at expiry":2,"no data":3,"entry unfilled":18,"early close":18,"nights with stale exit leg":44,"nights with a leg settled at expiry":2,"no expiry":20}
+MIRROR fly 09:45->15:50 w1.5%: {"ok":1606,"stale legs":92,"legs settled at expiry":4,"no data":3,"entry unfilled":39,"nights with stale exit leg":83,"early close":18,"nights with a leg settled at expiry":4,"no expiry":20}
+MIRROR fly 09:45->15:50 w2%: {"ok":1373,"stale legs":142,"legs settled at expiry":10,"no data":3,"entry unfilled":272,"nights with stale exit leg":132,"nights with a leg settled at expiry":10,"early close":18,"no expiry":20}
+MIRROR strangle 09:45->15:50 w1.5%: {"ok":1390,"stale legs":114,"legs settled at expiry":6,"no data":3,"entry unfilled":255,"nights with stale exit leg":112,"nights with a leg settled at expiry":6,"early close":18,"no expiry":20}
+
+## Primary config detail: ON fly 15:50->09:45 w1.5%
+gross: total -2272, t -0.42, nights 548, structs 1586, win 61.0%
+  per ticker: SPY -1296 (t -0.49), QQQ -3238 (t -1.33), IWM +2262 (t 2.41)
+  per year: 2024 -861, 2025 -3947, 2026 +2536
+  without 5 best nights: -4776; worst night -1959 on 2025-04-02; best night +649 on 2026-04-24
+  max drawdown +6565 = 19.9x avg credit (330.00); worst night = 5.9x avg credit
+  mean P&L per structure / max loss: 0.13%
+primary: total -19031, t -3.50, nights 548, structs 1586, win 55.0%
+  per ticker: SPY -7033 (t -2.65), QQQ -9529 (t -3.85), IWM -2469 (t -2.59)
+  per year: 2024 -7035, 2025 -11811, 2026 -185
+  without 5 best nights: -21369; worst night -2036 on 2025-04-02; best night +619 on 2026-04-24
+  max drawdown +20908 = 64.4x avg credit (324.87); worst night = 6.3x avg credit
+  mean P&L per structure / max loss: -4.54%
+stress: total -25993, t -4.70, nights 548, structs 1586, win 52.6%
+  per ticker: SPY -9560 (t -3.57), QQQ -12561 (t -5.01), IWM -3872 (t -3.99)
+  per year: 2024 -9293, 2025 -15235, 2026 -1465
+  without 5 best nights: -28254; worst night -2098 on 2025-04-02; best night +607 on 2026-04-24
+  max drawdown +27634 = 85.7x avg credit (322.62); worst night = 6.5x avg credit
+  mean P&L per structure / max loss: -6.30%
+harsh: total -28737, t -5.30, nights 548, structs 1586, win 50.5%
+  per ticker: SPY -10018 (t -3.79), QQQ -12477 (t -5.06), IWM -6242 (t -6.64)
+  per year: 2024 -11090, 2025 -16109, 2026 -1538
+  without 5 best nights: -30990; worst night -2045 on 2025-04-02; best night +601 on 2026-04-24
+  max drawdown +30287 = 94.1x avg credit (321.69); worst night = 6.4x avg credit
+  mean P&L per structure / max loss: -7.11%
+info only, skipping nights with any stale exit leg: 1522 structs, total -9080, t -2.07
+
+## Mechanism: overnight(D) vs mirror(D), paired by ticker-date, summed per date
+ON fly 15:50->09:45 w1.5% vs MIRROR fly 09:45->15:50 w1.5% [gross]: paired dates 546; overnight mean -2.98 (t -0.31), mirror mean 21.83 (t 2.04), diff mean -24.81 (t -1.68)
+ON fly 15:50->09:45 w1.5% vs MIRROR fly 09:45->15:50 w1.5% [primary]: paired dates 546; overnight mean -33.18 (t -3.36), mirror mean -11.39 (t -1.06), diff mean -21.80 (t -1.47)
+ON fly 15:50->09:45 w1.5% vs MIRROR fly 09:45->15:50 w1.5% [stress]: paired dates 546; overnight mean -45.75 (t -4.57), mirror mean -27.68 (t -2.58), diff mean -18.07 (t -1.21)
+ON fly 15:50->09:45 w1.5% vs MIRROR fly 09:45->15:50 w1.5% [harsh]: paired dates 546; overnight mean -50.65 (t -5.16), mirror mean -27.61 (t -2.58), diff mean -23.04 (t -1.56)
+ON fly 15:50->09:45 w1% vs MIRROR fly 09:45->15:50 w1% [gross]: paired dates 546; overnight mean -3.79 (t -0.56), mirror mean 18.00 (t 1.96), diff mean -21.79 (t -1.89)
+ON fly 15:50->09:45 w1% vs MIRROR fly 09:45->15:50 w1% [primary]: paired dates 546; overnight mean -35.21 (t -5.09), mirror mean -16.77 (t -1.83), diff mean -18.44 (t -1.59)
+ON fly 15:50->09:45 w1% vs MIRROR fly 09:45->15:50 w1% [stress]: paired dates 546; overnight mean -49.30 (t -6.93), mirror mean -35.39 (t -3.87), diff mean -13.91 (t -1.20)
+ON fly 15:50->09:45 w1% vs MIRROR fly 09:45->15:50 w1% [harsh]: paired dates 546; overnight mean -53.56 (t -7.80), mirror mean -33.09 (t -3.61), diff mean -20.47 (t -1.77)
+ON fly 15:50->09:45 w2% vs MIRROR fly 09:45->15:50 w2% [gross]: paired dates 538; overnight mean -9.51 (t -0.94), mirror mean 26.02 (t 2.46), diff mean -35.53 (t -2.37)
+ON fly 15:50->09:45 w2% vs MIRROR fly 09:45->15:50 w2% [primary]: paired dates 538; overnight mean -33.22 (t -3.25), mirror mean -0.05 (t -0.00), diff mean -33.17 (t -2.20)
+ON fly 15:50->09:45 w2% vs MIRROR fly 09:45->15:50 w2% [stress]: paired dates 538; overnight mean -42.99 (t -4.14), mirror mean -12.43 (t -1.18), diff mean -30.57 (t -2.02)
+ON fly 15:50->09:45 w2% vs MIRROR fly 09:45->15:50 w2% [harsh]: paired dates 538; overnight mean -46.39 (t -4.55), mirror mean -12.90 (t -1.22), diff mean -33.49 (t -2.23)
+ON strangle 15:50->09:45 w1.5% vs MIRROR strangle 09:45->15:50 w1.5% [gross]: paired dates 538; overnight mean -6.39 (t -0.72), mirror mean 10.73 (t 1.44), diff mean -17.11 (t -1.45)
+ON strangle 15:50->09:45 w1.5% vs MIRROR strangle 09:45->15:50 w1.5% [primary]: paired dates 538; overnight mean -27.46 (t -3.04), mirror mean -12.04 (t -1.59), diff mean -15.41 (t -1.29)
+ON strangle 15:50->09:45 w1.5% vs MIRROR strangle 09:45->15:50 w1.5% [stress]: paired dates 538; overnight mean -32.71 (t -3.56), mirror mean -20.20 (t -2.60), diff mean -12.51 (t -1.04)
+ON strangle 15:50->09:45 w1.5% vs MIRROR strangle 09:45->15:50 w1.5% [harsh]: paired dates 538; overnight mean -42.69 (t -4.75), mirror mean -27.31 (t -3.62), diff mean -15.38 (t -1.30)
