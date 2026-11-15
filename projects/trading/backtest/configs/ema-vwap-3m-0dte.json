@@ -1,0 +1,56 @@
+{
+  "name": "ema-vwap-3m-0dte",
+  "description": "Sweep #1: 3-minute bars, 0DTE ATM, EMA9 close stop, no premium stop, +100% target.",
+  "strategy": {
+    "preset": "ema-vwap-crossover",
+    "timeframeMinutes": 3,
+    "entryFilters": [
+      {
+        "type": "timeWindow",
+        "startDelayMinutes": 5,
+        "endBeforeCloseMinutes": 30
+      },
+      {
+        "type": "cooldown",
+        "bars": 2,
+        "afterReasons": ["pnlStop", "indicatorBreak"]
+      }
+    ],
+    "exits": [
+      {
+        "type": "flatBeforeClose",
+        "minutes": 10
+      },
+      {
+        "type": "indicatorBreak",
+        "indicator": "ema9",
+        "trigger": "close"
+      },
+      {
+        "type": "profitTarget",
+        "pct": 1
+      }
+    ],
+    "contract": {
+      "expiry": {
+        "type": "nearest",
+        "minDte": 0,
+        "maxDte": 0
+      },
+      "strike": {
+        "type": "atm"
+      },
+      "filters": [
+        {
+          "type": "maxSpreadPct",
+          "pct": 0.05
+        }
+      ]
+    }
+  },
+  "simulation": {
+    "startingCash": 25000,
+    "spreadPct": 0.02,
+    "feePerContract": 0.05
+  }
+}

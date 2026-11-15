@@ -11,7 +11,7 @@ import {
   worstCasePricePath,
 } from '@projects/trading-core';
 
-import { DataStore } from '../data/data-store';
+import { MarketData } from '../data/data-store';
 
 import { HistoricalChains } from './historical-chains';
 import { modelQuote } from './quotes';
@@ -36,7 +36,7 @@ export type DaySummary = {
 export type BacktestInput = {
   strategy: StrategyConfigInput;
   simulation: SimulationConfig;
-  store: DataStore;
+  store: MarketData;
   /** First and last trading day to trade, `YYYY-MM-DD`, inclusive. */
   from: string;
   to: string;

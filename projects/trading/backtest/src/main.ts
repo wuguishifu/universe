@@ -1,3 +1,4 @@
+import { availableParallelism } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
@@ -14,6 +15,8 @@ import {
   runConfigSchema,
 } from './run-config';
 import { runBacktest } from './sim/backtest';
+import { formatSweep, runSweep, writeSweep } from './sweep/sweep';
+import { loadSweepConfig } from './sweep/sweep-config';
 
 const print = (line = ''): void => {
   process.stdout.write(`${line}\n`);
@@ -24,6 +27,7 @@ const USAGE = `Usage:
                     [--data <dir>] [--out <dir>] [--daily]
   backtest download --from YYYY-MM-DD --to YYYY-MM-DD [--tickers SPY,QQQ] [--data <dir>]
                     [--expiry-days 7] [--strike-padding 10] [--strike-step 1] [--warmup-days 5]
+  backtest sweep    --config <file> [--data <dir>] [--out <dir>] [--workers N]
 
 Presets: ${Object.keys(PRESETS).join(', ')}
 Paths are relative to projects/trading/backtest. Data defaults to ./data, runs to ./runs.`;
@@ -119,10 +123,46 @@ async function downloadCommand(args: string[]): Promise<void> {
   print('Done.');
 }
 
+async function sweepCommand(args: string[]): Promise<void> {
+  const { values } = parseArgs({
+    args,
+    options: {
+      config: { type: 'string' },
+      data: { type: 'string', default: 'data' },
+      out: { type: 'string', default: 'runs' },
+      workers: {
+        type: 'string',
+        default: String(Math.max(1, availableParallelism() - 1)),
+      },
+    },
+  });
+  if (!values.config) throw new Error('sweep needs --config');
+
+  const config = loadSweepConfig(values.config);
+  const started = Date.now();
+  print(`Sweeping ${config.name} with ${values.workers} workers`);
+  const outcome = await runSweep(config, {
+    dataDir: resolve(values.data),
+    workers: Number(values.workers),
+    log: print,
+  });
+
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const outDir = resolve(join(values.out, `${stamp}-sweep-${config.name}`));
+  writeSweep(outDir, config, outcome);
+  print();
+  print(formatSweep(config, outcome));
+  print();
+  print(
+    `Finished in ${((Date.now() - started) / 1000).toFixed(0)}s. Wrote ${outDir}`,
+  );
+}
+
 async function main(): Promise<void> {
   const [command, ...args] = process.argv.slice(2);
   if (command === 'run') await run(args);
   else if (command === 'download') await downloadCommand(args);
+  else if (command === 'sweep') await sweepCommand(args);
   else {
     print(USAGE);
     process.exitCode = command ? 1 : 0;

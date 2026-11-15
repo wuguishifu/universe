@@ -73,3 +73,37 @@ const byTime = (a: Bar, b: Bar) => a.time - b.time;
 
 const readJson = (path: string): unknown =>
   JSON.parse(readFileSync(path, 'utf8'));
+
+/** The reads a backtest needs. */
+export type MarketData = Pick<
+  DataStore,
+  'calendar' | 'stockBars' | 'optionBars'
+>;
+
+/**
+ * Keeps everything it reads in memory. Parsing JSON is most of a single run's time, so a sweep
+ * running many configs over the same days reads each file once.
+ */
+export class CachedDataStore extends DataStore {
+  private calendarCache: CalendarDay[] | undefined;
+  private readonly stocks = new Map<string, Bar[] | null>();
+  private readonly options = new Map<string, Map<string, Bar[]> | null>();
+
+  override calendar(): CalendarDay[] {
+    return (this.calendarCache ??= super.calendar());
+  }
+
+  override stockBars(ticker: string, date: string): Bar[] | null {
+    const key = `${ticker}/${date}`;
+    if (!this.stocks.has(key))
+      this.stocks.set(key, super.stockBars(ticker, date));
+    return this.stocks.get(key) ?? null;
+  }
+
+  override optionBars(ticker: string, date: string): Map<string, Bar[]> | null {
+    const key = `${ticker}/${date}`;
+    if (!this.options.has(key))
+      this.options.set(key, super.optionBars(ticker, date));
+    return this.options.get(key) ?? null;
+  }
+}

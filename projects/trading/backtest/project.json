@@ -12,6 +12,13 @@
         "cwd": "projects/trading/backtest"
       }
     },
+    "sweep": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import @swc-node/register/esm-register src/main.ts sweep",
+        "cwd": "projects/trading/backtest"
+      }
+    },
     "download": {
       "executor": "nx:run-commands",
       "options": {

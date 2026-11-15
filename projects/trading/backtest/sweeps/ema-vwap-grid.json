@@ -1,0 +1,218 @@
+{
+  "name": "ema-vwap-grid",
+  "train": {
+    "from": "2026-08-03",
+    "to": "2026-10-09"
+  },
+  "test": {
+    "from": "2026-10-12",
+    "to": "2026-11-13"
+  },
+  "simulation": {
+    "startingCash": 25000,
+    "spreadPct": 0.02,
+    "feePerContract": 0.05
+  },
+  "base": {
+    "preset": "ema-vwap-crossover",
+    "exits": [
+      {
+        "type": "flatBeforeClose",
+        "minutes": 10
+      }
+    ],
+    "entryFilters": [
+      {
+        "type": "cooldown",
+        "bars": 2,
+        "afterReasons": ["pnlStop", "indicatorBreak"]
+      }
+    ]
+  },
+  "axes": {
+    "timeframe": {
+      "1m": {
+        "timeframeMinutes": 1
+      },
+      "3m": {
+        "timeframeMinutes": 3
+      },
+      "5m": {
+        "timeframeMinutes": 5
+      },
+      "10m": {
+        "timeframeMinutes": 10
+      }
+    },
+    "emaStop": {
+      "ema-close": {
+        "exits": [
+          {
+            "type": "indicatorBreak",
+            "indicator": "ema9",
+            "trigger": "close"
+          }
+        ]
+      },
+      "ema-wick": {
+        "exits": [
+          {
+            "type": "indicatorBreak",
+            "indicator": "ema9",
+            "trigger": "wick"
+          }
+        ]
+      },
+      "no-ema": {}
+    },
+    "premiumStop": {
+      "stop20": {
+        "exits": [
+          {
+            "type": "pnlStop",
+            "pct": 0.2
+          }
+        ]
+      },
+      "stop30": {
+        "exits": [
+          {
+            "type": "pnlStop",
+            "pct": 0.3
+          }
+        ]
+      },
+      "no-stop": {}
+    },
+    "target": {
+      "tp30": {
+        "exits": [
+          {
+            "type": "profitTarget",
+            "pct": 0.3
+          }
+        ]
+      },
+      "tp50": {
+        "exits": [
+          {
+            "type": "profitTarget",
+            "pct": 0.5
+          }
+        ]
+      },
+      "tp100": {
+        "exits": [
+          {
+            "type": "profitTarget",
+            "pct": 1
+          }
+        ]
+      },
+      "trail20": {
+        "exits": [
+          {
+            "type": "trailingStop",
+            "pct": 0.2,
+            "activateAtPct": 0.2
+          }
+        ]
+      },
+      "no-target": {}
+    },
+    "expiry": {
+      "0dte": {
+        "contract": {
+          "expiry": {
+            "type": "nearest",
+            "minDte": 0,
+            "maxDte": 0
+          }
+        }
+      },
+      "1dte": {
+        "contract": {
+          "expiry": {
+            "type": "nearest",
+            "minDte": 1
+          }
+        }
+      },
+      "5dte": {
+        "contract": {
+          "expiry": {
+            "type": "nearest",
+            "minDte": 5
+          }
+        }
+      }
+    },
+    "strike": {
+      "atm": {
+        "contract": {
+          "strike": {
+            "type": "atm"
+          }
+        }
+      },
+      "itm1": {
+        "contract": {
+          "strike": {
+            "type": "strikeOffset",
+            "steps": -1
+          }
+        }
+      },
+      "otm1": {
+        "contract": {
+          "strike": {
+            "type": "strikeOffset",
+            "steps": 1
+          }
+        }
+      }
+    },
+    "delay": {
+      "delay5": {
+        "entryFilters": [
+          {
+            "type": "timeWindow",
+            "startDelayMinutes": 5,
+            "endBeforeCloseMinutes": 30
+          }
+        ]
+      },
+      "delay15": {
+        "entryFilters": [
+          {
+            "type": "timeWindow",
+            "startDelayMinutes": 15,
+            "endBeforeCloseMinutes": 30
+          }
+        ]
+      },
+      "delay30": {
+        "entryFilters": [
+          {
+            "type": "timeWindow",
+            "startDelayMinutes": 30,
+            "endBeforeCloseMinutes": 30
+          }
+        ]
+      }
+    },
+    "onCross": {
+      "exit-on-cross": {
+        "exits": [
+          {
+            "type": "oppositeSignal"
+          }
+        ]
+      },
+      "hold": {}
+    }
+  },
+  "rankBy": "netPnl",
+  "minTrades": 30,
+  "top": 10
+}
