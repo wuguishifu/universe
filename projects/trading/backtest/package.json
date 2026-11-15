@@ -1,0 +1,10 @@
+{
+  "name": "@projects/trading-backtest",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@projects/trading-core": "workspace:*",
+    "zod": "^4.3.6"
+  }
+}

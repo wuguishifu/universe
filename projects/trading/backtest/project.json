@@ -1,0 +1,37 @@
+{
+  "name": "trading-backtest",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/trading/backtest/src",
+  "projectType": "application",
+  "tags": ["scope:server"],
+  "targets": {
+    "backtest": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import @swc-node/register/esm-register src/main.ts run",
+        "cwd": "projects/trading/backtest"
+      }
+    },
+    "download": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --env-file-if-exists=.env.local --import @swc-node/register/esm-register src/main.ts download",
+        "cwd": "projects/trading/backtest"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import @swc-node/register/esm-register --test \"src/**/*.spec.ts\"",
+        "cwd": "projects/trading/backtest"
+      }
+    },
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning",
+        "cwd": "projects/trading/backtest"
+      }
+    }
+  }
+}

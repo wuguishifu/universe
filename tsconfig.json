@@ -137,6 +137,9 @@
     },
     {
       "path": "./projects/trading/core"
+    },
+    {
+      "path": "./projects/trading/backtest"
     }
   ],
   "compilerOptions": {

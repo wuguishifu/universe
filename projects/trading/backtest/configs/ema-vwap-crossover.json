@@ -1,0 +1,9 @@
+{
+  "name": "ema-vwap-crossover",
+  "strategy": { "preset": "ema-vwap-crossover" },
+  "simulation": {
+    "startingCash": 25000,
+    "spreadPct": 0.03,
+    "feePerContract": 0.05
+  }
+}

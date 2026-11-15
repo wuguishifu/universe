@@ -1,0 +1,23 @@
+{
+  "name": "ema-vwap-0dte-trailing",
+  "strategy": {
+    "preset": "ema-vwap-crossover",
+    "contract": {
+      "expiry": { "type": "nearest", "minDte": 0, "maxDte": 0 },
+      "strike": { "type": "atm" },
+      "filters": [{ "type": "maxSpreadPct", "pct": 0.05 }]
+    },
+    "exits": [
+      { "type": "flatBeforeClose", "minutes": 10 },
+      { "type": "pnlStop", "pct": 0.3 },
+      { "type": "indicatorBreak", "indicator": "ema9", "trigger": "close" },
+      { "type": "trailingStop", "pct": 0.2, "activateAtPct": 0.2 },
+      { "type": "oppositeSignal" }
+    ]
+  },
+  "simulation": {
+    "startingCash": 25000,
+    "spreadPct": 0.03,
+    "feePerContract": 0.05
+  }
+}
