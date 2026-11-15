@@ -1,113 +1,28 @@
+mod settings;
+
 use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::Duration;
 
 use clipper_capture::{
-    AudioApp, AudioSource, CaptureSource, InputDevice, Recorder, RecorderConfig, WindowInfo,
-    list_audio_apps, list_input_devices, list_windows,
+    AudioSource, CaptureSource, InputDevice, Recorder, RecorderConfig, TrackState, WindowInfo,
+    list_input_devices, list_windows,
 };
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
+use settings::{Settings, tracks_for};
 use tauri::{AppHandle, Emitter, Manager, RunEvent};
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
+use tauri_plugin_store::StoreExt;
 
 /// How far back a clip can go.
 const BUFFER: Duration = Duration::from_secs(120);
 /// Saves a clip from anywhere, including from inside a game.
 const SAVE_SHORTCUT: (Modifiers, Code, &str) = (Modifiers::ALT, Code::F9, "Alt+F9");
 
-/// The audio tracks asked for, beyond the ones that are always there. Mirrored by
-/// `TrackSettings` in commands.ts.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct TrackSettings {
-    /// Whether a recorded window gets a Desktop track too. The display always has one.
-    desktop_with_window: bool,
-    microphone: bool,
-    /// The input device the microphone track records ([`InputDevice::id`]), or `None` for
-    /// Windows' default.
-    microphone_device: Option<String>,
-    /// Apps that get a track of their own, e.g. Discord.
-    apps: Vec<AudioApp>,
-}
-
-/// What's remembered between runs, in `settings.json` in the app's config folder. Apps aren't:
-/// they're picked by process, which is different each time an app starts.
-#[derive(Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-struct SavedSettings {
-    desktop_with_window: bool,
-    microphone: bool,
-    microphone_device: Option<String>,
-}
-
-fn load_settings(path: &std::path::Path) -> TrackSettings {
-    let saved: SavedSettings = std::fs::read_to_string(path)
-        .ok()
-        .and_then(|json| serde_json::from_str(&json).ok())
-        .unwrap_or_default();
-    TrackSettings {
-        desktop_with_window: saved.desktop_with_window,
-        microphone: saved.microphone,
-        microphone_device: saved.microphone_device,
-        apps: Vec::new(),
-    }
-}
-
-fn save_settings(path: &std::path::Path, settings: &TrackSettings) {
-    let saved = SavedSettings {
-        desktop_with_window: settings.desktop_with_window,
-        microphone: settings.microphone,
-        microphone_device: settings.microphone_device.clone(),
-    };
-    let result = path
-        .parent()
-        .map_or(Ok(()), std::fs::create_dir_all)
-        .and_then(|()| std::fs::write(path, serde_json::to_string_pretty(&saved).unwrap()));
-    if let Err(e) = result {
-        tracing::warn!(error = %e, path = %path.display(), "couldn't save settings");
-    }
-}
-
-/// The tracks to record: Desktop (always for the display; for a window, if asked for), the
-/// recorded window's app, the other apps asked for, then the microphone.
-fn tracks_for(source: &CaptureSource, settings: &TrackSettings) -> Vec<AudioSource> {
-    let mut tracks = Vec::new();
-    match source {
-        CaptureSource::Display => tracks.push(AudioSource::Desktop),
-        CaptureSource::Window(window) => {
-            if settings.desktop_with_window {
-                tracks.push(AudioSource::Desktop);
-            }
-            tracks.push(AudioSource::App {
-                pid: window.pid,
-                name: window.title.clone(),
-            });
-        }
-    }
-    for app in &settings.apps {
-        let already = tracks
-            .iter()
-            .any(|t| matches!(t, AudioSource::App { pid, .. } if *pid == app.pid));
-        if !already {
-            tracks.push(AudioSource::App {
-                pid: app.pid,
-                name: app.name.clone(),
-            });
-        }
-    }
-    if settings.microphone {
-        tracks.push(AudioSource::Microphone {
-            device: settings.microphone_device.clone(),
-        });
-    }
-    tracks
-}
-
 struct AppState {
     recorder: Recorder,
     clips_dir: PathBuf,
-    tracks: Mutex<TrackSettings>,
-    settings_path: PathBuf,
+    settings: Mutex<Settings>,
     /// Set while a clip is being written, so a second press doesn't start another.
     saving: Mutex<bool>,
 }
@@ -121,8 +36,8 @@ struct Status {
     recording: bool,
     source: CaptureSource,
     tracks: Vec<AudioSource>,
-    track_settings: TrackSettings,
-    track_warnings: Vec<String>,
+    /// Each track's state, in the order of `tracks`.
+    track_states: Vec<TrackState>,
     buffered_seconds: f64,
     last_error: Option<String>,
     clips_dir: String,
@@ -146,8 +61,7 @@ fn get_status(state: tauri::State<AppState>) -> Status {
         recording: recorder.recording,
         source: recorder.source,
         tracks: recorder.tracks,
-        track_settings: state.tracks.lock().unwrap().clone(),
-        track_warnings: recorder.track_warnings,
+        track_states: recorder.track_states,
         buffered_seconds: recorder.buffered_seconds,
         last_error: recorder.last_error,
         clips_dir: state.clips_dir.display().to_string(),
@@ -163,23 +77,17 @@ fn list_capture_windows() -> Vec<WindowInfo> {
 /// Switches what's recorded. The buffer starts over.
 #[tauri::command]
 fn set_source(state: tauri::State<AppState>, source: CaptureSource) {
-    let tracks = tracks_for(&source, &state.tracks.lock().unwrap());
+    let tracks = tracks_for(&source, &state.settings.lock().unwrap());
     state.recorder.set_capture(source, tracks);
 }
 
-/// Apps playing audio, which can each get a track.
+/// The UI's settings, sent whenever they change (and once they're loaded). If that changes the
+/// tracks, the buffer starts over.
 #[tauri::command]
-fn list_capture_audio_apps() -> Result<Vec<AudioApp>, String> {
-    list_audio_apps()
-}
-
-/// Changes the extra audio tracks. The buffer starts over.
-#[tauri::command]
-fn set_tracks(state: tauri::State<AppState>, settings: TrackSettings) {
+fn apply_settings(state: tauri::State<AppState>, settings: Settings) {
     let source = state.recorder.status().source;
     let tracks = tracks_for(&source, &settings);
-    save_settings(&state.settings_path, &settings);
-    *state.tracks.lock().unwrap() = settings;
+    *state.settings.lock().unwrap() = settings;
     state.recorder.set_capture(source, tracks);
 }
 
@@ -286,6 +194,7 @@ pub fn run() {
     let shortcut = Shortcut::new(Some(SAVE_SHORTCUT.0), SAVE_SHORTCUT.1);
 
     let app = tauri::Builder::default()
+        .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(move |app, pressed, event| {
@@ -301,8 +210,19 @@ pub fn run() {
             let work_dir = paths.app_local_data_dir()?.join("buffer");
             // Set CLIPPER_FFMPEG to use a particular build; otherwise ffmpeg on PATH.
             let ffmpeg = std::env::var_os("CLIPPER_FFMPEG").map_or("ffmpeg".into(), PathBuf::from);
-            let settings_path = paths.app_config_dir()?.join("settings.json");
-            let settings = load_settings(&settings_path);
+            // Settings were in a file of Rust's own before they moved to the UI's store.
+            let legacy = paths.app_config_dir()?.join("settings.json");
+            match std::fs::remove_file(&legacy) {
+                Err(e) if e.kind() != std::io::ErrorKind::NotFound => {
+                    tracing::warn!(error = %e, path = %legacy.display(), "couldn't remove old settings")
+                }
+                _ => {}
+            }
+            let settings = settings::from_store(
+                app.store(settings::STORE_FILE)
+                    .ok()
+                    .and_then(|store| store.get(settings::STORE_KEY)),
+            );
             tracing::info!(clips = %clips_dir.display(), buffer = %work_dir.display(), ?settings, "starting Clipper");
 
             let recorder = Recorder::start(
@@ -319,8 +239,7 @@ pub fn run() {
             app.manage(AppState {
                 recorder,
                 clips_dir,
-                tracks: Mutex::new(settings),
-                settings_path,
+                settings: Mutex::new(settings),
                 saving: Mutex::new(false),
             });
 
@@ -334,8 +253,7 @@ pub fn run() {
             get_status,
             list_capture_windows,
             set_source,
-            list_capture_audio_apps,
-            set_tracks,
+            apply_settings,
             get_levels,
             list_microphones,
             save_clip
@@ -348,93 +266,4 @@ pub fn run() {
             app.state::<AppState>().recorder.stop();
         }
     });
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn window(pid: u32) -> CaptureSource {
-        CaptureSource::Window(WindowInfo {
-            hwnd: 1,
-            title: "VALORANT".into(),
-            exe: "VALORANT-Win64-Shipping.exe".into(),
-            pid,
-        })
-    }
-
-    #[test]
-    fn records_desktop_alone_by_default() {
-        let tracks = tracks_for(&CaptureSource::Display, &TrackSettings::default());
-        assert_eq!(tracks, vec![AudioSource::Desktop]);
-    }
-
-    #[test]
-    fn leaves_desktop_out_of_a_window_unless_asked() {
-        let tracks = tracks_for(&window(5), &TrackSettings::default());
-        assert_eq!(
-            tracks,
-            vec![AudioSource::App {
-                pid: 5,
-                name: "VALORANT".into()
-            }]
-        );
-        // The display always has Desktop, whatever the setting.
-        let settings = TrackSettings {
-            desktop_with_window: false,
-            ..TrackSettings::default()
-        };
-        assert_eq!(
-            tracks_for(&CaptureSource::Display, &settings),
-            vec![AudioSource::Desktop]
-        );
-    }
-
-    #[test]
-    fn adds_the_window_app_then_other_apps_then_the_mic() {
-        let settings = TrackSettings {
-            desktop_with_window: true,
-            microphone: true,
-            microphone_device: None,
-            apps: vec![
-                AudioApp {
-                    pid: 7,
-                    name: "Discord".into(),
-                },
-                // The recorded window's own app isn't added twice.
-                AudioApp {
-                    pid: 5,
-                    name: "VALORANT-Win64-Shipping".into(),
-                },
-            ],
-        };
-        let titles: Vec<String> = tracks_for(&window(5), &settings)
-            .iter()
-            .map(|t| t.title().to_owned())
-            .collect();
-        assert_eq!(titles, ["Desktop", "VALORANT", "Discord", "Microphone"]);
-    }
-
-    #[test]
-    fn remembers_the_microphone_but_not_apps() {
-        let path =
-            std::env::temp_dir().join(format!("clipper-settings-{}.json", std::process::id()));
-        let settings = TrackSettings {
-            desktop_with_window: true,
-            microphone: true,
-            microphone_device: Some("{0.0.1.00000000}.{c603}".into()),
-            apps: vec![AudioApp {
-                pid: 7,
-                name: "Discord".into(),
-            }],
-        };
-        save_settings(&path, &settings);
-        let loaded = load_settings(&path);
-        let _ = std::fs::remove_file(&path);
-        assert!(loaded.microphone && loaded.desktop_with_window);
-        assert_eq!(loaded.microphone_device, settings.microphone_device);
-        assert!(loaded.apps.is_empty());
-        // Nothing saved yet: the defaults.
-        assert!(!load_settings(&path).microphone);
-    }
 }

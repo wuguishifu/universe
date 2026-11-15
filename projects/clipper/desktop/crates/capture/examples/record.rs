@@ -4,6 +4,10 @@
 //!
 //!   --window <title>   record the first window whose title contains <title> (else the display)
 //!   --app <name|pid>   add a track for an app playing audio (repeatable)
+//!   --program <name> <exe>...
+//!                      add a track for whichever process runs one of <exe>, whenever it's
+//!                      running, e.g. `--program Discord Discord.exe` (ends at the next option)
+//!   --discord          add a Discord track
 //!   --mic [name]       add a microphone track: the default input, or the first whose name
 //!                      contains [name]
 //!   --list             list the windows, audio apps and input devices
@@ -17,8 +21,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use clipper_capture::{
-    AudioSource, CaptureSource, Levels, Recorder, RecorderConfig, audio, list_audio_apps,
-    list_input_devices, list_windows,
+    AudioSource, CaptureSource, Levels, Recorder, RecorderConfig, TrackState, TrackStates, audio,
+    list_audio_apps, list_input_devices, list_windows,
 };
 
 fn db(peak: f32) -> f32 {
@@ -37,9 +41,13 @@ fn meter_inputs() {
         let thread = {
             let (stop, levels) = (stop.clone(), levels.clone());
             std::thread::spawn(move || {
-                audio::capture(&[track], std::io::sink(), stop, levels, |w| {
-                    eprintln!("  {w}")
-                })
+                audio::capture(
+                    &[track],
+                    std::io::sink(),
+                    stop,
+                    levels,
+                    TrackStates::default(),
+                )
             })
         };
         let mut loudest = 0f32;
@@ -110,9 +118,22 @@ fn main() {
                     name: app.name,
                 });
             }
+            "--program" => {
+                let name = rest.next().expect("--program needs a name").clone();
+                let mut exes = Vec::new();
+                while let Some(exe) = rest.next_if(|a| !a.starts_with("--")) {
+                    exes.push(exe.clone());
+                }
+                tracks.push(AudioSource::Program { name, exes });
+            }
+            "--discord" => tracks.push(AudioSource::discord()),
             "--no-desktop" => tracks.retain(|t| *t != AudioSource::Desktop),
             "--mic" => {
                 let device = rest.next_if(|a| !a.starts_with("--")).map(|wanted| {
+                    // A device ID as it is, e.g. one that isn't plugged in.
+                    if wanted.starts_with('{') {
+                        return wanted.clone();
+                    }
                     list_input_devices()
                         .unwrap_or_default()
                         .into_iter()
@@ -138,17 +159,27 @@ fn main() {
         source,
         tracks,
     );
-    // Each track's peak once a second, in dBFS: a quick check that a source is being heard.
+    // Each track's peak once a second, in dBFS, and why it's silent if it is: a quick check
+    // that a source is being heard.
     for _ in 0..seconds {
         std::thread::sleep(Duration::from_secs(1));
         let status = recorder.status();
-        let levels: Vec<String> = status
+        let levels = recorder.levels();
+        let tracks: Vec<String> = status
             .tracks
             .iter()
-            .zip(recorder.levels())
-            .map(|(track, peak)| format!("{} {:.0} dB", track.title(), db(peak)))
+            .enumerate()
+            .map(|(i, track)| {
+                let peak = db(levels.get(i).copied().unwrap_or(0.0));
+                match status.track_states.get(i) {
+                    Some(TrackState::Waiting { reason } | TrackState::Unavailable { reason }) => {
+                        format!("{} {peak:.0} dB ({reason})", track.title())
+                    }
+                    _ => format!("{} {peak:.0} dB", track.title()),
+                }
+            })
             .collect();
-        println!("levels: {}", levels.join(", "));
+        println!("levels: {}", tracks.join(", "));
     }
     println!("{:?}", recorder.status());
     let started = std::time::Instant::now();

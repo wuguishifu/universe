@@ -1,6 +1,8 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
+import type { SettingsState } from '../store/settings';
+
 /** Mirrors `WindowInfo` in crates/capture/src/window_list.rs. */
 export type WindowInfo = {
   hwnd: number;
@@ -13,14 +15,23 @@ export type WindowInfo = {
 export type CaptureSource =
   { kind: 'display' } | ({ kind: 'window' } & WindowInfo);
 
-/** Mirrors `AudioApp` in crates/capture/src/audio.rs. */
-export type AudioApp = { pid: number; name: string };
-
 /** Mirrors `AudioSource` in crates/capture/src/audio.rs: one audio track. */
 export type AudioSource =
   | { kind: 'desktop' }
   | { kind: 'microphone'; device: string | null }
-  | ({ kind: 'app' } & AudioApp);
+  /** One process, e.g. the recorded game. */
+  | { kind: 'app'; pid: number; name: string }
+  /** Whichever process runs one of `exes`, whenever it's running, e.g. Discord. */
+  | { kind: 'program'; name: string; exes: string[] };
+
+/** Mirrors `TrackState` in crates/capture/src/audio.rs. */
+export type TrackState =
+  | { state: 'starting' }
+  | { state: 'live' }
+  /** Silent until something expected happens, e.g. Discord starting. */
+  | { state: 'waiting'; reason: string }
+  /** Silent because something's wrong, e.g. the chosen microphone isn't connected. */
+  | { state: 'unavailable'; reason: string };
 
 /** Mirrors `InputDevice` in crates/capture/src/audio.rs. */
 export type InputDevice = {
@@ -28,16 +39,6 @@ export type InputDevice = {
   name: string;
   isDefault: boolean;
   isCommunicationsDefault: boolean;
-};
-
-/** Mirrors `TrackSettings` in src-tauri/src/lib.rs: the tracks asked for. */
-export type TrackSettings = {
-  /** Whether a recorded window gets a Desktop track too; the display always has one. */
-  desktopWithWindow: boolean;
-  microphone: boolean;
-  /** An `InputDevice.id`, or null for Windows' default. */
-  microphoneDevice: string | null;
-  apps: AudioApp[];
 };
 
 /** Mirrors `Status` in src-tauri/src/lib.rs. */
@@ -48,9 +49,8 @@ export type CaptureStatus = {
   source: CaptureSource;
   /** The tracks being recorded, in the order they're saved (after the mix). */
   tracks: AudioSource[];
-  trackSettings: TrackSettings;
-  /** Tracks that couldn't be captured, and are silent. */
-  trackWarnings: string[];
+  /** Each track's state, in the order of `tracks`. */
+  trackStates: TrackState[];
   bufferedSeconds: number;
   lastError: string | null;
   clipsDir: string;
@@ -69,11 +69,9 @@ export const commands = {
   listWindows: () => invoke<WindowInfo[]>('list_capture_windows'),
   /** Switches what's recorded; the buffer starts over. */
   setSource: (source: CaptureSource) => invoke<void>('set_source', { source }),
-  /** Apps with audio sessions, which can each get a track. */
-  listAudioApps: () => invoke<AudioApp[]>('list_capture_audio_apps'),
-  /** Changes the extra tracks; the buffer starts over. */
-  setTracks: (settings: TrackSettings) =>
-    invoke<void>('set_tracks', { settings }),
+  /** Sends the settings to the recorder. Mirrored by `Settings` in src-tauri/src/settings.rs. */
+  applySettings: (settings: SettingsState) =>
+    invoke<void>('apply_settings', { settings }),
   /** Each track's recent peak, 0 to 1, in the order of `CaptureStatus.tracks`. */
   getLevels: () => invoke<number[]>('get_levels'),
   listMicrophones: () => invoke<InputDevice[]>('list_microphones'),

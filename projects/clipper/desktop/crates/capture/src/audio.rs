@@ -2,6 +2,10 @@
 //! microphone), written out together as one continuous stream of interleaved raw PCM, two
 //! channels per source. Sharing one stream keeps the tracks in step with each other; ffmpeg
 //! splits it back into a track per source.
+//!
+//! A source that isn't there (an app that isn't running, a microphone that's unplugged) is
+//! silence until it is: each source keeps trying, and starts capturing when it can, without the
+//! stream (or the recording) starting over.
 
 use std::collections::VecDeque;
 use std::io::Write;
@@ -12,6 +16,8 @@ use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
 use wasapi::{AudioClient, DeviceEnumerator, Direction, SampleType, StreamMode, WaveFormat};
+
+use crate::process;
 
 pub const SAMPLE_RATE: u32 = 48_000;
 /// Per source.
@@ -33,10 +39,14 @@ const POLL: Duration = Duration::from_millis(10);
 pub enum AudioSource {
     /// Everything the default output device plays.
     Desktop,
-    /// An input device: the one with this [`InputDevice::id`], or Windows' default.
+    /// An input device: the one with this [`InputDevice::id`], or Windows' default. A chosen
+    /// device that isn't connected is silence; there's no falling back to another.
     Microphone { device: Option<String> },
-    /// What one process (and its children) plays.
+    /// What one process (and its children) plays, while it runs.
     App { pid: u32, name: String },
+    /// What a program plays, whenever it's running: the process tree of any of `exes`, found
+    /// when it starts (and again if it restarts). E.g. Discord.
+    Program { name: String, exes: Vec<String> },
 }
 
 impl AudioSource {
@@ -45,7 +55,17 @@ impl AudioSource {
         match self {
             Self::Desktop => "Desktop",
             Self::Microphone { .. } => "Microphone",
-            Self::App { name, .. } => name,
+            Self::App { name, .. } | Self::Program { name, .. } => name,
+        }
+    }
+
+    /// Discord, whichever release of it is installed.
+    pub fn discord() -> Self {
+        Self::Program {
+            name: "Discord".into(),
+            exes: ["Discord.exe", "DiscordPTB.exe", "DiscordCanary.exe"]
+                .map(String::from)
+                .into(),
         }
     }
 }
@@ -56,9 +76,38 @@ impl AudioSource {
 pub fn mixed_tracks(tracks: &[AudioSource]) -> Vec<usize> {
     let has_desktop = tracks.contains(&AudioSource::Desktop);
     (0..tracks.len())
-        .filter(|&i| !has_desktop || !matches!(tracks[i], AudioSource::App { .. }))
+        .filter(|&i| {
+            !has_desktop
+                || !matches!(
+                    tracks[i],
+                    AudioSource::App { .. } | AudioSource::Program { .. }
+                )
+        })
         .collect()
 }
+
+/// Whether a track is being captured, and if not, why.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
+#[serde(tag = "state", rename_all = "camelCase")]
+pub enum TrackState {
+    #[default]
+    Starting,
+    Live,
+    /// Silent until something expected happens, e.g. Discord starting.
+    Waiting {
+        reason: String,
+    },
+    /// Silent because something's wrong, e.g. the chosen microphone isn't connected.
+    Unavailable {
+        reason: String,
+    },
+}
+
+/// Each track's [`TrackState`], in track order.
+pub type TrackStates = Arc<Mutex<Vec<TrackState>>>;
+
+/// How long a source that isn't there waits before trying again.
+const RETRY: Duration = Duration::from_secs(1);
 
 fn frames(duration: Duration) -> usize {
     (duration.as_secs_f64() * f64::from(SAMPLE_RATE)) as usize
@@ -117,30 +166,41 @@ fn interleave(queues: &[Queue], n: usize, out: &mut Vec<u8>) -> Vec<f32> {
 /// The stream runs on the wall clock: one second of output is always one second of time, which
 /// keeps it in step with the video it's muxed with. Sources that deliver nothing (loopback while
 /// nothing plays, an app that's quiet, a source that failed to start) are written as silence.
-/// A source that fails is reported to `warn` and stays silent; the others carry on. Each
-/// source's recent peak is kept in `levels`, in the same order.
+/// Each source's [`TrackState`] is kept in `states`, and its recent peak in `levels`, in the
+/// same order.
 pub fn capture(
     sources: &[AudioSource],
     mut out: impl Write,
     stop: Arc<AtomicBool>,
     levels: Levels,
-    warn: impl Fn(String) + Send + Sync + 'static,
+    states: TrackStates,
 ) -> Result<(), String> {
-    let warn = Arc::new(warn);
+    *states.lock().unwrap() = vec![TrackState::Starting; sources.len()];
     let queues: Vec<Queue> = sources.iter().map(|_| Queue::default()).collect();
     let threads: Vec<_> = sources
         .iter()
         .zip(&queues)
-        .map(|(source, queue)| {
-            let (source, queue, stop, warn) =
-                (source.clone(), queue.clone(), stop.clone(), warn.clone());
+        .enumerate()
+        .map(|(i, (source, queue))| {
+            let (source, queue, stop, states) =
+                (source.clone(), queue.clone(), stop.clone(), states.clone());
             thread::Builder::new()
                 .name(format!("audio: {}", source.title()))
                 .spawn(move || {
-                    if let Err(e) = capture_source(&source, &queue, &stop) {
-                        tracing::warn!(track = source.title(), error = %e, "audio track is silent");
-                        warn(format!("{}: {e}", source.title()));
-                    }
+                    supervise_source(&source, &queue, &stop, |state| {
+                        let mut states = states.lock().unwrap();
+                        let Some(slot) = states.get_mut(i) else {
+                            return;
+                        };
+                        if *slot != state {
+                            if let TrackState::Waiting { reason }
+                            | TrackState::Unavailable { reason } = &state
+                            {
+                                tracing::info!(track = source.title(), reason, "track is silent");
+                            }
+                            *slot = state;
+                        }
+                    });
                 })
         })
         .collect::<Result<_, _>>()
@@ -226,33 +286,64 @@ fn wasapi_err(what: &'static str) -> impl Fn(wasapi::WasapiError) -> String {
     move |e| format!("{what} ({e})")
 }
 
-/// Opens the client a source is captured from: loopback of the output device, the input
-/// device, or process loopback of one app.
-fn open(source: &AudioSource) -> Result<(AudioClient, bool), String> {
-    let format = WaveFormat::new(
+/// A source ready to capture from.
+struct Connected {
+    client: AudioClient,
+    /// Process loopback only works event-driven; devices are polled.
+    events: bool,
+    /// The process being captured, which ends the capture when it exits.
+    process: Option<u32>,
+}
+
+/// Why a source can't be captured right now.
+enum NotConnected {
+    /// Something expected, e.g. Discord isn't running.
+    Waiting(String),
+    /// Something wrong, e.g. the chosen microphone isn't connected.
+    Unavailable(String),
+}
+
+fn audio_format() -> WaveFormat {
+    WaveFormat::new(
         32,
         32,
         SampleType::Float,
         SAMPLE_RATE as usize,
         CHANNELS as usize,
         None,
-    );
-    let (mut client, mode, events) = match source {
+    )
+}
+
+/// Opens the client a source is captured from: loopback of the output device, the input
+/// device, or process loopback of one app.
+fn connect(source: &AudioSource) -> Result<Connected, NotConnected> {
+    use NotConnected::{Unavailable, Waiting};
+    let fail =
+        |what: &'static str| move |e: wasapi::WasapiError| Unavailable(format!("{what} ({e})"));
+
+    let (mut client, mode, events, process) = match source {
         AudioSource::Desktop | AudioSource::Microphone { .. } => {
             let enumerator =
-                DeviceEnumerator::new().map_err(wasapi_err("couldn't list audio devices"))?;
+                DeviceEnumerator::new().map_err(fail("couldn't list audio devices"))?;
             let device = match source {
-                AudioSource::Microphone {
-                    device: Some(id), ..
-                } => enumerator
-                    .get_device(id)
-                    .map_err(wasapi_err("the chosen microphone isn't available"))?,
+                AudioSource::Microphone { device: Some(id) } => {
+                    let device = enumerator
+                        .get_device(id)
+                        .map_err(|_| Unavailable("The chosen microphone isn't connected".into()))?;
+                    if !matches!(device.get_state(), Ok(wasapi::DeviceState::Active)) {
+                        let name = device
+                            .get_friendlyname()
+                            .unwrap_or_else(|_| "The chosen microphone".into());
+                        return Err(Unavailable(format!("{name} isn't connected")));
+                    }
+                    device
+                }
                 AudioSource::Microphone { device: None } => enumerator
                     .get_default_device(Direction::Capture)
-                    .map_err(wasapi_err("no default input device"))?,
+                    .map_err(|_| Unavailable("No microphone is connected".into()))?,
                 _ => enumerator
                     .get_default_device(Direction::Render)
-                    .map_err(wasapi_err("no default output device"))?,
+                    .map_err(|_| Unavailable("No speakers or headphones are connected".into()))?,
             };
             tracing::info!(
                 track = source.title(),
@@ -261,41 +352,87 @@ fn open(source: &AudioSource) -> Result<(AudioClient, bool), String> {
             );
             let client = device
                 .get_iaudioclient()
-                .map_err(wasapi_err("couldn't open the device"))?;
+                .map_err(fail("couldn't open the device"))?;
             // Polled: loopback doesn't signal events on older Windows builds. A 1s buffer leaves
             // room for a slow read.
             let mode = StreamMode::PollingShared {
                 autoconvert: true,
                 buffer_duration_hns: 10_000_000,
             };
-            (client, mode, false)
+            (client, mode, false, None)
         }
-        AudioSource::App { pid, name } => {
+        AudioSource::App { name, .. } | AudioSource::Program { name, .. } => {
+            let pid = match source {
+                AudioSource::Program { exes, .. } => process::find_process_tree(exes),
+                AudioSource::App { pid, .. } => Some(*pid).filter(|&p| process::process_alive(p)),
+                _ => None,
+            }
+            .ok_or_else(|| Waiting(format!("{name} isn't running")))?;
             tracing::info!(track = %name, pid, "capturing");
-            let client = AudioClient::new_application_loopback_client(*pid, true)
-                .map_err(wasapi_err("couldn't capture the app"))?;
-            // Process loopback only works event-driven.
+            let client = AudioClient::new_application_loopback_client(pid, true)
+                .map_err(fail("couldn't capture the app"))?;
             let mode = StreamMode::EventsShared {
                 autoconvert: true,
                 buffer_duration_hns: 0,
             };
-            (client, mode, true)
+            (client, mode, true, Some(pid))
         }
     };
     // Capturing from a render device is loopback.
     client
-        .initialize_client(&format, Direction::Capture, mode, None)
-        .map_err(wasapi_err("couldn't start capturing"))?;
-    Ok((client, events))
+        .initialize_client(&audio_format(), Direction::Capture, mode, None)
+        .map_err(fail("couldn't start capturing"))?;
+    Ok(Connected {
+        client,
+        events,
+        process,
+    })
 }
 
-fn capture_source(source: &AudioSource, queue: &Queue, stop: &AtomicBool) -> Result<(), String> {
+/// Sleeps for `duration`, or less if `stop` is set.
+fn wait(stop: &AtomicBool, duration: Duration) {
+    let until = Instant::now() + duration;
+    while !stop.load(Ordering::Relaxed) && Instant::now() < until {
+        thread::sleep(POLL);
+    }
+}
+
+/// Captures `source` into `queue` until `stop` is set, connecting whenever it can: when the
+/// program starts, the microphone's plugged in, or after an error. Reports each change to
+/// `set_state`.
+fn supervise_source(
+    source: &AudioSource,
+    queue: &Queue,
+    stop: &AtomicBool,
+    set_state: impl Fn(TrackState),
+) {
     let hr = wasapi::initialize_mta();
     if hr.is_err() {
-        return Err(format!("couldn't initialize COM ({hr:?})"));
+        set_state(TrackState::Unavailable {
+            reason: format!("couldn't initialize COM ({hr:?})"),
+        });
+        return;
     }
-    let (client, events) = open(source)?;
-    let event = if events {
+    while !stop.load(Ordering::Relaxed) {
+        match connect(source) {
+            Ok(connected) => {
+                set_state(TrackState::Live);
+                if let Err(reason) = stream(&connected, queue, stop) {
+                    set_state(TrackState::Unavailable { reason });
+                }
+            }
+            Err(NotConnected::Waiting(reason)) => set_state(TrackState::Waiting { reason }),
+            Err(NotConnected::Unavailable(reason)) => set_state(TrackState::Unavailable { reason }),
+        }
+        wait(stop, RETRY);
+    }
+}
+
+/// Reads from a connected source into `queue` until `stop` is set or its process exits
+/// (`Ok`), or it fails, e.g. the device was unplugged (`Err`).
+fn stream(connected: &Connected, queue: &Queue, stop: &AtomicBool) -> Result<(), String> {
+    let client = &connected.client;
+    let event = if connected.events {
         Some(
             client
                 .set_get_eventhandle()
@@ -312,6 +449,7 @@ fn capture_source(source: &AudioSource, queue: &Queue, stop: &AtomicBool) -> Res
         .map_err(wasapi_err("couldn't start capturing"))?;
 
     let mut local = VecDeque::new();
+    let mut checked = Instant::now();
     let result = (|| {
         while !stop.load(Ordering::Relaxed) {
             match &event {
@@ -333,6 +471,15 @@ fn capture_source(source: &AudioSource, queue: &Queue, stop: &AtomicBool) -> Res
             }
             if !local.is_empty() {
                 queue.lock().unwrap().extend(local.drain(..));
+            }
+            // Process loopback carries on, silently, after its process exits.
+            if let Some(pid) = connected.process
+                && checked.elapsed() >= RETRY
+            {
+                checked = Instant::now();
+                if !process::process_alive(pid) {
+                    return Ok(());
+                }
             }
         }
         Ok(())
@@ -509,6 +656,12 @@ mod tests {
             vec![0, 2]
         );
         // Without Desktop, the app is the game audio, so it's mixed.
-        assert_eq!(mixed_tracks(&[app, mic]), vec![0, 1]);
+        assert_eq!(mixed_tracks(&[app, mic.clone()]), vec![0, 1]);
+        // Discord is in Desktop too.
+        assert_eq!(
+            mixed_tracks(&[AudioSource::Desktop, AudioSource::discord(), mic]),
+            vec![0, 2]
+        );
+        assert_eq!(AudioSource::discord().title(), "Discord");
     }
 }

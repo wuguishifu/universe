@@ -12,6 +12,8 @@ Tauri 2: a Rust backend with a Vite + React UI in WebView2.
 desktop/
   src/                 the UI (Vite + React + Tailwind, @libs/ui-web)
     lib/commands.ts    typed wrappers for the Rust commands
+    screens/           the home screen, and settings (a sidebar of pages)
+    store/             Redux: the settings slice, persisted to a Tauri store file
   src-tauri/           the Tauri app crate: window, commands, tray, hotkeys
   crates/capture/      the capture engine, with no Tauri in it, so it can be tested on its own
   Cargo.toml           the Cargo workspace for both crates
@@ -41,17 +43,22 @@ pnpm nx tauri clipper-desktop -- <args>   # any other tauri CLI command
   nothing is recorded while a window sends none (minimized, or a static app), and no new
   segments are written. Games redraw every frame, so they're fine. A closed window falls back to
   the display. Switching sources starts the buffer over.
-- **Audio tracks** (crates/capture/src/audio.rs), one WASAPI capture each:
-  - **Desktop**: everything the default output device plays (loopback). Always recorded for the
-    display; for a window, only when switched on ("Desktop audio").
-  - **The recorded window's app**, automatically, and any other **apps** added in the app (e.g.
-    Discord): process loopback, which takes the process and its children.
-  - **Microphone**, when switched on: Windows' default input device, or one picked in the app.
+- **Audio tracks** (crates/capture/src/audio.rs), one WASAPI capture each, set in Settings →
+  Audio:
+  - **The whole display**: **Desktop** (everything the default output device plays, by loopback,
+    so the game and Discord too) and the **Microphone**, if it's switched on.
+  - **A window**: the tracks switched on, of **Game** (the window's process, and its children),
+    **Discord** (whichever of `Discord.exe`, `DiscordPTB.exe` or `DiscordCanary.exe` is running,
+    from the top of its process tree) and **Microphone**. None is fine: then there's no audio.
+  - **Microphone** is the device chosen in settings, or Windows' default. A chosen device isn't
+    swapped for another when it's missing.
 
-  The Desktop audio and Microphone switches and the microphone device are remembered in
-  `settings.json` in the app's config folder; added apps aren't, as they're picked by process.
-
-  Each track has a live level meter in the app.
+  Every track switched on is in every recording, whether or not its source is there yet. A track
+  whose program isn't running, or whose microphone isn't connected, is silence, and keeps
+  checking every second; when Discord starts (or the microphone's plugged in) halfway through,
+  its track starts carrying it, without recording starting over. The home screen shows each
+  track's level, and why it's silent: muted for "Discord isn't running", a warning badge for a
+  microphone that isn't connected.
 
   They're interleaved into one raw PCM stream on ffmpeg's stdin (2 channels per track), so they
   can't drift apart, and ffmpeg splits it back into a titled AAC track each. A source that's
@@ -66,6 +73,12 @@ pnpm nx tauri clipper-desktop -- <args>   # any other tauri CLI command
   default track, as most players only play the first). With a Desktop track, Mix is Desktop +
   Microphone (apps are already in Desktop); without one, it's every track. It's measured with
   EBU R128 and turned toward -16 LUFS, at most +12 dB, then limited to -1 dBFS peaks. Tracks are named in MP4 by both `name` and `handler_name`.
+- **Settings** are a Redux slice (src/store/settings.ts), persisted by redux-persist into a Tauri
+  store, `preferences.json` in `%APPDATA%\com.wuguishifu.clipper`, as plain JSON
+  (`serialize: false`). Rust reads that file at launch (src-tauri/src/settings.rs), so recording
+  starts with the right tracks before the UI has loaded, and the UI sends it every change after
+  that (`apply_settings`), once the saved settings have loaded.
+- ffmpeg is in a Windows job object that ends it when Clipper ends, even if Clipper crashes.
 - If ffmpeg exits, it's started again after 2s. Clips only come from the current run. Changing
   the source or tracks starts the buffer over.
 
@@ -74,7 +87,7 @@ To try the recorder without the app:
 ```bash
 cargo run -p clipper-capture --example record -- --list                       # windows, audio apps
 cargo run -p clipper-capture --example record -- 15 clip.mp4                  # the display
-cargo run -p clipper-capture --example record -- 15 clip.mp4 --window VALORANT --no-desktop --mic
+cargo run -p clipper-capture --example record -- 15 clip.mp4 --window VALORANT --no-desktop --discord --mic
 cargo run -p clipper-capture --example record -- --meter-inputs                # which inputs are live
 ```
 

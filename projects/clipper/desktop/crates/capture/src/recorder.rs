@@ -20,7 +20,8 @@ use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
 
-use crate::audio::{self, AudioSource, Levels};
+use crate::audio::{self, AudioSource, Levels, TrackState, TrackStates};
+use crate::process;
 use crate::window_list::{WindowInfo, window_exists};
 
 /// Each segment's length, and the most a clip can run past the time asked for.
@@ -61,9 +62,9 @@ pub struct RecorderStatus {
     /// How much a clip saved now would hold.
     pub buffered_seconds: f64,
     pub last_error: Option<String>,
-    /// Tracks that couldn't be captured this run (and are silent), e.g. "Microphone: no
-    /// default device".
-    pub track_warnings: Vec<String>,
+    /// Each track's state, in the order of `tracks`: whether it's captured, and if not, why
+    /// (Discord isn't running, the microphone isn't connected). Empty when not recording.
+    pub track_states: Vec<TrackState>,
 }
 
 struct Run {
@@ -79,7 +80,6 @@ struct State {
     tracks: Vec<AudioSource>,
     run: Option<Run>,
     last_error: Option<String>,
-    track_warnings: Vec<String>,
 }
 
 struct Shared {
@@ -92,6 +92,8 @@ struct Shared {
     restart: AtomicBool,
     /// Each track's recent peak this run, in track order; empty when not recording.
     levels: Levels,
+    /// Each track's state this run, in track order; empty when not recording.
+    track_states: TrackStates,
 }
 
 impl Shared {
@@ -188,6 +190,7 @@ impl Recorder {
             stop: AtomicBool::new(false),
             restart: AtomicBool::new(false),
             levels: Levels::default(),
+            track_states: TrackStates::default(),
         });
         let supervisor = shared.clone();
         thread::Builder::new()
@@ -210,7 +213,7 @@ impl Recorder {
                     .as_secs_f64()
             }),
             last_error: state.last_error.clone(),
-            track_warnings: state.track_warnings.clone(),
+            track_states: self.shared.track_states.lock().unwrap().clone(),
         }
     }
 
@@ -476,24 +479,30 @@ fn ffmpeg_args(
         "lavfi",
         "-i",
         &video_input(source, config.framerate),
-        // Audio: every track's raw PCM, interleaved, from audio::capture on stdin.
-        "-thread_queue_size",
-        "4096",
-        "-f",
-        "f32le",
-        "-ar",
-        &audio::SAMPLE_RATE.to_string(),
-        "-ac",
-        &(usize::from(audio::CHANNELS) * tracks.len()).to_string(),
-        "-i",
-        "pipe:0",
-        "-filter_complex",
-        &split_tracks_filter(tracks.len()),
-        "-map",
-        "0:v",
     ]
     .map(String::from)
     .into();
+    if !tracks.is_empty() {
+        args.extend(
+            [
+                // Audio: every track's raw PCM, interleaved, from audio::capture on stdin.
+                "-thread_queue_size",
+                "4096",
+                "-f",
+                "f32le",
+                "-ar",
+                &audio::SAMPLE_RATE.to_string(),
+                "-ac",
+                &(usize::from(audio::CHANNELS) * tracks.len()).to_string(),
+                "-i",
+                "pipe:0",
+                "-filter_complex",
+                &split_tracks_filter(tracks.len()),
+            ]
+            .map(String::from),
+        );
+    }
+    args.extend(["-map".into(), "0:v".into()]);
     for (i, track) in tracks.iter().enumerate() {
         args.extend([
             "-map".into(),
@@ -516,8 +525,6 @@ fn ffmpeg_args(
             "aac",
             "-b:a",
             "192k",
-            // Ends when stdin does, so ffmpeg never outlives the app.
-            "-shortest",
             "-f",
             "segment",
             "-segment_time",
@@ -550,11 +557,11 @@ fn supervise(shared: &Arc<Shared>) {
             CaptureSource::Window(window) if !window_exists(window.hwnd) => {
                 Err(format!("\"{}\" was closed", window.title))
             }
-            _ if tracks.is_empty() => Err("no audio tracks to record".into()),
             _ => run_once(shared, &dir, &source, &tracks),
         };
         shared.state.lock().unwrap().run = None;
         shared.levels.lock().unwrap().clear();
+        shared.track_states.lock().unwrap().clear();
         let _ = fs::remove_dir_all(&dir);
 
         if let Err(e) = result {
@@ -596,22 +603,27 @@ fn run_once(
         .stderr(log)
         .spawn()
         .map_err(|e| format!("couldn't start ffmpeg ({}): {e}", config.ffmpeg.display()))?;
+    {
+        use std::os::windows::io::AsRawHandle;
+        process::kill_with_clipper(windows::Win32::Foundation::HANDLE(child.as_raw_handle()));
+    }
     let stdin = child.stdin.take().ok_or("ffmpeg has no stdin")?;
     tracing::info!(dir = %dir.display(), ?source, ?tracks, "recording");
 
-    shared.state.lock().unwrap().track_warnings.clear();
     let audio_stop = Arc::new(AtomicBool::new(false));
-    let audio = {
-        let (stop, tracks, warn_to) = (audio_stop.clone(), tracks.to_vec(), shared.clone());
-        let levels = shared.levels.clone();
-        thread::Builder::new()
-            .name("audio".into())
-            .spawn(move || {
-                audio::capture(&tracks, stdin, stop, levels, move |warning| {
-                    warn_to.state.lock().unwrap().track_warnings.push(warning);
-                })
-            })
-            .map_err(|e| e.to_string())?
+    // With no tracks, ffmpeg isn't given stdin as an input, so there's nothing to write.
+    let audio = if tracks.is_empty() {
+        drop(stdin);
+        None
+    } else {
+        let (stop, tracks) = (audio_stop.clone(), tracks.to_vec());
+        let (levels, states) = (shared.levels.clone(), shared.track_states.clone());
+        Some(
+            thread::Builder::new()
+                .name("audio".into())
+                .spawn(move || audio::capture(&tracks, stdin, stop, levels, states))
+                .map_err(|e| e.to_string())?,
+        )
     };
 
     *shared.child.lock().unwrap() = Some(child);
@@ -634,13 +646,15 @@ fn run_once(
         }
         drop(slot);
         delete_old_segments(dir, config.window + KEEP_EXTRA);
-        if audio.is_finished() || shared.interrupted() {
+        if audio.as_ref().is_some_and(|a| a.is_finished()) || shared.interrupted() {
             shared.kill_child();
         }
     };
 
     audio_stop.store(true, Ordering::Relaxed);
-    let audio_result = audio.join().unwrap_or(Err("audio capture panicked".into()));
+    let audio_result = audio.map_or(Ok(()), |audio| {
+        audio.join().unwrap_or(Err("audio capture panicked".into()))
+    });
     if shared.interrupted() {
         return Ok(());
     }
@@ -739,6 +753,22 @@ mod tests {
             serde_json::to_string(&CaptureSource::Display).unwrap(),
             r#"{"kind":"display"}"#
         );
+    }
+
+    #[test]
+    fn records_no_audio_without_tracks() {
+        let config = RecorderConfig {
+            ffmpeg: "ffmpeg".into(),
+            work_dir: "x".into(),
+            window: Duration::from_secs(120),
+            framerate: 60,
+            video_bitrate: "30M".into(),
+        };
+        let args = ffmpeg_args(&config, &CaptureSource::Display, &[]).join(" ");
+        assert!(!args.contains("pipe:0"), "{args}");
+        assert!(!args.contains("[1:a]"), "{args}");
+        let save = save_args(&["seg000000.ts".into()], &[], 0.0).join(" ");
+        assert!(save.contains("-map 0 -c copy"), "{save}");
     }
 
     #[test]
