@@ -1,5 +1,15 @@
 # Overnight research summary (2026-11-15)
 
+## Part 4: calendar effects (2026-11-15)
+
+- **Turn of the month: no effect.** SPY's days −1..+3 averaged 1.3 bp more than other days (t 0.25), and IWM and EFA were negative.
+- **Pre-FOMC drift: passed the pre-registered rule.** SPY gained 20 bp in the 24 hours before scheduled Fed announcements, against 5 bp on other days: t 2.12, positive in 8 of 10 years, and on QQQ (t 2.4) and IWM. It's the first pass in this log. But it's fragile:
+  - against Tuesday→Wednesday windows only, it's 9 bp, t 1.1;
+  - without its 5 best events, t 0.9;
+  - it's worth about 1.2% a year above T-bills, with the money in the market 8 days a year.
+
+  Treat it as "probably real, small and noisy", not as an edge to size up. Details are in `LOG.md`, part 4.
+
 ## Part 3: insider buying (2026-11-15)
 
 **Failed.** I tested 16,369 open-market purchases by officers and directors in 2016–2026, from SEC Form 4 data, holding each stock for six months after the filing, after realistic spreads. They matched small caps (IWM), with alpha +0.02% a month and t 0.2, and trailed SPY. None of the three predictions held: clustered buys, smaller stocks and CEO/CFO purchases were no better. Before costs there's a small first-month effect (+0.37% a month, t 2.1), but a month's round trip in these stocks costs about that much. The data side worked: delisted companies are covered, and the missing tickers are almost all OTC stocks and funds. Details are in `LOG.md`, part 3.

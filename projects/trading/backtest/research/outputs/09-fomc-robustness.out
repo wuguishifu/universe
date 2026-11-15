@@ -1,0 +1,24 @@
+SPY: 86 events, mean 20.1bp, median 10.2bp, other median 8.4bp
+vs non-FOMC Tue 14:00 → Wed 14:00 only (466): diff 9.3bp, t 1.11
+without 2022 (78): diff 7.7bp, t 1.12
+without the 5 best events: diff 5.7bp, t 0.93
+trimmed (drop 5 best and 5 worst): mean 17.7bp
+first half (to 2021-06): 5.4bp (43), t 0.57; second half: 25.1bp (43), t 2.46
+best 5: 2020-04-29 217.1bp, 2022-03-16 192.5bp, 2024-07-31 165.7bp, 2020-11-05 153.2bp, 2022-09-21 149.2bp
+
+QQQ: 86 events, mean 31.2bp, median 23.1bp, other median 12.9bp
+vs non-FOMC Tue 14:00 → Wed 14:00 only (466): diff 18.8bp, t 1.63
+without 2022 (78): diff 13.8bp, t 1.46
+without the 5 best events: diff 10.4bp, t 1.22
+trimmed (drop 5 best and 5 worst): mean 27.0bp
+first half (to 2021-06): 8.9bp (43), t 0.70; second half: 40.7bp (43), t 2.63
+best 5: 2022-03-16 309.3bp, 2022-07-27 263.6bp, 2024-07-31 260.2bp, 2020-04-29 256.1bp, 2020-11-05 235.6bp
+
+IWM: 86 events, mean 23.4bp, median 1.8bp, other median 7.0bp
+vs non-FOMC Tue 14:00 → Wed 14:00 only (466): diff 16.8bp, t 1.30
+without 2022 (78): diff 13.1bp, t 1.15
+without the 5 best events: diff 2.9bp, t 0.31
+trimmed (drop 5 best and 5 worst): mean 17.1bp
+first half (to 2021-06): 3.9bp (43), t 0.23; second half: 34.8bp (43), t 2.31
+best 5: 2020-04-29 426.0bp, 2022-03-16 291.1bp, 2024-06-12 275.1bp, 2020-11-05 265.5bp, 2022-06-15 193.7bp
+

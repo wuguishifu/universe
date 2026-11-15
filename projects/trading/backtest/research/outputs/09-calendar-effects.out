@@ -1,0 +1,34 @@
+# 4A. Turn of the month: days -1..+3 vs all other days (daily excess return over BIL)
+
+SPY  window   6.4 bp/day (519 days)  other  5.1 bp/day  diff   1.3 bp  t  0.25   | days -5..-2 vs rest   5.3 bp t  1.00
+QQQ  window   9.0 bp/day (519 days)  other  6.9 bp/day  diff   2.1 bp  t  0.31   | days -5..-2 vs rest   3.0 bp t  0.43
+IWM  window   1.1 bp/day (519 days)  other  5.1 bp/day  diff  -3.9 bp  t -0.58   | days -5..-2 vs rest   8.4 bp t  1.25
+EFA  window   2.4 bp/day (519 days)  other  3.4 bp/day  diff  -1.0 bp  t -0.20   | days -5..-2 vs rest   3.1 bp t  0.59
+IEF  window   1.8 bp/day (519 days)  other -1.1 bp/day  diff   2.9 bp  t  1.34   | days -5..-2 vs rest   6.8 bp t  3.47 (information only)
+TLT  window   1.7 bp/day (519 days)  other -1.7 bp/day  diff   3.4 bp  t  0.74   | days -5..-2 vs rest  11.3 bp t  2.65 (information only)
+
+SPY by year (window minus other, per day):
+2016 -11.4 bp   2017 1.9 bp   2018 -1.1 bp   2019 -4.6 bp   2020 29.4 bp   2021 -7.3 bp   2022 3.6 bp   2023 5.4 bp   2024 -23.3 bp   2025 -5.0 bp   
+2026 (partial) 28.8 bp
+
+SPY by offset (mean excess per day):
+-5: 5.8 bp  -4: 14.6 bp  -3: -0.9 bp  -2: 17.1 bp  -1: -3.3 bp  +1: 13.1 bp  +2: 8.6 bp  +3: 7.2 bp    rest: 3.9 bp
+
+Strategy: SPY from the close of day -2 to the close of day +3, BIL otherwise.
+SPY buy & hold            Sharpe 0.78  CAGR 15.2%  max DD 33.8%
+Turn of month, 2 bp/side   Sharpe 0.29  CAGR 4.1%  max DD 9.3%  (in SPY 19% of days)
+Turn of month, 5 bp/side   Sharpe 0.09  CAGR 2.6%  max DD 10.1%  (in SPY 19% of days)
+
+Pass rule 4A: SPY t 0.25 (≥ 2), 2/4 tickers positive (≥ 3), 4/10 years positive (≥ 6) → effect NOT SHOWN; worth trading: Sharpe at 5 bp 0.09 vs buy & hold 0.78 → NO
+
+# 4B. Pre-FOMC drift: 14:00 the day before → 14:00 on announcement day
+
+SPY  pre-FOMC  20.1 bp (86 events)  other  4.8 bp (2587)  diff  15.3 bp  t  2.12  hit 62%  | 14:00→close on the day -15.1 bp
+QQQ  pre-FOMC  31.2 bp (86 events)  other  6.4 bp (2587)  diff  24.8 bp  t  2.42  hit 63%  | 14:00→close on the day -9.3 bp
+IWM  pre-FOMC  23.4 bp (86 events)  other  4.0 bp (2587)  diff  19.3 bp  t  1.68  hit 50%  | 14:00→close on the day -19.5 bp
+announcement dates without a 14:00 → 14:00 pair: none
+
+SPY by year (pre-FOMC mean minus other mean):
+2016 6.1 bp (8)  2017 1.4 bp (8)  2018 26.7 bp (8)  2019 -9.5 bp (8)  2020 48.0 bp (7)  2021 -19.8 bp (8)  2022 89.3 bp (8)  2023 19.0 bp (8)  2024 26.5 bp (8)  2025 0.6 bp (8)  
+
+Pass rule 4B: SPY t 2.12 (≥ 2), QQQ +, IWM +, 8/10 years positive (≥ 6) → PASS

@@ -427,3 +427,109 @@ Excess over IWM by year: 2016 +7.4%, 2017 +4.5%, 2018 −1.2%, 2019 +2.0%, 2020 
 **Reading it:** after costs, stocks bought by insiders did exactly what other small caps did (β ≈ 1 against IWM, alpha ≈ 0), and worse than SPY. None of the three "where it should be stronger" predictions holds, so there's no sign of the mechanism either.
 
 The one trace of an effect is before costs and in the first month: +0.37% a month vs IWM, t 2.1. That's consistent with the literature's finding that most of the effect comes early, in small stocks. But it's one of six information-only cuts, and a round trip each month (about 0.36% at the median) wipes it out completely. The published effect may have been arbitraged away since the papers came out, or it may never have been big enough to survive real spreads.
+
+---
+
+# Part 4: calendar effects with a flow mechanism (written 2026-11-15, before any run)
+
+Two hypotheses that trade rarely, in the cheapest instruments to trade, so costs can't decide the result. Both come from published papers, with their published windows, and 2016–2026 is after both were published.
+
+## 4A. Turn of the month
+
+**Hypothesis.** Pensions, payrolls and fund flows pay out and reinvest on a monthly cycle. Institutions raise cash before month-end payouts (selling pressure), and new money is invested at the turn of the month (buying pressure). So equity returns should be high from the last trading day of the month through the third trading day of the next (days −1 to +3), and weak just before.
+
+- **Sources:** Lakonishok & Smidt (1988), and McConnell & Xu (2008), who found the turn of the month carried essentially all of the US equity premium in 1926–2005. Etula, Rinne, Suominen & Vaittinen (2020) link it to institutional cash needs.
+- **Who's on the other side:** institutions that must sell for cash on a schedule, regardless of price.
+
+**Measurement.**
+
+- **Data:** adjusted daily bars (official closes) for SPY, QQQ, IWM and EFA, 2016-02-01 → 2026-11-13.
+- **Returns:** daily close-to-close, in excess of BIL.
+- **Turn-of-month days:** day −1 (the last trading day of the month) and days +1, +2 and +3.
+- **Test:** the mean turn-of-month return minus the mean on all other days, with a Welch t-stat.
+
+**Prediction from the mechanism.** The 4 days before the window (−5 to −2) are below the average non-window day.
+
+**Strategy.** Hold SPY from the close of day −2 to the close of day +3 with market-on-close orders, and BIL otherwise. That's 12 round trips a year. Costs are 2 bp per side primary: the closing auction has no spread to cross and Alpaca charges no commission. Stress costs are 5 bp per side.
+
+**Pass rule.**
+
+- **Effect exists:** SPY's difference > 0 with t ≥ 2; the difference positive on at least 3 of the 4 tickers; SPY's difference positive in at least 6 of the 10 full years (2016–2025).
+- **Worth trading:** additionally, the strategy's Sharpe at 5 bp beats SPY buy-and-hold's.
+- Information only: IEF and TLT, and the prediction above.
+
+## 4B. Pre-FOMC drift
+
+**Hypothesis.** Stocks rise in the 24 hours before scheduled FOMC announcements. The proposed reason is a premium for holding risk into a scheduled resolution of uncertainty, but it's debated. Lucca & Moench (2015) found about +49 bp in 1994–2011, which accounted for a large share of the equity premium. Later papers report it weakened after publication. So this is partly a test of whether a published anomaly survived.
+
+**Measurement.**
+
+- **Data:** 1-minute bars for SPY, QQQ and IWM.
+- **Window:** from the price at 14:00 on the trading day before a scheduled announcement (the close of the 13:59 bar) to the price at 14:00 on announcement day, just before the 14:00 statement.
+- **Comparison:** the same 14:00 → 14:00 return on every other pair of consecutive trading days.
+- **Dates:** the Fed's own calendars, scheduled meetings only, excluding unscheduled and emergency actions (such as March 2020) and any statement not released at 14:00 on a trading day.
+
+**Pass rule.** The mean pre-FOMC return minus the mean non-FOMC 14:00 → 14:00 return > 0 with Welch t ≥ 2 on SPY; positive on QQQ and IWM; positive in at least 6 of the 10 full years (2016–2025). With about 86 events, a full-size 49 bp effect would give a t of about 4, and half that size about 2.
+
+**Information only:** the reaction from 14:00 to the close on announcement day.
+
+The strategy would be 8 round trips a year. Costs at 2 bp per side don't change the verdict either way, so they aren't modeled.
+
+## Part 4 data
+
+FOMC dates come from the Fed's own pages: `fomccalendars.htm` for 2021+ and `fomchistorical<year>.htm` for 2016–2020, parsed by `tools/fomc-dates.mjs`. Announcements are on the meeting's last day.
+
+- Scheduled meetings only: 8 a year, and 7 in 2020, when the March meeting was replaced by the emergency actions of March 3 and March 15.
+- That gives 86 announcements from 2016-01 to 2026-10-28, all with a usable 14:00 → 14:00 pair.
+
+## Part 4 result (run once, 2026-11-15)
+
+Script: `tools/calendar-effects.mjs`. Output: `outputs/09-calendar-effects.out`.
+
+### 4A. Turn of the month: **not shown**
+
+| Ticker | Days −1..+3 | Other days | Difference | t     |
+| ------ | ----------- | ---------- | ---------- | ----- |
+| SPY    | 6.4 bp/day  | 5.1 bp/day | +1.3 bp    | 0.25  |
+| QQQ    | 9.0         | 6.9        | +2.1       | 0.31  |
+| IWM    | 1.1         | 5.1        | −3.9       | −0.58 |
+| EFA    | 2.4         | 3.4        | −1.0       | −0.20 |
+
+- SPY's difference was positive in only 4 of 10 years.
+- The "weak before" prediction fails: days −5..−2 were above average on every ticker.
+- The strategy (in SPY 19% of days): Sharpe 0.29 at 2 bp and 0.09 at 5 bp, against 0.78 for buy-and-hold.
+
+The effect that McConnell & Xu found in 1926–2005 isn't visible in 2016–2026.
+
+Information only, and post hoc: Treasuries were strong in the days before month-end (IEF days −5..−2 +6.8 bp/day, t 3.5; TLT t 2.7). That fits the known month-end "index extension" buying of long bonds, but it's one of many information-only numbers and wasn't a prediction.
+
+### 4B. Pre-FOMC drift: **passes the pre-registered rule, but it's fragile**
+
+| Ticker | Pre-FOMC (86) | Other days (2,587) | Difference   | t    | Up  | 14:00 → close on the day |
+| ------ | ------------- | ------------------ | ------------ | ---- | --- | ------------------------ |
+| SPY    | +20.1 bp      | +4.8 bp            | **+15.3 bp** | 2.12 | 62% | −15.1 bp                 |
+| QQQ    | +31.2         | +6.4               | +24.8        | 2.42 | 63% | −9.3                     |
+| IWM    | +23.4         | +4.0               | +19.3        | 1.68 | 50% | −19.5                    |
+
+SPY by year: 2016 +6, 2017 +1, 2018 +27, 2019 −10, 2020 +48, 2021 −20, 2022 +89, 2023 +19, 2024 +27, 2025 +1 bp. That's 8 of 10 positive.
+
+**Pass rule:**
+
+- SPY: t 2.12, needs ≥ 2 ✓;
+- QQQ and IWM: both positive ✓;
+- years: 8 of 10 positive, needs 6 ✓.
+
+**PASS**, the first pre-registered test in this log to pass. The size is about a third of Lucca & Moench's 49 bp, consistent with the effect shrinking after publication.
+
+**Robustness** (information only, after seeing the pass; `tools/fomc-robustness.mjs`, `outputs/09-fomc-robustness.out`):
+
+- **Day of week:** FOMC windows are Tuesday 14:00 → Wednesday 14:00. Against non-FOMC Tuesday→Wednesday windows only, the SPY difference shrinks to 9.3 bp (t 1.11), and QQQ's to 18.8 bp (t 1.63). Part of the gap against "all other days" is a weekday effect.
+- **Concentration:**
+  - Median 10.2 bp vs 8.4 bp on other days.
+  - Without the 5 best events: +5.7 bp, t 0.93.
+  - Without 2022: +7.7 bp, t 1.12.
+  - The best events include 2020-11-05, the day after the presidential election (its window caught the post-election rally), and 2020-04-29, in the COVID rebound.
+- **Over time:** the first half (to mid-2021) is +5.4 bp (t 0.57) and the second half +25.1 bp (t 2.46). That's stronger recently, not decaying.
+- **After the statement:** SPY gave back 15 bp from 14:00 to the close on announcement days. Whatever the drift is, it's in the hours before the statement, not after.
+
+**Reading it:** the rule was fixed in advance, a single test was run, and it passed. That's real evidence, and the most there's been in this log. But it rests on a few large up days, and much of it disappears against the right weekday comparison. It's best read as "probably still there, smaller than published, and noisy". The size is also small: about 15 bp × 8 = 1.2% a year above T-bills, with the money in the market only 8 days a year. Gross Sharpe, roughly: per-event standard deviation ~1% → annual ~2.8% → about 0.4–0.5, below SPY buy-and-hold's 0.78.
