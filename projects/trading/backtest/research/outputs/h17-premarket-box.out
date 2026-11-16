@@ -1,0 +1,60 @@
+H17 pre-market box breakout, 2016-01-04 → 2026-11-13
+costs: primary = 1 NQ point round trip ($1/41 per QQQ share), stress = 3 points, shares = 1 bp per side
+
+== QQQ, P (filter on, 3R, flat 15:55) ==
+days 2717, trades 1257, skipped {"filter":1282,"thin box":162,"no breakout":16}
+cost zero                          n  1257  win 36.1%  mean +0.178R  t  +3.84  total  +223.9R  maxDD -30.7R  w/o best 5 +0.167R
+cost primary                       n  1257  win 36.1%  mean +0.139R  t  +2.99  total  +174.7R  maxDD -37.0R  w/o best 5 +0.128R
+cost stress                        n  1257  win 35.8%  mean +0.061R  t  +1.30  total   +76.5R  maxDD -58.9R  w/o best 5 +0.049R
+cost shares                        n  1257  win 36.0%  mean +0.101R  t  +2.16  total  +126.5R  maxDD -43.2R  w/o best 5 +0.089R
+risk (1R) in bp of price: median 30.6, p10 14.6, p90 61.8
+exits {"flat":238,"stop":771,"target":246,"stop gap":2}; long 756, short 501
+per year (primary):
+  2016                             n    86  win 38.4%  mean +0.159R  t  +0.87  total   +13.7R  maxDD -10.6R  w/o best 5 -0.013R
+  2017                             n    70  win 28.6%  mean -0.195R  t  -1.05  total   -13.6R  maxDD -18.3R  w/o best 5 -0.434R
+  2018                             n   118  win 36.4%  mean +0.251R  t  +1.53  total   +29.6R  maxDD -6.4R  w/o best 5 +0.131R
+  2019                             n   107  win 42.1%  mean +0.205R  t  +1.33  total   +21.9R  maxDD -9.1R  w/o best 5 +0.070R
+  2020                             n   114  win 25.4%  mean -0.178R  t  -1.27  total   -20.3R  maxDD -23.7R  w/o best 5 -0.323R
+  2021                             n   125  win 36.8%  mean +0.177R  t  +1.20  total   +22.1R  maxDD -13.7R  w/o best 5 +0.060R
+  2022                             n   135  win 35.6%  mean +0.041R  t  +0.31  total    +5.5R  maxDD -12.0R  w/o best 5 -0.072R
+  2023                             n   136  win 39.7%  mean +0.289R  t  +1.95  total   +39.3R  maxDD -15.9R  w/o best 5 +0.186R
+  2024                             n   128  win 39.1%  mean +0.333R  t  +2.15  total   +42.6R  maxDD -11.2R  w/o best 5 +0.225R
+  2025                             n   130  win 32.3%  mean +0.006R  t  +0.05  total    +0.8R  maxDD -22.6R  w/o best 5 -0.113R
+  2026 (to 11-13)                  n   108  win 40.7%  mean +0.306R  t  +1.91  total   +33.1R  maxDD -8.2R  w/o best 5 +0.176R
+half 2016–2020                     n   495  win 34.3%  mean +0.063R  t  +0.86  total   +31.3R  maxDD -26.7R  w/o best 5 +0.033R
+half 2021–2026                     n   762  win 37.3%  mean +0.188R  t  +3.14  total  +143.5R  maxDD -22.6R  w/o best 5 +0.170R
+long only                          n   756  win 38.5%  mean +0.164R  t  +2.76  total  +123.9R  maxDD -20.7R  w/o best 5 +0.145R
+short only                         n   501  win 32.5%  mean +0.102R  t  +1.36  total   +50.9R  maxDD -33.5R  w/o best 5 +0.072R
+
+== all configs (primary cost; zero cost in brackets) ==
+QQQ P                              n  1257  win 36.1%  mean +0.139R  t  +2.99  total  +174.7R  maxDD -37.0R  w/o best 5 +0.128R  [zero: +0.178R t +3.84]
+QQQ no filter                      n  2539  win 34.7%  mean +0.088R  t  +2.73  total  +223.5R  maxDD -44.1R  w/o best 5 +0.082R  [zero: +0.128R t +3.97]
+QQQ flat 15:00                     n  1257  win 36.8%  mean +0.133R  t  +2.92  total  +167.1R  maxDD -28.9R  w/o best 5 +0.122R  [zero: +0.172R t +3.78]
+QQQ target 2R                      n  1257  win 40.5%  mean +0.096R  t  +2.44  total  +120.2R  maxDD -21.9R  w/o best 5 +0.088R  [zero: +0.135R t +3.44]
+QQQ target 4R                      n  1257  win 34.5%  mean +0.162R  t  +3.18  total  +203.3R  maxDD -27.9R  w/o best 5 +0.146R  [zero: +0.201R t +3.95]
+QQQ no target                      n  1257  win 33.5%  mean +0.180R  t  +3.13  total  +226.8R  maxDD -30.4R  w/o best 5 +0.138R  [zero: +0.220R t +3.81]
+QQQ RTH-only EMAs                  n  1288  win 35.2%  mean +0.122R  t  +2.65  total  +156.8R  maxDD -21.8R  w/o best 5 +0.111R  [zero: +0.160R t +3.49]
+SPY P                              n  1382  win 33.1%  mean +0.013R  t  +0.31  total   +18.6R  maxDD -42.4R  w/o best 5 +0.003R  [zero: +0.074R t +1.72]
+SPY no filter                      n  2675  win 33.1%  mean -0.001R  t  -0.04  total    -3.6R  maxDD -94.0R  w/o best 5 -0.007R  [zero: +0.061R t +1.97]
+IWM P                              n  1041  win 33.5%  mean +0.014R  t  +0.29  total   +14.2R  maxDD -58.1R  w/o best 5 -0.001R  [zero: +0.039R t +0.82]
+IWM no filter                      n  2081  win 34.4%  mean +0.034R  t  +1.01  total   +71.3R  maxDD -58.4R  w/o best 5 +0.027R  [zero: +0.060R t +1.78]
+
+== pass rule (QQQ, P, primary) ==
+1. mean +0.139R, t +2.99 (needs > 0, t ≥ 2.5): pass
+2. 8 of 10 full years positive (needs 7): pass
+3. halves +0.063R / +0.188R (both > 0): pass
+4. stress +0.061R (> 0): pass
+5. filter +0.139R vs no filter +0.088R (filter better): pass
+6. SPY +0.013R (> 0): pass
+verdict: PASS
+
+== diagnostics (information only, post hoc) ==
+QQQ P, stop exits slip 2 more points n  1257  win 36.1%  mean +0.088R  t  +1.86  total  +110.9R  maxDD -46.0R  w/o best 5 +0.077R
+QQQ P, entry +1 min                n  1251  win 36.9%  mean +0.119R  t  +2.60  total  +149.4R  maxDD -40.7R  w/o best 5 +0.108R
+QQQ P, entry +2 min                n  1224  win 37.3%  mean +0.116R  t  +2.52  total  +142.2R  maxDD -43.0R  w/o best 5 +0.104R
+QQQ P trades in bp of price, zero cost:                n 1257  mean +5.78 bp  t +3.25
+control: always long 09:35 → 15:55:                    n 2715  mean +2.23 bp  t +1.11
+control: filter side 09:35 → 15:55, every day:         n 2715  mean -1.06 bp  t -0.53
+breakouts against the filter (no-filter minus P) n  1282  win 33.3%  mean +0.038R  t  +0.85  total   +48.8R  maxDD -60.3R  w/o best 5 +0.027R
+thin-box skips by year: {"2016":79,"2017":82,"2018":1}
+1% risk per trade, primary cost: CAGR 15.6%, max DD -32.1%
