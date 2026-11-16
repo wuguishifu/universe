@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { nyTime } from '../market/ny-time';
+import { nyTime, parseClockTime } from '../market/ny-time';
 import { Bar } from '../market/types';
 
 import { Indicator, priceOf, priceSourceSchema } from './indicator';
@@ -168,6 +168,72 @@ export class NoiseBand implements Indicator {
     this.previousClose = this.lastClose;
     this.firstStart = undefined;
     this.sessionOpen = undefined;
+    this.current = undefined;
+  }
+}
+
+// --- timeRange ---------------------------------------------------------------------------------
+
+const clockTimeSchema = z
+  .string()
+  .regex(/^\d{2}:\d{2}$/, 'Expected a New York time like 09:00');
+
+export const timeRangeConfigSchema = z
+  .object({
+    type: z.literal('timeRange'),
+    /** Which edge of the range this indicator reports. */
+    side: z.enum(['high', 'low']),
+    /**
+     * New York clock times. Bars starting from `start` up to, but not including, `end` count, so
+     * use a timeframe that divides the window evenly.
+     */
+    start: clockTimeSchema,
+    end: clockTimeSchema,
+  })
+  .refine((c) => parseClockTime(c.start) < parseClockTime(c.end), {
+    message: 'start must be before end',
+  });
+export type TimeRangeConfig = z.infer<typeof timeRangeConfigSchema>;
+
+/**
+ * The high or low of a fixed clock window each day, such as the 09:00–09:30 pre-market box.
+ * Undefined until the window has ended, then fixed for the rest of the session. A window before
+ * 09:30 needs `session: 'extended'`, or no bars reach it.
+ *
+ * It knows a bar has ended the window when a bar starting at or after `end` arrives.
+ */
+export class TimeRange implements Indicator {
+  private readonly start: number;
+  private readonly end: number;
+  private readonly side: 'high' | 'low';
+  private high = -Infinity;
+  private low = Infinity;
+  private current: number | undefined;
+
+  constructor(config: TimeRangeConfig) {
+    this.start = parseClockTime(config.start);
+    this.end = parseClockTime(config.end);
+    this.side = config.side;
+  }
+
+  get value(): number | undefined {
+    return this.current;
+  }
+
+  update(bar: Bar): number | undefined {
+    const minute = nyTime(bar.time).minute;
+    if (minute >= this.start && minute < this.end) {
+      this.high = Math.max(this.high, bar.high);
+      this.low = Math.min(this.low, bar.low);
+    } else if (minute >= this.end && Number.isFinite(this.high)) {
+      this.current = this.side === 'high' ? this.high : this.low;
+    }
+    return this.current;
+  }
+
+  startSession(): void {
+    this.high = -Infinity;
+    this.low = Infinity;
     this.current = undefined;
   }
 }

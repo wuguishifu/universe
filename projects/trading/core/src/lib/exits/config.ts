@@ -14,6 +14,10 @@ import {
   profitTargetConfigSchema,
   TrailingStop,
   trailingStopConfigSchema,
+  UnderlyingStop,
+  underlyingStopConfigSchema,
+  UnderlyingTarget,
+  underlyingTargetConfigSchema,
 } from './rules';
 
 // To add an exit: add its name to EXIT_REASONS, implement `ExitRule` in rules.ts (or its own
@@ -25,6 +29,8 @@ export const exitRuleConfigSchema = z.discriminatedUnion('type', [
   trailingStopConfigSchema,
   indicatorBreakConfigSchema,
   oppositeSignalConfigSchema,
+  underlyingStopConfigSchema,
+  underlyingTargetConfigSchema,
 ]);
 export type ExitRuleConfig = z.infer<typeof exitRuleConfigSchema>;
 
@@ -42,13 +48,24 @@ export function createExitRule(config: ExitRuleConfig): ExitRule {
       return new IndicatorBreak(config);
     case 'oppositeSignal':
       return new OppositeSignal();
+    case 'underlyingStop':
+      return new UnderlyingStop(config);
+    case 'underlyingTarget':
+      return new UnderlyingTarget(config);
   }
 }
 
 /** Indicator names the rule reads, so the config can check they exist. */
 export function exitRuleIndicators(config: ExitRuleConfig): string[] {
-  if (config.type !== 'indicatorBreak') return [];
-  return config.bearishIndicator
-    ? [config.indicator, config.bearishIndicator]
-    : [config.indicator];
+  const names = (main: string, bearish: string | undefined): string[] =>
+    bearish ? [main, bearish] : [main];
+  switch (config.type) {
+    case 'indicatorBreak':
+    case 'underlyingStop':
+      return names(config.indicator, config.bearishIndicator);
+    case 'underlyingTarget':
+      return names(config.stopIndicator, config.bearishStopIndicator);
+    default:
+      return [];
+  }
 }

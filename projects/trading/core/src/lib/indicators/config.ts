@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { Ema, emaConfigSchema } from './ema';
 import { Indicator } from './indicator';
+import { Resampled } from './resampled';
 import {
   NoiseBand,
   noiseBandConfigSchema,
@@ -9,6 +10,8 @@ import {
   openingRangeConfigSchema,
   Price,
   priceConfigSchema,
+  TimeRange,
+  timeRangeConfigSchema,
 } from './session-levels';
 import { Vwap, vwapConfigSchema } from './vwap';
 
@@ -20,13 +23,23 @@ export const indicatorConfigSchema = z.discriminatedUnion('type', [
   priceConfigSchema,
   openingRangeConfigSchema,
   noiseBandConfigSchema,
+  timeRangeConfigSchema,
 ]);
 export type IndicatorConfig = z.infer<typeof indicatorConfigSchema>;
 
-export function createIndicator(config: IndicatorConfig): Indicator {
+/** `inputMinutes` is the strategy's timeframe: the length of the bars the indicator is fed. */
+export function createIndicator(
+  config: IndicatorConfig,
+  inputMinutes = 1,
+): Indicator {
   switch (config.type) {
-    case 'ema':
-      return new Ema(config);
+    case 'ema': {
+      const ema = new Ema(config);
+      const minutes = config.timeframeMinutes;
+      return minutes !== undefined && minutes !== inputMinutes
+        ? new Resampled(ema, minutes, inputMinutes)
+        : ema;
+    }
     case 'vwap':
       return new Vwap(config);
     case 'price':
@@ -35,5 +48,14 @@ export function createIndicator(config: IndicatorConfig): Indicator {
       return new OpeningRange(config);
     case 'noiseBand':
       return new NoiseBand(config);
+    case 'timeRange':
+      return new TimeRange(config);
   }
+}
+
+/** The bar length an indicator runs on, when it differs from the strategy's. */
+export function indicatorTimeframe(
+  config: IndicatorConfig,
+): number | undefined {
+  return config.type === 'ema' ? config.timeframeMinutes : undefined;
 }

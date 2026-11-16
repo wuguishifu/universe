@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import {
   EMA_VWAP_CROSSOVER,
   parseStrategyConfig,
+  PREMARKET_BOX_BREAKOUT,
   StrategyConfig,
 } from '@projects/trading-core';
 
@@ -12,10 +13,12 @@ import { simulationConfigSchema } from './sim/simulation-config';
 
 export const PRESETS = {
   'ema-vwap-crossover': EMA_VWAP_CROSSOVER,
+  'premarket-box-breakout': PREMARKET_BOX_BREAKOUT,
 } as const;
-const PRESET_NAMES = ['ema-vwap-crossover'] as const satisfies ReadonlyArray<
-  keyof typeof PRESETS
->;
+const PRESET_NAMES = [
+  'ema-vwap-crossover',
+  'premarket-box-breakout',
+] as const satisfies ReadonlyArray<keyof typeof PRESETS>;
 
 export const isoDateSchema = z
   .string()

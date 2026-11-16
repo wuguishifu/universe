@@ -10,19 +10,41 @@ import { Bar } from './types';
  */
 export class BarAggregator {
   private readonly minutes: number;
+  private readonly inputMinutes: number;
   private current: Bar | null = null;
   private lastStart = Number.NEGATIVE_INFINITY;
 
-  constructor(minutes: number) {
+  /**
+   * `inputMinutes` is the length of the bars pushed in, 1 by default. It must divide `minutes`,
+   * so 5-minute bars can be rolled up into 15-minute ones.
+   */
+  constructor(minutes: number, inputMinutes = 1) {
     if (!Number.isInteger(minutes) || minutes < 1) {
       throw new Error(
         `Timeframe must be a whole number of minutes, got ${minutes}`,
       );
     }
+    if (
+      !Number.isInteger(inputMinutes) ||
+      inputMinutes < 1 ||
+      minutes % inputMinutes !== 0
+    ) {
+      throw new Error(
+        `Input bars of ${inputMinutes} minutes don't divide a ${minutes}-minute timeframe`,
+      );
+    }
     this.minutes = minutes;
+    this.inputMinutes = inputMinutes;
   }
 
-  /** Adds one closed 1-minute bar and returns the timeframe bars it completes, oldest first. */
+  /** Returns the bar still being built, if any, and starts afresh. */
+  flush(): Bar | null {
+    const current = this.current;
+    this.current = null;
+    return current;
+  }
+
+  /** Adds one closed input bar and returns the timeframe bars it completes, oldest first. */
   push(bar: Bar): Bar[] {
     const slot = Math.floor(nyTime(bar.time).minute) % this.minutes;
     const start =
@@ -48,7 +70,7 @@ export class BarAggregator {
       this.lastStart = start;
     }
 
-    if (slot === this.minutes - 1) {
+    if (slot === this.minutes - this.inputMinutes) {
       completed.push(this.current);
       this.current = null;
     }

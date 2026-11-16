@@ -109,7 +109,10 @@ export class TradingEngine {
         ticker,
         aggregator: new BarAggregator(this.config.timeframeMinutes),
         indicators: Object.entries(this.config.indicators).map(
-          ([name, config]) => [name, createIndicator(config)],
+          ([name, config]) => [
+            name,
+            createIndicator(config, this.config.timeframeMinutes),
+          ],
         ),
         signal: createSignal(this.config.signal),
         sessionDate: undefined,
@@ -151,7 +154,7 @@ export class TradingEngine {
       const state = this.tickerState(ticker);
       const events: EngineEvent[] = [];
       const clock = this.clockAt(bar.time + MINUTE_MS);
-      this.checkExits(ticker, { kind: 'clock', clock }, events);
+      this.checkExits(ticker, { kind: 'clock', clock, bar }, events);
       await this.ingestBar(state, bar, true, events);
       return events;
     });
@@ -356,6 +359,7 @@ export class TradingEngine {
       peakMark: price,
       bid: contract.bid,
       ask: contract.ask,
+      atEntry: { underlyingPrice, indicators: snapshot.indicators },
     });
     this.orders.set(orderId, { action: 'open', positionId });
     state.entriesToday += 1;

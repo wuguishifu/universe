@@ -53,6 +53,11 @@ export type Position = {
   peakMark: number;
   bid?: number;
   ask?: number;
+  /**
+   * The underlying's price and the indicator values on the bar whose signal opened the position,
+   * for exits measured on the underlying (a stop at the box low, a target at 3R).
+   */
+  atEntry?: { underlyingPrice: number; indicators: IndicatorValues };
 };
 
 /**

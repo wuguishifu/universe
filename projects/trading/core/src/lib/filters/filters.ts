@@ -12,6 +12,11 @@ export const timeWindowConfigSchema = z.object({
   startDelayMinutes: z.number().nonnegative().default(0),
   /** No entries in the last this-many minutes before the regular close. */
   endBeforeCloseMinutes: z.number().nonnegative().default(0),
+  /**
+   * No entries later than this many minutes after the regular open: 60 allows a signal from a
+   * bar that closes at 10:30, but not later. Leave out for no limit.
+   */
+  latestAfterOpenMinutes: z.number().nonnegative().optional(),
 });
 
 /** Only enters during the regular session, optionally trimmed at either end. */
@@ -25,9 +30,12 @@ export class TimeWindow implements EntryFilter {
 
   allow({ clock }: EntryContext): boolean {
     if (!clock.hours) return false;
+    const { latestAfterOpenMinutes } = this.config;
     return (
       clock.minute >= clock.hours.open + this.config.startDelayMinutes &&
-      clock.minute < clock.hours.close - this.config.endBeforeCloseMinutes
+      clock.minute < clock.hours.close - this.config.endBeforeCloseMinutes &&
+      (latestAfterOpenMinutes === undefined ||
+        clock.minute <= clock.hours.open + latestAfterOpenMinutes)
     );
   }
 }

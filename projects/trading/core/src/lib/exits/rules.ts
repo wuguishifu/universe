@@ -159,3 +159,91 @@ export class OppositeSignal implements ExitRule {
     return signal !== null && signal !== position.direction;
   }
 }
+
+// --- underlyingStop / underlyingTarget ---------------------------------------------------------
+
+/** The level an indicator had on the entry bar, picking the bearish one for puts. */
+function levelAtEntry(
+  position: Position,
+  indicator: string,
+  bearishIndicator: string | undefined,
+): number | undefined {
+  const name =
+    position.direction === 'bearish'
+      ? (bearishIndicator ?? indicator)
+      : indicator;
+  return position.atEntry?.indicators[name];
+}
+
+export const underlyingStopConfigSchema = z.object({
+  type: z.literal('underlyingStop'),
+  /** Indicator whose value on the entry bar is the stop for calls, e.g. the low of a box. */
+  indicator: z.string().min(1),
+  /** The stop for puts, e.g. the high of the box. Defaults to `indicator`. */
+  bearishIndicator: z.string().min(1).optional(),
+});
+
+/**
+ * Exits once any 1-minute bar of the underlying trades at or through a stop level fixed at entry:
+ * its low for calls, its high for puts. The order goes out when that bar closes.
+ */
+export class UnderlyingStop implements ExitRule {
+  readonly reason = 'underlyingStop';
+  private readonly config: z.infer<typeof underlyingStopConfigSchema>;
+
+  constructor(config: z.infer<typeof underlyingStopConfigSchema>) {
+    this.config = config;
+  }
+
+  shouldExit(position: Position, event: ExitEvent): boolean {
+    if (event.kind !== 'clock' || !event.bar) return false;
+    const stop = levelAtEntry(
+      position,
+      this.config.indicator,
+      this.config.bearishIndicator,
+    );
+    if (stop === undefined) return false;
+    return position.direction === 'bullish'
+      ? event.bar.low <= stop
+      : event.bar.high >= stop;
+  }
+}
+
+export const underlyingTargetConfigSchema = z.object({
+  type: z.literal('underlyingTarget'),
+  /** The stop the risk is measured to, as in `underlyingStop`. */
+  stopIndicator: z.string().min(1),
+  bearishStopIndicator: z.string().min(1).optional(),
+  /** The target's distance from the entry price, in multiples of the distance to the stop. */
+  rMultiple: z.number().positive(),
+});
+
+/**
+ * Exits once any 1-minute bar of the underlying reaches `rMultiple` times the entry-to-stop
+ * distance beyond the entry price (the underlying's close on the signal bar). List it after
+ * `underlyingStop`, so a bar that touches both counts as stopped out.
+ */
+export class UnderlyingTarget implements ExitRule {
+  readonly reason = 'underlyingTarget';
+  private readonly config: z.infer<typeof underlyingTargetConfigSchema>;
+
+  constructor(config: z.infer<typeof underlyingTargetConfigSchema>) {
+    this.config = config;
+  }
+
+  shouldExit(position: Position, event: ExitEvent): boolean {
+    if (event.kind !== 'clock' || !event.bar || !position.atEntry) return false;
+    const stop = levelAtEntry(
+      position,
+      this.config.stopIndicator,
+      this.config.bearishStopIndicator,
+    );
+    if (stop === undefined) return false;
+    const entry = position.atEntry.underlyingPrice;
+    const side = position.direction === 'bullish' ? 1 : -1;
+    const risk = side * (entry - stop);
+    if (!(risk > 0)) return false;
+    const target = entry + side * this.config.rMultiple * risk;
+    return side > 0 ? event.bar.high >= target : event.bar.low <= target;
+  }
+}

@@ -6,7 +6,12 @@ import {
   entryFilterConfigSchema,
   entryFilterIndicators,
 } from '../filters/config';
-import { indicatorConfigSchema } from '../indicators/config';
+import {
+  indicatorConfigSchema,
+  indicatorTimeframe,
+} from '../indicators/config';
+import { REGULAR_HOURS } from '../market/calendar';
+import { parseClockTime } from '../market/ny-time';
 import { riskRuleConfigSchema } from '../risk/risk-rules';
 import { signalConfigSchema, signalIndicators } from '../signals/config';
 import { sizingConfigSchema } from '../sizing/position-sizer';
@@ -63,6 +68,31 @@ export const strategyConfigSchema = z
           code: 'custom',
           message: `Unknown indicator "${name}". Defined: ${Object.keys(config.indicators).join(', ') || 'none'}`,
           path,
+        });
+      }
+    }
+    for (const [name, indicator] of Object.entries(config.indicators)) {
+      const minutes = indicatorTimeframe(indicator);
+      if (
+        minutes !== undefined &&
+        (minutes % config.timeframeMinutes !== 0 ||
+          !TIMEFRAME_MINUTES.some((t) => t === minutes))
+      ) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `timeframeMinutes must be a multiple of the strategy's ${config.timeframeMinutes} and one of ${TIMEFRAME_MINUTES.join(', ')}`,
+          path: ['indicators', name, 'timeframeMinutes'],
+        });
+      }
+      if (
+        indicator.type === 'timeRange' &&
+        config.session === 'regular' &&
+        parseClockTime(indicator.start) < REGULAR_HOURS.open
+      ) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `starts before the 09:30 open, so it needs session: 'extended'`,
+          path: ['indicators', name, 'start'],
         });
       }
     }

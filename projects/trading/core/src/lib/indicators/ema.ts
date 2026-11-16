@@ -13,6 +13,12 @@ export const emaConfigSchema = z.object({
    * `resetDaily` starts over each session, so there is no value for the first `length` bars of a day.
    */
   warmup: z.enum(['carryOver', 'resetDaily']).default('carryOver'),
+  /**
+   * Compute it on longer bars than the strategy's, rolled up from them: 15 on a 5-minute strategy
+   * gives a 15-minute EMA. Must be a multiple of the strategy's timeframe. Leave out to use the
+   * strategy's own bars.
+   */
+  timeframeMinutes: z.number().int().positive().optional(),
 });
 export type EmaConfig = z.infer<typeof emaConfigSchema>;
 

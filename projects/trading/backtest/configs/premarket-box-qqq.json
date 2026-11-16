@@ -1,0 +1,13 @@
+{
+  "name": "premarket-box-qqq",
+  "description": "Pre-market box breakout (research H17, H18 config B): QQQ, next-expiration ATM option, real NBBO quotes. 2024-02-01 is the first day with quotes.",
+  "from": "2024-02-01",
+  "to": "2026-11-13",
+  "strategy": { "preset": "premarket-box-breakout" },
+  "simulation": {
+    "startingCash": 25000,
+    "prices": "quotes",
+    "feePerContract": 0.05,
+    "warmupDays": 15
+  }
+}
