@@ -1,0 +1,24 @@
+H18 HOLDOUT 2026-05-01 → 2026-11-13, QQQ options at real NBBO
+return on risk = P&L / max loss per trade (fees included); one trade per signal day
+
+== A: long ATM, 0DTE ==  trades 68, skipped {}
+   same days as shares (H17, 1 NQ pt): mean +0.248R  t +1.26
+   average max loss per lot $252
+   primary  return on risk +0.286  t  +1.64  win 33.8%  $/lot   +69.5  maxDD -6.0 risk units
+   stress   return on risk +0.276  t  +1.59  win 33.8%  $/lot   +67.5  maxDD -6.1 risk units
+   harsh    return on risk +0.266  t  +1.54  win 33.8%  $/lot   +65.5  maxDD -6.2 risk units
+   per year (primary): 2026 +0.286 (n 68, t +1.64)
+   by exit: flat n 17 mean +0.408; stop n 38 mean -0.534; target n 13 mean +2.524
+
+== B: long ATM, next expiration ==  trades 68, skipped {}
+   same days as shares (H17, 1 NQ pt): mean +0.248R  t +1.26
+   average max loss per lot $435
+   primary  return on risk +0.162  t  +1.73  win 38.2%  $/lot   +63.4  maxDD -2.8 risk units
+   stress   return on risk +0.156  t  +1.68  win 38.2%  $/lot   +61.4  maxDD -2.8 risk units
+   harsh    return on risk +0.151  t  +1.63  win 36.8%  $/lot   +59.4  maxDD -2.9 risk units
+   per year (primary): 2026 +0.162 (n 68, t +1.73)
+   by exit: flat n 17 mean +0.304; stop n 38 mean -0.311; target n 13 mean +1.358
+
+== candidates (development rule: primary mean > 0, t ≥ 2.0, stress mean > 0; not F/G) ==
+A: primary +0.286 t +1.64, stress +0.276 → holdout > 0 at primary and stress
+B: primary +0.162 t +1.73, stress +0.156 → holdout > 0 at primary and stress
