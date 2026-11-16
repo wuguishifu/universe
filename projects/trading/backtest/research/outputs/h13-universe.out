@@ -1,0 +1,22 @@
+H13 universe (2016-01-04 → 2026-11-13, 2733 sessions)
+SEC pairs 13092, kept 13035, tickers 12587, not common by name 1019; rename stand-in ticker-days 44648; zero-volume bars dropped 651516, bad prints dropped 1132
+daily files: 12587 present (2071 empty), 0 missing
+min $DV of the 1,000th name on any day: 16.5M (floor 1M)
+sessions with a universe: 2713; first 2016-02-02
+  universe per day: min 1833  p10 2451  median 2535  p90 2945  max 3170
+  top      per day: min 1000  p10 1000  median 1000  p90 1000  max 1000
+  cand     per day: min 473  p10 571  median 654  p90 763  max 895
+  tier1    per day: min 351  p10 387  median 414  p90 448  max 488
+per year: median candidates/day, open15 symbol-days, requests (100 symbols each)
+  2016: 605 cand/day, 176602 symbol-days, 1876 requests
+  2017: 583 cand/day, 171669 symbol-days, 1843 requests
+  2018: 654 cand/day, 187478 symbol-days, 2015 requests
+  2019: 612 cand/day, 174101 symbol-days, 1854 requests
+  2020: 683 cand/day, 197329 symbol-days, 2126 requests
+  2021: 678 cand/day, 192449 symbol-days, 2057 requests
+  2022: 706 cand/day, 193010 symbol-days, 2051 requests
+  2023: 629 cand/day, 177080 symbol-days, 1909 requests
+  2024: 636 cand/day, 179891 symbol-days, 1933 requests
+  2025: 724 cand/day, 198589 symbol-days, 2096 requests
+  2026: 781 cand/day, 184744 symbol-days, 1953 requests
+total: 2032942 symbol-days, 21713 requests ≈ 2.4 h at ~0.4 s each

@@ -1,0 +1,132 @@
+H13 ORB on stocks in play — 2713 days with picks and full-day data (2016-02-02 → 2026-11-13); 0 days with picks but no full-day files yet; gap days 0
+
+## Skips per config (picks not traded)
+P: {"doji":445,"no minute bars":1,"no entry bar":46}
+2 entry 09:36: {"doji":445,"no minute bars":1,"no entry bar":63}
+3 top 10: {"doji":201,"no entry bar":22}
+4 top 50: {"doji":1334,"no minute bars":1,"no entry bar":94}
+5 RV >= 2: {"doji":413,"no minute bars":1,"no entry bar":34}
+6 stop 5% ATR: {"doji":445,"no minute bars":1,"no entry bar":46}
+7 stop 20% ATR: {"doji":445,"no minute bars":1,"no entry bar":46}
+8 no stop: {"doji":445,"no minute bars":1,"no entry bar":46}
+9 long only: {"doji":445,"no entry bar":19}
+10 stop-order entry: {"never triggered":10250,"doji":445,"no minute bars":1}
+11 09:30-bar open: {"doji":436,"no minute bars":1,"no entry bar":47}
+10b stop-order, stop from next bar (diag): {"never triggered":10250,"doji":445,"no minute bars":1}
+
+## Primary: P at 1x gross, equal split across the day's trades (rows = sample period x cost level)
+| Slice | Trades | /day | Hit | Avg trade bp | Daily mean bp | t (daily) | Sharpe | CAGR | Max DD | Worst day | t w/o 5 best |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| full 2016-2026 zero | 53764 | 19.82 | 12% | 5.8 | 5.72 | 7.18 | 2.19 | 15.3% | -12.6% | -2.70% | 6.82 |
+| full 2016-2026 primary | 53764 | 19.82 | 12% | -1.0 | -1.06 | -1.33 | -0.41 | -2.8% | -36.6% | -2.77% | -1.98 |
+| full 2016-2026 stress | 53764 | 19.82 | 12% | -13.5 | -13.55 | -16.98 | -5.18 | -29.1% | -97.6% | -2.91% | -18.18 |
+| paper sample 2016-2023 zero | 39438 | 19.80 | 13% | 5.9 | 5.88 | 6.28 | 2.23 | 15.7% | -12.6% | -2.70% | 5.87 |
+| paper sample 2016-2023 primary | 39438 | 19.80 | 13% | -0.8 | -0.86 | -0.92 | -0.33 | -2.4% | -26.8% | -2.77% | -1.63 |
+| paper sample 2016-2023 stress | 39438 | 19.80 | 12% | -13.2 | -13.26 | -14.16 | -5.04 | -28.6% | -93.2% | -2.91% | -15.39 |
+| post-publication 2024-02+ zero | 13910 | 19.87 | 11% | 5.0 | 5.03 | 3.28 | 1.97 | 13.3% | -3.8% | -0.73% | 2.55 |
+| post-publication 2024-02+ primary | 13910 | 19.87 | 11% | -1.9 | -1.87 | -1.22 | -0.73 | -4.8% | -18.8% | -0.80% | -2.43 |
+| post-publication 2024-02+ stress | 13910 | 19.87 | 11% | -14.7 | -14.65 | -9.49 | -5.70 | -31.0% | -64.4% | -0.90% | -11.64 |
+
+## P slices (primary costs unless noted; per-trade averages, daily t on the slice alone)
+| Slice | Trades | /day | Hit | Avg trade bp | Daily mean bp | t (daily) | Sharpe | CAGR | Max DD | Worst day | t w/o 5 best |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| long zero (days with a trade: 2711) | 27424 | 10.11 | 12% | 5.5 | 4.60 | 4.10 | 1.25 | 11.8% | -14.4% | -3.11% | 3.56 |
+| long primary (days with a trade: 2711) | 27424 | 10.11 | 12% | -1.3 | -2.18 | -1.94 | -0.59 | -5.8% | -53.8% | -3.19% | -2.85 |
+| short zero (days with a trade: 2710) | 26340 | 9.71 | 12% | 6.1 | 5.73 | 4.80 | 1.46 | 15.0% | -25.8% | -2.48% | 4.33 |
+| short primary (days with a trade: 2710) | 26340 | 9.71 | 12% | -0.7 | -1.04 | -0.87 | -0.27 | -3.1% | -45.4% | -2.55% | -1.63 |
+| top 500 zero (days with a trade: 2711) | 28798 | 10.61 | 12% | 6.5 | 6.55 | 6.31 | 1.92 | 17.5% | -18.7% | -2.80% | 5.91 |
+| top 500 primary (days with a trade: 2711) | 28798 | 10.61 | 12% | 2.5 | 2.55 | 2.46 | 0.75 | 6.3% | -26.6% | -2.84% | 1.78 |
+| rank 501-1000 zero (days with a trade: 2709) | 24966 | 9.20 | 12% | 4.9 | 4.85 | 4.01 | 1.22 | 12.4% | -11.0% | -3.15% | 3.43 |
+| rank 501-1000 primary (days with a trade: 2709) | 24966 | 9.20 | 12% | -5.1 | -5.14 | -4.24 | -1.29 | -12.6% | -79.6% | -3.25% | -5.42 |
+| now delisted zero (days with a trade: 2377) | 9662 | 3.56 | 13% | 5.7 | 5.60 | 2.87 | 0.87 | 13.7% | -23.7% | -8.73% | 2.04 |
+| now delisted primary (days with a trade: 2377) | 9662 | 3.56 | 13% | -2.0 | -1.28 | -0.66 | -0.20 | -4.4% | -52.8% | -8.83% | -2.10 |
+| still listed (survivor-biased) zero (days with a trade: 2711) | 44102 | 16.26 | 12% | 5.8 | 5.68 | 6.64 | 2.02 | 15.1% | -15.2% | -2.72% | 6.25 |
+| still listed (survivor-biased) primary (days with a trade: 2711) | 44102 | 16.26 | 12% | -0.8 | -0.90 | -1.05 | -0.32 | -2.5% | -33.3% | -2.79% | -1.74 |
+break-even cost per side, all: 2.92 bp (avg gross 5.85 bp over 53764 trades)
+break-even cost per side, top 500: 3.28 bp (avg gross 6.57 bp over 28798 trades)
+break-even cost per side, rank 501-1000: 2.51 bp (avg gross 5.02 bp over 24966 trades)
+now-delisted picks: 9662 of 53764 (18.0%); distinct tickers 1992, now delisted 568
+
+## Exits (P)
+stop: 46971 (87.4%), avg gross -37.5 bp
+close: 6793 (12.6%), avg gross 305.7 bp
+stop distance as % of entry: median 0.30%, p10 0.17%, p90 0.65%
+|entry→close| on trades held to the close: median 215.3 bp
+
+## P per year (1x): daily-mean-sum = sum of daily returns
+| Year | Days | Trades | Avg trade bp (0 / primary / stress) | Sum primary | t primary | Sum zero |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2016 | 232 | 4594 | 10.2 / 3.6 / -8.3 | 8.4% | 1.31 | 23.6% |
+| 2017 | 251 | 4965 | 2.3 / -4.2 / -15.9 | -10.5% | -2.96 | 5.7% |
+| 2018 | 251 | 4973 | 7.8 / 1.1 / -11.3 | 2.4% | 0.43 | 19.3% |
+| 2019 | 252 | 4987 | 10.0 / 3.4 / -8.6 | 8.4% | 1.52 | 25.0% |
+| 2020 | 253 | 4983 | -1.5 / -8.4 / -21.2 | -21.2% | -2.43 | -3.9% |
+| 2021 | 252 | 4998 | 8.4 / 1.5 / -11.5 | 3.5% | 0.47 | 21.1% |
+| 2022 | 251 | 4983 | 7.7 / 0.7 / -12.5 | 1.6% | 0.19 | 19.3% |
+| 2023 | 250 | 4955 | 2.9 / -3.9 / -16.3 | -9.8% | -1.75 | 7.0% |
+| 2024 | 252 | 5007 | 5.4 / -1.3 / -13.5 | -3.1% | -0.58 | 13.7% |
+| 2025 | 250 | 4964 | 3.6 / -3.4 / -16.2 | -8.4% | -1.34 | 9.0% |
+| 2026 | 219 | 4355 | 7.1 / -0.0 / -13.3 | -0.1% | -0.01 | 15.5% |
+
+## Paper sizing (P): 1% risk per trade at the stop, book scaled to <= 4x gross
+| Sample | Cost | Financing | Avg gross lev | CAGR | Sharpe | Max DD | Total |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| full 2016-2026 | zero | none | 4.00 | 53.2% | 2.20 | -35.2% | 9776% |
+| full 2016-2026 | zero | BIL+2% | 4.00 | 35.2% | 1.58 | -38.7% | 2475% |
+| full 2016-2026 | primary | none | 4.00 | -20.8% | -1.05 | -93.5% | -92% |
+| full 2016-2026 | primary | BIL+2% | 4.00 | -30.1% | -1.66 | -98.3% | -98% |
+| paper sample 2016-2023 | zero | none | 4.00 | 54.0% | 2.23 | -35.2% | 2937% |
+| paper sample 2016-2023 | zero | BIL+2% | 4.00 | 39.1% | 1.73 | -38.7% | 1260% |
+| paper sample 2016-2023 | primary | none | 4.00 | -19.8% | -0.99 | -85.9% | -82% |
+| paper sample 2016-2023 | primary | BIL+2% | 4.00 | -27.5% | -1.49 | -93.6% | -92% |
+| post-publication 2024-02+ | zero | none | 4.00 | 49.9% | 2.07 | -12.1% | 208% |
+| post-publication 2024-02+ | zero | BIL+2% | 4.00 | 24.2% | 1.15 | -15.4% | 83% |
+| post-publication 2024-02+ | primary | none | 4.00 | -24.3% | -1.25 | -56.6% | -54% |
+| post-publication 2024-02+ | primary | BIL+2% | 4.00 | -37.3% | -2.16 | -72.8% | -73% |
+
+## Grid (1x): avg trade bp / daily t, at zero / primary / stress; full, paper sample, after publication
+| Config | Trades | Full 0 | Full primary | Full stress | Paper primary | Post primary | Sharpe full primary | Years + (of full 2016-2025) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| P | 53764 | 5.8 / 7.18 | -1.0 / -1.33 | -13.5 / -16.98 | -0.8 / -0.92 | -1.9 / -1.22 | -0.41 | 5 |
+| 2 entry 09:36 | 53747 | 4.0 / 5.41 | -2.8 / -3.74 | -15.3 / -20.53 | -2.1 / -2.36 | -4.5 / -3.30 | -1.14 | 2 |
+| 3 top 10 | 26907 | 7.3 / 6.26 | 0.4 / 0.28 | -12.4 / -10.77 | 0.0 / -0.01 | 0.9 / 0.39 | 0.09 | 6 |
+| 4 top 50 | 132894 | 4.8 / 8.58 | -1.8 / -3.19 | -13.8 / -24.64 | -1.6 / -2.45 | -2.1 / -1.98 | -0.97 | 2 |
+| 5 RV >= 2 | 51672 | 5.8 / 6.94 | -1.0 / -1.15 | -13.5 / -16.02 | -0.8 / -0.75 | -1.7 / -1.18 | -0.35 | 5 |
+| 6 stop 5% ATR | 53764 | 5.2 / 8.77 | -1.6 / -2.75 | -14.1 / -23.88 | -1.3 / -1.93 | -2.6 / -2.25 | -0.84 | 5 |
+| 7 stop 20% ATR | 53764 | 5.6 / 5.21 | -1.2 / -1.12 | -13.7 / -12.79 | -1.1 / -0.98 | -1.3 / -0.57 | -0.34 | 4 |
+| 8 no stop | 53764 | 6.1 / 3.50 | -0.7 / -0.40 | -13.2 / -7.59 | 0.4 / 0.18 | -3.8 / -1.06 | -0.12 | 3 |
+| 9 long only | 27424 | 5.5 / 4.10 | -1.3 / -1.94 | -13.9 / -13.04 | -0.7 / -1.36 | -3.4 / -1.58 | -0.59 | 3 |
+| 10 stop-order entry | 43560 | -8.9 / -13.02 | -15.7 / -22.78 | -28.2 / -40.64 | -13.7 / -16.00 | -21.6 / -19.89 | -6.94 | 0 |
+| 11 09:30-bar open | 52896 | 5.8 / 7.24 | -1.0 / -1.19 | -13.5 / -16.67 | -0.8 / -0.84 | -1.7 / -1.08 | -0.36 | 5 |
+| 10b stop-order, stop from next bar (diag) | 43560 | 7.0 / 7.67 | 0.3 / 0.27 | -12.3 / -13.35 | 1.2 / 1.18 | -2.7 / -1.58 | 0.08 | 5 |
+
+## Pass rule (P, 1x, primary costs)
+1. full sample mean -1.06 bp/day, t -1.33 (needs > 0, t >= 2.5): FAIL
+2. positive full years 2016-2025: 5 of 10 (needs 7): FAIL
+3. entry 09:36 mean -2.77 bp/day (needs > 0): FAIL
+4. stress costs mean -13.55 bp/day (needs > 0): FAIL
+5. after publication mean -1.87 bp/day (needs > 0): FAIL
+replication (paper sample, zero cost, 1x): Sharpe 2.23 (gate 1.5); paper-sizing CAGR: see the sizing table (gate 50%)
+
+## Post hoc (information only): the top-500 slice, the only cell positive at primary cost
+| Slice | Trades | /day | Hit | Avg trade bp | Daily mean bp | t (daily) | Sharpe | CAGR | Max DD | Worst day | t w/o 5 best |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| P top-500 trades, full 2016-2026, primary | 28798 | 10.61 | 12% | 2.5 | 2.55 | 2.46 | 0.75 | 6.3% | -26.6% | -2.84% | 1.78 |
+| P top-500 trades, full 2016-2026, stress | 28798 | 10.61 | 12% | -3.5 | -3.44 | -3.32 | -1.01 | -8.6% | -69.2% | -2.90% | -4.41 |
+| P top-500 trades, paper sample 2016-2023, primary | 21383 | 10.73 | 12% | 2.0 | 2.13 | 1.76 | 0.63 | 5.1% | -26.6% | -2.84% | 0.96 |
+| P top-500 trades, paper sample 2016-2023, stress | 21383 | 10.73 | 12% | -4.0 | -3.87 | -3.20 | -1.14 | -9.6% | -57.0% | -2.90% | -4.47 |
+| P top-500 trades, post-publication 2024-02+, primary | 7174 | 10.25 | 12% | 3.9 | 3.83 | 1.84 | 1.11 | 9.7% | -5.7% | -0.82% | 0.92 |
+| P top-500 trades, post-publication 2024-02+, stress | 7174 | 10.25 | 11% | -2.1 | -2.17 | -1.05 | -0.63 | -5.7% | -27.4% | -0.88% | -2.33 |
+| 2 entry 09:36 top-500 trades, full 2016-2026, primary | 28791 | 10.61 | 12% | 0.5 | 0.47 | 0.48 | 0.15 | 0.9% | -22.7% | -2.82% | -0.30 |
+| 2 entry 09:36 top-500 trades, full 2016-2026, stress | 28791 | 10.61 | 12% | -5.5 | -5.53 | -5.69 | -1.73 | -13.3% | -78.6% | -2.88% | -6.88 |
+| 2 entry 09:36 top-500 trades, paper sample 2016-2023, primary | 21375 | 10.73 | 12% | 0.9 | 1.13 | 1.01 | 0.36 | 2.6% | -18.0% | -2.82% | 0.29 |
+| 2 entry 09:36 top-500 trades, paper sample 2016-2023, stress | 21375 | 10.73 | 12% | -5.1 | -4.86 | -4.32 | -1.54 | -11.8% | -63.1% | -2.88% | -5.36 |
+| 2 entry 09:36 top-500 trades, post-publication 2024-02+, primary | 7175 | 10.25 | 11% | -0.7 | -1.22 | -0.62 | -0.37 | -3.3% | -15.7% | -0.83% | -2.22 |
+| 2 entry 09:36 top-500 trades, post-publication 2024-02+, stress | 7175 | 10.25 | 11% | -6.7 | -7.22 | -3.65 | -2.19 | -16.9% | -40.3% | -0.89% | -5.93 |
+| 3 top 10 top-500 trades, full 2016-2026, primary | 13896 | 5.12 | 12% | 4.2 | 4.59 | 2.90 | 0.88 | 11.3% | -37.5% | -3.63% | 2.23 |
+| 3 top 10 top-500 trades, full 2016-2026, stress | 13896 | 5.12 | 11% | -1.8 | -1.39 | -0.88 | -0.27 | -4.3% | -58.5% | -3.69% | -1.84 |
+| 3 top 10 top-500 trades, paper sample 2016-2023, primary | 10372 | 5.21 | 12% | 3.3 | 3.55 | 1.99 | 0.71 | 8.5% | -37.5% | -3.63% | 1.22 |
+| 3 top 10 top-500 trades, paper sample 2016-2023, stress | 10372 | 5.21 | 12% | -2.7 | -2.43 | -1.36 | -0.48 | -6.7% | -49.2% | -3.69% | -2.40 |
+| 3 top 10 top-500 trades, post-publication 2024-02+, primary | 3409 | 4.87 | 11% | 6.6 | 7.20 | 2.13 | 1.28 | 18.7% | -9.5% | -1.02% | 1.14 |
+| 3 top 10 top-500 trades, post-publication 2024-02+, stress | 3409 | 4.87 | 11% | 0.6 | 1.20 | 0.36 | 0.21 | 2.1% | -20.3% | -1.08% | -0.98 |
+P top-500 trades per year at 2 bp: 2016 9.3%, 2017 -9.7%, 2018 22.5%, 2019 23.1%, 2020 -20.4%, 2021 19.8%, 2022 -3.2%, 2023 1.1%, 2024 -2.9%, 2025 4.3%; positive 6 of 10

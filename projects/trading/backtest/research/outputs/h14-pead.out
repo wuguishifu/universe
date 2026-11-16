@@ -1,0 +1,376 @@
+# h14 PEAD on EAR
+data through 2026-11-13; 10517 SEC-issuer tickers with adjusted+raw bars
+universe size (eligible, price >= $5) on sample dates: 2016-06-01 3125, 2018-06-01 3274, 2020-06-01 3017, 2022-06-01 3515, 2024-06-03 3083, 2026-06-01 3491
+data fixes: zero-volume bars dropped 651680, one-day reversing spikes dropped 132: ABTS 2020-03-09 -0.57/1.46, ADMP 2023-08-01 1.79/-0.67, ADTX 2026-06-17 -0.60/1.27, ADTX 2026-06-23 1.17/-0.77, ALF 2022-10-24 -0.54/89.19, AMRH 2020-12-28 1.19/-0.54, AONC 2023-09-19 -0.53/0.90, APDN 2019-11-12 3.32/-0.73, APLT 2025-09-26 1.21/-0.51, AVCO 2019-01-22 1.24/-0.63, AXLA 2022-12-16 -0.63/1.65, AZTR 2024-07-23 2.07/-0.76, BJDX 2025-04-07 1.12/-0.61, BNBX 2019-11-12 3.32/-0.73, BQ 2025-10-30 1.14/-0.76, BRLSW 2024-01-10 -0.58/1.43, CAUD 2023-10-25 1.15/-0.77, CEN 2020-03-18 -0.50/0.97, CHK 2020-06-08 1.82/-0.66, COSM 2022-12-16 1.79/-0.67, CSAI 2025-02-13 1.14/-0.49, DCIX 2016-11-16 1.09/-0.68, DMK 2023-08-01 1.79/-0.67, DTOC 2023-09-19 -0.53/0.90, EFSH 2024-10-24 1.09/-0.45, ELAB 2026-04-01 1.34/-0.59, ENBL 2020-03-09 -0.63/1.54, ENVB 2020-12-28 1.19/-0.54, EPIX 2025-08-25 2.28/-0.66, EXE 2020-06-08 1.82/-0.66
+identity: 8791 CIKs mapped to a priced ticker on some day; stand-in ticker-days 47263
+
+## Coverage
+{
+ "filings": 193160,
+ "amendments": 1687,
+ "noAcceptance": 0,
+ "outsideData": 4374,
+ "repeats": 3235,
+ "unmapped": 4083,
+ "tickerConflict": 162,
+ "duplicateTickerSession": 0,
+ "noPrices": 3154,
+ "nameFilter": 341,
+ "standIn": 657,
+ "noTradeBars": 5820,
+ "priceIntegrity": 4,
+ "mappedPriced": 170300,
+ "notInUniverse": {
+  "under5": 32071,
+  "shortHistory": 3377,
+  "rankOver3000": 7176
+ },
+ "inUniverse": 127676
+}
+events in universe by group: {"501-1000":22027,"top 500":22095,"1001-3000":83554}
+events in universe by year: {"2016":9211,"2017":11988,"2018":12003,"2019":11903,"2020":12096,"2021":12060,"2022":11964,"2023":11904,"2024":11990,"2025":11750,"2026":10807}
+diagnostic: busiest-volume day in s0-5..s0+5 relative to s0: {"0":68887,"1":10855,"2":7045,"3":5949,"4":5372,"5":5727,"-1":7468,"-5":4322,"-2":4168,"-4":4025,"-3":3858}; at s0 or s0+1: 62.5%
+timing of accepted 8-Ks in universe: {"after close":71867,"pre-open":48697,"intraday":7112}
+series cut by the integrity rules: {"identity":674,"integrity":38}
+events whose series ends within 60 sessions of entry: 1563; of those meeting the -30% condition: 9
+EAR2 percentiles: 1% -27.1%, 5% -15.1%, 20% -5.5%, 50% -0.0%, 80% 5.4%, 95% 14.9%, 99% 27.9%
+largest EAR2: ALTM 2020-11-05 190%, MGNX 2020-05-06 172%, RENT 2024-04-11 160%, ALLK 2019-08-05 158%, BKKT 2024-11-15 146%, HEAR 2018-05-10 130%, INOD 2026-05-08 126%, KALA 2023-03-03 118%
+smallest EAR2: ARDX 2021-07-20 -77%, KRRO 2025-11-13 -79%, VTYX 2023-11-07 -81%, KOD 2022-02-23 -81%, CYCN 2019-10-30 -82%, MRNS 2024-04-15 -83%, BBLN 2023-05-10 -83%, SPRB 2024-03-14 -84%
+largest 60-day returns: GME 2020-12-11 1853%, TLRY 2020-11-12 764%, CRBP 2023-11-09 648%, DDD 2020-11-10 616%, HYMC 2025-10-30 552%, SNDK 2025-08-19 535%, MGNI 2020-11-12 496%, STRP 2017-03-14 451%
+smallest 60-day returns: LYRA 2024-03-26 -96%, BLPH 2023-05-18 -96%, VTL 2018-08-10 -96%, EYPT 2026-08-07 -97%, EVLO 2023-08-16 -97%, TCDA 2022-08-11 -98%, EFTR 2024-03-28 -98%, MULN 2025-02-24 -100%
+
+## Dropped after amendments/repeats: {"unmapped":4083,"no bars around s0":5820,"name filter":341,"no prices":3154,"ticker conflict":162,"price integrity":4}; 20 random:
+  2023-05-03  unmapped           CIK 842183   RAMCO GERSHENSON PROPERTIES TRUST        RPT 2018-01-31..2018-06-19
+  2019-08-14  no bars around s0  CIK 922521   FALCONSTOR SOFTWARE INC                  FALC
+  2017-03-15  no bars around s0  CIK 1592379  Papa Murphy's Holdings, Inc.             FRSH
+  2019-05-07  no prices          CIK 1483646  BLACKSTAR ENTERPRISE GROUP, INC.         BEGI 2017-03-13..2025-01-07
+  2020-06-24  no bars around s0  CIK 896429   USA TECHNOLOGIES INC                     USAT
+  2016-05-05  no bars around s0  CIK 722313   NORTECH SYSTEMS INC                      NSYS
+  2023-01-24  no bars around s0  CIK 750558   QNB CORP                                 QNBC
+  2024-04-17  no bars around s0  CIK 1347652  CorEnergy Infrastructure Trust, Inc.     CORR
+  2022-03-31  no prices          CIK 1783875                                           FFNTF 2021-01-04..2025-05-19
+  2016-02-04  unmapped           CIK 730464   Adtalem Global Education Inc.            ATGE 2017-05-30..2025-12-12; CVSA 2026-03-05..2026-09-01; DV 2016-02-1
+  2025-04-16  no prices          CIK 1085913  FARMERS & MERCHANTS BANCORP              FMCB 2016-01-08..2026-08-25
+  2022-11-08  no prices          CIK 310522   FEDERAL NATIONAL MORTGAGE ASSOCIATION FA FNMA 2016-01-22..2025-12-19
+  2024-02-13  no bars around s0  CIK 1297341  Kentucky First Federal Bancorp           KFFB
+  2016-03-10  unmapped           CIK 1638833  Surgery Partners, Inc.                   SGRY 2016-03-21..2026-08-20
+  2021-04-20  no prices          CIK 1770561  Coronado Global Resources Inc.           CRN 2020-06-25..2022-03-03
+  2020-03-06  no bars around s0  CIK 1360565  Where Food Comes From, Inc.              WFCF
+  2021-08-16  name filter        CIK 72633    NORTH EUROPEAN OIL ROYALTY TRUST         NRT 2017-06-05..2026-03-19
+  2024-03-18  name filter        CIK 1724009  PermRock Royalty Trust                   PRT 2018-05-07..2025-04-08
+  2016-11-14  ticker conflict    CIK 81318    Yuma Energy, Inc.                        YUMA 2016-07-12..2016-11-08
+  2017-11-07  no bars around s0  CIK 1017907  FIRST ACCEPTANCE CORP /DE/               FAC
+
+## Config: PRIMARY {"hold":60,"ear":"ear2","tiles":5,"minPrice":5,"delist":"both","bp":"prior3","borrow":0.005}
+  full (top 3000)  zero    events L/S 25747/25623, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo -0.00% (t -0.02, NW -0.01)  α vs SPY 0.08% (t 0.54, β -0.08)  α vs IWM 0.06% (t 0.39)  ann -0.2% maxDD -23.3% worst mo -5.20% mean w/o 5 best -0.14%  delist haircuts L/S 2/3
+     L-SPY mean/mo -0.23% (t -0.78)  α(L) vs SPY -0.48% (t -1.63, β 1.23)  α(L) vs IWM -0.02% (t -0.16, β 1.03)
+     L-S by year: 2016 -2.0% 2017 4.6% 2018 2.2% 2019 0.8% 2020 -6.2% 2021 -4.7% 2022 -5.2% 2023 1.5% 2024 15.0% 2025 -1.1% 2026 -5.3%
+  full (top 3000)  primary events L/S 25747/25623, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo -0.08% (t -0.52, NW -0.48)  α vs SPY 0.01% (t 0.05, β -0.08)  α vs IWM -0.02% (t -0.11)  ann -1.1% maxDD -25.6% worst mo -5.26% mean w/o 5 best -0.21%  delist haircuts L/S 2/3
+     L-SPY mean/mo -0.27% (t -0.91)  α(L) vs SPY -0.52% (t -1.75, β 1.23)  α(L) vs IWM -0.05% (t -0.49, β 1.03)
+     L-S by year: 2016 -3.0% 2017 3.7% 2018 1.3% 2019 -0.1% 2020 -7.0% 2021 -5.5% 2022 -6.0% 2023 0.7% 2024 14.0% 2025 -1.9% 2026 -6.0%
+     L-SPY by year: 2016 10.4% 2017 -0.7% 2018 -5.8% 2019 -6.8% 2020 7.2% 2021 -12.3% 2022 -9.2% 2023 -4.7% 2024 -7.3% 2025 -5.3% 2026 -3.8%
+     legs: long-SPY -0.27% (t -0.91), SPY-short 0.23% (t 0.69)
+     sub-period 2016-2020: L-S mean/mo -0.08% (t -0.41), 57 mo
+     sub-period 2021-2026: L-S mean/mo -0.07% (t -0.33), 71 mo
+     daily L-S: mean -0.004% (t -0.51), worst day 2021-01-27 -2.35%; avg open positions L/S ~579/576
+  full (top 3000)  stress  events L/S 25747/25623, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo -0.22% (t -1.48, NW -1.39)  α vs SPY -0.14% (t -0.90, β -0.08)  α vs IWM -0.16% (t -1.07)  ann -2.8% maxDD -30.0% worst mo -5.38% mean w/o 5 best -0.36%  delist haircuts L/S 2/3
+     L-SPY mean/mo -0.34% (t -1.16)  α(L) vs SPY -0.59% (t -2.00, β 1.23)  α(L) vs IWM -0.13% (t -1.15, β 1.03)
+     L-S by year: 2016 -5.0% 2017 1.9% 2018 -0.3% 2019 -1.8% 2020 -8.7% 2021 -7.1% 2022 -7.6% 2023 -1.0% 2024 12.1% 2025 -3.5% 2026 -7.5%
+  top 500          zero    events L/S 4430/4409, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.09% (t -0.45, NW -0.50)  α vs SPY 0.02% (t 0.09, β -0.10)  α vs IWM -0.02% (t -0.08)  ann -1.3% maxDD -24.4% worst mo -5.72% mean w/o 5 best -0.28%  delist haircuts L/S 1/0
+     L-SPY mean/mo -0.09% (t -0.37)  α(L) vs SPY -0.29% (t -1.38, β 1.19)  α(L) vs IWM 0.28% (t 1.26, β 0.86)
+     L-S by year: 2016 4.7% 2017 2.9% 2018 -1.2% 2019 -1.6% 2020 -6.7% 2021 -3.9% 2022 -0.2% 2023 -7.3% 2024 12.2% 2025 -3.8% 2026 -7.1%
+  top 500          primary events L/S 4430/4409, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.12% (t -0.61, NW -0.68)  α vs SPY -0.01% (t -0.07, β -0.10)  α vs IWM -0.05% (t -0.25)  ann -1.7% maxDD -26.3% worst mo -5.74% mean w/o 5 best -0.31%  delist haircuts L/S 1/0
+     L-SPY mean/mo -0.10% (t -0.44)  α(L) vs SPY -0.31% (t -1.45, β 1.19)  α(L) vs IWM 0.26% (t 1.19, β 0.86)
+     L-S by year: 2016 4.4% 2017 2.6% 2018 -1.6% 2019 -2.0% 2020 -7.1% 2021 -4.2% 2022 -0.5% 2023 -7.7% 2024 11.8% 2025 -4.2% 2026 -7.4%
+     L-SPY by year: 2016 3.9% 2017 2.3% 2018 -1.5% 2019 -0.9% 2020 13.5% 2021 -11.5% 2022 -8.8% 2023 2.2% 2024 -2.8% 2025 1.6% 2026 -12.3%
+     legs: long-SPY -0.10% (t -0.44), SPY-short 0.03% (t 0.09)
+     sub-period 2016-2020: L-S mean/mo -0.06% (t -0.25), 56 mo
+     sub-period 2021-2026: L-S mean/mo -0.16% (t -0.56), 71 mo
+     daily L-S: mean -0.006% (t -0.54), worst day 2022-11-10 -2.80%; avg open positions L/S ~100/100
+  top 500          stress  events L/S 4430/4409, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.16% (t -0.86, NW -0.95)  α vs SPY -0.06% (t -0.31, β -0.10)  α vs IWM -0.09% (t -0.49)  ann -2.2% maxDD -29.1% worst mo -5.75% mean w/o 5 best -0.36%  delist haircuts L/S 1/0
+     L-SPY mean/mo -0.12% (t -0.54)  α(L) vs SPY -0.33% (t -1.56, β 1.19)  α(L) vs IWM 0.24% (t 1.08, β 0.86)
+     L-S by year: 2016 3.9% 2017 2.0% 2018 -2.1% 2019 -2.5% 2020 -7.6% 2021 -4.7% 2022 -1.0% 2023 -8.2% 2024 11.2% 2025 -4.7% 2026 -7.9%
+  501-1000         zero    events L/S 4426/4433, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.19% (t -0.65, NW -0.60)  α vs SPY -0.12% (t -0.38, β -0.07)  α vs IWM -0.12% (t -0.42)  ann -3.0% maxDD -48.9% worst mo -20.76% mean w/o 5 best -0.43%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.14% (t -0.50)  α(L) vs SPY -0.42% (t -1.53, β 1.26)  α(L) vs IWM 0.11% (t 0.65, β 0.99)
+     L-S by year: 2016 4.7% 2017 9.8% 2018 8.2% 2019 -5.9% 2020 -8.7% 2021 -34.5% 2022 -3.6% 2023 8.5% 2024 7.9% 2025 -10.0% 2026 2.1%
+  501-1000         primary events L/S 4426/4433, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.27% (t -0.92, NW -0.85)  α vs SPY -0.20% (t -0.64, β -0.07)  α vs IWM -0.20% (t -0.70)  ann -3.9% maxDD -50.7% worst mo -20.80% mean w/o 5 best -0.51%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.18% (t -0.65)  α(L) vs SPY -0.46% (t -1.68, β 1.26)  α(L) vs IWM 0.07% (t 0.41, β 0.99)
+     L-S by year: 2016 3.9% 2017 8.8% 2018 7.2% 2019 -6.8% 2020 -9.7% 2021 -35.1% 2022 -4.5% 2023 7.5% 2024 6.8% 2025 -10.8% 2026 1.2%
+     L-SPY by year: 2016 8.1% 2017 5.9% 2018 -1.7% 2019 -7.2% 2020 14.7% 2021 -14.3% 2022 -9.7% 2023 0.6% 2024 -9.0% 2025 -9.8% 2026 -2.9%
+     legs: long-SPY -0.18% (t -0.65), SPY-short -0.05% (t -0.12)
+     sub-period 2016-2020: L-S mean/mo 0.06% (t 0.20), 56 mo
+     sub-period 2021-2026: L-S mean/mo -0.54% (t -1.15), 71 mo
+     daily L-S: mean -0.013% (t -0.99), worst day 2021-01-27 -10.35%; avg open positions L/S ~100/100
+  501-1000         stress  events L/S 4426/4433, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.43% (t -1.46, NW -1.35)  α vs SPY -0.35% (t -1.15, β -0.08)  α vs IWM -0.36% (t -1.25)  ann -5.8% maxDD -54.1% worst mo -20.89% mean w/o 5 best -0.67%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.26% (t -0.93)  α(L) vs SPY -0.54% (t -1.96, β 1.26)  α(L) vs IWM -0.01% (t -0.06, β 0.99)
+     L-S by year: 2016 2.4% 2017 6.7% 2018 5.3% 2019 -8.6% 2020 -11.5% 2021 -36.3% 2022 -6.3% 2023 5.6% 2024 4.8% 2025 -12.4% 2026 -0.7%
+  1001-3000        zero    events L/S 16825/16788, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo 0.17% (t 1.09, NW 1.00)  α vs SPY 0.25% (t 1.56, β -0.07)  α vs IWM 0.22% (t 1.39)  ann 1.9% maxDD -16.1% worst mo -4.63% mean w/o 5 best 0.02%  delist haircuts L/S 1/3
+     L-SPY mean/mo -0.20% (t -0.60)  α(L) vs SPY -0.45% (t -1.29, β 1.23)  α(L) vs IWM -0.03% (t -0.24, β 1.07)
+     L-S by year: 2016 6.2% 2017 2.9% 2018 0.5% 2019 2.2% 2020 -3.9% 2021 4.2% 2022 -6.1% 2023 2.2% 2024 17.8% 2025 5.2% 2026 -8.6%
+  1001-3000        primary events L/S 16825/16788, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo 0.09% (t 0.57, NW 0.52)  α vs SPY 0.17% (t 1.07, β -0.08)  α vs IWM 0.14% (t 0.89)  ann 0.9% maxDD -17.7% worst mo -4.68% mean w/o 5 best -0.06%  delist haircuts L/S 1/3
+     L-SPY mean/mo -0.25% (t -0.72)  α(L) vs SPY -0.49% (t -1.41, β 1.23)  α(L) vs IWM -0.07% (t -0.55, β 1.07)
+     L-S by year: 2016 5.1% 2017 1.9% 2018 -0.4% 2019 1.3% 2020 -4.9% 2021 3.2% 2022 -7.0% 2023 1.3% 2024 16.6% 2025 4.3% 2026 -9.4%
+     L-SPY by year: 2016 21.4% 2017 -3.4% 2018 -8.0% 2019 -7.7% 2020 5.0% 2021 -11.0% 2022 -9.2% 2023 -8.3% 2024 -7.5% 2025 -4.6% 2026 -2.9%
+     legs: long-SPY -0.25% (t -0.72), SPY-short 0.38% (t 1.02)
+     sub-period 2016-2020: L-S mean/mo 0.06% (t 0.28), 57 mo
+     sub-period 2021-2026: L-S mean/mo 0.11% (t 0.50), 71 mo
+     daily L-S: mean 0.004% (t 0.57), worst day 2022-11-10 -1.98%; avg open positions L/S ~378/377
+  1001-3000        stress  events L/S 16825/16788, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo -0.08% (t -0.48, NW -0.44)  α vs SPY 0.01% (t 0.06, β -0.08)  α vs IWM -0.02% (t -0.13)  ann -1.1% maxDD -23.9% worst mo -4.77% mean w/o 5 best -0.22%  delist haircuts L/S 1/3
+     L-SPY mean/mo -0.33% (t -0.97)  α(L) vs SPY -0.57% (t -1.65, β 1.23)  α(L) vs IWM -0.15% (t -1.19, β 1.07)
+     L-S by year: 2016 2.8% 2017 -0.0% 2018 -2.3% 2019 -0.6% 2020 -6.7% 2021 1.2% 2022 -8.7% 2023 -0.6% 2024 14.4% 2025 2.3% 2026 -11.1%
+
+## Config: hold 20 {"hold":20,"ear":"ear2","tiles":5,"minPrice":5,"delist":"both","bp":"prior3","borrow":0.005}
+  full (top 3000)  primary events L/S 25747/25623, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo -0.24% (t -1.04, NW -0.87)  α vs SPY -0.18% (t -0.76, β -0.06)  α vs IWM -0.19% (t -0.83)  ann -3.3% maxDD -38.6% worst mo -8.83% mean w/o 5 best -0.46%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.36% (t -1.00)  α(L) vs SPY -0.59% (t -1.65, β 1.22)  α(L) vs IWM -0.15% (t -0.70, β 1.04)
+     L-S by year: 2016 2.8% 2017 -0.6% 2018 -5.6% 2019 -0.3% 2020 -13.3% 2021 -14.7% 2022 16.7% 2023 -4.8% 2024 20.8% 2025 -16.9% 2026 -11.4%
+  top 500          primary events L/S 4430/4409, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.36% (t -1.04, NW -0.99)  α vs SPY -0.27% (t -0.74, β -0.08)  α vs IWM -0.31% (t -0.84)  ann -5.2% maxDD -46.7% worst mo -13.63% mean w/o 5 best -0.69%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.14% (t -0.38)  α(L) vs SPY -0.28% (t -0.74, β 1.13)  α(L) vs IWM 0.22% (t 0.64, β 0.85)
+     L-S by year: 2016 3.7% 2017 -1.9% 2018 -4.9% 2019 -5.3% 2020 -8.1% 2021 -13.7% 2022 0.4% 2023 10.9% 2024 12.5% 2025 -7.0% 2026 -32.8%
+  501-1000         primary events L/S 4426/4433, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -1.26% (t -2.45, NW -2.25)  α vs SPY -1.26% (t -2.43, β 0.01)  α vs IWM -1.24% (t -2.42)  ann -15.9% maxDD -87.9% worst mo -25.00% mean w/o 5 best -1.74%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.87% (t -1.91)  α(L) vs SPY -1.14% (t -2.52, β 1.26)  α(L) vs IWM -0.62% (t -1.62, β 1.00)
+     L-S by year: 2016 11.2% 2017 1.1% 2018 9.9% 2019 -18.0% 2020 -46.9% 2021 3.1% 2022 -2.4% 2023 -13.9% 2024 -8.1% 2025 -33.6% 2026 -43.8%
+  1001-3000        primary events L/S 16825/16788, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo 0.19% (t 0.59, NW 0.53)  α vs SPY 0.24% (t 0.73, β -0.04)  α vs IWM 0.21% (t 0.66)  ann 1.5% maxDD -34.6% worst mo -10.17% mean w/o 5 best -0.18%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.21% (t -0.49)  α(L) vs SPY -0.48% (t -1.10, β 1.25)  α(L) vs IWM -0.07% (t -0.25, β 1.11)
+     L-S by year: 2016 12.1% 2017 -2.3% 2018 -13.7% 2019 5.5% 2020 0.5% 2021 -18.1% 2022 29.9% 2023 -4.4% 2024 30.7% 2025 -15.2% 2026 3.7%
+
+## Config: hold 120 {"hold":120,"ear":"ear2","tiles":5,"minPrice":5,"delist":"both","bp":"prior3","borrow":0.005}
+  full (top 3000)  primary events L/S 25747/25623, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo 0.02% (t 0.14, NW 0.17)  α vs SPY 0.09% (t 0.63, β -0.06)  α vs IWM 0.08% (t 0.62)  ann 0.1% maxDD -19.3% worst mo -7.88% mean w/o 5 best -0.12%  delist haircuts L/S 12/21
+     L-SPY mean/mo -0.16% (t -0.55)  α(L) vs SPY -0.41% (t -1.42, β 1.23)  α(L) vs IWM 0.06% (t 0.61, β 1.02)
+     L-S by year: 2016 -1.4% 2017 5.0% 2018 5.6% 2019 -0.6% 2020 -7.6% 2021 1.4% 2022 -4.0% 2023 1.4% 2024 5.8% 2025 0.5% 2026 -4.2%
+  top 500          primary events L/S 4430/4409, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.09% (t -0.62, NW -0.69)  α vs SPY -0.03% (t -0.23, β -0.05)  α vs IWM -0.04% (t -0.30)  ann -1.2% maxDD -23.3% worst mo -3.76% mean w/o 5 best -0.24%  delist haircuts L/S 1/1
+     L-SPY mean/mo -0.06% (t -0.29)  α(L) vs SPY -0.31% (t -1.55, β 1.23)  α(L) vs IWM 0.28% (t 1.37, β 0.89)
+     L-S by year: 2016 3.0% 2017 1.9% 2018 2.5% 2019 -5.3% 2020 -10.6% 2021 1.8% 2022 -0.6% 2023 -7.8% 2024 2.4% 2025 1.4% 2026 -0.8%
+  501-1000         primary events L/S 4426/4433, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.03% (t -0.16, NW -0.19)  α vs SPY 0.02% (t 0.09, β -0.05)  α vs IWM 0.03% (t 0.15)  ann -0.8% maxDD -28.0% worst mo -12.45% mean w/o 5 best -0.28%  delist haircuts L/S 0/1
+     L-SPY mean/mo -0.16% (t -0.58)  α(L) vs SPY -0.44% (t -1.67, β 1.26)  α(L) vs IWM 0.09% (t 0.62, β 0.99)
+     L-S by year: 2016 7.6% 2017 6.9% 2018 8.9% 2019 -4.5% 2020 -4.0% 2021 -8.8% 2022 -9.4% 2023 6.5% 2024 4.6% 2025 -4.7% 2026 -8.5%
+  1001-3000        primary events L/S 16825/16788, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo 0.16% (t 1.03, NW 1.20)  α vs SPY 0.23% (t 1.51, β -0.07)  α vs IWM 0.22% (t 1.48)  ann 1.7% maxDD -19.4% worst mo -8.56% mean w/o 5 best 0.00%  delist haircuts L/S 11/18
+     L-SPY mean/mo -0.13% (t -0.39)  α(L) vs SPY -0.36% (t -1.07, β 1.22)  α(L) vs IWM 0.06% (t 0.48, β 1.06)
+     L-S by year: 2016 7.1% 2017 5.2% 2018 5.4% 2019 1.8% 2020 -7.5% 2021 3.8% 2022 -2.8% 2023 2.0% 2024 6.7% 2025 1.9% 2026 -4.2%
+
+## Config: EAR 1 day {"hold":60,"ear":"ear1","tiles":5,"minPrice":5,"delist":"both","bp":"prior3","borrow":0.005}
+  full (top 3000)  primary events L/S 25643/25552, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo 0.11% (t 0.71, NW 0.66)  α vs SPY 0.15% (t 1.00, β -0.04)  α vs IWM 0.14% (t 0.91)  ann 1.1% maxDD -17.8% worst mo -4.91% mean w/o 5 best -0.05%  delist haircuts L/S 1/4
+     L-SPY mean/mo -0.15% (t -0.50)  α(L) vs SPY -0.43% (t -1.40, β 1.26)  α(L) vs IWM 0.04% (t 0.37, β 1.05)
+     L-S by year: 2016 8.4% 2017 4.1% 2018 0.3% 2019 -1.2% 2020 -1.4% 2021 -0.7% 2022 -4.3% 2023 -3.4% 2024 14.5% 2025 0.3% 2026 -3.3%
+  top 500          primary events L/S 4428/4431, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo 0.06% (t 0.33, NW 0.34)  α vs SPY 0.14% (t 0.80, β -0.08)  α vs IWM 0.11% (t 0.62)  ann 0.5% maxDD -14.7% worst mo -6.17% mean w/o 5 best -0.11%  delist haircuts L/S 1/0
+     L-SPY mean/mo -0.00% (t -0.02)  α(L) vs SPY -0.23% (t -1.04, β 1.21)  α(L) vs IWM 0.34% (t 1.53, β 0.88)
+     L-S by year: 2016 4.7% 2017 7.4% 2018 0.6% 2019 -2.1% 2020 1.7% 2021 5.5% 2022 -8.7% 2023 -5.6% 2024 12.6% 2025 -4.9% 2026 -4.3%
+  501-1000         primary events L/S 4450/4373, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.05% (t -0.17, NW -0.17)  α vs SPY -0.00% (t -0.01, β -0.04)  α vs IWM 0.02% (t 0.07)  ann -1.3% maxDD -41.9% worst mo -23.93% mean w/o 5 best -0.29%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.07% (t -0.25)  α(L) vs SPY -0.36% (t -1.37, β 1.27)  α(L) vs IWM 0.18% (t 1.16, β 1.00)
+     L-S by year: 2016 7.5% 2017 8.1% 2018 4.6% 2019 -4.6% 2020 -6.2% 2021 -29.3% 2022 2.4% 2023 3.3% 2024 9.5% 2025 -6.2% 2026 4.1%
+  1001-3000        primary events L/S 16766/16736, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo 0.20% (t 1.19, NW 1.11)  α vs SPY 0.25% (t 1.50, β -0.05)  α vs IWM 0.23% (t 1.36)  ann 2.2% maxDD -13.7% worst mo -4.27% mean w/o 5 best 0.01%  delist haircuts L/S 0/4
+     L-SPY mean/mo -0.19% (t -0.54)  α(L) vs SPY -0.47% (t -1.31, β 1.26)  α(L) vs IWM -0.03% (t -0.24, β 1.09)
+     L-S by year: 2016 10.1% 2017 2.7% 2018 -1.0% 2019 -0.8% 2020 -2.2% 2021 8.8% 2022 -3.4% 2023 -4.6% 2024 15.9% 2025 5.4% 2026 -5.4%
+
+## Config: EAR 3 days {"hold":60,"ear":"ear3","tiles":5,"minPrice":5,"delist":"both","bp":"prior3","borrow":0.005}
+  full (top 3000)  primary events L/S 25679/25608, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo 0.02% (t 0.15, NW 0.16)  α vs SPY 0.10% (t 0.65, β -0.07)  α vs IWM 0.08% (t 0.53)  ann 0.1% maxDD -20.3% worst mo -4.91% mean w/o 5 best -0.12%  delist haircuts L/S 2/4
+     L-SPY mean/mo -0.22% (t -0.75)  α(L) vs SPY -0.48% (t -1.62, β 1.24)  α(L) vs IWM -0.01% (t -0.09, β 1.03)
+     L-S by year: 2016 0.3% 2017 0.5% 2018 0.2% 2019 -0.5% 2020 -1.2% 2021 -1.8% 2022 -7.6% 2023 0.3% 2024 16.3% 2025 0.3% 2026 -4.1%
+  top 500          primary events L/S 4396/4437, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.04% (t -0.18, NW -0.21)  α vs SPY 0.06% (t 0.32, β -0.09)  α vs IWM 0.04% (t 0.22)  ann -0.7% maxDD -24.5% worst mo -6.70% mean w/o 5 best -0.23%  delist haircuts L/S 1/0
+     L-SPY mean/mo -0.05% (t -0.23)  α(L) vs SPY -0.26% (t -1.28, β 1.19)  α(L) vs IWM 0.32% (t 1.42, β 0.85)
+     L-S by year: 2016 4.9% 2017 4.4% 2018 -2.3% 2019 0.6% 2020 1.6% 2021 -5.9% 2022 -7.0% 2023 -9.3% 2024 12.1% 2025 -2.0% 2026 -3.1%
+  501-1000         primary events L/S 4410/4443, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.27% (t -0.94, NW -0.91)  α vs SPY -0.22% (t -0.72, β -0.05)  α vs IWM -0.21% (t -0.74)  ann -3.9% maxDD -50.9% worst mo -17.47% mean w/o 5 best -0.52%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.23% (t -0.84)  α(L) vs SPY -0.52% (t -1.90, β 1.27)  α(L) vs IWM 0.02% (t 0.11, β 0.99)
+     L-S by year: 2016 7.7% 2017 8.0% 2018 9.1% 2019 -4.6% 2020 -8.4% 2021 -32.4% 2022 -11.6% 2023 4.6% 2024 5.9% 2025 -8.8% 2026 -1.9%
+  1001-3000        primary events L/S 16759/16813, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo 0.18% (t 1.08, NW 1.03)  α vs SPY 0.26% (t 1.53, β -0.07)  α vs IWM 0.23% (t 1.36)  ann 2.0% maxDD -12.4% worst mo -5.36% mean w/o 5 best 0.01%  delist haircuts L/S 1/4
+     L-SPY mean/mo -0.19% (t -0.55)  α(L) vs SPY -0.44% (t -1.25, β 1.24)  α(L) vs IWM -0.01% (t -0.12, β 1.08)
+     L-S by year: 2016 6.3% 2017 -1.0% 2018 -2.2% 2019 2.0% 2020 -2.2% 2021 9.8% 2022 -6.6% 2023 2.0% 2024 19.4% 2025 3.5% 2026 -6.9%
+
+## Config: deciles {"hold":60,"ear":"ear2","tiles":10,"minPrice":5,"delist":"both","bp":"prior3","borrow":0.005}
+  full (top 3000)  primary events L/S 12927/12880, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo 0.05% (t 0.23, NW 0.20)  α vs SPY 0.10% (t 0.46, β -0.05)  α vs IWM 0.11% (t 0.48)  ann 0.2% maxDD -33.9% worst mo -11.18% mean w/o 5 best -0.14%  delist haircuts L/S 1/3
+     L-SPY mean/mo -0.21% (t -0.64)  α(L) vs SPY -0.55% (t -1.69, β 1.31)  α(L) vs IWM -0.05% (t -0.33, β 1.09)
+     L-S by year: 2016 2.3% 2017 5.0% 2018 2.8% 2019 0.7% 2020 -7.2% 2021 -10.2% 2022 -6.2% 2023 -0.9% 2024 21.2% 2025 1.9% 2026 -3.7%
+  top 500          primary events L/S 2206/2275, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.10% (t -0.38, NW -0.42)  α vs SPY -0.00% (t -0.01, β -0.09)  α vs IWM -0.02% (t -0.06)  ann -1.8% maxDD -38.9% worst mo -8.73% mean w/o 5 best -0.37%  delist haircuts L/S 1/0
+     L-SPY mean/mo -0.00% (t -0.01)  α(L) vs SPY -0.34% (t -1.02, β 1.31)  α(L) vs IWM 0.30% (t 0.83, β 0.93)
+     L-S by year: 2016 3.5% 2017 7.2% 2018 6.2% 2019 -7.2% 2020 -6.6% 2021 -5.6% 2022 -11.4% 2023 -12.0% 2024 18.2% 2025 -8.5% 2026 1.6%
+  501-1000         primary events L/S 2274/2219, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.30% (t -0.53, NW -0.49)  α vs SPY -0.18% (t -0.30, β -0.11)  α vs IWM -0.15% (t -0.28)  ann -6.6% maxDD -72.9% worst mo -52.09% mean w/o 5 best -0.75%  delist haircuts L/S 0/0
+     L-SPY mean/mo 0.01% (t 0.03)  α(L) vs SPY -0.34% (t -1.03, β 1.33)  α(L) vs IWM 0.22% (t 0.84, β 1.04)
+     L-S by year: 2016 2.0% 2017 16.2% 2018 12.9% 2019 -2.9% 2020 -14.7% 2021 -59.6% 2022 -10.9% 2023 16.5% 2024 17.1% 2025 -9.8% 2026 -1.4%
+  1001-3000        primary events L/S 8497/8435, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo 0.20% (t 0.90, NW 0.81)  α vs SPY 0.26% (t 1.16, β -0.05)  α vs IWM 0.24% (t 1.10)  ann 2.1% maxDD -28.4% worst mo -5.86% mean w/o 5 best -0.03%  delist haircuts L/S 0/2
+     L-SPY mean/mo -0.23% (t -0.61)  α(L) vs SPY -0.55% (t -1.49, β 1.30)  α(L) vs IWM -0.09% (t -0.57, β 1.13)
+     L-S by year: 2016 5.5% 2017 2.9% 2018 -0.1% 2019 1.4% 2020 -9.8% 2021 6.2% 2022 -4.9% 2023 0.2% 2024 22.5% 2025 8.2% 2026 -6.7%
+
+## Config: min price $10 {"hold":60,"ear":"ear2","tiles":5,"minPrice":10,"delist":"both","bp":"prior3","borrow":0.005}
+  full (top 3000)  primary events L/S 22493/22345, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo -0.16% (t -1.03, NW -1.01)  α vs SPY -0.08% (t -0.53, β -0.07)  α vs IWM -0.10% (t -0.64)  ann -2.0% maxDD -26.1% worst mo -5.49% mean w/o 5 best -0.29%  delist haircuts L/S 2/1
+     L-SPY mean/mo -0.28% (t -1.06)  α(L) vs SPY -0.47% (t -1.71, β 1.18)  α(L) vs IWM -0.02% (t -0.22, β 0.97)
+     L-S by year: 2016 -5.6% 2017 1.3% 2018 0.8% 2019 -3.3% 2020 -4.8% 2021 -6.0% 2022 -7.6% 2023 1.0% 2024 12.3% 2025 -0.6% 2026 -7.6%
+  top 500          primary events L/S 4377/4355, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.16% (t -0.78, NW -0.86)  α vs SPY -0.03% (t -0.17, β -0.12)  α vs IWM -0.08% (t -0.38)  ann -2.3% maxDD -30.8% worst mo -9.12% mean w/o 5 best -0.39%  delist haircuts L/S 1/0
+     L-SPY mean/mo -0.15% (t -0.71)  α(L) vs SPY -0.33% (t -1.64, β 1.17)  α(L) vs IWM 0.23% (t 1.11, β 0.84)
+     L-S by year: 2016 4.6% 2017 2.9% 2018 -2.0% 2019 -0.9% 2020 -7.4% 2021 -8.7% 2022 0.4% 2023 -10.1% 2024 12.7% 2025 -4.7% 2026 -8.4%
+  501-1000         primary events L/S 4277/4267, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.37% (t -1.24, NW -1.16)  α vs SPY -0.28% (t -0.93, β -0.08)  α vs IWM -0.29% (t -1.03)  ann -5.0% maxDD -53.1% worst mo -21.92% mean w/o 5 best -0.61%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.20% (t -0.74)  α(L) vs SPY -0.43% (t -1.57, β 1.22)  α(L) vs IWM 0.08% (t 0.48, β 0.96)
+     L-S by year: 2016 1.0% 2017 8.0% 2018 7.0% 2019 -4.6% 2020 -9.6% 2021 -37.3% 2022 -5.4% 2023 0.0% 2024 7.6% 2025 -7.5% 2026 -1.8%
+  1001-3000        primary events L/S 13809/13703, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo -0.04% (t -0.25, NW -0.23)  α vs SPY 0.04% (t 0.25, β -0.07)  α vs IWM 0.01% (t 0.08)  ann -0.6% maxDD -19.3% worst mo -5.37% mean w/o 5 best -0.18%  delist haircuts L/S 1/1
+     L-SPY mean/mo -0.24% (t -0.76)  α(L) vs SPY -0.42% (t -1.25, β 1.17)  α(L) vs IWM -0.03% (t -0.22, β 1.02)
+     L-S by year: 2016 0.1% 2017 -1.7% 2018 0.1% 2019 -3.3% 2020 -4.1% 2021 4.8% 2022 -10.0% 2023 3.9% 2024 12.7% 2025 4.6% 2026 -11.2%
+
+## Config: delisting rule off {"hold":60,"ear":"ear2","tiles":5,"minPrice":5,"delist":"off","bp":"prior3","borrow":0.005}
+  full (top 3000)  primary events L/S 25747/25623, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo -0.08% (t -0.52, NW -0.48)  α vs SPY 0.01% (t 0.05, β -0.08)  α vs IWM -0.02% (t -0.11)  ann -1.1% maxDD -25.6% worst mo -5.26% mean w/o 5 best -0.21%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.27% (t -0.91)  α(L) vs SPY -0.52% (t -1.75, β 1.23)  α(L) vs IWM -0.05% (t -0.49, β 1.03)
+     L-S by year: 2016 -3.0% 2017 3.7% 2018 1.3% 2019 -0.1% 2020 -7.0% 2021 -5.5% 2022 -6.0% 2023 0.7% 2024 14.0% 2025 -1.9% 2026 -6.0%
+  top 500          primary events L/S 4430/4409, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.12% (t -0.61, NW -0.67)  α vs SPY -0.01% (t -0.06, β -0.10)  α vs IWM -0.05% (t -0.24)  ann -1.6% maxDD -26.2% worst mo -5.74% mean w/o 5 best -0.31%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.10% (t -0.43)  α(L) vs SPY -0.31% (t -1.45, β 1.19)  α(L) vs IWM 0.26% (t 1.19, β 0.86)
+     L-S by year: 2016 4.4% 2017 2.6% 2018 -1.6% 2019 -2.0% 2020 -7.1% 2021 -4.2% 2022 -0.5% 2023 -7.5% 2024 11.8% 2025 -4.2% 2026 -7.4%
+  501-1000         primary events L/S 4426/4433, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.27% (t -0.92, NW -0.85)  α vs SPY -0.20% (t -0.64, β -0.07)  α vs IWM -0.20% (t -0.70)  ann -3.9% maxDD -50.7% worst mo -20.80% mean w/o 5 best -0.51%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.18% (t -0.65)  α(L) vs SPY -0.46% (t -1.68, β 1.26)  α(L) vs IWM 0.07% (t 0.41, β 0.99)
+     L-S by year: 2016 3.9% 2017 8.8% 2018 7.2% 2019 -6.8% 2020 -9.7% 2021 -35.1% 2022 -4.5% 2023 7.5% 2024 6.8% 2025 -10.8% 2026 1.2%
+  1001-3000        primary events L/S 16825/16788, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo 0.09% (t 0.57, NW 0.52)  α vs SPY 0.17% (t 1.06, β -0.08)  α vs IWM 0.14% (t 0.88)  ann 0.9% maxDD -17.7% worst mo -4.68% mean w/o 5 best -0.06%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.25% (t -0.72)  α(L) vs SPY -0.49% (t -1.41, β 1.23)  α(L) vs IWM -0.07% (t -0.55, β 1.07)
+     L-S by year: 2016 5.1% 2017 1.9% 2018 -0.4% 2019 1.2% 2020 -4.9% 2021 3.2% 2022 -7.0% 2023 1.2% 2024 16.6% 2025 4.3% 2026 -9.4%
+
+## Config: delisting rule long leg only {"hold":60,"ear":"ear2","tiles":5,"minPrice":5,"delist":"long","bp":"prior3","borrow":0.005}
+  full (top 3000)  primary events L/S 25747/25623, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo -0.08% (t -0.52, NW -0.48)  α vs SPY 0.01% (t 0.04, β -0.08)  α vs IWM -0.02% (t -0.11)  ann -1.1% maxDD -25.6% worst mo -5.26% mean w/o 5 best -0.21%  delist haircuts L/S 2/0
+     L-SPY mean/mo -0.27% (t -0.91)  α(L) vs SPY -0.52% (t -1.75, β 1.23)  α(L) vs IWM -0.05% (t -0.49, β 1.03)
+     L-S by year: 2016 -3.0% 2017 3.7% 2018 1.3% 2019 -0.1% 2020 -7.0% 2021 -5.5% 2022 -6.0% 2023 0.6% 2024 14.0% 2025 -1.9% 2026 -6.0%
+  top 500          primary events L/S 4430/4409, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.12% (t -0.61, NW -0.68)  α vs SPY -0.01% (t -0.07, β -0.10)  α vs IWM -0.05% (t -0.25)  ann -1.7% maxDD -26.3% worst mo -5.74% mean w/o 5 best -0.31%  delist haircuts L/S 1/0
+     L-SPY mean/mo -0.10% (t -0.44)  α(L) vs SPY -0.31% (t -1.45, β 1.19)  α(L) vs IWM 0.26% (t 1.19, β 0.86)
+     L-S by year: 2016 4.4% 2017 2.6% 2018 -1.6% 2019 -2.0% 2020 -7.1% 2021 -4.2% 2022 -0.5% 2023 -7.7% 2024 11.8% 2025 -4.2% 2026 -7.4%
+  501-1000         primary events L/S 4426/4433, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.27% (t -0.92, NW -0.85)  α vs SPY -0.20% (t -0.64, β -0.07)  α vs IWM -0.20% (t -0.70)  ann -3.9% maxDD -50.7% worst mo -20.80% mean w/o 5 best -0.51%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.18% (t -0.65)  α(L) vs SPY -0.46% (t -1.68, β 1.26)  α(L) vs IWM 0.07% (t 0.41, β 0.99)
+     L-S by year: 2016 3.9% 2017 8.8% 2018 7.2% 2019 -6.8% 2020 -9.7% 2021 -35.1% 2022 -4.5% 2023 7.5% 2024 6.8% 2025 -10.8% 2026 1.2%
+  1001-3000        primary events L/S 16825/16788, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo 0.09% (t 0.57, NW 0.52)  α vs SPY 0.17% (t 1.06, β -0.08)  α vs IWM 0.14% (t 0.88)  ann 0.9% maxDD -17.7% worst mo -4.68% mean w/o 5 best -0.06%  delist haircuts L/S 1/0
+     L-SPY mean/mo -0.25% (t -0.72)  α(L) vs SPY -0.49% (t -1.41, β 1.23)  α(L) vs IWM -0.07% (t -0.55, β 1.07)
+     L-S by year: 2016 5.1% 2017 1.9% 2018 -0.4% 2019 1.2% 2020 -4.9% 2021 3.2% 2022 -7.0% 2023 1.2% 2024 16.6% 2025 4.3% 2026 -9.4%
+
+## Config: same-month breakpoints (look-ahead) {"hold":60,"ear":"ear2","tiles":5,"minPrice":5,"delist":"both","bp":"same","borrow":0.005}
+  full (top 3000)  primary events L/S 25592/25480, 2016-03..2026-11 (129 mo)
+     L-S  mean/mo -0.02% (t -0.15, NW -0.15)  α vs SPY 0.07% (t 0.45, β -0.08)  α vs IWM 0.04% (t 0.28)  ann -0.4% maxDD -22.2% worst mo -4.44% mean w/o 5 best -0.15%  delist haircuts L/S 2/4
+     L-SPY mean/mo -0.19% (t -0.66)  α(L) vs SPY -0.44% (t -1.51, β 1.23)  α(L) vs IWM 0.02% (t 0.23, β 1.02)
+     L-S by year: 2016 -1.6% 2017 3.5% 2018 2.4% 2019 -1.1% 2020 -6.8% 2021 -1.7% 2022 -4.4% 2023 -0.0% 2024 14.1% 2025 -0.1% 2026 -7.3%
+  top 500          primary events L/S 4134/4057, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo -0.12% (t -0.68, NW -0.74)  α vs SPY -0.04% (t -0.20, β -0.08)  α vs IWM -0.06% (t -0.32)  ann -1.7% maxDD -26.0% worst mo -5.96% mean w/o 5 best -0.30%  delist haircuts L/S 1/0
+     L-SPY mean/mo -0.12% (t -0.59)  α(L) vs SPY -0.32% (t -1.60, β 1.18)  α(L) vs IWM 0.24% (t 1.16, β 0.85)
+     L-S by year: 2016 0.4% 2017 6.7% 2018 1.1% 2019 -3.1% 2020 -5.6% 2021 -1.8% 2022 -2.0% 2023 -10.7% 2024 11.4% 2025 -4.1% 2026 -8.7%
+  501-1000         primary events L/S 4127/4057, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo -0.18% (t -0.77, NW -0.81)  α vs SPY -0.07% (t -0.29, β -0.11)  α vs IWM -0.09% (t -0.39)  ann -2.6% maxDD -39.2% worst mo -10.47% mean w/o 5 best -0.42%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.23% (t -0.86)  α(L) vs SPY -0.49% (t -1.90, β 1.25)  α(L) vs IWM 0.04% (t 0.25, β 0.98)
+     L-S by year: 2016 -4.1% 2017 7.9% 2018 9.3% 2019 -8.6% 2020 -10.8% 2021 -17.9% 2022 -7.0% 2023 6.9% 2024 10.0% 2025 -8.7% 2026 -0.3%
+  1001-3000        primary events L/S 16378/16288, 2016-03..2026-11 (129 mo)
+     L-S  mean/mo 0.11% (t 0.70, NW 0.65)  α vs SPY 0.19% (t 1.24, β -0.08)  α vs IWM 0.17% (t 1.05)  ann 1.1% maxDD -16.5% worst mo -5.05% mean w/o 5 best -0.04%  delist haircuts L/S 1/3
+     L-SPY mean/mo -0.22% (t -0.65)  α(L) vs SPY -0.46% (t -1.34, β 1.22)  α(L) vs IWM -0.04% (t -0.32, β 1.07)
+     L-S by year: 2016 1.6% 2017 2.4% 2018 0.8% 2019 1.1% 2020 -7.1% 2021 7.8% 2022 -4.7% 2023 1.3% 2024 15.2% 2025 5.7% 2026 -9.8%
+
+## Config: borrow 5%/yr {"hold":60,"ear":"ear2","tiles":5,"minPrice":5,"delist":"both","bp":"prior3","borrow":0.05}
+  full (top 3000)  primary events L/S 25747/25623, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo -0.45% (t -3.01, NW -2.80)  α vs SPY -0.37% (t -2.44, β -0.08)  α vs IWM -0.39% (t -2.61)  ann -5.4% maxDD -44.8% worst mo -5.67% mean w/o 5 best -0.58%  delist haircuts L/S 2/3
+     L-SPY mean/mo -0.27% (t -0.91)  α(L) vs SPY -0.52% (t -1.75, β 1.23)  α(L) vs IWM -0.05% (t -0.49, β 1.03)
+     L-S by year: 2016 -6.2% 2017 -0.8% 2018 -3.1% 2019 -4.5% 2020 -11.2% 2021 -9.7% 2022 -10.2% 2023 -3.7% 2024 9.1% 2025 -6.2% 2026 -9.7%
+  top 500          primary events L/S 4430/4409, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.49% (t -2.57, NW -2.86)  α vs SPY -0.39% (t -2.05, β -0.10)  α vs IWM -0.42% (t -2.23)  ann -6.0% maxDD -51.2% worst mo -6.13% mean w/o 5 best -0.69%  delist haircuts L/S 1/0
+     L-SPY mean/mo -0.10% (t -0.44)  α(L) vs SPY -0.31% (t -1.45, β 1.19)  α(L) vs IWM 0.26% (t 1.19, β 0.86)
+     L-S by year: 2016 1.3% 2017 -1.9% 2018 -5.9% 2019 -6.3% 2020 -11.2% 2021 -8.5% 2022 -4.9% 2023 -11.7% 2024 6.9% 2025 -8.4% 2026 -11.0%
+  501-1000         primary events L/S 4426/4433, 2016-05..2026-11 (127 mo)
+     L-S  mean/mo -0.65% (t -2.18, NW -2.01)  α vs SPY -0.57% (t -1.85, β -0.07)  α vs IWM -0.57% (t -2.00)  ann -8.1% maxDD -62.8% worst mo -21.14% mean w/o 5 best -0.89%  delist haircuts L/S 0/0
+     L-SPY mean/mo -0.18% (t -0.65)  α(L) vs SPY -0.46% (t -1.68, β 1.26)  α(L) vs IWM 0.07% (t 0.41, β 0.99)
+     L-S by year: 2016 0.9% 2017 4.0% 2018 2.5% 2019 -11.0% 2020 -13.7% 2021 -38.1% 2022 -8.7% 2023 2.8% 2024 2.1% 2025 -14.7% 2026 -2.7%
+  1001-3000        primary events L/S 16825/16788, 2016-04..2026-11 (128 mo)
+     L-S  mean/mo -0.28% (t -1.79, NW -1.63)  α vs SPY -0.20% (t -1.25, β -0.08)  α vs IWM -0.23% (t -1.44)  ann -3.5% maxDD -36.0% worst mo -5.07% mean w/o 5 best -0.43%  delist haircuts L/S 1/3
+     L-SPY mean/mo -0.25% (t -0.72)  α(L) vs SPY -0.49% (t -1.41, β 1.23)  α(L) vs IWM -0.07% (t -0.55, β 1.07)
+     L-S by year: 2016 1.6% 2017 -2.5% 2018 -4.8% 2019 -3.2% 2020 -9.1% 2021 -1.4% 2022 -11.1% 2023 -3.2% 2024 11.6% 2025 -0.3% 2026 -12.9%
+
+## Event-time drift: average buy-and-hold return minus SPY from close s0+2 to close s0+k (gross, primary buckets)
+  full (top 3000) (events top 25128, bottom 25143; day k = s0+k):
+     k            3      5     10     15     20     30     40     50     60     62
+     top      0.06% -0.11% -0.15% -0.08%  0.06% -0.00% -0.10% -0.34% -0.51% -0.56%
+     bottom  -0.08% -0.04% -0.15% -0.14% -0.16% -0.44% -0.64% -0.74% -0.69% -0.60%
+     spread   0.14% -0.08% -0.01%  0.06%  0.22%  0.43%  0.55%  0.40%  0.18%  0.05%
+  top 500 (events top 4318, bottom 4327; day k = s0+k):
+     k            3      5     10     15     20     30     40     50     60     62
+     top      0.05% -0.13% -0.07%  0.01%  0.13%  0.10% -0.04% -0.06%  0.04% -0.08%
+     bottom  -0.02% -0.01% -0.13% -0.06% -0.00% -0.06% -0.03%  0.01% -0.08% -0.05%
+     spread   0.07% -0.12%  0.06%  0.07%  0.14%  0.16% -0.01% -0.07%  0.12% -0.03%
+  501-1000 (events top 4309, bottom 4351; day k = s0+k):
+     k            3      5     10     15     20     30     40     50     60     62
+     top      0.01% -0.18% -0.21% -0.15%  0.01% -0.08% -0.15%  0.02% -0.20% -0.37%
+     bottom  -0.06% -0.07% -0.31% -0.23% -0.28% -0.30% -0.68% -0.47% -0.07%  0.09%
+     spread   0.06% -0.10%  0.11%  0.08%  0.29%  0.22%  0.52%  0.49% -0.12% -0.46%
+  1001-3000 (events top 16440, bottom 16477; day k = s0+k):
+     k            3      5     10     15     20     30     40     50     60     62
+     top      0.09% -0.10% -0.16% -0.06%  0.08%  0.01% -0.09% -0.49% -0.72% -0.73%
+     bottom  -0.08% -0.02% -0.08% -0.10% -0.20% -0.57% -0.78% -0.98% -1.03% -0.95%
+     spread   0.17% -0.08% -0.08%  0.04%  0.28%  0.58%  0.69%  0.49%  0.31%  0.22%
+
+## Information only: return minus SPY on day s0+2 (close s0+1 -> close s0+2, skipped before entry), primary buckets
+  full (top 3000)  top 0.04% (n 25742)  bottom -0.06% (n 25619)  spread 0.10%
+  top 500          top 0.02% (n 4429)  bottom 0.05% (n 4409)  spread -0.03%
+  501-1000         top -0.01% (n 4426)  bottom -0.03% (n 4433)  spread 0.02%
+  1001-3000        top 0.05% (n 16821)  bottom -0.08% (n 16785)  spread 0.13%
+
+## Spot check events (ticker, accepted, s0, EAR2, rank)
+  AAPL 2023-02-02T16:30:33 s0 2023-02-03 EAR2 2.276% rank 2
+  AAPL 2023-05-04T16:30:43 s0 2023-05-05 EAR2 2.773% rank 3
+  AAPL 2023-08-03T16:30:21 s0 2023-08-04 EAR2 -6.862% rank 3
+  AAPL 2023-11-02T16:30:32 s0 2023-11-03 EAR2 -0.212% rank 3
+  CROX 2023-01-10T07:03:54 s0 2023-01-10 EAR2 5.976% rank 392
+  CROX 2023-02-16T07:03:56 s0 2023-02-16 EAR2 6.239% rank 323
+  CROX 2023-04-27T07:03:37 s0 2023-04-27 EAR2 -19.177% rank 302
+  CROX 2023-07-27T07:04:43 s0 2023-07-27 EAR2 -10.044% rank 332
+  CROX 2023-11-02T07:03:46 s0 2023-11-02 EAR2 -6.827% rank 464
+  NFLX 2023-01-19T16:51:04 s0 2023-01-20 EAR2 10.087% rank 8
+  NFLX 2023-04-18T16:03:44 s0 2023-04-19 EAR2 -1.925% rank 9
+  NFLX 2023-07-19T16:04:02 s0 2023-07-20 EAR2 -9.827% rank 10
+  NFLX 2023-10-18T16:01:28 s0 2023-10-19 EAR2 17.926% rank 10
+
+## Summary: long-short mean per month (HC1 t), primary costs; L-SPY in brackets
+  config                                               full (top 3000)                       top 500                      501-1000                     1001-3000
+  PRIMARY                                      -0.08% (-0.52) [-0.27%]       -0.12% (-0.61) [-0.10%]       -0.27% (-0.92) [-0.18%]         0.09% (0.57) [-0.25%]
+  hold 20                                      -0.24% (-1.04) [-0.36%]       -0.36% (-1.04) [-0.14%]       -1.26% (-2.45) [-0.87%]         0.19% (0.59) [-0.21%]
+  hold 120                                       0.02% (0.14) [-0.16%]       -0.09% (-0.62) [-0.06%]       -0.03% (-0.16) [-0.16%]         0.16% (1.03) [-0.13%]
+  EAR 1 day                                      0.11% (0.71) [-0.15%]         0.06% (0.33) [-0.00%]       -0.05% (-0.17) [-0.07%]         0.20% (1.19) [-0.19%]
+  EAR 3 days                                     0.02% (0.15) [-0.22%]       -0.04% (-0.18) [-0.05%]       -0.27% (-0.94) [-0.23%]         0.18% (1.08) [-0.19%]
+  deciles                                        0.05% (0.23) [-0.21%]       -0.10% (-0.38) [-0.00%]        -0.30% (-0.53) [0.01%]         0.20% (0.90) [-0.23%]
+  min price $10                                -0.16% (-1.03) [-0.28%]       -0.16% (-0.78) [-0.15%]       -0.37% (-1.24) [-0.20%]       -0.04% (-0.25) [-0.24%]
+  delisting rule off                           -0.08% (-0.52) [-0.27%]       -0.12% (-0.61) [-0.10%]       -0.27% (-0.92) [-0.18%]         0.09% (0.57) [-0.25%]
+  delisting rule long leg only                 -0.08% (-0.52) [-0.27%]       -0.12% (-0.61) [-0.10%]       -0.27% (-0.92) [-0.18%]         0.09% (0.57) [-0.25%]
+  same-month breakpoints (look-ahead)          -0.02% (-0.15) [-0.19%]       -0.12% (-0.68) [-0.12%]       -0.18% (-0.77) [-0.23%]         0.11% (0.70) [-0.22%]
+  borrow 5%/yr                                 -0.45% (-3.01) [-0.27%]       -0.49% (-2.57) [-0.10%]       -0.65% (-2.18) [-0.18%]       -0.28% (-1.79) [-0.25%]
+
+## Pass rule (PRIMARY, primary costs)
+1. full L-S mean -0.08% t -0.52 (need > 0, t >= 2.5): no
+2. L-S mean by group top500/501-1000/1001-3000: -0.12% / -0.27% / 0.09% (all > 0): no
+3. positive full years 2017-2025: 4/9 (need >= 7): no
+4. 1001-3000 > top 500: yes; monotone: no
+VERDICT: FAIL

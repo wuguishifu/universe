@@ -68,3 +68,36 @@ Everything above still applies, with these additions. Also read `h1.md` from "Re
 ## Samples
 
 There is no untouched holdout for SPY/QQQ/IWM share data from 2016–2026: Parts 1–4 and h3/h4 have used it. So for share strategies, the protection against overfitting is the design: a single published rule with published parameters as the primary, a small grid only as a robustness check, and a pass rule set in advance. Say in your design which choices come from the literature and which are yours.
+
+---
+
+# Round 3 (2026-11-15): h13–h16, single stocks and a broad ETF set
+
+Everything above still applies. These four tests move beyond SPY/QQQ/IWM, which matters for two reasons: costs are a smaller share of a volatile stock's move, and these tickers have never been used here, so they are fresh data. The biggest danger is **survivorship and hindsight**: choosing stocks you know did well (NVDA, TSLA). Every universe must be chosen by a rule that uses only data available on each day, and must include companies that later failed or were delisted.
+
+## New data (being downloaded as of 2026-11-15; check the logs before relying on it)
+
+- `data/universe/candidate-tickers.txt`: 20,822 tickers = every issuer ticker on an SEC Form 3/4/5 filing 2016–2026 (`sec-issuer-tickers.json`) ∪ Alpaca's active and inactive assets on NYSE, NASDAQ, ARCA, AMEX, BATS. Alpaca's inactive list alone misses many delistings (TWTR, SIVB, ATVI); the SEC list adds them. Known gap: companies that don't file with the SEC (e.g. First Republic, which filed with the FDIC).
+- `data/universe/sec-issuer-tickers.json`: `[{cik, ticker, first, last, filings, name}]`: the CIK ↔ ticker pairs seen on insider filings and the first/last filing dates for each pair. A ticker that appears with two CIKs was reused by two companies (e.g. BBBY, FB): use `first`/`last` to keep only the right company's dates, or drop the ticker.
+- `data/universe/assets-{active,inactive}.json`: Alpaca's asset lists (fields include `exchange`, `name`, `shortable`, `easy_to_borrow`). ETFs are listed mostly on ARCA/BATS and have "ETF" or "Trust"/"Fund" in their names; SEC-issuer tickers are operating companies.
+- `data/daily/<T>.json` (adjusted for splits and dividends) and `data/daily-raw/<T>.json` (as traded) for every candidate ticker with bars, 2016-01-04 → 2026-11-13. Logs: `research/outputs/download-universe-{all,raw}.log`; each is complete when its last line is "Done.". A ticker with no bars has an empty file.
+- `data/sec/earnings-8k.jsonl`: one line per 8-K filing with Item 2.02 (Results of Operations), `{cik, accession, form, filed, accepted, items}`, `accepted` in New York time. Acceptance after 16:00 means the market first trades on it the next session; before 09:30, the same session; during the session, the same session but intraday. 8-K/A amendments are included and should usually be dropped. Log: `research/outputs/data-sec-earnings.log`, complete when its last line starts with "Done:".
+- `data/stocks-open15/<T>/<DATE>.json`: 09:30–09:44 one-minute bars, and full-day `data/stocks/<T>/<DATE>.json`, for any (stock, day) you request with:
+  `node --env-file-if-exists=.env.local --import @swc-node/register/esm-register src/main.ts download-minutes --jobs=<file>` where the jobs file is `{ "window": "open15" | "day", "days": { "YYYY-MM-DD": ["AAPL", ...] } }`. 100 symbols per request, throttled for Alpaca's free plan (200 requests a minute). **Only one Alpaca download at a time across all agents**, and not before both universe logs say "Done.". Only h13 needs this.
+
+## Universe rules (use these unless your design argues otherwise in advance)
+
+- **Liquid stock universe, point in time:** on each date, common stocks (SEC-issuer tickers within their `first`–`last` window, minus anything whose Alpaca name says ETF/Fund/Trust/Notes/Warrant/Units/Preferred) with raw close ≥ $5, ranked by median raw dollar volume (raw close × volume) over the previous 63 trading days; the top 500 or 1,000 by that rank. Use only data up to the previous close.
+- **Delisting:** if a stock's bars end while you hold it, exit at its last close; apply −30% if that close is under $1 or under half the entry price (Part 3's rule).
+- **Costs, liquid single stocks:** primary 2 bp per side, stress 5 bp, plus zero; for anything outside the top 500 by dollar volume, primary 5 bp and stress 15 bp. Borrow cost for shorts: assume 0.5%/yr for easy-to-borrow, and say plainly that the Alpaca `easy_to_borrow` flag is current, not historical.
+- **Samples:** all of 2016–2026 for these tickers is unused, but the rules being tested came from older literature or from h8 on SPY. No separate holdout; the pass rule and a small grid decide.
+
+## Round 3 corrections (found by h15, 2026-11-15; see h15.md dated note 1)
+
+The universe rules above have survivorship and look-ahead problems. Use h15's fixes (its code is `research/tools/h15-rsi2-stocks.mjs`; read it, don't import it):
+
+1. **Names:** Alpaca's name is the symbol's *current* owner, so the ETF/Fund/Trust filter wrongly drops acquired companies whose old ticker now belongs to an ETF (FB for 2017–2022, EV, CAM, ~400 others). Trust Alpaca's name only if the company still files with the SEC in 2026; otherwise use the SEC issuer name.
+2. **Validity window:** `last` filing date is future information, and the SEC file ends ~2026-09, so the window collapses at the end of the sample. Use first filing → last filing + 365 days, cut the day before a later ticker of the same CIK starts trading (e.g. FB ends 2022-06-08, META starts 2022-06-09), at most one ticker per company per day.
+3. **Renamed companies** whose old ticker has no bars (JEC → J, ~150): Alpaca keeps the history under the new symbol; use it only where its bars run without a gap back to that day.
+4. **Zero-volume daily bars are stale prints after delisting** (EV prints a flat $73.07 for years after its 2021 acquisition): treat them as no bar.
+5. **Bad prints exist** (AQB raw $0.0072 on 2017-01-09): guard against implausible one-day moves.

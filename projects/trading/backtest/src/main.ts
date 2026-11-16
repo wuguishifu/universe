@@ -14,6 +14,7 @@ import { dailyStats } from './daily/daily-stats';
 import { DataStore } from './data/data-store';
 import { AlpacaClient } from './download/alpaca-client';
 import { download, downloadDaily } from './download/download';
+import { downloadMinutes, loadMinuteJobs } from './download/download-minutes';
 import {
   downloadChainSnapshots,
   downloadQuotes,
@@ -46,6 +47,8 @@ const USAGE = `Usage:
                     [--full-chain] [--probe]
   backtest download-chains --from YYYY-MM-DD --to YYYY-MM-DD [--tickers SPY] [--data <dir>]
                     [--max-dte 60] [--low 0.6] [--high 1.25] [--minutes-before-close 15] [--concurrency 2]
+  backtest download-minutes --jobs <file> [--data <dir>]
+                    jobs file: { "window": "day" | "open15", "days": { "YYYY-MM-DD": ["AAPL", ...] } }
   backtest sweep    --config <file> [--data <dir>] [--out <dir>] [--workers N]
   backtest download-daily --from YYYY-MM-DD --to YYYY-MM-DD (--tickers SPY,EFA | --tickers-file <file>)
                     [--adjustment all|raw] [--skip-existing] [--data <dir>]
@@ -245,6 +248,24 @@ async function downloadChainsCommand(args: string[]): Promise<void> {
   print('Done.');
 }
 
+async function downloadMinutesCommand(args: string[]): Promise<void> {
+  const { values } = parseArgs({
+    args,
+    options: {
+      jobs: { type: 'string' },
+      data: { type: 'string', default: 'data' },
+    },
+  });
+  if (!values.jobs) throw new Error('download-minutes needs --jobs');
+  await downloadMinutes({
+    client: AlpacaClient.fromEnv(),
+    dir: resolve(values.data),
+    jobs: loadMinuteJobs(values.jobs),
+    log: print,
+  });
+  print('Done.');
+}
+
 async function sweepCommand(args: string[]): Promise<void> {
   const { values } = parseArgs({
     args,
@@ -386,6 +407,7 @@ async function main(): Promise<void> {
   else if (command === 'download') await downloadCommand(args);
   else if (command === 'download-quotes') await downloadQuotesCommand(args);
   else if (command === 'download-chains') await downloadChainsCommand(args);
+  else if (command === 'download-minutes') await downloadMinutesCommand(args);
   else if (command === 'sweep') await sweepCommand(args);
   else if (command === 'download-daily') await downloadDailyCommand(args);
   else if (command === 'daily') dailyCommand(args);

@@ -1,0 +1,177 @@
+H15 RSI(2) on liquid single stocks. Window 2017-01-03 .. 2026-11-13 (2480 return days). Panel 10517 tickers with bars (SEC 12587, name-filtered 1023, no bars 2070).
+Universe built in 6 s; 3034 tickers ever ranked in the top 1000.
+  P: 63218 trades (0 s)
+  LAG: 62925 trades (0 s)
+  T5: 33437 trades (0 s)
+  T15: 88940 trades (0 s)
+  NOF: 122130 trades (0 s)
+  CAP10: 63564 trades (0 s)
+  RES: 71417 trades (0 s)
+  UREADME: 62695 trades (0 s)
+
+=== Primary P: event level (every signal, no slot limit) ===
+(net = mean net trade; bench = same-stock random hold of the same length on qualifying days; excess = net − bench; tNW Newey–West lag 10 on entry days; tCl clustered by entry day; tIid naive; 3se = minimum detectable excess at t 3; vsEW / vsSPY = net − equal-weight group / SPY over the same hold)
+                              n   /yr  hold  hit     net   bench  excess    tNW    tCl   tIid    3se    vsEW   tEW   vsSPY
+A zero 0bp                32426  3295   4.1  67%   0.35%   0.16%   0.19%   1.64   2.53   7.32  0.35%   0.08%  1.58   0.05%
+A primary 2bp             32426  3295   4.1  67%   0.31%   0.16%   0.15%   1.29   1.99   5.77  0.35%   0.04%  0.76   0.01%
+A stress 5bp              32426  3295   4.1  66%   0.25%   0.16%   0.09%   0.77   1.19   3.44  0.35%  -0.02% -0.49  -0.05%
+B zero 0bp                30792  3129   4.1  66%   0.29%   0.07%   0.22%   1.71   2.69   7.66  0.39%   0.06%  1.19   0.01%
+B primary 5bp             30792  3129   4.1  65%   0.19%   0.07%   0.12%   0.95   1.48   4.24  0.39%  -0.04% -0.90  -0.09%
+B stress 15bp             30792  3129   4.1  62%  -0.01%   0.07%  -0.08%  -0.59  -0.92  -2.64  0.39%  -0.24% -5.08  -0.29%
+
+P group A: median net 0.96%, worst -65.2%; without the 5 best entry days: excess 0.092% tNW 0.81
+  exits: rule 32400, bars end 15 (haircut −30%: 0; mean gross of bars-end trades -4.27%), open at end 11
+  |gross| > 50%: 8: APLS 2023-07-07 -63%, ARNC 2020-02-25 -52%, BBAI 2025-02-20 -56%, CVNA 2020-02-27 -60%, DRI 2020-02-24 -65%, JUNO 2018-01-16 52%, MP 2025-07-09 51%, WKHS 2021-02-12 -52%
+  bootstrap (2000 draws, iid, ignores cross-trade correlation): mean gross trade 0.351%; random same-stock holds 0.162% ± 0.029%; p 0.0000
+
+P group B: median net 0.92%, worst -83.4%; without the 5 best entry days: excess 0.071% tNW 0.54
+  exits: rule 30745, bars end 31 (haircut −30%: 0; mean gross of bars-end trades -2.07%), open at end 16
+  |gross| > 50%: 17: ACAD 2019-09-03 54%, AER 2020-02-24 -68%, ALNY 2017-09-19 52%, BYD 2020-02-24 -63%, CAR 2020-02-26 -70%, CODX 2020-08-10 -52%, CORT 2025-03-28 109%, CPRI 2024-10-17 -53%, CZR 2020-02-24 -83%, ERI 2020-02-24 -83%, NTNX 2020-02-24 -61%, PACW 2023-03-08 -54%
+  bootstrap (2000 draws, iid, ignores cross-trade correlation): mean gross trade 0.291%; random same-stock holds 0.067% ± 0.031%; p 0.0000
+
+=== P by entry year (primary cost; excess with NW t) ===
+Group A: excess positive in 7 of 10 years (at stress cost: 7)
+  2017: n  3506  net   0.45%  bench   0.11%  excess   0.34% tNW   3.48  hit 71%  vsEW   0.01%
+  2018: n  3286  net  -0.44%  bench   0.14%  excess  -0.57% tNW  -1.69  hit 58%  vsEW  -0.14%
+  2019: n  3044  net   0.41%  bench   0.14%  excess   0.27% tNW   1.40  hit 71%  vsEW  -0.01%
+  2020: n  3051  net   0.23%  bench   0.14%  excess   0.09% tNW   0.12  hit 67%  vsEW   0.21%
+  2021: n  4374  net   0.61%  bench   0.17%  excess   0.44% tNW   1.85  hit 69%  vsEW  -0.01%
+  2022: n  2010  net  -0.54%  bench   0.12%  excess  -0.65% tNW  -1.21  hit 60%  vsEW  -0.23%
+  2023: n  3071  net   0.17%  bench   0.19%  excess  -0.03% tNW  -0.09  hit 64%  vsEW  -0.01%
+  2024: n  4071  net   0.49%  bench   0.19%  excess   0.29% tNW   1.25  hit 67%  vsEW   0.15%
+  2025: n  3201  net   0.72%  bench   0.21%  excess   0.51% tNW   1.23  hit 70%  vsEW   0.09%
+  2026: n  2812  net   0.56%  bench   0.18%  excess   0.39% tNW   1.21  hit 65%  vsEW   0.22%
+Group B: excess positive in 7 of 10 years (at stress cost: 5)
+  2017: n  3429  net   0.45%  bench   0.07%  excess   0.37% tNW   3.19  hit 70%  vsEW  -0.14%
+  2018: n  3143  net  -0.61%  bench   0.03%  excess  -0.64% tNW  -1.86  hit 58%  vsEW  -0.23%
+  2019: n  2800  net   0.31%  bench   0.08%  excess   0.22% tNW   1.08  hit 68%  vsEW  -0.17%
+  2020: n  2745  net  -0.23%  bench   0.10%  excess  -0.32% tNW  -0.33  hit 65%  vsEW   0.16%
+  2021: n  4212  net   0.64%  bench   0.03%  excess   0.61% tNW   2.21  hit 68%  vsEW   0.02%
+  2022: n  2057  net  -0.36%  bench   0.02%  excess  -0.38% tNW  -0.70  hit 59%  vsEW  -0.28%
+  2023: n  2943  net   0.11%  bench   0.09%  excess   0.03% tNW   0.09  hit 64%  vsEW   0.04%
+  2024: n  3841  net   0.22%  bench   0.13%  excess   0.09% tNW   0.37  hit 63%  vsEW  -0.02%
+  2025: n  2830  net   0.56%  bench   0.07%  excess   0.49% tNW   1.52  hit 68%  vsEW  -0.05%
+  2026: n  2792  net   0.46%  bench   0.04%  excess   0.43% tNW   1.39  hit 64%  vsEW   0.18%
+
+=== P by size group (rank by 63-day median $ volume at entry; primary cost of the group) ===
+                              n   /yr  hold  hit     net   bench  excess    tNW    tCl   tIid    3se    vsEW   tEW   vsSPY
+A1 1-100                   6872   698   4.1  67%   0.43%   0.35%   0.08%   0.60   0.85   1.43  0.42%   0.16%  1.83   0.12%
+A2 101-250                 9839  1000   4.1  66%   0.27%   0.21%   0.05%   0.45   0.64   1.16  0.36%   0.00%  0.07  -0.02%
+A3 251-500                15715  1597   4.1  67%   0.29%   0.05%   0.24%   2.01   3.03   6.49  0.35%   0.00%  0.09  -0.01%
+B 501-1000                30792  3129   4.1  65%   0.19%   0.07%   0.12%   0.95   1.48   4.24  0.39%  -0.04% -0.90  -0.09%
+
+=== Market-wide confound: P split by SPY RSI2 < 10 on the entry day; RES (residual reversal) ===
+                              n   /yr  hold  hit     net   bench  excess    tNW    tCl   tIid    3se    vsEW   tEW   vsSPY
+A P SPY RSI2<10            8321   846   3.9  69%   0.53%   0.18%   0.35%   1.22   1.57   6.44  0.85%   0.05%  0.52   0.04%
+A P SPY RSI2>=10          24105  2449   4.1  66%   0.24%   0.16%   0.08%   0.83   1.24   2.74  0.29%   0.03%  0.60   0.00%
+A RES all                 36746  3734   4.5  63%   0.18%   0.17%   0.01%   0.11   0.20   0.42  0.27%   0.03%  0.62  -0.02%
+A RES SPY RSI2>=10        33969  3452   4.5  63%   0.16%   0.17%  -0.01%  -0.08  -0.13  -0.28  0.25%   0.02%  0.33  -0.03%
+  share of P trades entered on SPY RSI2<10 days: 26%; P distinct entry days 2295; RES excess at stress -0.05%
+B P SPY RSI2<10            7523   764   4.0  68%   0.39%   0.09%   0.30%   0.80   1.10   4.45  1.14%   0.04%  0.46  -0.10%
+B P SPY RSI2>=10          23269  2364   4.1  64%   0.13%   0.06%   0.07%   0.65   1.02   2.06  0.30%  -0.07% -1.35  -0.08%
+B RES all                 34671  3523   4.5  62%   0.07%   0.08%  -0.00%  -0.04  -0.08  -0.16  0.31%  -0.04% -0.78  -0.10%
+B RES SPY RSI2>=10        31941  3246   4.5  61%   0.06%   0.08%  -0.02%  -0.27  -0.46  -0.89  0.27%  -0.06% -1.19  -0.12%
+  share of P trades entered on SPY RSI2<10 days: 24%; P distinct entry days 2327; RES excess at stress -0.20%
+
+=== Robustness (information only): event level, primary cost ===
+                              n   /yr  hold  hit     net   bench  excess    tNW    tCl   tIid    3se    vsEW   tEW   vsSPY
+P A                       32426  3295   4.1  67%   0.31%   0.16%   0.15%   1.29   1.99   5.77  0.35%   0.04%  0.76   0.01%  stress ex 0.09%
+P B                       30792  3129   4.1  65%   0.19%   0.07%   0.12%   0.95   1.48   4.24  0.39%  -0.04% -0.90  -0.09%  stress ex -0.08%
+LAG A                     32300  3282   4.3  61%   0.30%   0.17%   0.13%   1.00   1.65   4.74  0.38%   0.05%  0.87   0.03%  stress ex 0.07%
+LAG B                     30625  3112   4.3  60%   0.20%   0.07%   0.12%   0.89   1.43   3.88  0.41%  -0.02% -0.30  -0.06%  stress ex -0.08%
+T5 A                      17088  1736   4.1  66%   0.37%   0.15%   0.22%   1.61   2.43   6.02  0.41%   0.08%  1.22   0.05%  stress ex 0.16%
+T5 B                      16349  1661   4.1  65%   0.27%   0.06%   0.21%   1.31   2.02   5.22  0.49%   0.03%  0.43  -0.03%  stress ex 0.01%
+T15 A                     45600  4634   4.0  67%   0.25%   0.16%   0.09%   0.84   1.33   4.05  0.31%  -0.01% -0.27  -0.03%  stress ex 0.03%
+T15 B                     43340  4404   4.0  65%   0.16%   0.07%   0.09%   0.78   1.26   3.74  0.35%  -0.06% -1.41  -0.09%  stress ex -0.11%
+NOF A                     60131  6110   4.2  66%   0.37%   0.20%   0.17%   1.04   1.59   7.56  0.48%   0.04%  1.06   0.03%  stress ex 0.11%
+NOF B                     61999  6300   4.2  65%   6.20%   0.52%   5.67%   0.99   0.99   0.99 17.21%   5.92%  1.00   5.90%  stress ex 5.46%
+CAP10 A                   32606  3313   4.0  67%   0.30%   0.16%   0.14%   1.24   1.89   5.47  0.34%   0.03%  0.59   0.01%  stress ex 0.08%
+CAP10 B                   30958  3146   4.0  65%   0.19%   0.07%   0.12%   0.96   1.47   4.15  0.37%  -0.05% -1.05  -0.09%  stress ex -0.08%
+RES A                     36746  3734   4.5  63%   0.18%   0.17%   0.01%   0.11   0.20   0.42  0.27%   0.03%  0.62  -0.02%  stress ex -0.05%
+RES B                     34671  3523   4.5  62%   0.07%   0.08%  -0.00%  -0.04  -0.08  -0.16  0.31%  -0.04% -0.78  -0.10%  stress ex -0.20%
+UREADME A                 32167  3269   4.1  67%   0.33%   0.16%   0.18%   1.51   2.33   6.82  0.35%   0.07%  1.43   0.04%  stress ex 0.12%
+UREADME B                 30528  3102   4.1  65%   0.19%   0.05%   0.14%   1.05   1.63   4.73  0.40%  -0.04% -0.86  -0.09%  stress ex -0.06%
+  P        P ★ RSI2<10, C>SMA200, exit C>SMA5, same close
+  LAG      LAG: all decisions on the previous close
+  T5       RSI2 < 5
+  T15      RSI2 < 15
+  NOF      no 200-day filter
+  CAP10    hold cap 10 days
+  RES      residual (stock - SPY) RSI2 and SMA5 exit
+  UREADME  README's first..last window
+LAG group A excess by year: 2017 0.18%, 2018 -0.58%, 2019 0.38%, 2020 0.01%, 2021 0.40%, 2022 -0.64%, 2023 0.03%, 2024 0.46%, 2025 0.26%, 2026 0.35%
+
+=== Portfolios (equal slots, lowest RSI first, cash in BIL) vs equal-weight group ===
+
+Group A (costs 0/2/5 bp): EW group full exposure: CAGR 12.9%, vol 20.4%, Sharpe 0.58, maxDD -38.7%; SPY: CAGR 14.8%, Sharpe 0.73, maxDD -33.8%
+                           trades  expo    CAGR    vol Sharpe   maxDD  worst alpha/yr  beta    tA  aSPY/yr   tAS
+P N20 zero                   9371   78%   10.8%  18.4%   0.52  -23.7% -10.7%     2.2%  0.63  0.56     0.7%  0.17
+P N20 primary                9371   78%    8.7%  18.3%   0.42  -23.7% -10.7%     0.3%  0.63  0.07    -1.2% -0.30
+  same-exposure EW (78%)                  10.9%  16.0%   0.58  -31.4% -10.1%
+  trades taken by the portfolio: 9371 of 32426; their excess 0.04% tNW 0.38, hold 4.2
+  daily strategy − same-exposure EW: -0.63 bp/day, t -0.37
+P N20 stress                 9371   78%    5.7%  18.3%   0.27  -26.4% -10.7%    -2.6%  0.63 -0.68    -4.1% -1.01
+P N10 primary                5081   85%    8.4%  20.5%   0.38  -31.2% -12.0%     0.0%  0.66  0.01    -1.5% -0.31
+P N50 primary               18639   62%    6.2%  15.9%   0.31  -27.6%  -8.9%    -1.5%  0.54 -0.45    -2.8% -0.82
+LAG N20 primary              9081   80%    9.2%  18.7%   0.44  -29.3% -13.7%     0.5%  0.65  0.13    -1.1% -0.25
+T5 N20 primary               7396   62%    7.1%  16.4%   0.36  -21.4%  -5.9%     0.0%  0.49  0.01    -1.2% -0.29
+T15 N20 primary             10250   85%   10.0%  18.8%   0.48  -27.1%  -9.4%     1.0%  0.67  0.27    -0.7% -0.17
+NOF N20 primary             10290   88%   11.2%  23.1%   0.47  -48.9% -20.6%     0.2%  0.90  0.06    -1.5% -0.32
+CAP10 N20 primary            9701   78%    9.3%  18.3%   0.45  -23.5% -10.3%     0.9%  0.61  0.23    -0.6% -0.15
+RES N20 primary             10184   93%    6.0%  21.0%   0.27  -39.1% -10.6%    -3.7%  0.79 -0.94    -5.8% -1.37
+UREADME N20 primary          9296   77%   11.9%  18.2%   0.58  -23.8% -10.7%     3.2%  0.62  0.88     1.8%  0.45
+
+Group B (costs 0/5/15 bp): EW group full exposure: CAGR 10.7%, vol 22.7%, Sharpe 0.46, maxDD -45.5%; SPY: CAGR 14.8%, Sharpe 0.73, maxDD -33.8%
+                           trades  expo    CAGR    vol Sharpe   maxDD  worst alpha/yr  beta    tA  aSPY/yr   tAS
+P N20 zero                   9358   78%   11.2%  18.9%   0.53  -33.5%  -9.7%     3.9%  0.59  1.01     0.8%  0.20
+P N20 primary                9358   78%    6.0%  18.8%   0.28  -39.7%  -9.7%    -0.8%  0.58 -0.22    -3.9% -0.96
+  same-exposure EW (78%)                   9.3%  17.7%   0.46  -37.1% -11.5%
+  trades taken by the portfolio: 9358 of 30792; their excess 0.09% tNW 0.90, hold 4.2
+  daily strategy − same-exposure EW: -1.13 bp/day, t -0.64
+P N20 stress                 9358   78%   -3.6%  18.6%  -0.23  -52.7%  -9.7%   -10.3%  0.58 -2.72   -13.4% -3.33
+P N10 primary                5113   86%    5.0%  21.0%   0.22  -47.4%  -9.2%    -1.6%  0.61 -0.34    -4.7% -0.95
+P N50 primary               18329   61%    3.5%  15.8%   0.15  -42.0%  -9.9%    -2.9%  0.51 -0.94    -5.6% -1.65
+LAG N20 primary              8972   79%    7.8%  19.1%   0.37  -42.7% -13.6%     0.8%  0.60  0.19    -2.3% -0.55
+T5 N20 primary               7375   62%    4.7%  17.3%   0.21  -41.8% -11.6%    -1.6%  0.51 -0.42    -4.3% -1.07
+T15 N20 primary             10267   84%    2.2%  19.9%   0.09  -48.9%  -9.1%    -5.1%  0.66 -1.38    -8.4% -2.02
+NOF N20 primary             10370   89%   83.8%2753.0%   0.33  -49.9% -13.8%   882.8%  1.37  1.00   878.7%  1.00
+CAP10 N20 primary            9646   78%    5.8%  18.8%   0.27  -38.6% -10.1%    -1.0%  0.58 -0.26    -4.1% -1.00
+RES N20 primary             10064   92%    0.9%  21.5%   0.04  -59.2% -11.6%    -6.8%  0.73 -1.66   -10.7% -2.30
+UREADME N20 primary          9197   77%    5.9%  18.5%   0.28  -42.3%  -9.4%    -0.8%  0.57 -0.22    -3.7% -0.91
+
+=== P portfolio N20 by year (primary cost): strategy, same-exposure EW, EW, SPY ===
+Group A: strategy beat the same-exposure mix in 5 of 10 years
+  2017:   17.3%  mix   13.5%  EW   17.3%  SPY   20.9%
+  2018:   -7.6%  mix   -5.3%  EW   -7.4%  SPY   -5.0%
+  2019:   14.7%  mix   23.3%  EW   29.7%  SPY   31.1%
+  2020:   26.7%  mix   21.3%  EW   25.9%  SPY   18.5%
+  2021:    9.9%  mix   17.4%  EW   22.5%  SPY   28.6%
+  2022:   -3.7%  mix  -13.9%  EW  -18.4%  SPY  -18.2%
+  2023:    4.7%  mix   19.2%  EW   23.1%  SPY   26.2%
+  2024:   16.4%  mix   13.8%  EW   16.1%  SPY   24.9%
+  2025:   18.7%  mix   15.6%  EW   18.5%  SPY   17.7%
+  2026:   -5.4%  mix    8.7%  EW    9.9%  SPY   11.5%
+Group B: strategy beat the same-exposure mix in 4 of 10 years
+  2017:   10.6%  mix   17.8%  EW   23.0%  SPY   20.9%
+  2018:  -21.0%  mix   -9.6%  EW  -12.9%  SPY   -5.0%
+  2019:    5.4%  mix   22.1%  EW   28.2%  SPY   31.1%
+  2020:   27.0%  mix   19.1%  EW   22.5%  SPY   18.5%
+  2021:    3.6%  mix   13.4%  EW   17.2%  SPY   28.6%
+  2022:    5.2%  mix  -13.6%  EW  -18.3%  SPY  -18.2%
+  2023:    7.0%  mix   16.7%  EW   19.8%  SPY   26.2%
+  2024:    1.4%  mix   10.7%  EW   12.0%  SPY   24.9%
+  2025:   13.1%  mix   10.1%  EW   11.3%  SPY   17.7%
+  2026:   13.5%  mix   11.1%  EW   13.1%  SPY   11.5%
+
+=== Pass rule (P, group A) ===
+1. mean excess 0.149% > 0 with NW t 1.29 >= 3: NO
+2. excess positive in 7 of 10 years (need 7): yes
+3. excess at stress (5 bp) 0.089% > 0: yes
+Verdict: INCONCLUSIVE
+Worth trading:
+4. portfolio Sharpe 0.42 > EW (same-exposure) Sharpe 0.58: NO
+5. alpha on EW 0.3% /yr (t 0.07) > 0: yes
+6. LAG mean excess 0.128% (t 1.00) > 0: yes
+(portfolio exposure 78%)
+
+Done in 35 s.

@@ -507,12 +507,12 @@ function runCheck(ticker, date) {
     const c = { o: cb[0].o, h: Math.max(...cb.map((b) => b.h)), l: Math.min(...cb.map((b) => b.l)), c: cb.at(-1).c };
     let note = '';
     if (!side && m + 5 <= hhmm('11:30')) {
-      if (c.c > hi) (side = 1), (boEnd = m + 5), (note = 'BREAKOUT LONG');
-      else if (c.c < lo) (side = -1), (boEnd = m + 5), (note = 'BREAKOUT SHORT');
+      if (c.c > hi) { side = 1; boEnd = m + 5; note = 'BREAKOUT LONG'; }
+      else if (c.c < lo) { side = -1; boEnd = m + 5; note = 'BREAKOUT SHORT'; }
     } else if (side && outcome === 'none' && m + 5 - boEnd <= 60) {
       const edge = side > 0 ? hi : lo;
-      if (side > 0 ? c.c <= edge : c.c >= edge) (outcome = 'void'), (note = 'VOID');
-      else if (side > 0 ? c.l <= edge : c.h >= edge) (outcome = 'retest'), (reEnd = m + 5), (note = 'RETEST');
+      if (side > 0 ? c.c <= edge : c.c >= edge) { outcome = 'void'; note = 'VOID'; }
+      else if (side > 0 ? c.l <= edge : c.h >= edge) { outcome = 'retest'; reEnd = m + 5; note = 'RETEST'; }
     }
     p(`  ${clock(m)}-${clock(m + 5)} o ${c.o} h ${c.h} l ${c.l} c ${c.c} ${note}`);
     if (outcome !== 'none' && m + 5 > (reEnd ?? boEnd) + 10) break;

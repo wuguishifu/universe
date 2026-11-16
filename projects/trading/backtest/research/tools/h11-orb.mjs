@@ -318,8 +318,8 @@ if (CHECK) {
   if (!t.skip) {
     let hi = -Infinity, lo = Infinity, hiK = -1, loK = -1;
     for (let k = t.entryK; k < s.n; k++) {
-      if (s.H[k] > hi) (hi = s.H[k]), (hiK = k);
-      if (s.L[k] < lo) (lo = s.L[k]), (loK = k);
+      if (s.H[k] > hi) { hi = s.H[k]; hiK = k; }
+      if (s.L[k] < lo) { lo = s.L[k]; loK = k; }
     }
     console.log(`\nafter entry: high ${hi} at ${kToClock(hiK)}, low ${lo} at ${kToClock(loK)}`);
   }

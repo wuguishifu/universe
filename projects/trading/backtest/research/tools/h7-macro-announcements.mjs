@@ -471,7 +471,7 @@ for (const t of ['SPY', 'QQQ', 'IWM']) {
 {
   const inf = (d) => d >= '2021-01-01' && d < '2024-01-01';
   info('#9 CPI 2021-2023 alone', 'SPY', (d) => CPI.has(d) && inf(d), (d) => isN(d) && inf(d));
-  const c = compare('SPY', (d) => CPI.has(d) && inf(d), (d) => true);
+  const c = compare('SPY', (d) => CPI.has(d) && inf(d), () => true);
   log(`   SPY CPI 2021-2023: ${c.a.length} days, sd ${bp(sd(c.a), 0)} bp vs N same years sd ${bp(sd(compare('SPY', () => false, (d) => isN(d) && inf(d)).b), 0)} bp`);
 }
 for (const t of ['SPY', 'QQQ', 'IWM', 'IEF', 'TLT']) {

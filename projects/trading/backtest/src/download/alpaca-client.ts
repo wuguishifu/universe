@@ -73,6 +73,24 @@ export class AlpacaClient {
     return bars[symbol] ?? [];
   }
 
+  /** 1-minute SIP bars for up to 100 stocks over one window. Symbols with no bars are left out. */
+  stockBarsMany(
+    symbols: readonly string[],
+    start: string,
+    end: string,
+  ): Promise<Record<string, AlpacaBar[]>> {
+    return this.paginate('/v2/stocks/bars', {
+      symbols: symbols.join(','),
+      timeframe: '1Min',
+      start,
+      end,
+      adjustment: 'raw',
+      feed: 'sip',
+      limit: '10000',
+      sort: 'asc',
+    });
+  }
+
   /**
    * Daily SIP bars for up to 100 stocks. `all` adjusts for splits and dividends, so returns include
    * both; `raw` gives the prices that actually traded. Symbols with no bars are left out.

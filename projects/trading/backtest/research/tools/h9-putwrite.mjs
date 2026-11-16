@@ -508,8 +508,6 @@ function navMaxDD(rs) {
 // ---------------------------------------------------------------- run
 const ends = monthEnds();
 const MONTHS = ends.map((e) => e.m);
-const idxM = (m) => MONTHS.indexOf(m);
-const sliceM = (rs, a, b) => rs.filter((_, i) => MONTHS[i] >= a && MONTHS[i] <= b);
 log(`# H9 put-write — ${TICKERS.join(', ')} — snapshots ${FROM} → ${TO}; months ${MONTHS[0]} → ${MONTHS.at(-1)} (${MONTHS.length})`);
 log('');
 

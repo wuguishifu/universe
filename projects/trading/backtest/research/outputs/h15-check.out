@@ -1,0 +1,43 @@
+h8 reproduction (SPY, same close): 86 trades, mean gross 0.524%, net at 1 bp 0.504% (h8: 86 trades, 0.524% gross, 0.50% net)
+
+SEC tickers 12587; dropped by name filter 1023 (README literal rule: 1315); no bars (either file empty/missing) 2070; panel 10517; zero-volume bars dropped 651680
+
+primary (first .. last+365, dated note 1): stand-in stock-days 39249
+
+Eligibility primary (first .. last+365, dated note 1): eligible-and-ranked stocks per day (window): min 2590, median 3026, max 3702; days with < 1000: 0
+  distinct stocks ever in A (top 500): 1228; only ever in B (501-1000): 1209; of those, bars end before 2026-11-13: A 282, B-only 440; extra segments (gap > 10 days) among them: 134
+  one-day spikes in group-A stock-days (r_t < -25% and r_t+1 > +33%, or reverse): 12 of 1239674
+    BBBY 2021-01-27 43%/-36%
+    GME 2021-01-27 135%/-44%
+    GME 2021-01-28 -44%/68%
+    GME 2021-01-29 68%/-31%
+    GME 2021-03-24 -34%/53%
+    OKE 2020-03-18 -30%/36%
+    PCG 2018-11-15 -31%/38%
+    PE 2020-03-09 -51%/42%
+    RGTI 2025-01-13 -32%/48%
+    RKT 2021-03-02 71%/-33%
+    TLRY 2021-02-10 51%/-50%
+    WAL 2023-05-04 -38%/49%
+  SIVB: ranked on 1557 days (2017-01-03 .. 2023-03-10, best rank 224); bars 2016-01-04 .. 2023-03-09
+  SIVBQ: ranked on 0 days; bars 2016-01-04 .. 2023-03-09
+  TWTR: ranked on 1467 days (2017-01-03 .. 2022-10-28, best rank 18); bars 2016-01-04 .. 2022-10-27
+  FB: ranked on 1368 days (2017-01-03 .. 2022-06-08, best rank 3); bars 2016-01-04 .. 2026-11-13
+  META: ranked on 1113 days (2022-06-09 .. 2026-11-13, best rank 4); bars 2016-01-04 .. 2026-11-13
+  BBBY: ranked on 1436 days (2017-01-03 .. 2023-02-07, best rank 330); bars 2016-01-04 .. 2026-08-14
+  ATVI: ranked on 1707 days (2017-01-03 .. 2023-10-13, best rank 56); bars 2016-01-04 .. 2023-10-12
+  AAPL: ranked on 2481 days (2017-01-03 .. 2026-11-13, best rank 1); bars 2016-01-04 .. 2026-11-13
+  GOOG: ranked on 2127 days (2017-01-03 .. 2025-06-18, best rank 6); bars 2016-01-04 .. 2026-11-13
+  GOOGL: ranked on 354 days (2025-06-20 .. 2026-11-13, best rank 5); bars 2016-01-04 .. 2026-11-13
+  J: ranked on 2481 days (2017-01-03 .. 2026-11-13, best rank 457); bars 2016-01-04 .. 2026-11-13
+  MLKN: ranked on 0 days; bars 2016-01-04 .. 2026-11-13
+  EV: ranked on 831 days (2017-01-03 .. 2021-03-01, best rank 466); bars 2016-01-04 .. 2025-04-17
+  ETH: ranked on 0 days; bars 2024-07-23 .. 2026-11-13
+  DLR: ranked on 0 days; bars 2016-01-04 .. 2026-11-13
+  SHLD: ranked on 0 days; bars 2016-01-04 .. 2026-11-13
+  GME: ranked on 2207 days (2017-01-03 .. 2026-11-13, best rank 8); bars 2016-01-04 .. 2026-11-13
+
+README (first .. last, README name rule): stand-in stock-days 0
+
+Eligibility README (first .. last, README name rule): eligible-and-ranked stocks per day (window): min 0, median 2968, max 3579; days with < 1000: 42
+  distinct stocks ever in A (top 500): 1750; only ever in B (501-1000): 1238; of those, bars end before 2026-11-13: A 290, B-only 436; extra segments (gap > 10 days) among them: 163
