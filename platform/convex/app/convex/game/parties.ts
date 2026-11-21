@@ -1,17 +1,16 @@
 import { ConvexError, v } from 'convex/values';
 
-import type { Id } from '../_generated/dataModel';
-import { mutation, query } from '../_generated/server';
+import type { Doc, Id } from '../_generated/dataModel';
+import {
+  mutation,
+  type MutationCtx,
+  query,
+  type QueryCtx,
+} from '../_generated/server';
 
 import { generateUniqueCode, normalizeCode } from './codes';
 import { pointsForPlace, withRanks } from './scoring';
-import {
-  assertPoints,
-  cleanName,
-  eventConfig,
-  MAX_EVENTS,
-  MAX_PLACES,
-} from './validators';
+import { cleanEvents, cleanName, eventConfig } from './validators';
 
 type EventResult = {
   playerId: Id<'gamePlayers'>;
@@ -26,33 +25,99 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const name = cleanName(args.name, 'Party name');
-    if (args.events.length === 0) {
-      throw new ConvexError('Add at least one event.');
-    }
-    if (args.events.length > MAX_EVENTS) {
-      throw new ConvexError(`A party can have at most ${MAX_EVENTS} events.`);
-    }
-
-    const events = args.events.map((event) => {
-      const eventName = cleanName(event.name, 'Event name');
-      if (event.placePoints.length > MAX_PLACES) {
-        throw new ConvexError(
-          `"${eventName}" can score at most ${MAX_PLACES} places.`,
-        );
-      }
-      event.placePoints.forEach((points) => assertPoints(points, eventName));
-      assertPoints(event.minimumPoints, eventName);
-      return { ...event, name: eventName };
-    });
+    const events = cleanEvents(args.events);
 
     const code = await generateUniqueCode(ctx);
     const partyId = await ctx.db.insert('gameParties', { name, code });
-    for (const [order, event] of events.entries()) {
+    for (const [order, { _id, ...event }] of events.entries()) {
       await ctx.db.insert('gameEvents', { partyId, order, ...event });
     }
     return { code };
   },
 });
+
+/**
+ * Replaces a party's name and event list. Events with an `_id` are updated in place (keeping
+ * their results), events without one are added, and existing events left out are deleted along
+ * with their results. Anyone with the code can do this.
+ */
+export const update = mutation({
+  args: {
+    partyId: v.id('gameParties'),
+    name: v.string(),
+    events: v.array(eventConfig),
+  },
+  handler: async (ctx, args) => {
+    const party = await ctx.db.get('gameParties', args.partyId);
+    if (!party) throw new ConvexError('That party no longer exists.');
+    const name = cleanName(args.name, 'Party name');
+    const events = cleanEvents(args.events);
+
+    const existing = await ctx.db
+      .query('gameEvents')
+      .withIndex('by_party_order', (q) => q.eq('partyId', party._id))
+      .collect();
+    const existingById = new Map(existing.map((event) => [event._id, event]));
+    const keptIds = new Set<Id<'gameEvents'>>();
+
+    await ctx.db.patch('gameParties', party._id, { name });
+
+    for (const [order, { _id, ...event }] of events.entries()) {
+      const previous = _id && existingById.get(_id);
+      if (!previous) {
+        if (_id) throw new ConvexError('An event you edited was deleted.');
+        await ctx.db.insert('gameEvents', {
+          partyId: party._id,
+          order,
+          ...event,
+        });
+        continue;
+      }
+      if (keptIds.has(previous._id)) {
+        throw new ConvexError(`"${event.name}" is listed twice.`);
+      }
+      keptIds.add(previous._id);
+      await ctx.db.patch('gameEvents', previous._id, { order, ...event });
+      await remapOtherPlaces(ctx, previous, event.placePoints.length);
+    }
+
+    for (const event of existing) {
+      if (keptIds.has(event._id)) continue;
+      for (const result of await resultsForEvent(ctx, event._id)) {
+        await ctx.db.delete('gameResults', result._id);
+      }
+      await ctx.db.delete('gameEvents', event._id);
+    }
+  },
+});
+
+function resultsForEvent(ctx: QueryCtx, eventId: Id<'gameEvents'>) {
+  return ctx.db
+    .query('gameResults')
+    .withIndex('by_event_player', (q) => q.eq('eventId', eventId))
+    .collect();
+}
+
+/**
+ * "Other" is stored as one past the last scored place. When the number of scored places changes,
+ * move everyone who was in "Other" (or whose place no longer exists) to the new "Other", so adding
+ * a 4th place doesn't silently promote all the "Other" players to 4th.
+ */
+async function remapOtherPlaces(
+  ctx: MutationCtx,
+  previous: Doc<'gameEvents'>,
+  scoredPlaces: number,
+) {
+  if (previous.placePoints.length === scoredPlaces) return;
+  for (const result of await resultsForEvent(ctx, previous._id)) {
+    const wasOther = result.place > previous.placePoints.length;
+    if (wasOther || result.place > scoredPlaces) {
+      await ctx.db.patch('gameResults', result._id, {
+        place: scoredPlaces + 1,
+      });
+    }
+  }
+}
 
 /**
  * Everything the party page needs in one reactive query: events with their results, players,

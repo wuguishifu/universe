@@ -1,10 +1,10 @@
 'use client';
 
-import { CheckIcon, CopyIcon } from 'lucide-react';
+import { CheckIcon, CopyIcon, PencilIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { Button, cn, Spinner } from '@libs/ui-web';
+import { cn } from '@libs/ui-web';
 import { api } from '@platform/convex-contracts';
 
 import { useQuery } from '../convex/use-query';
@@ -12,6 +12,7 @@ import { useQuery } from '../convex/use-query';
 import { EventCard } from './event-card';
 import { ordinal, pointsLabel } from './format';
 import { JoinParty } from './join-party';
+import { PartyStatus } from './party-status';
 import { Standings } from './standings';
 import type { Party, PartyPlayer } from './types';
 import { usePlayerId } from './use-player-id';
@@ -35,21 +36,13 @@ export function PartyView({
   const [playerId, setPlayerId] = usePlayerId(code);
   const [tab, setTab] = useState<Tab>('events');
 
-  if (isError) {
-    return <Message title="Couldn't load the party">Try refreshing.</Message>;
-  }
-  if (isPending || playerId === undefined) {
+  if (isError || isPending || playerId === undefined || !party) {
     return (
-      <div className="flex justify-center pt-24">
-        <Spinner className="size-6 text-muted-foreground" />
-      </div>
-    );
-  }
-  if (!party) {
-    return (
-      <Message title={`No party with code ${code}`}>
-        Double-check the code with your host.
-      </Message>
+      <PartyStatus
+        code={code}
+        isError={isError}
+        isPending={isPending || playerId === undefined}
+      />
     );
   }
 
@@ -129,31 +122,36 @@ function PartyHeader({ party }: { party: Party }) {
   };
 
   return (
-    <header className="flex items-start justify-between gap-4">
-      <div className="min-w-0">
-        <Link
-          href="/game"
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
+    <header className="space-y-1">
+      <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
+        <Link href="/game" className="hover:text-foreground">
           ← Game Night
         </Link>
-        <h1 className="mt-1 font-display text-3xl leading-tight text-balance break-words font-semibold tracking-tight">
+        <Link
+          href={`/game/${party.party.code}/edit`}
+          className="flex items-center gap-1.5 font-medium hover:text-foreground"
+        >
+          <PencilIcon className="size-3.5" /> Edit party
+        </Link>
+      </div>
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="font-display text-3xl leading-tight text-balance break-words font-semibold tracking-tight">
           {party.party.name}
         </h1>
+        <button
+          type="button"
+          onClick={() => void copy()}
+          className="mt-0.5 flex shrink-0 items-center gap-2 rounded-lg border bg-card px-3 py-2 font-mono text-lg font-bold tracking-widest shadow-xs active:translate-y-px"
+          aria-label={`Party code ${party.party.code}, copy`}
+        >
+          {party.party.code}
+          {copied ? (
+            <CheckIcon className="size-4 text-primary" />
+          ) : (
+            <CopyIcon className="size-4 text-muted-foreground" />
+          )}
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={() => void copy()}
-        className="mt-5 flex shrink-0 items-center gap-2 rounded-lg border bg-card px-3 py-2 font-mono text-lg font-bold tracking-widest shadow-xs active:translate-y-px"
-        aria-label={`Party code ${party.party.code}, copy`}
-      >
-        {party.party.code}
-        {copied ? (
-          <CheckIcon className="size-4 text-primary" />
-        ) : (
-          <CopyIcon className="size-4 text-muted-foreground" />
-        )}
-      </button>
     </header>
   );
 }
@@ -228,23 +226,5 @@ function TabButton({
     >
       {children}
     </button>
-  );
-}
-
-function Message({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-4 pt-24 text-center">
-      <h1 className="font-display text-2xl font-semibold">{title}</h1>
-      <p className="text-muted-foreground">{children}</p>
-      <Button asChild variant="outline">
-        <Link href="/game">Enter a different code</Link>
-      </Button>
-    </div>
   );
 }

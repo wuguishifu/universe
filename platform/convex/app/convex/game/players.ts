@@ -45,3 +45,44 @@ export const join = mutation({
     return { playerId };
   },
 });
+
+/** Renames a player. Fails if someone else in the party already has that name. */
+export const rename = mutation({
+  args: { playerId: v.id('gamePlayers'), name: v.string() },
+  handler: async (ctx, args) => {
+    const player = await ctx.db.get('gamePlayers', args.playerId);
+    if (!player) throw new ConvexError('That player no longer exists.');
+    const name = cleanName(args.name, 'Name');
+    const normalizedName = name.toLowerCase();
+
+    const clash = await ctx.db
+      .query('gamePlayers')
+      .withIndex('by_party_name', (q) =>
+        q.eq('partyId', player.partyId).eq('normalizedName', normalizedName),
+      )
+      .unique();
+    if (clash && clash._id !== player._id) {
+      throw new ConvexError(`Someone is already called ${clash.name}.`);
+    }
+    await ctx.db.patch('gamePlayers', player._id, { name, normalizedName });
+  },
+});
+
+/** Removes a player and all of their results. */
+export const remove = mutation({
+  args: { playerId: v.id('gamePlayers') },
+  handler: async (ctx, { playerId }) => {
+    const player = await ctx.db.get('gamePlayers', playerId);
+    if (!player) return;
+    const results = await ctx.db
+      .query('gameResults')
+      .withIndex('by_party', (q) => q.eq('partyId', player.partyId))
+      .collect();
+    for (const result of results) {
+      if (result.playerId === playerId) {
+        await ctx.db.delete('gameResults', result._id);
+      }
+    }
+    await ctx.db.delete('gamePlayers', playerId);
+  },
+});
