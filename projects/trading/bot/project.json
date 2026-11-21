@@ -1,0 +1,41 @@
+{
+  "name": "trading-bot",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/trading/bot/src",
+  "projectType": "application",
+  "tags": ["scope:server"],
+  "targets": {
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "trading-bot:build"
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import @swc-node/register/esm-register --test \"src/**/*.spec.ts\"",
+        "cwd": "projects/trading/bot"
+      }
+    },
+    "replay-fixture": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import @swc-node/register/esm-register src/replay/build-fixture.ts",
+        "cwd": "projects/trading/bot"
+      }
+    },
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning",
+        "cwd": "projects/trading/bot"
+      }
+    }
+  }
+}

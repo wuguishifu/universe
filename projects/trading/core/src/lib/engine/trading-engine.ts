@@ -148,6 +148,61 @@ export class TradingEngine {
     });
   }
 
+  /**
+   * Adds a position the broker still holds from an earlier run, e.g. after a restart. Call it after
+   * `warmup`, so the ticker's indicators and signal have caught up with the day. The position comes
+   * back `open` and is managed like any other: pass the original `atEntry` so exits measured on the
+   * underlying keep their levels. It counts as that day's entry for `maxEntriesPerDay`, and
+   * `entryBarIndex` is reset to the latest bar seen, so bar-counting rules start from the restore.
+   */
+  restorePosition(position: Position): Promise<void> {
+    return this.serialize(() => {
+      const state = this.tickerState(position.ticker);
+      if (this.positions.has(position.id))
+        throw new Error(`Position ${position.id} is already held`);
+      if (!(position.qty > 0))
+        throw new Error(`Position ${position.id} has no contracts`);
+
+      this.positions.set(position.id, {
+        ...position,
+        status: 'open',
+        entryBarIndex: state.barIndex,
+      });
+      if (state.entriesDate !== position.entryDate) {
+        state.entriesDate = position.entryDate;
+        state.entriesToday = 0;
+      }
+      state.entriesToday += 1;
+    });
+  }
+
+  /**
+   * Asks for an exit order on an open position now, with reason `forced`, whatever its exit rules
+   * say. For the host's own reasons to get flat: shutting down, stale data. Positions that are
+   * still opening or already closing are left alone and produce no events.
+   */
+  closePosition(positionId: string, time: number): Promise<EngineEvent[]> {
+    return this.serialize(() => {
+      const events: EngineEvent[] = [];
+      const position = this.positions.get(positionId);
+      if (position?.status === 'open')
+        this.placeExit(position, 'forced', time, events);
+      return events;
+    });
+  }
+
+  /** `closePosition` for every open position. */
+  closeAll(time: number): Promise<EngineEvent[]> {
+    return this.serialize(() => {
+      const events: EngineEvent[] = [];
+      for (const position of this.positions.values()) {
+        if (position.status === 'open')
+          this.placeExit(position, 'forced', time, events);
+      }
+      return events;
+    });
+  }
+
   /** A closed 1-minute bar for the underlying. */
   onBar(ticker: string, bar: Bar): Promise<EngineEvent[]> {
     return this.serialize(async () => {
@@ -429,14 +484,21 @@ export class TradingEngine {
     events: EngineEvent[],
   ): void {
     const rule = this.exits.find((exit) => exit.shouldExit(position, event));
-    if (!rule) return;
+    if (rule) this.placeExit(position, rule.reason, event.clock.time, events);
+  }
 
+  private placeExit(
+    position: Position,
+    reason: ExitReason,
+    time: number,
+    events: EngineEvent[],
+  ): void {
     const orderId = this.nextId('o');
     position.status = 'closing';
     this.orders.set(orderId, {
       action: 'close',
       positionId: position.id,
-      reason: rule.reason,
+      reason,
       barIndex: this.tickers.get(position.ticker)?.barIndex ?? 0,
     });
     events.push({
@@ -450,8 +512,8 @@ export class TradingEngine {
         side: 'sell',
         qty: position.qty,
         refPrice: position.bid ?? position.mark,
-        time: event.clock.time,
-        reason: rule.reason,
+        time,
+        reason,
       },
     });
   }

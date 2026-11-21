@@ -140,6 +140,9 @@
     },
     {
       "path": "./projects/trading/backtest"
+    },
+    {
+      "path": "./projects/trading/bot"
     }
   ],
   "compilerOptions": {

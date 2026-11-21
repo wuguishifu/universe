@@ -1171,6 +1171,27 @@ importers:
         specifier: ^4.3.6
         version: 4.6.5
 
+  projects/trading/bot:
+    dependencies:
+      '@libs/nest-core':
+        specifier: workspace:*
+        version: link:../../../libs/nest/core
+      '@libs/nest-universe-db':
+        specifier: workspace:*
+        version: link:../../../libs/nest/universe-db
+      '@platform/postgres-db':
+        specifier: workspace:*
+        version: link:../../../platform/postgres/db
+      '@projects/trading-core':
+        specifier: workspace:*
+        version: link:../core
+      tslib:
+        specifier: ^2.3.0
+        version: 2.8.1
+      zod:
+        specifier: ^4.3.6
+        version: 4.6.5
+
   projects/trading/core:
     dependencies:
       zod:

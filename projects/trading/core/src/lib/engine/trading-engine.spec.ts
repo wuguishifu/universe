@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { at, DAY, FakeChains, minuteBars } from '../../testing/fixtures';
+import {
+  at,
+  DAY,
+  FakeChains,
+  minuteBars,
+  position,
+} from '../../testing/fixtures';
 import { StrategyConfigInput } from '../config/strategy-config';
 import { MINUTE_MS } from '../market/ny-time';
 import { Bar } from '../market/types';
@@ -324,6 +330,62 @@ describe('TradingEngine', () => {
       OPEN + (UP_CROSS + 1) * MINUTE_MS,
       OPEN + (DOWN_CROSS + 1) * MINUTE_MS,
     ]);
+  });
+
+  it("manages a restored position like one it opened, and counts it as the day's entry", async () => {
+    const { engine } = engineWith({
+      exits: [{ type: 'pnlStop', pct: 0.3 }],
+      entryFilters: [{ type: 'maxEntriesPerDay', count: 1 }],
+    });
+    await engine.restorePosition(
+      position({ ticker: 'SPY', status: 'closing', entryPrice: 1 }),
+    );
+    assert.equal(engine.getPositions()[0]?.status, 'open');
+
+    const events = await engine.onQuote({
+      symbol: 'SPY261117C00100000',
+      time: at(DAY, '10:05'),
+      bid: 0.68,
+      ask: 0.7,
+    });
+    const exit = onlyOrder(events);
+    assert.equal(exit.action, 'close');
+    assert.equal(exit.reason, 'pnlStop');
+    assert.equal(exit.positionId, 'p1');
+    await fill(engine, exit, 0.68);
+    assert.equal(Math.round(engine.getTrades()[0]?.pnl ?? 0), -32);
+
+    // The restore was the day's one entry, so the next cross is skipped.
+    const later = await feed(engine, BARS.slice(0, UP_CROSS + 1));
+    assert.deepEqual(skips(later), ['blocked by maxEntriesPerDay']);
+  });
+
+  it('refuses to restore a position twice', async () => {
+    const { engine } = engineWith();
+    await engine.restorePosition(position({ ticker: 'SPY' }));
+    await assert.rejects(
+      engine.restorePosition(position({ ticker: 'SPY' })),
+      /already held/,
+    );
+  });
+
+  it('closes open positions on request with reason forced', async () => {
+    const { engine } = engineWith();
+    await enterLong(engine);
+    const [held] = engine.getPositions();
+    assert.ok(held);
+
+    const time = at(DAY, '10:00');
+    const exit = onlyOrder(await engine.closeAll(time));
+    assert.equal(exit.reason, 'forced');
+    assert.equal(exit.time, time);
+    assert.equal(exit.qty, 2);
+    // Already closing: a second request asks for nothing.
+    assert.deepEqual(await engine.closePosition(held.id, time), []);
+
+    const closed = await fill(engine, exit, 1.1);
+    assert.equal(closed[0]?.type, 'positionClosed');
+    assert.equal(engine.getTrades()[0]?.reason, 'forced');
   });
 
   it('rejects bars for tickers it was not configured with', async () => {

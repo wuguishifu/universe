@@ -1,0 +1,2 @@
+# Git worktrees made by Claude Code sessions are full checkouts; nx would see every project twice.
+.claude/worktrees

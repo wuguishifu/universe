@@ -11,3 +11,9 @@ dist
 .vscode
 **/.venv
 **/__pycache__
+
+# Local-only data that is gitignored (and so absent in CI) but huge on a dev machine
+projects/trading/backtest/data
+projects/trading/backtest/runs
+# Claude Code worktrees are full checkouts of the repo
+.claude

@@ -10,6 +10,8 @@ export const EXIT_REASONS = [
   'oppositeSignal',
   'underlyingStop',
   'underlyingTarget',
+  /** Closed by the host through `TradingEngine.closePosition`, e.g. on shutdown or stale data. */
+  'forced',
 ] as const;
 export type ExitReason = (typeof EXIT_REASONS)[number];
 

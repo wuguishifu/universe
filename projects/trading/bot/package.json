@@ -1,0 +1,14 @@
+{
+  "name": "@projects/trading-bot",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@libs/nest-core": "workspace:*",
+    "@libs/nest-universe-db": "workspace:*",
+    "@platform/postgres-db": "workspace:*",
+    "@projects/trading-core": "workspace:*",
+    "tslib": "^2.3.0",
+    "zod": "^4.3.6"
+  }
+}
