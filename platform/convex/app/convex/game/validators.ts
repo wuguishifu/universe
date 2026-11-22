@@ -46,9 +46,17 @@ export function cleanName(name: string, what: string): string {
   return trimmed;
 }
 
+/** Points must be 0 to 1,000,000 with at most one decimal place, like 2.5. */
 export function assertPoints(points: number, eventName: string): void {
-  if (!Number.isFinite(points) || points < 0 || points > 1_000_000) {
-    throw new ConvexError(`"${eventName}" has an invalid point value.`);
+  if (
+    !Number.isFinite(points) ||
+    points < 0 ||
+    points > 1_000_000 ||
+    Math.abs(points * 10 - Math.round(points * 10)) > 1e-9
+  ) {
+    throw new ConvexError(
+      `"${eventName}" has an invalid point value. Use a number from 0 up, with at most 1 decimal place.`,
+    );
   }
 }
 

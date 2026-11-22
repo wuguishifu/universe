@@ -110,14 +110,21 @@ export function draftFromEvent(event: PartyEvent): EventDraft {
   };
 }
 
-function parsePoints(value: string): number | null {
+function parseNumber(value: string): number | null {
   if (value.trim() === '') return null;
   const n = Number(value);
   return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
+/** Points allow one decimal place, like 2.5. */
+function parsePoints(value: string): number | null {
+  const n = parseNumber(value);
+  // Tolerance for float noise: 2.3 * 10 isn't exactly 23.
+  return n !== null && Math.abs(n * 10 - Math.round(n * 10)) < 1e-9 ? n : null;
+}
+
 function parseMultiplier(value: string): number | null {
-  const n = parsePoints(value);
+  const n = parseNumber(value);
   return n !== null && n > 0 ? n : null;
 }
 
@@ -189,7 +196,9 @@ export function PartyForm({
       const placePoints = parseAll(event.placePoints, parsePoints);
       const minimumPoints = parsePoints(event.minimumPoints);
       if (placePoints === null || minimumPoints === null) {
-        return setError(`Fill in every point value for "${label}".`);
+        return setError(
+          `Fill in every point value for "${label}" (up to 1 decimal place).`,
+        );
       }
       const roundMultipliers = parseAll(
         event.roundMultipliers,
@@ -680,7 +689,7 @@ function PointsInput({
   value: string;
   onChange: (value: string) => void;
   muted?: boolean;
-  /** Allow fractional values like 1.5. */
+  /** Allow any fraction (multipliers). Otherwise one decimal place, like 2.5. */
   decimal?: boolean;
 }) {
   const id = useId();
@@ -700,8 +709,8 @@ function PointsInput({
       <input
         id={id}
         type="number"
-        inputMode={decimal ? 'decimal' : 'numeric'}
-        step={decimal ? 'any' : undefined}
+        inputMode="decimal"
+        step={decimal ? 'any' : 0.1}
         min={0}
         value={value}
         onChange={(e) => onChange(e.target.value)}
