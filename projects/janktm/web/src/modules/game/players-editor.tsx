@@ -71,7 +71,7 @@ function PlayerRow({
   const confirmRemove = () => {
     const results =
       eventsPlayed > 0
-        ? ` Their ${eventsPlayed} ${eventsPlayed === 1 ? 'result' : 'results'} will be deleted.`
+        ? `Their results across ${eventsPlayed} ${eventsPlayed === 1 ? 'event' : 'events'} will be deleted.`
         : '';
     if (window.confirm(`Remove ${player.name}?${results}`)) {
       void run(() => remove({ playerId: player._id }));
