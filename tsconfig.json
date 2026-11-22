@@ -134,6 +134,9 @@
     },
     {
       "path": "./projects/wuguishifu/web"
+    },
+    {
+      "path": "./projects/janktm/web"
     }
   ],
   "compilerOptions": {

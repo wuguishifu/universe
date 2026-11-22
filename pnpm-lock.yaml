@@ -969,6 +969,15 @@ importers:
         specifier: ^2.3.0
         version: 2.8.1
 
+  projects/janktm/web:
+    dependencies:
+      '@libs/ui-web':
+        specifier: workspace:*
+        version: link:../../../libs/ui-web
+      '@platform/convex-contracts':
+        specifier: workspace:*
+        version: link:../../../platform/convex/contracts
+
   projects/mega-client/contracts: {}
 
   projects/mega-client/mcp:
