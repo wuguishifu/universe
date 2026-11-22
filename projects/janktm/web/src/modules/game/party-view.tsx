@@ -12,6 +12,7 @@ import { useQuery } from '../convex/use-query';
 import { EventCard } from './event-card';
 import { ordinal, pointsLabel } from './format';
 import { JoinParty } from './join-party';
+import { MyName } from './my-name';
 import { PartyStatus } from './party-status';
 import { Standings } from './standings';
 import type { Party, PartyPlayer } from './types';
@@ -135,7 +136,7 @@ function PartyHeader({ party }: { party: Party }) {
         </Link>
       </div>
       <div className="flex items-start justify-between gap-4">
-        <h1 className="font-display text-3xl leading-tight text-balance break-words font-semibold tracking-tight">
+        <h1 className="font-display text-3xl leading-tight text-balance wrap-break-word font-semibold tracking-tight">
           {party.party.name}
         </h1>
         <button
@@ -172,19 +173,9 @@ function YourScore({
     party.standings.filter((s) => s.rank === standing.rank).length > 1;
 
   return (
-    <section className="flex items-center justify-between gap-4 rounded-xl bg-accent p-4 text-accent-foreground shadow-sm">
-      <div className="min-w-0">
-        <p className="text-sm opacity-80">
-          Playing as <span className="font-semibold">{me.name}</span>
-          {' · '}
-          <button
-            type="button"
-            onClick={onSwitch}
-            className="underline underline-offset-2"
-          >
-            switch
-          </button>
-        </p>
+    <section className="flex items-end justify-between gap-4 rounded-xl bg-accent p-4 text-accent-foreground shadow-sm">
+      <div className="min-w-0 flex-1">
+        <MyName me={me} onSwitch={onSwitch} />
         <p className="mt-1 font-display text-3xl font-semibold">
           {pointsLabel(total)}
         </p>
