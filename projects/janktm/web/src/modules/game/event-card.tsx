@@ -10,12 +10,14 @@ import {
   describeScoring,
   errorMessage,
   multiplierLabel,
+  ordinal,
   placeLabel,
   pointsLabel,
 } from './format';
 import type { PartyEvent, PartyPlayer } from './types';
 
 type EventResult = PartyEvent['results'][number];
+type EventStanding = NonNullable<PartyEvent['standings']>[number];
 
 export function EventCard({
   event,
@@ -32,18 +34,36 @@ export function EventCard({
   const myResults = me
     ? event.results.filter((r) => r.playerId === me._id)
     : [];
-  const myPoints =
-    Math.round(myResults.reduce((sum, r) => sum + r.points, 0) * 100) / 100;
+  // In 'standings' mode round points only decide the order; the event's points are what count.
+  const myStanding = me && event.standings?.find((s) => s.playerId === me._id);
+  const myPoints = event.standings
+    ? (myStanding?.points ?? 0)
+    : Math.round(myResults.reduce((sum, r) => sum + r.points, 0) * 100) / 100;
 
   return (
     <article className="space-y-4 rounded-xl border bg-card p-4 shadow-xs">
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="font-display text-xl font-semibold">{event.name}</h3>
-          <p className="text-xs text-muted-foreground">
-            {multiRound && `${rounds.length} rounds · `}
-            {describeScoring(event)}
-          </p>
+          {event.roundScoring ? (
+            <div className="space-y-0.5 text-xs text-muted-foreground">
+              <p>
+                <span className="font-semibold">Final standings:</span>{' '}
+                {describeScoring(event)}
+              </p>
+              <p>
+                <span className="font-semibold">
+                  {multiRound ? `${rounds.length} rounds, each:` : 'Round:'}
+                </span>{' '}
+                {describeScoring(event.roundScoring)}
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              {multiRound && `${rounds.length} rounds · `}
+              {describeScoring(event)}
+            </p>
+          )}
         </div>
         {myResults.length > 0 && (
           <span className="shrink-0 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-bold text-primary">
@@ -64,6 +84,14 @@ export function EventCard({
           results={event.results.filter((r) => r.round === round)}
         />
       ))}
+
+      {event.standings && (
+        <EventStandings
+          standings={event.standings}
+          me={me}
+          namesById={namesById}
+        />
+      )}
     </article>
   );
 }
@@ -89,8 +117,9 @@ function RoundSection({
   const [pendingPlace, setPendingPlace] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const scoredPlaces = event.placePoints.length;
-  const places = [...event.placePoints.keys()]
+  const scoring = event.roundScoring ?? event;
+  const scoredPlaces = scoring.placePoints.length;
+  const places = [...scoring.placePoints.keys()]
     .map((i) => i + 1)
     .concat(scoredPlaces + 1);
   const myResult = me && results.find((r) => r.playerId === me._id);
@@ -132,7 +161,7 @@ function RoundSection({
                 {multiplierLabel(multiplier)} points
               </span>
               <span className="text-xs text-muted-foreground">
-                {describeScoring(event, multiplier)}
+                {describeScoring(scoring, multiplier)}
               </span>
             </>
           )}
@@ -203,6 +232,53 @@ function RoundSection({
         </ul>
       ) : (
         <p className="text-sm text-muted-foreground">No results yet.</p>
+      )}
+    </section>
+  );
+}
+
+/** Where everyone stands on round points, and the event points that earns them. */
+function EventStandings({
+  standings,
+  me,
+  namesById,
+}: {
+  standings: EventStanding[];
+  me: PartyPlayer | undefined;
+  namesById: Map<PartyPlayer['_id'], string>;
+}) {
+  return (
+    <section className="space-y-2 border-t pt-4">
+      <h4 className="font-semibold">Event standings</h4>
+      {standings.length > 0 ? (
+        <ol className="divide-y rounded-lg border bg-background/60">
+          {standings.map((standing) => (
+            <li
+              key={standing.playerId}
+              className={cn(
+                'flex items-baseline gap-3 px-3 py-2 text-sm',
+                standing.playerId === me?._id && 'bg-primary/10',
+              )}
+            >
+              <span className="w-12 shrink-0 font-bold">
+                {ordinal(standing.rank)}
+              </span>
+              <span className="min-w-0 flex-1 truncate">
+                {namesById.get(standing.playerId) ?? '?'}
+              </span>
+              <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                {pointsLabel(standing.total)} in rounds
+              </span>
+              <span className="w-16 shrink-0 text-right font-semibold tabular-nums">
+                +{pointsLabel(standing.points)}
+              </span>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          Standings appear once someone records a round.
+        </p>
       )}
     </section>
   );

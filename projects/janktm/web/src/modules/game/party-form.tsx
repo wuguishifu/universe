@@ -30,6 +30,10 @@ export type EventDraft = {
   minimumPoints: string;
   /** One multiplier per round. */
   roundMultipliers: string[];
+  roundMode: RoundMode;
+  /** What a round placement earns in 'standings' mode. Kept while in 'perRound' so toggling back is lossless. */
+  roundPlacePoints: string[];
+  roundMinimumPoints: string;
   resultCount: number;
   /** Results already recorded in each round, to warn before a round is removed. */
   roundResultCounts: number[];
@@ -43,13 +47,21 @@ export type PartyFormValues = {
     placePoints: number[];
     minimumPoints: number;
     roundMultipliers: number[];
+    roundMode: RoundMode;
+    roundScoring?: { placePoints: number[]; minimumPoints: number };
   }[];
 };
+
+export type RoundMode = PartyEvent['roundMode'];
 
 /** Mirrors MAX_ROUNDS in the Convex game validators. */
 const MAX_ROUNDS = 20;
 
 const DEFAULT_SCORING = { placePoints: ['10', '5', '2'], minimumPoints: '1' };
+const DEFAULT_ROUND_SCORING = {
+  placePoints: ['3', '2', '1'],
+  minimumPoints: '0',
+};
 
 let nextKey = 0;
 function newEvent(copyScoringFrom?: EventDraft): EventDraft {
@@ -62,6 +74,14 @@ function newEvent(copyScoringFrom?: EventDraft): EventDraft {
     minimumPoints:
       copyScoringFrom?.minimumPoints ?? DEFAULT_SCORING.minimumPoints,
     roundMultipliers: ['1'],
+    roundMode: 'perRound',
+    roundPlacePoints: [
+      ...(copyScoringFrom?.roundPlacePoints ??
+        DEFAULT_ROUND_SCORING.placePoints),
+    ],
+    roundMinimumPoints:
+      copyScoringFrom?.roundMinimumPoints ??
+      DEFAULT_ROUND_SCORING.minimumPoints,
     resultCount: 0,
     roundResultCounts: [0],
   };
@@ -75,6 +95,14 @@ export function draftFromEvent(event: PartyEvent): EventDraft {
     placePoints: event.placePoints.map(String),
     minimumPoints: String(event.minimumPoints),
     roundMultipliers: event.roundMultipliers.map(String),
+    roundMode: event.roundMode,
+    roundPlacePoints: (
+      event.roundScoring?.placePoints.map(String) ??
+      DEFAULT_ROUND_SCORING.placePoints
+    ).slice(),
+    roundMinimumPoints: event.roundScoring
+      ? String(event.roundScoring.minimumPoints)
+      : DEFAULT_ROUND_SCORING.minimumPoints,
     resultCount: event.results.length,
     roundResultCounts: event.roundMultipliers.map(
       (_, round) => event.results.filter((r) => r.round === round).length,
@@ -172,12 +200,26 @@ export function PartyForm({
           `Every round multiplier for "${label}" needs to be above 0.`,
         );
       }
+      let roundScoring: PartyFormValues['events'][number]['roundScoring'];
+      if (event.roundMode === 'standings') {
+        const roundPlacePoints = parseAll(event.roundPlacePoints, parsePoints);
+        const roundMinimumPoints = parsePoints(event.roundMinimumPoints);
+        if (roundPlacePoints === null || roundMinimumPoints === null) {
+          return setError(`Fill in every round point value for "${label}".`);
+        }
+        roundScoring = {
+          placePoints: roundPlacePoints,
+          minimumPoints: roundMinimumPoints,
+        };
+      }
       parsed.push({
         _id: event.id,
         name: event.name,
         placePoints,
         minimumPoints,
         roundMultipliers,
+        roundMode: event.roundMode,
+        roundScoring,
       });
     }
 
@@ -269,10 +311,6 @@ function EventEditor({
   onMove: (offset: -1 | 1) => void;
 }) {
   const id = useId();
-  const setPlace = (i: number, value: string) =>
-    onChange({
-      placePoints: event.placePoints.map((p, j) => (j === i ? value : p)),
-    });
 
   return (
     <fieldset className="space-y-4 rounded-xl border bg-card p-4 shadow-xs">
@@ -327,60 +365,149 @@ function EventEditor({
         </div>
       </div>
 
-      <div className="space-y-2">
-        <p className="text-sm font-medium">Points per place</p>
-        {event.resultCount > 0 && (
-          <p className="text-xs text-muted-foreground">
-            {event.resultCount} {event.resultCount === 1 ? 'result' : 'results'}{' '}
-            recorded. Changing points updates everyone&apos;s scores.
-          </p>
-        )}
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {event.placePoints.map((points, i) => (
-            <PointsInput
-              key={i}
-              label={ordinal(i + 1)}
-              value={points}
-              onChange={(value) => setPlace(i, value)}
-            />
-          ))}
-          <PointsInput
-            label="Others"
-            value={event.minimumPoints}
-            onChange={(minimumPoints) => onChange({ minimumPoints })}
-            muted
-          />
-        </div>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() =>
-              onChange({
-                placePoints: [...event.placePoints, event.minimumPoints],
-              })
-            }
-          >
-            <PlusIcon /> Place
-          </Button>
-          {event.placePoints.length > 0 && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                onChange({ placePoints: event.placePoints.slice(0, -1) })
-              }
-            >
-              <MinusIcon /> Place
-            </Button>
-          )}
-        </div>
-      </div>
+      <PlacePointsEditor
+        title={
+          event.roundMode === 'standings'
+            ? 'Points for final standings'
+            : 'Points per place'
+        }
+        hint={
+          event.resultCount > 0
+            ? `${event.resultCount} ${event.resultCount === 1 ? 'result' : 'results'} recorded. Changing points updates everyone's scores.`
+            : undefined
+        }
+        placePoints={event.placePoints}
+        minimumPoints={event.minimumPoints}
+        onChange={({ placePoints, minimumPoints }) =>
+          onChange({ placePoints, minimumPoints })
+        }
+      />
 
       <RoundsEditor event={event} onChange={onChange} />
     </fieldset>
+  );
+}
+
+function PlacePointsEditor({
+  title,
+  hint,
+  placePoints,
+  minimumPoints,
+  onChange,
+}: {
+  title: string;
+  hint?: string;
+  placePoints: string[];
+  minimumPoints: string;
+  onChange: (scoring: { placePoints: string[]; minimumPoints: string }) => void;
+}) {
+  const setPoints = (patch: {
+    placePoints?: string[];
+    minimumPoints?: string;
+  }) => onChange({ placePoints, minimumPoints, ...patch });
+
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium">{title}</p>
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {placePoints.map((points, i) => (
+          <PointsInput
+            key={i}
+            label={ordinal(i + 1)}
+            value={points}
+            onChange={(value) =>
+              setPoints({
+                placePoints: placePoints.map((p, j) => (j === i ? value : p)),
+              })
+            }
+          />
+        ))}
+        <PointsInput
+          label="Others"
+          value={minimumPoints}
+          onChange={(value) => setPoints({ minimumPoints: value })}
+          muted
+        />
+      </div>
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={() =>
+            setPoints({ placePoints: [...placePoints, minimumPoints] })
+          }
+        >
+          <PlusIcon /> Place
+        </Button>
+        {placePoints.length > 0 && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setPoints({ placePoints: placePoints.slice(0, -1) })}
+          >
+            <MinusIcon /> Place
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const ROUND_MODES: { value: RoundMode; label: string; description: string }[] =
+  [
+    {
+      value: 'perRound',
+      label: 'Every round counts',
+      description: "Each round's points go straight to the party total.",
+    },
+    {
+      value: 'standings',
+      label: 'Rounds decide the winner',
+      description:
+        'Rounds earn round points. The totals rank everyone, and the event pays out on that ranking.',
+    },
+  ];
+
+function RoundModeToggle({
+  value,
+  onChange,
+}: {
+  value: RoundMode;
+  onChange: (mode: RoundMode) => void;
+}) {
+  const selected = ROUND_MODES.find((mode) => mode.value === value);
+  return (
+    <div className="space-y-1.5">
+      <div
+        role="radiogroup"
+        aria-label="How rounds are scored"
+        className="grid grid-cols-2 gap-1 rounded-lg border bg-background p-1"
+      >
+        {ROUND_MODES.map((mode) => (
+          <button
+            key={mode.value}
+            type="button"
+            role="radio"
+            aria-checked={mode.value === value}
+            onClick={() => onChange(mode.value)}
+            className={cn(
+              'rounded-md px-2 py-1.5 text-sm font-semibold transition-colors',
+              mode.value === value
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:bg-muted',
+            )}
+          >
+            {mode.label}
+          </button>
+        ))}
+      </div>
+      {selected && (
+        <p className="text-xs text-muted-foreground">{selected.description}</p>
+      )}
+    </div>
   );
 }
 
@@ -392,8 +519,11 @@ function RoundsEditor({
   onChange: (patch: Partial<EventDraft>) => void;
 }) {
   const count = event.roundMultipliers.length;
+  const standings = event.roundMode === 'standings';
   // A lone round with a non-1 multiplier still needs to be visible, or it'd apply silently.
   const showMultipliers = count > 1 || event.roundMultipliers[0] !== '1';
+  // The mode only matters with several rounds, but stays visible if it's already been changed.
+  const showMode = count > 1 || standings;
 
   const addRound = () =>
     onChange({
@@ -425,8 +555,13 @@ function RoundsEditor({
     });
 
   // Preview what boosted rounds are worth, once the numbers are valid.
-  const placePoints = parseAll(event.placePoints, parsePoints);
-  const minimumPoints = parsePoints(event.minimumPoints);
+  const placePoints = parseAll(
+    standings ? event.roundPlacePoints : event.placePoints,
+    parsePoints,
+  );
+  const minimumPoints = parsePoints(
+    standings ? event.roundMinimumPoints : event.minimumPoints,
+  );
   const previews =
     placePoints && minimumPoints !== null
       ? event.roundMultipliers.flatMap((value, round) => {
@@ -446,12 +581,13 @@ function RoundsEditor({
       : [];
 
   return (
-    <div className="space-y-2 border-t pt-4">
+    <div className="space-y-3 border-t pt-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-sm font-medium">Rounds</p>
           <p className="text-xs text-muted-foreground">
-            Each round is placed separately. Multipliers scale the points.
+            Each round is placed separately. Multipliers scale{' '}
+            {standings ? 'round points' : 'the points'}.
           </p>
         </div>
         <div className="flex shrink-0 items-center rounded-lg border bg-background">
@@ -480,6 +616,27 @@ function RoundsEditor({
           </Button>
         </div>
       </div>
+
+      {showMode && (
+        <RoundModeToggle
+          value={event.roundMode}
+          onChange={(roundMode) => onChange({ roundMode })}
+        />
+      )}
+
+      {standings && (
+        <PlacePointsEditor
+          title="Round points per place"
+          placePoints={event.roundPlacePoints}
+          minimumPoints={event.roundMinimumPoints}
+          onChange={(scoring) =>
+            onChange({
+              roundPlacePoints: scoring.placePoints,
+              roundMinimumPoints: scoring.minimumPoints,
+            })
+          }
+        />
+      )}
 
       {showMultipliers && (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">

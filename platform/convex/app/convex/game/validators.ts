@@ -7,6 +7,17 @@ export const MAX_ROUNDS = 20;
 export const MAX_MULTIPLIER = 100;
 export const MAX_NAME_LENGTH = 60;
 
+/** See `gameEvents.roundMode`. */
+export const roundMode = v.union(v.literal('perRound'), v.literal('standings'));
+
+/** Points by place: `placePoints[0]` for 1st, and `minimumPoints` for every place past the end. */
+export const placeScoring = v.object({
+  placePoints: v.array(v.number()),
+  minimumPoints: v.number(),
+});
+
+export type PlaceScoring = Infer<typeof placeScoring>;
+
 export const eventConfig = v.object({
   /** Set when editing an existing event; omitted for a new one. */
   _id: v.optional(v.id('gameEvents')),
@@ -15,6 +26,10 @@ export const eventConfig = v.object({
   minimumPoints: v.number(),
   /** One multiplier per round. Omitted means a single 1x round. */
   roundMultipliers: v.optional(v.array(v.number())),
+  /** Omitted means 'perRound'. */
+  roundMode: v.optional(roundMode),
+  /** Required in 'standings' mode, ignored otherwise. */
+  roundScoring: v.optional(placeScoring),
 });
 
 export type EventConfig = Infer<typeof eventConfig>;
@@ -45,13 +60,7 @@ export function cleanEvents(events: EventConfig[]): EventConfig[] {
   }
   return events.map((event) => {
     const name = cleanName(event.name, 'Event name');
-    if (event.placePoints.length > MAX_PLACES) {
-      throw new ConvexError(
-        `"${name}" can score at most ${MAX_PLACES} places.`,
-      );
-    }
-    event.placePoints.forEach((points) => assertPoints(points, name));
-    assertPoints(event.minimumPoints, name);
+    assertPlaceScoring(event, name);
 
     const roundMultipliers = event.roundMultipliers?.length
       ? event.roundMultipliers
@@ -70,6 +79,26 @@ export function cleanEvents(events: EventConfig[]): EventConfig[] {
         );
       }
     }
-    return { ...event, name, roundMultipliers };
+
+    const roundMode = event.roundMode ?? 'perRound';
+    let roundScoring: PlaceScoring | undefined;
+    if (roundMode === 'standings') {
+      if (!event.roundScoring) {
+        throw new ConvexError(`"${name}" needs points for each round.`);
+      }
+      assertPlaceScoring(event.roundScoring, name);
+      roundScoring = event.roundScoring;
+    }
+    return { ...event, name, roundMultipliers, roundMode, roundScoring };
   });
+}
+
+function assertPlaceScoring(scoring: PlaceScoring, eventName: string): void {
+  if (scoring.placePoints.length > MAX_PLACES) {
+    throw new ConvexError(
+      `"${eventName}" can score at most ${MAX_PLACES} places.`,
+    );
+  }
+  scoring.placePoints.forEach((points) => assertPoints(points, eventName));
+  assertPoints(scoring.minimumPoints, eventName);
 }
