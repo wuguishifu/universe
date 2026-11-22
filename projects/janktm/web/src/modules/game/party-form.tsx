@@ -486,7 +486,7 @@ function RoundsEditor({
           {event.roundMultipliers.map((multiplier, i) => (
             <PointsInput
               key={i}
-              label={count > 1 ? `R${i + 1} ×` : 'Points ×'}
+              label={count > 1 ? `Round ${i + 1} ×` : 'Points ×'}
               value={multiplier}
               onChange={(value) => setMultiplier(i, value)}
               decimal

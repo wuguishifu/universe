@@ -24,12 +24,7 @@ export function PlayersEditor({
 
   return (
     <section className="space-y-3">
-      <div>
-        <h2 className="font-display text-xl font-semibold">Players</h2>
-        <p className="text-sm text-muted-foreground">
-          Renames and removals save right away.
-        </p>
-      </div>
+      <h2 className="font-display text-xl font-semibold">Players</h2>
       {players.length === 0 ? (
         <p className="text-sm text-muted-foreground">Nobody has joined yet.</p>
       ) : (

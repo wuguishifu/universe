@@ -41,9 +41,6 @@ export function EditParty({ code }: { code: string }) {
         <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">
           Edit party
         </h1>
-        <p className="mt-1 text-muted-foreground">
-          Changes apply to everyone&apos;s scores as soon as you save.
-        </p>
       </header>
 
       {/* Keyed by party so the form's local draft starts from the saved state. */}

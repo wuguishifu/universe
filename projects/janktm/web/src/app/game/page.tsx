@@ -8,7 +8,6 @@ export default function GamePage() {
   return (
     <div className="flex min-h-[70dvh] flex-col justify-center gap-10">
       <header className="text-center">
-        <p className="text-5xl">🦃</p>
         <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight">
           Game Night
         </h1>
