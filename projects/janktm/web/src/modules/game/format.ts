@@ -24,14 +24,20 @@ export function pointsLabel(points: number): string {
   return `${points} ${points === 1 ? 'pt' : 'pts'}`;
 }
 
-export function describeScoring(event: {
-  placePoints: number[];
-  minimumPoints: number;
-}): string {
+/** e.g. "1st 10 · 2nd 5 · others 1", with every value scaled by `multiplier`. */
+export function describeScoring(
+  event: { placePoints: number[]; minimumPoints: number },
+  multiplier = 1,
+): string {
+  const scale = (points: number) => Math.round(points * multiplier * 100) / 100;
   const places = event.placePoints.map(
-    (points, i) => `${ordinal(i + 1)} ${points}`,
+    (points, i) => `${ordinal(i + 1)} ${scale(points)}`,
   );
-  return [...places, `others ${event.minimumPoints}`].join(' · ');
+  return [...places, `others ${scale(event.minimumPoints)}`].join(' · ');
+}
+
+export function multiplierLabel(multiplier: number): string {
+  return `${multiplier}×`;
 }
 
 export function errorMessage(error: unknown): string {

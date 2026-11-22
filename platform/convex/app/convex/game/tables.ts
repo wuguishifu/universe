@@ -21,6 +21,11 @@ export const gameTables = {
     placePoints: v.array(v.number()),
     /** What any place past the end of `placePoints` earns. */
     minimumPoints: v.number(),
+    /**
+     * One entry per round: that round's points are the scoring above times its multiplier.
+     * Missing on events from before rounds existed, which means a single 1x round.
+     */
+    roundMultipliers: v.optional(v.array(v.number())),
   }).index('by_party_order', ['partyId', 'order']),
 
   gamePlayers: defineTable({
@@ -31,13 +36,15 @@ export const gameTables = {
     normalizedName: v.string(),
   }).index('by_party_name', ['partyId', 'normalizedName']),
 
-  /** One row per player per event they've reported a placement for. */
+  /** One row per player per event round they've reported a placement for. */
   gameResults: defineTable({
     partyId: v.id('gameParties'),
     eventId: v.id('gameEvents'),
     playerId: v.id('gamePlayers'),
     /** 1-based. Several players can share a place. */
     place: v.number(),
+    /** 0-based index into the event's rounds. Missing means round 0. */
+    round: v.optional(v.number()),
   })
     .index('by_party', ['partyId'])
     .index('by_event_player', ['eventId', 'playerId']),

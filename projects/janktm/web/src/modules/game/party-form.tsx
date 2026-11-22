@@ -12,7 +12,12 @@ import { useId, useState } from 'react';
 import { Button, cn, Input, Label } from '@libs/ui-web';
 import type { Id } from '@platform/convex-contracts';
 
-import { errorMessage, ordinal } from './format';
+import {
+  describeScoring,
+  errorMessage,
+  multiplierLabel,
+  ordinal,
+} from './format';
 import type { PartyEvent } from './types';
 
 /** Numbers are kept as strings while editing so a field can be briefly empty. */
@@ -23,7 +28,11 @@ export type EventDraft = {
   name: string;
   placePoints: string[];
   minimumPoints: string;
+  /** One multiplier per round. */
+  roundMultipliers: string[];
   resultCount: number;
+  /** Results already recorded in each round, to warn before a round is removed. */
+  roundResultCounts: number[];
 };
 
 export type PartyFormValues = {
@@ -33,8 +42,12 @@ export type PartyFormValues = {
     name: string;
     placePoints: number[];
     minimumPoints: number;
+    roundMultipliers: number[];
   }[];
 };
+
+/** Mirrors MAX_ROUNDS in the Convex game validators. */
+const MAX_ROUNDS = 20;
 
 const DEFAULT_SCORING = { placePoints: ['10', '5', '2'], minimumPoints: '1' };
 
@@ -48,7 +61,9 @@ function newEvent(copyScoringFrom?: EventDraft): EventDraft {
     ],
     minimumPoints:
       copyScoringFrom?.minimumPoints ?? DEFAULT_SCORING.minimumPoints,
+    roundMultipliers: ['1'],
     resultCount: 0,
+    roundResultCounts: [0],
   };
 }
 
@@ -59,7 +74,11 @@ export function draftFromEvent(event: PartyEvent): EventDraft {
     name: event.name,
     placePoints: event.placePoints.map(String),
     minimumPoints: String(event.minimumPoints),
+    roundMultipliers: event.roundMultipliers.map(String),
     resultCount: event.results.length,
+    roundResultCounts: event.roundMultipliers.map(
+      (_, round) => event.results.filter((r) => r.round === round).length,
+    ),
   };
 }
 
@@ -67,6 +86,18 @@ function parsePoints(value: string): number | null {
   if (value.trim() === '') return null;
   const n = Number(value);
   return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
+function parseMultiplier(value: string): number | null {
+  const n = parsePoints(value);
+  return n !== null && n > 0 ? n : null;
+}
+
+function parseAll<T>(values: string[], parse: (v: string) => T | null) {
+  const parsed = values.map(parse);
+  return parsed.every((v) => v !== null)
+    ? parsed.filter((v) => v !== null)
+    : null;
 }
 
 /** Shared by creating and editing a party. `onSubmit` throws to show an error. */
@@ -127,16 +158,26 @@ export function PartyForm({
     for (const [i, event] of events.entries()) {
       const label = event.name.trim() || `Event ${i + 1}`;
       if (!event.name.trim()) return setError(`${label} needs a name.`);
-      const placePoints = event.placePoints.map(parsePoints);
+      const placePoints = parseAll(event.placePoints, parsePoints);
       const minimumPoints = parsePoints(event.minimumPoints);
-      if (placePoints.some((p) => p === null) || minimumPoints === null) {
+      if (placePoints === null || minimumPoints === null) {
         return setError(`Fill in every point value for "${label}".`);
+      }
+      const roundMultipliers = parseAll(
+        event.roundMultipliers,
+        parseMultiplier,
+      );
+      if (roundMultipliers === null) {
+        return setError(
+          `Every round multiplier for "${label}" needs to be above 0.`,
+        );
       }
       parsed.push({
         _id: event.id,
         name: event.name,
-        placePoints: placePoints.filter((p) => p !== null),
+        placePoints,
         minimumPoints,
+        roundMultipliers,
       });
     }
 
@@ -337,7 +378,137 @@ function EventEditor({
           )}
         </div>
       </div>
+
+      <RoundsEditor event={event} onChange={onChange} />
     </fieldset>
+  );
+}
+
+function RoundsEditor({
+  event,
+  onChange,
+}: {
+  event: EventDraft;
+  onChange: (patch: Partial<EventDraft>) => void;
+}) {
+  const count = event.roundMultipliers.length;
+  // A lone round with a non-1 multiplier still needs to be visible, or it'd apply silently.
+  const showMultipliers = count > 1 || event.roundMultipliers[0] !== '1';
+
+  const addRound = () =>
+    onChange({
+      roundMultipliers: [...event.roundMultipliers, '1'],
+      roundResultCounts: [...event.roundResultCounts, 0],
+    });
+
+  const removeRound = () => {
+    const recorded = event.roundResultCounts[count - 1] ?? 0;
+    if (
+      recorded > 0 &&
+      !window.confirm(
+        `Remove round ${count}? Its ${recorded} recorded ${recorded === 1 ? 'result' : 'results'} will be deleted when you save.`,
+      )
+    ) {
+      return;
+    }
+    onChange({
+      roundMultipliers: event.roundMultipliers.slice(0, -1),
+      roundResultCounts: event.roundResultCounts.slice(0, -1),
+    });
+  };
+
+  const setMultiplier = (i: number, value: string) =>
+    onChange({
+      roundMultipliers: event.roundMultipliers.map((m, j) =>
+        j === i ? value : m,
+      ),
+    });
+
+  // Preview what boosted rounds are worth, once the numbers are valid.
+  const placePoints = parseAll(event.placePoints, parsePoints);
+  const minimumPoints = parsePoints(event.minimumPoints);
+  const previews =
+    placePoints && minimumPoints !== null
+      ? event.roundMultipliers.flatMap((value, round) => {
+          const multiplier = parseMultiplier(value);
+          if (multiplier === null || multiplier === 1) return [];
+          return [
+            {
+              round,
+              multiplier,
+              scoring: describeScoring(
+                { placePoints, minimumPoints },
+                multiplier,
+              ),
+            },
+          ];
+        })
+      : [];
+
+  return (
+    <div className="space-y-2 border-t pt-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium">Rounds</p>
+          <p className="text-xs text-muted-foreground">
+            Each round is placed separately. Multipliers scale the points.
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center rounded-lg border bg-background">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Remove a round"
+            disabled={count <= 1}
+            onClick={removeRound}
+          >
+            <MinusIcon />
+          </Button>
+          <span className="w-6 text-center font-semibold tabular-nums">
+            {count}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Add a round"
+            disabled={count >= MAX_ROUNDS}
+            onClick={addRound}
+          >
+            <PlusIcon />
+          </Button>
+        </div>
+      </div>
+
+      {showMultipliers && (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {event.roundMultipliers.map((multiplier, i) => (
+            <PointsInput
+              key={i}
+              label={count > 1 ? `R${i + 1} ×` : 'Points ×'}
+              value={multiplier}
+              onChange={(value) => setMultiplier(i, value)}
+              decimal
+            />
+          ))}
+        </div>
+      )}
+
+      {previews.length > 0 && (
+        <ul className="space-y-0.5 text-xs text-muted-foreground">
+          {previews.map(({ round, multiplier, scoring }) => (
+            <li key={round}>
+              <span className="font-semibold text-foreground">
+                {count > 1 ? `Round ${round + 1}` : 'Points'} (
+                {multiplierLabel(multiplier)})
+              </span>
+              : {scoring}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -346,11 +517,14 @@ function PointsInput({
   value,
   onChange,
   muted,
+  decimal,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   muted?: boolean;
+  /** Allow fractional values like 1.5. */
+  decimal?: boolean;
 }) {
   const id = useId();
   return (
@@ -369,7 +543,8 @@ function PointsInput({
       <input
         id={id}
         type="number"
-        inputMode="numeric"
+        inputMode={decimal ? 'decimal' : 'numeric'}
+        step={decimal ? 'any' : undefined}
         min={0}
         value={value}
         onChange={(e) => onChange(e.target.value)}

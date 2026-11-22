@@ -3,6 +3,8 @@ import { ConvexError, type Infer, v } from 'convex/values';
 export const MAX_EVENTS = 30;
 export const MAX_PLACES = 20;
 export const MAX_PLAYERS = 100;
+export const MAX_ROUNDS = 20;
+export const MAX_MULTIPLIER = 100;
 export const MAX_NAME_LENGTH = 60;
 
 export const eventConfig = v.object({
@@ -11,6 +13,8 @@ export const eventConfig = v.object({
   name: v.string(),
   placePoints: v.array(v.number()),
   minimumPoints: v.number(),
+  /** One multiplier per round. Omitted means a single 1x round. */
+  roundMultipliers: v.optional(v.array(v.number())),
 });
 
 export type EventConfig = Infer<typeof eventConfig>;
@@ -48,6 +52,24 @@ export function cleanEvents(events: EventConfig[]): EventConfig[] {
     }
     event.placePoints.forEach((points) => assertPoints(points, name));
     assertPoints(event.minimumPoints, name);
-    return { ...event, name };
+
+    const roundMultipliers = event.roundMultipliers?.length
+      ? event.roundMultipliers
+      : [1];
+    if (roundMultipliers.length > MAX_ROUNDS) {
+      throw new ConvexError(`"${name}" can have at most ${MAX_ROUNDS} rounds.`);
+    }
+    for (const multiplier of roundMultipliers) {
+      if (
+        !Number.isFinite(multiplier) ||
+        multiplier <= 0 ||
+        multiplier > MAX_MULTIPLIER
+      ) {
+        throw new ConvexError(
+          `"${name}" has an invalid round multiplier. Use a number above 0, up to ${MAX_MULTIPLIER}.`,
+        );
+      }
+    }
+    return { ...event, name, roundMultipliers };
   });
 }

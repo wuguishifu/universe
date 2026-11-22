@@ -9,10 +9,13 @@ import { api } from '@platform/convex-contracts';
 import {
   describeScoring,
   errorMessage,
+  multiplierLabel,
   placeLabel,
   pointsLabel,
 } from './format';
 import type { PartyEvent, PartyPlayer } from './types';
+
+type EventResult = PartyEvent['results'][number];
 
 export function EventCard({
   event,
@@ -23,14 +26,74 @@ export function EventCard({
   players: PartyPlayer[];
   me: PartyPlayer | undefined;
 }) {
+  const namesById = new Map(players.map((p) => [p._id, p.name]));
+  const rounds = event.roundMultipliers;
+  const multiRound = rounds.length > 1;
+  const myResults = me
+    ? event.results.filter((r) => r.playerId === me._id)
+    : [];
+  const myPoints =
+    Math.round(myResults.reduce((sum, r) => sum + r.points, 0) * 100) / 100;
+
+  return (
+    <article className="space-y-4 rounded-xl border bg-card p-4 shadow-xs">
+      <header className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="font-display text-xl font-semibold">{event.name}</h3>
+          <p className="text-xs text-muted-foreground">
+            {multiRound && `${rounds.length} rounds · `}
+            {describeScoring(event)}
+          </p>
+        </div>
+        {myResults.length > 0 && (
+          <span className="shrink-0 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-bold text-primary">
+            +{pointsLabel(myPoints)}
+          </span>
+        )}
+      </header>
+
+      {rounds.map((multiplier, round) => (
+        <RoundSection
+          key={round}
+          event={event}
+          round={round}
+          multiplier={multiplier}
+          showHeader={multiRound}
+          me={me}
+          namesById={namesById}
+          results={event.results.filter((r) => r.round === round)}
+        />
+      ))}
+    </article>
+  );
+}
+
+function RoundSection({
+  event,
+  round,
+  multiplier,
+  showHeader,
+  me,
+  namesById,
+  results,
+}: {
+  event: PartyEvent;
+  round: number;
+  multiplier: number;
+  showHeader: boolean;
+  me: PartyPlayer | undefined;
+  namesById: Map<PartyPlayer['_id'], string>;
+  results: EventResult[];
+}) {
   const setResult = useMutation(api.game.results.set);
   const [pendingPlace, setPendingPlace] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const scoredPlaces = event.placePoints.length;
-  const otherPlace = scoredPlaces + 1;
-  const myResult = me && event.results.find((r) => r.playerId === me._id);
-  const namesById = new Map(players.map((p) => [p._id, p.name]));
+  const places = [...event.placePoints.keys()]
+    .map((i) => i + 1)
+    .concat(scoredPlaces + 1);
+  const myResult = me && results.find((r) => r.playerId === me._id);
 
   const choose = async (place: number) => {
     if (!me) return;
@@ -40,6 +103,7 @@ export function EventCard({
       await setResult({
         playerId: me._id,
         eventId: event._id,
+        round,
         // Tapping your current place again clears it.
         place: myResult?.place === place ? null : place,
       });
@@ -50,54 +114,65 @@ export function EventCard({
     }
   };
 
-  const groups = groupResults(event.results, scoredPlaces);
+  const groups = groupResults(results, scoredPlaces);
 
   return (
-    <article className="space-y-4 rounded-xl border bg-card p-4 shadow-xs">
-      <header className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="font-display text-xl font-semibold">{event.name}</h3>
-          <p className="text-xs text-muted-foreground">
-            {describeScoring(event)}
-          </p>
+    <section
+      className={cn(
+        'space-y-3',
+        showHeader && 'border-t pt-4 first-of-type:border-t-0',
+      )}
+    >
+      {showHeader && (
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <h4 className="font-semibold">Round {round + 1}</h4>
+          {multiplier !== 1 && (
+            <>
+              <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-bold text-accent-foreground">
+                {multiplierLabel(multiplier)} points
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {describeScoring(event, multiplier)}
+              </span>
+            </>
+          )}
         </div>
-        {myResult && (
-          <span className="shrink-0 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-bold text-primary">
-            +{pointsLabel(myResult.points)}
-          </span>
-        )}
-      </header>
+      )}
 
       {me && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase">
-            Where did you place?
-          </p>
+          {!showHeader && (
+            <p className="text-xs font-semibold text-muted-foreground uppercase">
+              Where did you place?
+            </p>
+          )}
           <div className="flex flex-wrap gap-2">
-            {[...event.placePoints.keys()]
-              .map((i) => i + 1)
-              .concat(otherPlace)
-              .map((place) => {
-                const selected = myResult?.place === place;
-                return (
-                  <button
-                    key={place}
-                    type="button"
-                    aria-pressed={selected}
-                    disabled={pendingPlace !== null}
-                    onClick={() => void choose(place)}
-                    className={cn(
-                      'h-10 min-w-14 rounded-lg border px-3 text-sm font-semibold transition-all active:translate-y-px disabled:opacity-60',
-                      selected
-                        ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                        : 'bg-background hover:bg-muted',
-                      pendingPlace === place && 'animate-pulse',
-                    )}
-                  >
-                    {placeLabel(place, scoredPlaces)}
-                  </button>
-                );
-              })}
+            {places.map((place) => {
+              const selected = myResult?.place === place;
+              return (
+                <button
+                  key={place}
+                  type="button"
+                  aria-pressed={selected}
+                  aria-label={
+                    showHeader
+                      ? `Round ${round + 1}: ${placeLabel(place, scoredPlaces)}`
+                      : undefined
+                  }
+                  disabled={pendingPlace !== null}
+                  onClick={() => void choose(place)}
+                  className={cn(
+                    'h-10 min-w-14 rounded-lg border px-3 text-sm font-semibold transition-all active:translate-y-px disabled:opacity-60',
+                    selected
+                      ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                      : 'bg-background hover:bg-muted',
+                    pendingPlace === place && 'animate-pulse',
+                  )}
+                >
+                  {placeLabel(place, scoredPlaces)}
+                </button>
+              );
+            })}
           </div>
           {error && (
             <p role="alert" className="text-sm font-medium text-destructive">
@@ -129,16 +204,16 @@ export function EventCard({
       ) : (
         <p className="text-sm text-muted-foreground">No results yet.</p>
       )}
-    </article>
+    </section>
   );
 }
 
 /** Results arrive sorted by place; every place past the scored ones folds into "Other". */
-function groupResults(results: PartyEvent['results'], scoredPlaces: number) {
+function groupResults(results: EventResult[], scoredPlaces: number) {
   const groups: {
     label: string;
     points: number;
-    playerIds: PartyEvent['results'][number]['playerId'][];
+    playerIds: EventResult['playerId'][];
   }[] = [];
   for (const result of results) {
     const label = placeLabel(result.place, scoredPlaces);
