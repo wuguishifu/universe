@@ -10,19 +10,15 @@ import {
 
 import { generateUniqueCode, normalizeCode } from './codes';
 import {
-  pointsForPlace,
   resultRound,
+  roundMode,
   roundMultipliers,
+  roundPlaceScoring,
+  roundPoints,
+  scoreEvent,
   withRanks,
 } from './scoring';
 import { cleanEvents, cleanName, eventConfig } from './validators';
-
-type EventResult = {
-  playerId: Id<'gamePlayers'>;
-  place: number;
-  round: number;
-  points: number;
-};
 
 export const create = mutation({
   args: {
@@ -85,8 +81,8 @@ export const update = mutation({
       keptIds.add(previous._id);
       await ctx.db.patch('gameEvents', previous._id, { order, ...event });
       await reconcileResults(ctx, previous, {
-        scoredPlaces: event.placePoints.length,
-        rounds: event.roundMultipliers?.length ?? 1,
+        scoredPlaces: roundPlaceScoring(event).placePoints.length,
+        rounds: roundMultipliers(event).length,
       });
     }
 
@@ -110,16 +106,18 @@ function resultsForEvent(ctx: QueryCtx, eventId: Id<'gameEvents'>) {
 /**
  * Keeps an edited event's results consistent with its new shape:
  * - Results in rounds that no longer exist are deleted.
- * - "Other" is stored as one past the last scored place. When the number of scored places
- *   changes, everyone who was in "Other" (or whose place no longer exists) moves to the new
- *   "Other", so adding a 4th place doesn't silently promote all the "Other" players to 4th.
+ * - "Other" is stored as one past the last scored round place (the event's places, or the
+ *   round scoring's in 'standings' mode). When that count changes, everyone who was in "Other"
+ *   (or whose place no longer exists) moves to the new "Other", so adding a 4th place doesn't
+ *   silently promote all the "Other" players to 4th.
  */
 async function reconcileResults(
   ctx: MutationCtx,
   previous: Doc<'gameEvents'>,
   { scoredPlaces, rounds }: { scoredPlaces: number; rounds: number },
 ) {
-  const placesChanged = previous.placePoints.length !== scoredPlaces;
+  const previousPlaces = roundPlaceScoring(previous).placePoints.length;
+  const placesChanged = previousPlaces !== scoredPlaces;
   const roundsShrank = roundMultipliers(previous).length > rounds;
   if (!placesChanged && !roundsShrank) return;
 
@@ -128,7 +126,7 @@ async function reconcileResults(
       await ctx.db.delete('gameResults', result._id);
       continue;
     }
-    const wasOther = result.place > previous.placePoints.length;
+    const wasOther = result.place > previousPlaces;
     if (placesChanged && (wasOther || result.place > scoredPlaces)) {
       await ctx.db.patch('gameResults', result._id, {
         place: scoredPlaces + 1,
@@ -168,32 +166,48 @@ export const get = query({
         .collect(),
     ]);
 
-    const totals = new Map(
-      players.map((player) => [
-        player._id,
-        { total: 0, events: new Set<Id<'gameEvents'>>() },
-      ]),
-    );
-    const eventsById = new Map(events.map((event) => [event._id, event]));
-    const resultsByEvent = new Map<Id<'gameEvents'>, EventResult[]>(
-      events.map((event) => [event._id, []]),
-    );
-
+    const playerIds = new Set(players.map((player) => player._id));
+    const resultsByEvent = new Map<Id<'gameEvents'>, Doc<'gameResults'>[]>();
     for (const result of results) {
-      const event = eventsById.get(result.eventId);
-      const playerTotal = totals.get(result.playerId);
-      if (!event || !playerTotal) continue;
-      const round = resultRound(result);
-      const points = pointsForPlace(event, result.place, round);
-      playerTotal.total += points;
-      playerTotal.events.add(event._id);
-      resultsByEvent.get(event._id)?.push({
-        playerId: result.playerId,
-        place: result.place,
-        round,
-        points,
-      });
+      if (!playerIds.has(result.playerId)) continue;
+      const eventResults = resultsByEvent.get(result.eventId) ?? [];
+      eventResults.push(result);
+      resultsByEvent.set(result.eventId, eventResults);
     }
+    const namesById = new Map(players.map((p) => [p._id, p.name]));
+    const byName = (a: Id<'gamePlayers'>, b: Id<'gamePlayers'>) =>
+      (namesById.get(a) ?? '').localeCompare(namesById.get(b) ?? '');
+
+    const totals = new Map(
+      players.map((player) => [player._id, { total: 0, eventsPlayed: 0 }]),
+    );
+    const scoredEvents = events.map((event) => {
+      const scored = scoreEvent(event, resultsByEvent.get(event._id) ?? []);
+      for (const [playerId, points] of scored.partyPoints) {
+        const playerTotal = totals.get(playerId);
+        if (!playerTotal) continue;
+        playerTotal.total += points;
+        playerTotal.eventsPlayed += 1;
+      }
+      return {
+        _id: event._id,
+        name: event.name,
+        placePoints: event.placePoints,
+        minimumPoints: event.minimumPoints,
+        roundMultipliers: roundMultipliers(event),
+        roundMode: roundMode(event),
+        /** Set only in 'standings' mode; otherwise rounds use the event's own place points. */
+        roundScoring:
+          roundMode(event) === 'standings' ? roundPlaceScoring(event) : null,
+        results: scored.results.sort(
+          (a, b) => a.round - b.round || a.place - b.place,
+        ),
+        standings:
+          scored.standings?.sort(
+            (a, b) => a.rank - b.rank || byName(a.playerId, b.playerId),
+          ) ?? null,
+      };
+    });
 
     const sortedPlayers = players
       .map((player) => {
@@ -201,9 +215,9 @@ export const get = query({
         return {
           playerId: player._id,
           name: player.name,
-          total: Math.round((playerTotal?.total ?? 0) * 100) / 100,
+          total: roundPoints(playerTotal?.total ?? 0),
           /** Distinct events with at least one result, whatever the round count. */
-          eventsPlayed: playerTotal?.events.size ?? 0,
+          eventsPlayed: playerTotal?.eventsPlayed ?? 0,
         };
       })
       .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
@@ -214,16 +228,7 @@ export const get = query({
       players: players
         .map((player) => ({ _id: player._id, name: player.name }))
         .sort((a, b) => a.name.localeCompare(b.name)),
-      events: events.map((event) => ({
-        _id: event._id,
-        name: event.name,
-        placePoints: event.placePoints,
-        minimumPoints: event.minimumPoints,
-        roundMultipliers: roundMultipliers(event),
-        results: (resultsByEvent.get(event._id) ?? []).sort(
-          (a, b) => a.round - b.round || a.place - b.place,
-        ),
-      })),
+      events: scoredEvents,
       standings,
     };
   },

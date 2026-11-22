@@ -1,6 +1,8 @@
 import { defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
+import { placeScoring, roundMode } from './validators';
+
 /**
  * Game night score tracking (janktm-web). There is no auth: a party's code is the only thing
  * standing between a guest and its data, so treat everything here as public.
@@ -17,15 +19,27 @@ export const gameTables = {
     name: v.string(),
     /** Display order within the party. */
     order: v.number(),
-    /** `placePoints[0]` is what 1st place earns, `placePoints[1]` 2nd, and so on. */
+    /**
+     * `placePoints[0]` is what 1st place earns, `placePoints[1]` 2nd, and so on. In 'perRound'
+     * mode that's per round placement; in 'standings' mode it's per place in the final standings.
+     */
     placePoints: v.array(v.number()),
     /** What any place past the end of `placePoints` earns. */
     minimumPoints: v.number(),
     /**
-     * One entry per round: that round's points are the scoring above times its multiplier.
+     * One entry per round: that round's points are its place scoring times its multiplier.
      * Missing on events from before rounds existed, which means a single 1x round.
      */
     roundMultipliers: v.optional(v.array(v.number())),
+    /**
+     * How rounds turn into party points. Missing means 'perRound'.
+     * - 'perRound': every round's points count toward the party total directly.
+     * - 'standings': round points (from `roundScoring`) are summed per player, players are
+     *   ranked by that sum, and the rank earns `placePoints` once for the whole event.
+     */
+    roundMode: v.optional(roundMode),
+    /** What a round placement earns in 'standings' mode, before the round's multiplier. */
+    roundScoring: v.optional(placeScoring),
   }).index('by_party_order', ['partyId', 'order']),
 
   gamePlayers: defineTable({
