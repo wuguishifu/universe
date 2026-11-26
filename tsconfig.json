@@ -137,6 +137,15 @@
     },
     {
       "path": "./projects/janktm/web"
+    },
+    {
+      "path": "./platform/ffmpeg/contracts"
+    },
+    {
+      "path": "./platform/ffmpeg/client-nest"
+    },
+    {
+      "path": "./platform/ffmpeg/worker"
     }
   ],
   "compilerOptions": {

@@ -1,0 +1,23 @@
+{
+  "name": "platform-ffmpeg-contracts",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "platform/ffmpeg/contracts/src",
+  "projectType": "library",
+  "tags": ["scope:shared"],
+  "targets": {
+    "circular-deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude \"(^|/)convex/_generated(/|$)\"",
+        "cwd": "platform/ffmpeg/contracts"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --test \"src/**/*.spec.ts\"",
+        "cwd": "platform/ffmpeg/contracts"
+      }
+    }
+  }
+}
