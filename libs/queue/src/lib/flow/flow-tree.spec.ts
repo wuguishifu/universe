@@ -25,7 +25,7 @@ const flow: FlowJob = {
 
 describe('withIdempotencyKey', () => {
   it('gives every job in the tree the key as its ID', () => {
-    const result = withIdempotencyKey(flow, 'clip-1');
+    const result = withIdempotencyKey(flow, 'clip-1', 'app');
     assert.equal(result.opts?.jobId, 'clip-1');
     const [transcription] = result.children ?? [];
     assert.equal(transcription?.opts?.jobId, 'clip-1');
@@ -39,12 +39,13 @@ describe('withIdempotencyKey', () => {
         children: [job('ffmpeg-queue', 'ffmpeg-worker-queue', 'own')],
       },
       'clip-1',
+      'app',
     );
     assert.equal(result.children?.[0]?.opts?.jobId, 'own');
   });
 
   it('leaves IDs unset without a key', () => {
-    const result = withIdempotencyKey(flow, undefined);
+    const result = withIdempotencyKey(flow, undefined, 'app');
     assert.equal(result.opts?.jobId, undefined);
     assert.equal(result.children?.[0]?.children?.[0]?.opts?.jobId, undefined);
   });
@@ -63,6 +64,7 @@ describe('withIdempotencyKey', () => {
             ],
           },
           'clip-1',
+          'app',
         ),
       /two jobs with ID clip-1 in queue ffmpeg-queue/,
     );
@@ -73,7 +75,29 @@ describe('withIdempotencyKey', () => {
       withIdempotencyKey(
         { ...job('jobs', 'a'), children: [job('jobs', 'b')] },
         'clip-1',
+        'app',
       ),
+    );
+  });
+
+  it("treats a job without a prefix as in the producer's prefix", () => {
+    assert.throws(
+      () =>
+        withIdempotencyKey(
+          { ...job('jobs'), children: [job('jobs', 'app')] },
+          'clip-1',
+          'app',
+        ),
+      /two jobs with ID clip-1 in queue jobs/,
+    );
+    assert.throws(
+      () =>
+        withIdempotencyKey(
+          { ...job('jobs', ''), children: [job('jobs', 'app')] },
+          'clip-1',
+          'app',
+        ),
+      /two jobs with ID clip-1 in queue jobs/,
     );
   });
 });

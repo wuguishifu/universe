@@ -10,6 +10,8 @@ import type { FlowJob, FlowJobNode } from 'bullmq';
 export function withIdempotencyKey(
   flow: FlowJob,
   idempotencyKey: string | undefined,
+  /** The flow producer's prefix, which BullMQ uses for jobs that don't set their own. */
+  defaultPrefix: string,
 ): FlowJob {
   const opts = { ...flow.opts, jobId: flow.opts?.jobId ?? idempotencyKey };
   const result: FlowJob = flow.children
@@ -21,7 +23,7 @@ export function withIdempotencyKey(
         ),
       }
     : { ...flow, opts };
-  assertUniqueJobIds(result);
+  assertUniqueJobIds(result, defaultPrefix);
   return result;
 }
 
@@ -36,12 +38,13 @@ function withJobId(node: FlowJobNode, jobId: string | undefined): FlowJobNode {
     : { ...node, opts };
 }
 
-function assertUniqueJobIds(flow: FlowJob) {
+function assertUniqueJobIds(flow: FlowJob, defaultPrefix: string) {
   const seen = new Set<string>();
   const visit = (node: FlowJob | FlowJobNode) => {
     const id = node.opts?.jobId;
     if (id !== undefined) {
-      const key = `${node.prefix ?? ''}:${node.queueName}:${id}`;
+      // `||` like BullMQ's FlowProducer, so an empty prefix also means the default.
+      const key = `${node.prefix || defaultPrefix}:${node.queueName}:${id}`;
       if (seen.has(key)) {
         throw new Error(
           `The flow has two jobs with ID ${id} in queue ${node.queueName}; give one its own jobId`,

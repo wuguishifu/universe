@@ -82,6 +82,8 @@ export class FlowClient {
         children,
       },
       idempotencyKey,
+      // BullMQ's own default when the producer has no prefix.
+      this.flowProducer.opts.prefix ?? 'bull',
     );
 
     const node = await this.flowProducer.add(flow);
