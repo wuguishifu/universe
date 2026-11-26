@@ -77,8 +77,10 @@ nx setup environment                         # writes .env.local from Infisical 
 pnpm nx run sapphire-vault:capture-fixtures  # VAULT_TEST_EMAIL, VAULT_TEST_MASTER_PASSWORD
 ```
 
-The account holds only dummy items, so the fixtures, including its master password, are committed
-(access and refresh tokens are stripped). `Fixtures/expected.json` must match the account's items:
+The captured files (`account.json`, `prelogin.json`, `token.json`, `sync.json`,
+`master-password-hash.txt`) are gitignored, since together they're enough to decrypt the account,
+so each machine captures its own. Access and refresh tokens are stripped. Only
+`Fixtures/expected.json` is committed, and it must match the account's items:
 
 | Name          | Username              | Password             | URIs (match)                                                 | TOTP                                                                                                      |
 | ------------- | --------------------- | -------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
