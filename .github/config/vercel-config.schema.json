@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "vercel-config.json",
+  "description": "Per-app Vercel deploy config consumed by the deploy-web-apps workflow. The app root is the directory containing this file. The workflow builds the app with `vercel build` from the repo root, using the Vercel project's own build settings (build command, output directory, env vars).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["projectName", "projectId"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "projectName": {
+      "description": "Name of the Vercel project. Only used in logs, since it often differs from the Nx project name.",
+      "type": "string"
+    },
+    "projectId": {
+      "description": "ID of the Vercel project (Project Settings -> General, or `vercel project inspect <name>`).",
+      "type": "string",
+      "pattern": "^prj_[A-Za-z0-9]+$"
+    }
+  }
+}
