@@ -14,7 +14,7 @@ permissions:
 
 concurrency:
   group: deploy-web-apps
-  # Never cancel halfway through promoting; queue the next run instead.
+  # Never cancel halfway through deploying; queue the next run instead.
   cancel-in-progress: false
 
 env:
@@ -56,19 +56,17 @@ jobs:
           head: ${{ env.NX_HEAD }}
           all: ${{ github.event_name == 'workflow_dispatch' }}
 
-  # Builds every app here instead of on Vercel, then uploads it as a production deployment that is
-  # not yet assigned to the app's domains. Nothing goes live until every app has built and
-  # uploaded, so one app can't ship against a shared lib change that another app failed to build
-  # with.
-  build:
-    name: Build ${{ matrix.app.project }}
+  # Builds each app here instead of on Vercel and deploys it to production as soon as it's built.
+  # Web apps don't share contracts the way the server apps do, so they don't wait on each other.
+  deploy:
+    name: Deploy ${{ matrix.app.project }}
     needs: plan
     if: needs.plan.outputs.apps != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
-      # The promote job is skipped as soon as any build fails, so don't waste time on the rest.
-      fail-fast: true
+      # One app failing to build shouldn't hold back the others.
+      fail-fast: false
       matrix:
         app: ${{ fromJson(needs.plan.outputs.apps) }}
     env:
@@ -88,7 +86,7 @@ jobs:
         run: npm install --global "vercel@$VERCEL_CLI_VERSION"
 
       # Fetches the project's build settings and production env vars into .vercel/. That folder
-      # holds secrets, so it never leaves this job; only the deployment URL does.
+      # holds secrets, so nothing from it is uploaded as a workflow artifact.
       - name: Pull Vercel project settings
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -101,68 +99,13 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: vercel build --prod --token="$VERCEL_TOKEN"
 
-      - name: Upload deployment
+      - name: Deploy to production
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          APP: ${{ matrix.app.project }}
           VERCEL_PROJECT: ${{ matrix.app.vercelProject }}
         run: |
-          # --skip-domain: create the production deployment without pointing the domains at it yet.
-          URL=$(vercel deploy --prebuilt --prod --skip-domain --archive=tgz --yes \
+          URL=$(vercel deploy --prebuilt --prod --archive=tgz --yes \
             --meta commit="$GITHUB_SHA" \
             --meta run="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
             --token="$VERCEL_TOKEN")
-
-          if [[ "$URL" != https://* ]]; then
-            echo "::error::vercel deploy did not print a deployment URL: $URL"
-            exit 1
-          fi
-          echo "Staged $VERCEL_PROJECT at $URL"
-
-          mkdir -p out
-          jq -n --arg app "$APP" --arg vercelProject "$VERCEL_PROJECT" --arg url "$URL" \
-            '{app: $app, vercelProject: $vercelProject, url: $url}' \
-            > out/deployment.json
-
-      - name: Save deployment URL
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-app-${{ matrix.app.project }}
-          path: out/deployment.json
-          retention-days: 1
-          if-no-files-found: error
-
-  promote:
-    name: Promote ${{ matrix.app.project }}
-    needs: [plan, build]
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    strategy:
-      # Once promoting has started, finish every app rather than leave the rest half-released.
-      fail-fast: false
-      matrix:
-        app: ${{ fromJson(needs.plan.outputs.apps) }}
-    env:
-      VERCEL_PROJECT_ID: ${{ matrix.app.vercelProjectId }}
-    steps:
-      - name: Download deployment URL
-        uses: actions/download-artifact@v4
-        with:
-          name: web-app-${{ matrix.app.project }}
-          path: out
-
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Install Vercel CLI
-        run: npm install --global "vercel@$VERCEL_CLI_VERSION"
-
-      - name: Promote to production
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          URL=$(jq -r '.url' out/deployment.json)
-          echo "Promoting $(jq -r '.vercelProject' out/deployment.json): $URL"
-          vercel promote "$URL" --yes --token="$VERCEL_TOKEN"
+          echo "Deployed $VERCEL_PROJECT: $URL"
