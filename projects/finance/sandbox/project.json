@@ -1,0 +1,34 @@
+{
+  "name": "finance-sandbox",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "projects/finance/sandbox/src",
+  "projectType": "application",
+  "tags": ["scope:server"],
+  "targets": {
+    "link": {
+      "continuous": true,
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node src/link.ts",
+        "cwd": "projects/finance/sandbox"
+      }
+    },
+    "seed": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node src/seed-sandbox.ts",
+        "cwd": "projects/finance/sandbox"
+      }
+    },
+    "fetch": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node src/fetch.ts",
+        "cwd": "projects/finance/sandbox"
+      }
+    }
+  }
+}

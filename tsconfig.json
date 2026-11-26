@@ -146,6 +146,9 @@
     },
     {
       "path": "./platform/ffmpeg/worker"
+    },
+    {
+      "path": "./projects/finance/sandbox"
     }
   ],
   "compilerOptions": {
