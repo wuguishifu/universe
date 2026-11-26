@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 
-import { SidebarInset, SidebarProvider } from '@libs/ui-web';
+import { SidebarInset, SidebarProvider, TooltipProvider } from '@libs/ui-web';
 
 import { AppSidebar } from '../../modules/layout/app-sidebar';
 
@@ -12,9 +12,11 @@ export default async function AppLayout({
   const defaultOpen = (await cookies()).get('sidebar_state')?.value !== 'false';
 
   return (
-    <SidebarProvider defaultOpen={defaultOpen}>
-      <AppSidebar />
-      <SidebarInset>{children}</SidebarInset>
-    </SidebarProvider>
+    <TooltipProvider>
+      <SidebarProvider defaultOpen={defaultOpen}>
+        <AppSidebar />
+        <SidebarInset>{children}</SidebarInset>
+      </SidebarProvider>
+    </TooltipProvider>
   );
 }
