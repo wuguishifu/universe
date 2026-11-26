@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Logs in to the throwaway vault account and writes its responses to the test fixtures.
 // Needs `.env.local` from `nx setup environment` (Infisical `projects/sapphire/vault`) and a Mac
-// on the tailnet. The account only holds dummy items, so the fixtures (including its master
-// password) are committed.
+// on the tailnet. The output holds the account's master password and enough to decrypt its vault,
+// so it's gitignored: only `expected.json` is tracked.
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';

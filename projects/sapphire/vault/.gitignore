@@ -1,3 +1,8 @@
 # swift test
 .build
 .swiftpm
+
+# Captured from the throwaway vault account by scripts/capture-fixtures.mjs (credentials come
+# from .env.local). Only expected.json, the list of dummy items, is tracked.
+tests/SapphireVaultCoreTests/Fixtures/*
+!tests/SapphireVaultCoreTests/Fixtures/expected.json
