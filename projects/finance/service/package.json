@@ -1,0 +1,11 @@
+{
+  "name": "@projects/finance-service",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@projects/finance-contracts": "workspace:*",
+    "@platform/convex-contracts": "workspace:*",
+    "@libs/nest-core": "workspace:*",
+    "tslib": "^2.3.0"
+  }
+}

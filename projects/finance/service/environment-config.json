@@ -1,0 +1,5 @@
+{
+  "$schema": "../../../tools/environment/environment-config.schema.json",
+  "hasConvex": true,
+  "secretsPaths": ["projects/finance/common", "projects/finance/service"]
+}

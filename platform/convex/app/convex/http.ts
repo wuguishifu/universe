@@ -1,8 +1,12 @@
 import { httpRouter } from 'convex/server';
 
+import { auth } from './auth';
 import { routes } from './routes';
 
 const http = httpRouter();
+
+// Convex Auth's routes, including /.well-known/jwks.json that finance-service verifies tokens with.
+auth.addHttpRoutes(http);
 
 routes.forEach((route) => http.route(route));
 

@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as auth from "../auth.js";
 import type * as clipper_auth from "../clipper/auth.js";
 import type * as clipper_clipJobs from "../clipper/clipJobs.js";
 import type * as clipper_helpers from "../clipper/helpers.js";
@@ -16,6 +17,10 @@ import type * as clipper_tables from "../clipper/tables.js";
 import type * as clipper_validators from "../clipper/validators.js";
 import type * as common_functions_customFunctions from "../common/functions/customFunctions.js";
 import type * as crons from "../crons.js";
+import type * as finance_auth from "../finance/auth.js";
+import type * as finance_items from "../finance/items.js";
+import type * as finance_tables from "../finance/tables.js";
+import type * as finance_validators from "../finance/validators.js";
 import type * as game_codes from "../game/codes.js";
 import type * as game_parties from "../game/parties.js";
 import type * as game_players from "../game/players.js";
@@ -37,6 +42,7 @@ import type * as ruby_tables from "../ruby/tables.js";
 import type * as sapphire_dashboard from "../sapphire/dashboard.js";
 import type * as sapphire_tables from "../sapphire/tables.js";
 import type * as sapphire_v1_readingList from "../sapphire/v1/readingList.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -45,6 +51,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  auth: typeof auth;
   "clipper/auth": typeof clipper_auth;
   "clipper/clipJobs": typeof clipper_clipJobs;
   "clipper/helpers": typeof clipper_helpers;
@@ -53,6 +60,10 @@ declare const fullApi: ApiFromModules<{
   "clipper/validators": typeof clipper_validators;
   "common/functions/customFunctions": typeof common_functions_customFunctions;
   crons: typeof crons;
+  "finance/auth": typeof finance_auth;
+  "finance/items": typeof finance_items;
+  "finance/tables": typeof finance_tables;
+  "finance/validators": typeof finance_validators;
   "game/codes": typeof game_codes;
   "game/parties": typeof game_parties;
   "game/players": typeof game_players;
@@ -74,6 +85,7 @@ declare const fullApi: ApiFromModules<{
   "sapphire/dashboard": typeof sapphire_dashboard;
   "sapphire/tables": typeof sapphire_tables;
   "sapphire/v1/readingList": typeof sapphire_v1_readingList;
+  users: typeof users;
 }>;
 
 /**

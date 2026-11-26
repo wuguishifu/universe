@@ -328,6 +328,9 @@ importers:
       ioredis:
         specifier: ^6.0.0
         version: 6.0.0(supports-color@8.1.1)
+      jose:
+        specifier: ^5.10.0
+        version: 5.10.0
       lucide-react:
         specifier: ^0.526.0
         version: 0.526.0(react@19.2.3)
@@ -881,6 +884,40 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+
+  projects/finance/contracts: {}
+
+  projects/finance/sandbox: {}
+
+  projects/finance/service:
+    dependencies:
+      '@libs/nest-core':
+        specifier: workspace:*
+        version: link:../../../libs/nest/core
+      '@platform/convex-contracts':
+        specifier: workspace:*
+        version: link:../../../platform/convex/contracts
+      '@projects/finance-contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      tslib:
+        specifier: ^2.3.0
+        version: 2.8.1
+
+  projects/finance/web:
+    dependencies:
+      '@convex-dev/auth':
+        specifier: '*'
+        version: 0.0.96(@auth/core@0.41.3)(convex@1.37.0(react@19.2.3))(react@19.2.3)
+      '@libs/ui-web':
+        specifier: workspace:*
+        version: link:../../../libs/ui-web
+      '@platform/convex-contracts':
+        specifier: workspace:*
+        version: link:../../../platform/convex/contracts
+      '@projects/finance-contracts':
+        specifier: workspace:*
+        version: link:../contracts
 
   projects/internet-monitor/service:
     dependencies:

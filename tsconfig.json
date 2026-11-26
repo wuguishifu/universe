@@ -149,6 +149,15 @@
     },
     {
       "path": "./projects/finance/sandbox"
+    },
+    {
+      "path": "./projects/finance/contracts"
+    },
+    {
+      "path": "./projects/finance/service"
+    },
+    {
+      "path": "./projects/finance/web"
     }
   ],
   "compilerOptions": {

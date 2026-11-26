@@ -24,6 +24,13 @@
         "command": "nx convex convex-app -- codegen"
       }
     },
+    "auth": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "platform/convex/app",
+        "command": "pnpm dlx @convex-dev/auth"
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "options": {

@@ -1,0 +1,6 @@
+{
+  "$schema": "../../../tools/environment/environment-config.schema.json",
+  "hasConvex": true,
+  "publicPrefix": "NEXT_PUBLIC_",
+  "secretsPaths": ["projects/finance/web"]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@projects/finance-web",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "next start"
+  },
+  "dependencies": {
+    "@convex-dev/auth": "*",
+    "@libs/ui-web": "workspace:*",
+    "@platform/convex-contracts": "workspace:*",
+    "@projects/finance-contracts": "workspace:*"
+  }
+}
