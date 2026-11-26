@@ -708,6 +708,39 @@ importers:
 
   platform/convex/contracts: {}
 
+  platform/ffmpeg/client-nest:
+    dependencies:
+      '@libs/queue':
+        specifier: workspace:*
+        version: link:../../../libs/queue
+      '@platform/ffmpeg-contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
+  platform/ffmpeg/contracts:
+    dependencies:
+      '@libs/queue':
+        specifier: workspace:*
+        version: link:../../../libs/queue
+
+  platform/ffmpeg/worker:
+    dependencies:
+      '@libs/nest-core':
+        specifier: workspace:*
+        version: link:../../../libs/nest/core
+      '@libs/nest-s3':
+        specifier: workspace:*
+        version: link:../../../libs/nest/s3
+      '@libs/queue':
+        specifier: workspace:*
+        version: link:../../../libs/queue
+      '@platform/ffmpeg-contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      tslib:
+        specifier: ^2.3.0
+        version: 2.8.1
+
   platform/mcp/service:
     dependencies:
       '@libs/nest-core':

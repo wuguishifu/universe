@@ -96,4 +96,11 @@ export default [
       ],
     },
   },
+  {
+    files: ['tools/**'],
+    rules: {
+      'no-console': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+    },
+  },
 ];

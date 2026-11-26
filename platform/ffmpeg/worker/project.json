@@ -1,0 +1,78 @@
+{
+  "name": "ffmpeg-worker",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "platform/ffmpeg/worker/src",
+  "projectType": "application",
+  "tags": ["scope:server"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "webpack-cli build",
+        "env": {
+          "NODE_ENV": "production"
+        },
+        "cwd": "platform/ffmpeg/worker"
+      },
+      "configurations": {
+        "development": {
+          "env": {
+            "NODE_ENV": "development"
+          }
+        }
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --test \"src/**/*.spec.ts\"",
+        "cwd": "platform/ffmpeg/worker"
+      }
+    },
+    "prune-lockfile": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "executor": "@nx/js:prune-lockfile",
+      "outputs": [
+        "{workspaceRoot}/platform/ffmpeg/worker/dist/package.json",
+        "{workspaceRoot}/platform/ffmpeg/worker/dist/pnpm-lock.yaml"
+      ],
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "copy-workspace-modules": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "outputs": [
+        "{workspaceRoot}/platform/ffmpeg/worker/dist/workspace_modules"
+      ],
+      "executor": "@nx/js:copy-workspace-modules",
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "prune": {
+      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
+      "executor": "nx:noop"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "ffmpeg-worker:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "ffmpeg-worker:build:development"
+        },
+        "production": {
+          "buildTarget": "ffmpeg-worker:build:production"
+        }
+      }
+    }
+  }
+}
