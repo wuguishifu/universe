@@ -1,0 +1,111 @@
+name: Deploy Web Apps
+
+on:
+  push:
+    branches:
+      - main
+  # Deploys every web app regardless of what changed.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # nx-set-shas reads past runs of this workflow to find the last successful deploy
+  actions: read
+
+concurrency:
+  group: deploy-web-apps
+  # Never cancel halfway through deploying; queue the next run instead.
+  cancel-in-progress: false
+
+env:
+  # Not a secret: the "wuguishifu's projects" team, which owns every project in a vercel-config.json.
+  VERCEL_ORG_ID: team_uU8Ny5zAvAjgdqkaRYEtMEoF
+  VERCEL_CLI_VERSION: 67.0.0
+  # Matches the Node.js version in the Vercel projects' settings, which the functions run on.
+  NODE_VERSION: 26
+
+jobs:
+  plan:
+    name: Find affected web apps
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      apps: ${{ steps.apps.outputs.apps }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # nx affected needs the history between the base and head commits
+          fetch-depth: 0
+
+      - name: Install packages
+        uses: ./.github/actions/setup-packages
+
+      # Base is the commit of the last successful run of this workflow on main, so apps from a
+      # failed run get redeployed on the next merge instead of being skipped.
+      - name: Derive base and head SHAs
+        uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: main
+
+      - name: Find affected web apps
+        id: apps
+        uses: ./.github/actions/affected-web-apps
+        with:
+          base: ${{ env.NX_BASE }}
+          head: ${{ env.NX_HEAD }}
+          all: ${{ github.event_name == 'workflow_dispatch' }}
+
+  # Builds each app here instead of on Vercel and deploys it to production as soon as it's built.
+  # Web apps don't share contracts the way the server apps do, so they don't wait on each other.
+  deploy:
+    name: Deploy ${{ matrix.app.project }}
+    needs: plan
+    if: needs.plan.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      # One app failing to build shouldn't hold back the others.
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.plan.outputs.apps) }}
+    env:
+      VERCEL_PROJECT_ID: ${{ matrix.app.vercelProjectId }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install packages
+        uses: ./.github/actions/setup-packages
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Vercel CLI
+        run: npm install --global "vercel@$VERCEL_CLI_VERSION"
+
+      # Fetches the project's build settings and production env vars into .vercel/. That folder
+      # holds secrets, so nothing from it is uploaded as a workflow artifact.
+      - name: Pull Vercel project settings
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      # Runs the project's own install and build commands (e.g. `nx build sapphire-web`) and writes
+      # the result to .vercel/output.
+      - name: Build
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy to production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT: ${{ matrix.app.vercelProject }}
+        run: |
+          URL=$(vercel deploy --prebuilt --prod --archive=tgz --yes \
+            --meta commit="$GITHUB_SHA" \
+            --meta run="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --token="$VERCEL_TOKEN")
+          echo "Deployed $VERCEL_PROJECT: $URL"

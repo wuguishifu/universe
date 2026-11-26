@@ -1,0 +1,78 @@
+name: Affected Web Apps
+description: >-
+  List the Vercel web apps (projects with a vercel-config.json at their root) affected between two
+  commits, or every web app when `all` is true. Packages must already be installed and the history
+  between base and head fetched.
+
+inputs:
+  base:
+    description: Base commit for nx affected
+    required: true
+  head:
+    description: Head commit for nx affected
+    required: true
+  all:
+    description: List every web app instead of only the affected ones
+    required: false
+    default: 'false'
+
+outputs:
+  apps:
+    description: 'JSON array of {project, root, vercelProject, vercelProjectId}, e.g. [{"project": "sapphire-web", ...}]'
+    value: ${{ steps.apps.outputs.apps }}
+
+runs:
+  using: composite
+  steps:
+    - name: Find affected web apps
+      id: apps
+      shell: bash
+      env:
+        BASE: ${{ inputs.base }}
+        HEAD: ${{ inputs.head }}
+        ALL: ${{ inputs.all }}
+      run: |
+        ALLOWED_KEYS='["$schema", "projectName", "projectId"]'
+
+        if [ "$ALL" == "true" ]; then
+          CANDIDATES=$(pnpm --silent nx show projects --json)
+          echo "All projects: $CANDIDATES"
+        else
+          CANDIDATES=$(pnpm --silent nx show projects --affected --base="$BASE" --head="$HEAD" --json)
+          echo "Affected projects ($BASE..$HEAD): $CANDIDATES"
+        fi
+
+        APPS='[]'
+        for PROJECT in $(echo "$CANDIDATES" | jq -r '.[]'); do
+          ROOT=$(pnpm --silent nx show project "$PROJECT" --json | jq -r '.root')
+          CONFIG_FILE="$ROOT/vercel-config.json"
+          if [ ! -f "$CONFIG_FILE" ]; then
+            continue
+          fi
+
+          UNKNOWN_KEYS=$(jq -r --argjson allowed "$ALLOWED_KEYS" 'keys - $allowed | join(", ")' "$CONFIG_FILE")
+          if [ -n "$UNKNOWN_KEYS" ]; then
+            echo "::error file=$CONFIG_FILE::unknown keys: $UNKNOWN_KEYS (see .github/config/vercel-config.schema.json)"
+            exit 1
+          fi
+
+          PROJECT_NAME=$(jq -r '.projectName // empty' "$CONFIG_FILE")
+          if [ -z "$PROJECT_NAME" ]; then
+            echo "::error file=$CONFIG_FILE::missing projectName"
+            exit 1
+          fi
+
+          PROJECT_ID=$(jq -r '.projectId // empty' "$CONFIG_FILE")
+          if ! [[ "$PROJECT_ID" =~ ^prj_[A-Za-z0-9]+$ ]]; then
+            echo "::error file=$CONFIG_FILE::projectId must look like prj_..."
+            exit 1
+          fi
+
+          APPS=$(echo "$APPS" | jq -c \
+            --arg project "$PROJECT" --arg root "$ROOT" \
+            --arg vercelProject "$PROJECT_NAME" --arg vercelProjectId "$PROJECT_ID" \
+            '. + [{project: $project, root: $root, vercelProject: $vercelProject, vercelProjectId: $vercelProjectId}]')
+        done
+
+        echo "Web apps: $APPS"
+        echo "apps=$APPS" >> "$GITHUB_OUTPUT"
