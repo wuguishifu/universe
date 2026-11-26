@@ -1,11 +1,12 @@
-import { BullModule } from '@nestjs/bullmq';
 import { DynamicModule, Module } from '@nestjs/common';
 
-import { TRANSCRIPTION_FLOW_PRODUCER } from './constants';
+import { BullFlowModule } from '@libs/queue';
+
 import { TranscriptionClient } from './transcription-client.service';
 
 /**
- * Provides `TranscriptionClient` app-wide, for queueing transcriptions as BullMQ flows.
+ * Provides `TranscriptionClient` app-wide, for queueing transcriptions as BullMQ flows. Also
+ * provides `FlowClient`, for flows with several services' jobs.
  *
  * Needs the app's `BullRootModule`: the flow producer reuses its Redis connection (flows only work
  * when every queue in them is on the same Redis) and its prefix for the app's own parent jobs.
@@ -16,9 +17,7 @@ export class TranscriptionClientModule {
     return {
       module: TranscriptionClientModule,
       global: true,
-      imports: [
-        BullModule.registerFlowProducer({ name: TRANSCRIPTION_FLOW_PRODUCER }),
-      ],
+      imports: [BullFlowModule.forRoot()],
       providers: [TranscriptionClient],
       exports: [TranscriptionClient],
     };

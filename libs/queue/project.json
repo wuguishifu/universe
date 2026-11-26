@@ -5,5 +5,13 @@
   "projectType": "library",
   "tags": ["scope:shared"],
   "// targets": "to see all targets run: nx show project queue --web",
-  "targets": {}
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --test \"src/**/*.spec.ts\"",
+        "cwd": "libs/queue"
+      }
+    }
+  }
 }

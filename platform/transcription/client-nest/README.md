@@ -71,12 +71,24 @@ flow, job options come from whoever adds the job.
 
 ### Custom flows
 
-For a parent with other children too, build the transcription job with `child()` and add the flow
-yourself. A parent can have at most one transcription child.
+For a parent with other children too, or a transcription of another service's output, build the
+transcription job with `child()` and add the flow with `FlowClient` (from `@libs/queue`, provided by
+`TranscriptionClientModule`). A parent can have at most one transcription child. `idempotencyKey`
+becomes the ID of every job in the flow.
 
 ```ts
-await flowProducer.add({
-  ...parent,
-  children: [this.transcription.child(request), otherChild],
+await this.flows.addFlow({
+  idempotencyKey: clipId,
+  parent: { queueConfig: MY_QUEUE_CONFIG, queueKey: 'publish', data },
+  children: [
+    this.transcription.child(
+      { source: { type: 's3', bucket, key: audioKey } },
+      // Runs first; it writes the audio the transcription reads.
+      { children: [otherServiceChild] },
+    ),
+  ],
 });
 ```
+
+A parent only reads its direct children's results, so here the parent gets the transcript but not
+the other service's result.

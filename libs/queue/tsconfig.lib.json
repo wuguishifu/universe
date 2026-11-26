@@ -16,5 +16,6 @@
     {
       "path": "../redis-cache/tsconfig.lib.json"
     }
-  ]
+  ],
+  "exclude": ["src/**/*.spec.ts"]
 }
