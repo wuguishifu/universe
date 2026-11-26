@@ -42,9 +42,9 @@ Ciphertexts look like `v1:<iv>:<tag>:<ciphertext>` (base64url). The AAD is
      Losing or changing `PLAID_TOKEN_KEY` makes every stored token unreadable, and every item has
      to be linked again.
 2. The convex deployment (dev and prod), from `platform/convex/app`:
-   - Convex Auth's keys: `npx @convex-dev/auth --skip-git-check` sets `JWT_PRIVATE_KEY`, `JWKS` and
-     `SITE_URL` on dev; add `--prod` for prod. Or generate them by hand per the Convex Auth manual
-     setup docs.
+   - Convex Auth's keys, from the repo root: `node tools/scripts/convex-auth-keys.mjs` sets `JWT_PRIVATE_KEY` and
+     `JWKS` on dev; add `--prod` for prod. Running it again rotates them and signs everyone out.
+     (Not `npx @convex-dev/auth`: it would rewrite the auth files that are already set up.)
    - `pnpm nx convex convex-app -- env set FINANCE_CONVEX_SECRET <same value>`
    - `pnpm nx convex convex-app -- env set AUTH_SIGNUP_ALLOWLIST you@example.com`
    - Push the functions (`nx serve convex-app` for dev; the deploy workflow for prod).
