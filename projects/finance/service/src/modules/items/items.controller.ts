@@ -6,6 +6,7 @@ import { financeRootRouter } from '@projects/finance-contracts';
 
 import { ConvexJwtGuard, UserId } from '../../auth/convex-jwt.guard';
 import { formatPlaidError } from '../plaid/plaid.service';
+import { SyncService } from '../sync/sync.service';
 
 import { toItemsError } from './items.errors';
 import { ItemsService } from './items.service';
@@ -15,7 +16,10 @@ import { ItemsService } from './items.service';
 export class ItemsController {
   private readonly logger = new Logger(ItemsController.name);
 
-  constructor(private readonly itemsService: ItemsService) {}
+  constructor(
+    private readonly itemsService: ItemsService,
+    private readonly syncService: SyncService,
+  ) {}
 
   @TsRestHandler(financeRootRouter)
   public handler(@UserId() userId: Id<'users'>) {
@@ -39,6 +43,11 @@ export class ItemsController {
           await this.itemsService.removeItem(userId, itemId);
           return { status: 200, body: { itemId } };
         }),
+      syncItems: () =>
+        this.respond('syncItems', async () => ({
+          status: 200,
+          body: { items: await this.syncService.syncUser(userId) },
+        })),
     });
   }
 

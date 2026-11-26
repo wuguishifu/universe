@@ -18,3 +18,13 @@ export const linkedItemSchema = z.object({
   institutionName: z.string().nullable(),
 });
 export type LinkedItem = z.infer<typeof linkedItemSchema>;
+
+/** How one item's sync went. */
+export const itemSyncResultSchema = z.object({
+  itemId: z.string(),
+  institutionName: z.string().nullable(),
+  ok: z.boolean(),
+  /** Plaid's error_code (e.g. ITEM_LOGIN_REQUIRED), or SYNC_FAILED for anything else. */
+  errorCode: z.string().optional(),
+});
+export type ItemSyncResult = z.infer<typeof itemSyncResultSchema>;

@@ -1,7 +1,7 @@
 import { defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
-import { itemStatus, linkKind } from './validators';
+import { accountBalances, itemStatus, linkKind } from './validators';
 
 export const financeTables = {
   /**
@@ -34,4 +34,42 @@ export const financeTables = {
   })
     .index('by_itemId', ['itemId'])
     .index('by_userId', ['userId']),
+
+  /** An account in an item, as of the item's last sync (Plaid's accounts.get). */
+  financeAccounts: defineTable({
+    userId: v.id('users'),
+    itemId: v.string(),
+    /** Plaid's account_id. Unique, but a new one if the item is linked again. */
+    accountId: v.string(),
+    name: v.string(),
+    officialName: v.union(v.string(), v.null()),
+    /** The last 2-4 digits of the account number. */
+    mask: v.union(v.string(), v.null()),
+    /** Plaid's type: depository, credit, loan, investment, brokerage or other. */
+    type: v.string(),
+    /** e.g. checking, credit card, 401k, mortgage. */
+    subtype: v.union(v.string(), v.null()),
+    ...accountBalances,
+    syncedAt: v.number(),
+  })
+    .index('by_accountId', ['accountId'])
+    .index('by_itemId', ['itemId'])
+    .index('by_userId', ['userId']),
+
+  /**
+   * Each account's balance once per day (UTC), overwritten by later syncs that day. Plaid only
+   * gives current balances, so this is the only history there will be.
+   */
+  financeBalanceSnapshots: defineTable({
+    userId: v.id('users'),
+    itemId: v.string(),
+    accountId: v.string(),
+    /** YYYY-MM-DD, UTC. */
+    date: v.string(),
+    ...accountBalances,
+    recordedAt: v.number(),
+  })
+    .index('by_accountId_date', ['accountId', 'date'])
+    .index('by_itemId', ['itemId'])
+    .index('by_userId_date', ['userId', 'date']),
 } as const;

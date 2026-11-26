@@ -86,12 +86,32 @@ export const getEncryptedAccessToken = query({
   },
 });
 
-/** Deletes one of `userId`'s items. finance-service calls Plaid's item.remove first. */
+/**
+ * Deletes one of `userId`'s items with its accounts and balance history. finance-service calls
+ * Plaid's item.remove first.
+ */
 export const remove = mutation({
   args: { secret: financeSecret, userId: v.id('users'), itemId: v.string() },
   handler: async (ctx, { secret, userId, itemId }) => {
     assertFinanceSecret(secret);
     const item = await getOwnedItem(ctx, userId, itemId);
+    const [accounts, snapshots] = await Promise.all([
+      ctx.db
+        .query('financeAccounts')
+        .withIndex('by_itemId', (q) => q.eq('itemId', itemId))
+        .collect(),
+      ctx.db
+        .query('financeBalanceSnapshots')
+        .withIndex('by_itemId', (q) => q.eq('itemId', itemId))
+        .collect(),
+    ]);
+    for (const account of accounts) {
+      await ctx.db.delete('financeAccounts', account._id);
+    }
+    // One per account per day, so this is fine for years; past that it would need batching.
+    for (const snapshot of snapshots) {
+      await ctx.db.delete('financeBalanceSnapshots', snapshot._id);
+    }
     await ctx.db.delete('financeItems', item._id);
   },
 });

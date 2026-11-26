@@ -24,6 +24,14 @@ browser ──► finance-web (Vercel) ── server actions, as the signed-in u
 | `POST /api/link-token`  | a Link token for `bank` or `investments` (see `link-products.ts`)                     |
 | `POST /api/items`       | exchanges Link's public token and saves the item; removes it at Plaid if saving fails |
 | `DELETE /api/items/:id` | `item.remove` at Plaid (stops billing), then deletes the row                          |
+| `POST /api/sync`        | refreshes the user's accounts and balances (`accounts.get`) into convex               |
+
+Balances: `SyncService` copies `accounts.get` into convex (`financeAccounts`, plus one
+`financeBalanceSnapshots` row per account per UTC day, since Plaid keeps no balance history). It
+runs right after linking, every 6 hours for every user, and on the web app's Refresh button.
+`accounts.get` returns the balances Plaid last fetched and is free; `accounts.getBalance` is
+real-time but billed per call, so it isn't used. A Plaid error on sync sets the item's status
+(`login_required` for `ITEM_LOGIN_REQUIRED`, otherwise `error`), and the next good sync clears it.
 
 The contract is in [finance-contracts](../contracts/src/lib/root.ts). The web app reads items
 straight from convex (`api.finance.items.list`), which never returns the ciphertext.
@@ -57,7 +65,7 @@ an Access service token. Plaid's webhooks can't reach it through Access, so ther
 
 ## Not built yet
 
-- Syncing (`transactions.sync`, holdings, balances) and the tables for them.
-- Reconnecting (Link update mode) for items whose status isn't `ok`. Nothing sets that status yet.
+- Transactions (`transactions.sync`), holdings and liabilities details.
+- Reconnecting (Link update mode) for items whose status isn't `ok`. For now: disconnect and link again.
 - Linking on mobile web: OAuth institutions need a registered `redirect_uri` and a page that reopens
   Link with `receivedRedirectUri`.

@@ -1,7 +1,12 @@
 import { z } from 'zod';
 
 import { c } from './contract';
-import { errorBodySchema, linkedItemSchema, linkKindSchema } from './items';
+import {
+  errorBodySchema,
+  itemSyncResultSchema,
+  linkedItemSchema,
+  linkKindSchema,
+} from './items';
 
 /**
  * Every route needs `Authorization: Bearer <convex auth JWT>`; the user is whoever the token is for.
@@ -51,6 +56,17 @@ export const financeRootRouter = c.router(
       body: c.noBody(),
       responses: {
         200: z.object({ itemId: z.string() }),
+        ...errorResponses,
+      },
+    },
+    syncItems: {
+      method: 'POST',
+      path: '/sync',
+      description:
+        "Refreshes the user's accounts and balances from Plaid (accounts.get, which is free) into convex.",
+      body: c.noBody(),
+      responses: {
+        200: z.object({ items: itemSyncResultSchema.array() }),
         ...errorResponses,
       },
     },

@@ -11,6 +11,7 @@ import {
   PlaidService,
   plaidErrorCode,
 } from '../plaid/plaid.service';
+import { SyncService } from '../sync/sync.service';
 
 /** Plaid error codes from item.remove that mean the item is already gone at Plaid. */
 const ALREADY_REMOVED = new Set(['ITEM_NOT_FOUND', 'INVALID_ACCESS_TOKEN']);
@@ -24,6 +25,7 @@ export class ItemsService {
     private readonly plaidService: PlaidService,
     private readonly convexService: ConvexService,
     private readonly tokenCipher: TokenCipherService,
+    private readonly syncService: SyncService,
   ) {}
 
   private get plaid() {
@@ -55,9 +57,15 @@ export class ItemsService {
       { public_token: publicToken },
     );
 
+    const encryptedAccessToken = this.tokenCipher.encrypt(
+      access_token,
+      userId,
+      item_id,
+    );
+    let saved;
     try {
       const { item } = await this.plaid.item.get({ access_token });
-      const saved = await this.convexService.mutation(
+      saved = await this.convexService.mutation(
         api.finance.items.upsertLinked,
         {
           userId,
@@ -66,11 +74,7 @@ export class ItemsService {
           institutionId: item.institution_id ?? null,
           institutionName: item.institution_name ?? null,
           products: item.products,
-          encryptedAccessToken: this.tokenCipher.encrypt(
-            access_token,
-            userId,
-            item_id,
-          ),
+          encryptedAccessToken,
           consentExpirationTime: item.consent_expiration_time
             ? Date.parse(item.consent_expiration_time)
             : undefined,
@@ -79,11 +83,6 @@ export class ItemsService {
       this.logger.log(
         `Linked ${saved.institutionName ?? saved.institutionId} (${kind}, item ${item_id}), products: ${item.products.join(', ')}`,
       );
-      return {
-        itemId: saved.itemId,
-        kind: saved.kind,
-        institutionName: saved.institutionName,
-      };
     } catch (error) {
       // Nothing saved the token, so nothing could ever remove this item. Remove it now so Plaid
       // doesn't bill for it.
@@ -94,6 +93,20 @@ export class ItemsService {
       });
       throw error;
     }
+
+    // So the home page has balances right away. The item is saved either way; a failed sync
+    // shows on it and the next one retries.
+    await this.syncService.syncItem({
+      userId,
+      itemId: saved.itemId,
+      institutionName: saved.institutionName,
+      encryptedAccessToken,
+    });
+    return {
+      itemId: saved.itemId,
+      kind: saved.kind,
+      institutionName: saved.institutionName,
+    };
   }
 
   /** Removes the item at Plaid, which stops billing for it, then deletes it from convex. */

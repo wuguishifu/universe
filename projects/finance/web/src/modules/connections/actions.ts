@@ -3,7 +3,10 @@
 import { convexAuthNextjsToken } from '@convex-dev/auth/nextjs/server';
 import { z } from 'zod';
 
-import { linkKindSchema } from '@projects/finance-contracts';
+import {
+  type ItemSyncResult,
+  linkKindSchema,
+} from '@projects/finance-contracts';
 
 import {
   financeServiceClient,
@@ -61,6 +64,18 @@ export async function removeItem(itemId: unknown): Promise<ActionResult> {
       params: { itemId: parsed.data },
     });
     return response.status === 200 ? { ok: true } : failure(response);
+  });
+}
+
+/** Refreshes the user's balances from Plaid into convex; the page updates from convex on its own. */
+export async function syncAccounts(): Promise<
+  ActionResult<{ items: ItemSyncResult[] }>
+> {
+  return await withFinanceService(async (client) => {
+    const response = await client.syncItems();
+    return response.status === 200
+      ? { ok: true, items: response.body.items }
+      : failure(response);
   });
 }
 
