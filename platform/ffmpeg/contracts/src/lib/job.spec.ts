@@ -218,6 +218,29 @@ describe('ffmpegRequestSchema', () => {
     );
   });
 
+  it('rejects scratch names that differ only by case', () => {
+    const messages = issues({
+      ...trim,
+      steps: [
+        { args: ['-i', '{{ in:clip }}', '{{ tmp:Pass.log }}'] },
+        {
+          args: [
+            '-i',
+            '{{ tmp:pass.log }}',
+            '{{ tmp:Pass.log }}',
+            '{{ out:trimmed }}',
+          ],
+        },
+      ],
+    });
+    assert.deepEqual(
+      messages.filter((message) => message.includes('case-insensitive')),
+      [
+        'Scratch files "Pass.log" and "pass.log" would be one file on a case-insensitive disk',
+      ],
+    );
+  });
+
   it('rejects two outputs to one object', () => {
     const messages = issues({
       ...trim,

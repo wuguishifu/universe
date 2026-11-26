@@ -3,6 +3,9 @@ import path from 'node:path';
 
 import type { FfmpegRequest, Placeholder } from '@platform/ffmpeg-contracts';
 
+/** Like the contracts' `foldCase`, which this file can't import at runtime (see above). */
+const foldCase = (name: string) => name.normalize('NFC').toLowerCase();
+
 /**
  * Where a job's files live in its work dir: `in/<name><ext>` and `out/<name><ext>` (the S3 key's
  * extension, since ffmpeg picks formats by it) and `tmp/<name>`.
@@ -22,16 +25,17 @@ export class LocalPaths {
       const names = Object.keys(
         kind === 'in' ? request.inputs : request.outputs,
       );
+      // Case-insensitively, since macOS disks are: `Clip` and `clip` would be one file.
       const files = new Map<string, string>();
       for (const name of names) {
         const file = this.resolve({ kind, name });
-        const other = files.get(file);
+        const other = files.get(foldCase(file));
         if (other) {
           throw new Error(
             `"${other}" and "${name}" would both be ${path.relative(workDir, file)}; rename one`,
           );
         }
-        files.set(file, name);
+        files.set(foldCase(file), name);
       }
     }
   }

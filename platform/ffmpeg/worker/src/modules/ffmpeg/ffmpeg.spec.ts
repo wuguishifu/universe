@@ -48,6 +48,17 @@ describe('LocalPaths', () => {
     );
   });
 
+  it('rejects names that differ only by case, as macOS disks do', () => {
+    assert.throws(
+      () =>
+        new LocalPaths('/work', {
+          inputs: {},
+          outputs: { Clip: s3('a.mp4'), clip: s3('b.MP4') },
+        }),
+      /"Clip" and "clip" would both be out\/clip\.MP4/,
+    );
+  });
+
   it('shows args relative to the work dir', () => {
     assert.equal(
       paths.relative('subtitles=/work/job-1/in/subs.srt'),

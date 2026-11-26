@@ -128,6 +128,8 @@ export const ffmpegRequestSchema = z
   .superRefine((request, ctx) => {
     const read = new Set<string>();
     const written = new Set<string>();
+    /** Scratch file names by their case-folded form: macOS disks don't tell `A` from `a`. */
+    const scratch = new Map<string, string>();
     request.steps.forEach((step, i) => {
       step.args.forEach((arg, j) => {
         const path = ['steps', i, 'args', j];
@@ -158,6 +160,17 @@ export const ffmpegRequestSchema = z
                 message: `No output named "${name}"`,
               });
             }
+          } else {
+            const folded = foldCase(name);
+            const other = scratch.get(folded);
+            if (other !== undefined && other !== name) {
+              ctx.addIssue({
+                code: 'custom',
+                path,
+                message: `Scratch files "${other}" and "${name}" would be one file on a case-insensitive disk`,
+              });
+            }
+            scratch.set(folded, other ?? name);
           }
         }
       });
@@ -194,6 +207,11 @@ export const ffmpegRequestSchema = z
     }
   });
 export type FfmpegRequest = z.infer<typeof ffmpegRequestSchema>;
+
+/** How a case-insensitive, normalization-insensitive disk (macOS's default) compares names. */
+export function foldCase(name: string): string {
+  return name.normalize('NFC').toLowerCase();
+}
 
 // MARK: result
 
