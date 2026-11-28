@@ -6,6 +6,10 @@
 //   --bucket <name>       the originals bucket (or JANKTM_ALBUM_BUCKET; default "janktm-album")
 //   --album <folder>      only this album (a folder directly in <dir>); repeat for more
 //   --limit <n>           only the first n files (by path), e.g. a small set to test with
+//   --sample <n>          a test seed instead of everything: n files of each kind (jpg, heic,
+//                         Live Photo heic, Live Photo mov, plain mov, mp4, …), spread across
+//                         the albums, with each Live Photo's other half. The same n picks the
+//                         same files every time.
 //   --concurrency <n>     files uploading at once (default 8)
 //   --force               upload files that are already there too
 //   --dry-run             list what would be uploaded
@@ -57,6 +61,7 @@ const { positionals, values } = parseArgs({
     },
     album: { type: 'string', multiple: true },
     limit: { type: 'string' },
+    sample: { type: 'string' },
     concurrency: { type: 'string', default: '8' },
     force: { type: 'boolean', default: false },
     'dry-run': { type: 'boolean', default: false },
@@ -64,12 +69,13 @@ const { positionals, values } = parseArgs({
 });
 if (positionals.length !== 1) {
   console.error(
-    'usage: upload.mjs <dir> [--bucket B] [--album A]... [--limit N] [--concurrency N] [--force] [--dry-run]',
+    'usage: upload.mjs <dir> [--bucket B] [--album A]... [--limit N] [--sample N] [--concurrency N] [--force] [--dry-run]',
   );
   process.exit(1);
 }
 const root = path.resolve(positionals[0]);
 const limit = values.limit && positiveInt('--limit', values.limit);
+const sample = values.sample && positiveInt('--sample', values.sample);
 const concurrency = positiveInt('--concurrency', values.concurrency);
 const { bucket } = values;
 
@@ -77,7 +83,8 @@ const { bucket } = values;
 
 const { files, ignored, loose } = await findMedia(root, values.album);
 files.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
-const selected = limit ? files.slice(0, limit) : files;
+const sampled = sample ? sampleKinds(files, sample) : files;
+const selected = limit ? sampled.slice(0, limit) : sampled;
 
 const albums = new Set(selected.map((file) => file.key.split('/')[0]));
 console.log(
@@ -252,6 +259,56 @@ function attachmentDisposition(name) {
     (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
   );
   return `attachment; filename="${fallback}"; filename*=UTF-8''${encoded}`;
+}
+
+/**
+ * `perKind` files of each kind, spread evenly through `files` (which are sorted, so across the
+ * albums), plus each picked Live Photo's other half. A kind is the extension, with Live Photo
+ * stills and videos (same folder and name, like janktm-service pairs them) apart from the rest.
+ */
+function sampleKinds(files, perKind) {
+  const stem = (file) =>
+    file.key.slice(0, file.key.lastIndexOf('.')).toLowerCase();
+  const byStem = new Map();
+  for (const file of files) {
+    const group = byStem.get(stem(file)) ?? [];
+    group.push(file);
+    byStem.set(stem(file), group);
+  }
+  const ext = (file) => path.extname(file.key).toLowerCase();
+  const STILLS = new Set(['.heic', '.heif', '.jpg', '.jpeg']);
+  const partners = (file) => {
+    const group = byStem.get(stem(file)) ?? [];
+    const movs = group.filter((other) => ext(other) === '.mov');
+    const stills = group.filter((other) => STILLS.has(ext(other)));
+    return movs.length === 1 && stills.length > 0 ? group : [];
+  };
+
+  const kinds = new Map();
+  for (const file of files) {
+    const live =
+      partners(file).length > 0 &&
+      (ext(file) === '.mov' || STILLS.has(ext(file)));
+    const kind = `${ext(file).slice(1)}${live ? ' (Live Photo)' : ''}`;
+    const list = kinds.get(kind) ?? [];
+    list.push(file);
+    kinds.set(kind, list);
+  }
+
+  const picked = new Set();
+  console.log('Sample:');
+  for (const [kind, list] of [...kinds].sort(([a], [b]) =>
+    a.localeCompare(b),
+  )) {
+    const n = Math.min(perKind, list.length);
+    for (let i = 0; i < n; i++) {
+      const file = list[Math.floor(((i + 0.5) * list.length) / n)];
+      picked.add(file);
+      for (const partner of partners(file)) picked.add(partner);
+    }
+    console.log(`  ${kind}: ${n} of ${list.length}`);
+  }
+  return files.filter((file) => picked.has(file));
 }
 
 function isHidden(name) {
