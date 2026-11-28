@@ -13,6 +13,8 @@ import {
 import { type Queue } from 'bullmq';
 import { z } from 'zod';
 
+import { randomUUID } from 'crypto';
+
 import { TokenAuthGuard } from '../../auth/token-auth.guard';
 import {
   derivativeKindSchema,
@@ -68,7 +70,8 @@ export class ItemsController {
         selector: itemIds ? { itemIds } : { album, kind, all },
         derivatives,
       },
-      { jobId: `reprocess-${Date.now()}` },
+      // Unique per request: two in the same millisecond mustn't collapse into one job.
+      { jobId: `reprocess-${Date.now()}-${randomUUID().slice(0, 8)}` },
     );
     return { reprocessId: job.id };
   }

@@ -13,6 +13,8 @@ import {
 } from '@nestjs/common';
 import { type Queue } from 'bullmq';
 
+import { randomUUID } from 'crypto';
+
 import { TokenAuthGuard } from '../../auth/token-auth.guard';
 import { JANKTM_QUEUE_CONFIG, type JanktmJobData } from '../../queues/queue';
 import { jobStatus } from '../common/job-status';
@@ -44,7 +46,8 @@ export class ScansController {
       );
     }
     const scannedAt = Date.now();
-    const scanId = `scan-${scannedAt}`;
+    // Unique per request, so a request that's deduplicated always gets someone else's ID back.
+    const scanId = `scan-${scannedAt}-${randomUUID().slice(0, 8)}`;
     // Deduplicated in Redis, atomically: until the scan in progress completes or finally fails,
     // adding another returns it instead, whichever instance asks.
     const job = await this.queue.add(
