@@ -47,20 +47,46 @@ export class FlowClient {
    *   ],
    * });
    */
-  public async addFlow<C extends QueueConfigMap, K extends keyof C>({
+  public async addFlow<C extends QueueConfigMap, K extends keyof C>(
+    flow: FlowSpec<C, K>,
+  ): Promise<AddedFlow> {
+    return toAddedFlow(await this.flowProducer.add(this.toFlowJob(flow)));
+  }
+
+  /**
+   * Adds several flows in one round trip to Redis, e.g. one per item when queueing a backlog.
+   * They're added atomically: if one is invalid, none are. Results are in the same order.
+   *
+   * A Redis transaction holds every job at once, so add a big backlog in chunks (a few hundred
+   * flows at a time) rather than in one call.
+   *
+   * @throws if two flows share an `idempotencyKey`: their jobs would share IDs, so all but the
+   * first would silently be dropped.
+   */
+  public async addFlows<C extends QueueConfigMap, K extends keyof C>(
+    flows: FlowSpec<C, K>[],
+  ): Promise<AddedFlow[]> {
+    if (flows.length === 0) return [];
+    const keys = new Set<string>();
+    for (const { idempotencyKey } of flows) {
+      if (idempotencyKey === undefined) continue;
+      if (keys.has(idempotencyKey)) {
+        throw new Error(
+          `Two flows have idempotency key ${idempotencyKey}; only one of them would be added`,
+        );
+      }
+      keys.add(idempotencyKey);
+    }
+    const jobs = flows.map((flow) => this.toFlowJob(flow));
+    const nodes = await this.flowProducer.addBulk(jobs);
+    return nodes.map(toAddedFlow);
+  }
+
+  private toFlowJob<C extends QueueConfigMap, K extends keyof C>({
     idempotencyKey,
     parent,
     children,
-  }: {
-    /**
-     * Makes adding the flow again a no-op while its jobs are still in Redis (e.g. when the job
-     * that adds it retries). Becomes the ID of every job in the flow that doesn't set its own
-     * `jobId`, so it can't contain ':', and the flow can't have two jobs in the same queue.
-     */
-    idempotencyKey?: string;
-    parent: FlowParentJob<C, K>;
-    children: FlowJobNode[];
-  }): Promise<{ parentJobId: string; node: JobNode }> {
+  }: FlowSpec<C, K>): FlowJob {
     const { queueConfig, queueKey, data, opts, prefix } = parent;
     const config = queueConfig[queueKey];
     if (!config) {
@@ -72,7 +98,7 @@ export class FlowClient {
       );
     }
 
-    const flow = withIdempotencyKey(
+    return withIdempotencyKey(
       {
         name: config.jobName,
         queueName: config.queueName,
@@ -85,14 +111,29 @@ export class FlowClient {
       // BullMQ's own default when the producer has no prefix.
       this.flowProducer.opts.prefix ?? 'bull',
     );
-
-    const node = await this.flowProducer.add(flow);
-    // BullMQ types IDs as optional for jobs not yet added; flow jobs always have one.
-    if (!node.job.id) {
-      throw new Error('Flow was added without a parent job ID');
-    }
-    return { parentJobId: node.job.id, node };
   }
+}
+
+/** One flow for `FlowClient.addFlow` or `addFlows`. */
+export type FlowSpec<C extends QueueConfigMap, K extends keyof C> = {
+  /**
+   * Makes adding the flow again a no-op while its jobs are still in Redis (e.g. when the job
+   * that adds it retries). Becomes the ID of every job in the flow that doesn't set its own
+   * `jobId`, so it can't contain ':', and the flow can't have two jobs in the same queue.
+   */
+  idempotencyKey?: string;
+  parent: FlowParentJob<C, K>;
+  children: FlowJobNode[];
+};
+
+export type AddedFlow = { parentJobId: string; node: JobNode };
+
+function toAddedFlow(node: JobNode): AddedFlow {
+  // BullMQ types IDs as optional for jobs not yet added; flow jobs always have one.
+  if (!node.job.id) {
+    throw new Error('Flow was added without a parent job ID');
+  }
+  return { parentJobId: node.job.id, node };
 }
 
 /**

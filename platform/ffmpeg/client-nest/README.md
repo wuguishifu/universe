@@ -110,3 +110,33 @@ await this.flows.addFlow({
 
 A parent only reads its direct children's results, so here it gets the transcript but not the
 ffmpeg result.
+
+### Many flows at once
+
+To queue a backlog (e.g. one job per file), add the flows in chunks of a few hundred with
+`FlowClient.addFlows`, which adds each chunk in one round trip to Redis:
+
+```ts
+await this.flows.addFlows(
+  items.map((item) => ({
+    idempotencyKey: item.id,
+    parent: { queueConfig: MY_QUEUE_CONFIG, queueKey: 'thumbnail', data: { itemId: item.id } },
+    children: [this.ffmpeg.child(thumbnailRequest(item), { priority: 1 })],
+  })),
+);
+```
+
+## The worker's ffmpeg
+
+Homebrew's `ffmpeg` is a slim build: it has VideoToolbox, but no `libwebp`, `zscale` or
+`libplacebo`. Jobs that need those want `ffmpeg-full` (keg-only, so point the worker at it):
+
+```sh
+FFMPEG_PATH=/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg
+FFPROBE_PATH=/opt/homebrew/opt/ffmpeg-full/bin/ffprobe
+FFMPEG_REQUIRED_ENCODERS=h264_videotoolbox,hevc_videotoolbox,libwebp
+FFMPEG_REQUIRED_FILTERS=zscale,tonemap
+```
+
+The worker checks `FFMPEG_REQUIRED_ENCODERS` and `FFMPEG_REQUIRED_FILTERS` on start, so a wrong
+ffmpeg fails there rather than in every job.

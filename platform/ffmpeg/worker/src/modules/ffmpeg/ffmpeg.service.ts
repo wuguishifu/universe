@@ -13,6 +13,7 @@ import type { FfmpegProbe } from '@platform/ffmpeg-contracts';
 import { EnvironmentService } from '../../config/environment';
 
 import { FfmpegExitError, FfmpegTimeoutError, tail } from './errors';
+import { listedNames } from './listed-names';
 import { toProbe } from './probe';
 import { createProgressParser } from './progress';
 
@@ -39,28 +40,48 @@ export class FfmpegService implements OnModuleInit, OnModuleDestroy {
   constructor(private readonly environmentService: EnvironmentService) {}
 
   async onModuleInit() {
-    const { ffmpegPath, ffprobePath, ffmpegRequiredEncoders } =
-      this.environmentService.environment;
+    const {
+      ffmpegPath,
+      ffprobePath,
+      ffmpegRequiredEncoders,
+      ffmpegRequiredFilters,
+    } = this.environmentService.environment;
     let encoders: string;
+    let filters: string;
     try {
-      encoders = await runProcess(ffmpegPath, ['-hide_banner', '-encoders'], {
-        timeoutMs: 10_000,
-      });
+      [encoders, filters] = await Promise.all([
+        runProcess(ffmpegPath, ['-hide_banner', '-encoders'], {
+          timeoutMs: 10_000,
+        }),
+        runProcess(ffmpegPath, ['-hide_banner', '-filters'], {
+          timeoutMs: 10_000,
+        }),
+      ]);
       await runProcess(ffprobePath, ['-version'], { timeoutMs: 10_000 });
     } catch (error) {
       throw new Error(
         `Can't run ffmpeg (FFMPEG_PATH=${ffmpegPath}) or ffprobe (FFPROBE_PATH=${ffprobePath}): ${error instanceof Error ? error.message : error}`,
       );
     }
+    const encoderNames = listedNames(encoders);
     for (const encoder of ffmpegRequiredEncoders) {
-      if (!new RegExp(`\\b${encoder}\\b`).test(encoders)) {
+      if (!encoderNames.has(encoder)) {
         throw new Error(
           `ffmpeg at ${ffmpegPath} has no ${encoder} encoder (FFMPEG_REQUIRED_ENCODERS)`,
         );
       }
     }
+    const filterNames = listedNames(filters);
+    for (const filter of ffmpegRequiredFilters) {
+      if (!filterNames.has(filter)) {
+        throw new Error(
+          `ffmpeg at ${ffmpegPath} has no ${filter} filter (FFMPEG_REQUIRED_FILTERS)`,
+        );
+      }
+    }
+    const required = [...ffmpegRequiredEncoders, ...ffmpegRequiredFilters];
     this.logger.log(
-      `Using ffmpeg at ${ffmpegPath}${ffmpegRequiredEncoders.length ? ` with ${ffmpegRequiredEncoders.join(', ')}` : ''}`,
+      `Using ffmpeg at ${ffmpegPath}${required.length ? ` with ${required.join(', ')}` : ''}`,
     );
   }
 
