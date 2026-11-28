@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { buttonVariants } from '@libs/ui-web';
+import { buttonVariants } from '@libs/web-ui';
 
 import { JoinCodeForm } from '../../modules/game/join-code-form';
 

@@ -1,0 +1,13 @@
+{
+  "name": "@projects/admin-web",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "next start"
+  },
+  "dependencies": {
+    "@libs/web-auth": "workspace:*",
+    "@libs/web-ui": "workspace:*",
+    "@platform/convex-contracts": "workspace:*"
+  }
+}

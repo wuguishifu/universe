@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useId, useState } from 'react';
 
-import { Button, cn, Input, Label } from '@libs/ui-web';
+import { Button, cn, Input, Label } from '@libs/web-ui';
 import type { Id } from '@platform/convex-contracts';
 
 import {

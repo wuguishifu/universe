@@ -1,7 +1,7 @@
 import { Flame, Info, Minus, Plus, Snowflake } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 
-import { Button, cn, Spinner } from '@libs/ui-web';
+import { Button, cn, Spinner } from '@libs/web-ui';
 import {
   type DeviceSnapshot,
   type DisplayUnit,

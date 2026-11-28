@@ -337,6 +337,9 @@ importers:
       ioredis:
         specifier: ^6.0.0
         version: 6.0.0(supports-color@8.1.1)
+      jose:
+        specifier: ^5.10.0
+        version: 5.10.0
       lucide-react:
         specifier: ^0.526.0
         version: 0.526.0(react@19.2.3)
@@ -669,7 +672,16 @@ importers:
 
   libs/redis-cache: {}
 
-  libs/ui-web: {}
+  libs/web/auth:
+    dependencies:
+      '@libs/web-ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@platform/convex-contracts':
+        specifier: workspace:*
+        version: link:../../../platform/convex/contracts
+
+  libs/web/ui: {}
 
   platform/analytics/client-nest:
     dependencies:
@@ -861,6 +873,18 @@ importers:
         specifier: ^2.3.0
         version: 2.8.1
 
+  projects/admin/web:
+    dependencies:
+      '@libs/web-auth':
+        specifier: workspace:*
+        version: link:../../../libs/web/auth
+      '@libs/web-ui':
+        specifier: workspace:*
+        version: link:../../../libs/web/ui
+      '@platform/convex-contracts':
+        specifier: workspace:*
+        version: link:../../../platform/convex/contracts
+
   projects/clipper/contracts:
     dependencies:
       '@libs/queue':
@@ -1043,9 +1067,12 @@ importers:
 
   projects/janktm/web:
     dependencies:
-      '@libs/ui-web':
+      '@libs/web-auth':
         specifier: workspace:*
-        version: link:../../../libs/ui-web
+        version: link:../../../libs/web/auth
+      '@libs/web-ui':
+        specifier: workspace:*
+        version: link:../../../libs/web/ui
       '@platform/convex-contracts':
         specifier: workspace:*
         version: link:../../../platform/convex/contracts
@@ -1075,18 +1102,18 @@ importers:
 
   projects/mega-client/web:
     dependencies:
-      '@libs/ui-web':
+      '@libs/web-ui':
         specifier: workspace:*
-        version: link:../../../libs/ui-web
+        version: link:../../../libs/web/ui
       '@projects/mega-client-contracts':
         specifier: workspace:*
         version: link:../contracts
 
   projects/portfolio/web:
     dependencies:
-      '@libs/ui-web':
+      '@libs/web-ui':
         specifier: workspace:*
-        version: link:../../../libs/ui-web
+        version: link:../../../libs/web/ui
 
   projects/sapphire/mobile:
     dependencies:
@@ -1207,9 +1234,9 @@ importers:
 
   projects/sapphire/web:
     dependencies:
-      '@libs/ui-web':
+      '@libs/web-ui':
         specifier: workspace:*
-        version: link:../../../libs/ui-web
+        version: link:../../../libs/web/ui
       '@platform/convex-contracts':
         specifier: workspace:*
         version: link:../../../platform/convex/contracts
@@ -1257,18 +1284,18 @@ importers:
 
   projects/thermo-automation/web:
     dependencies:
-      '@libs/ui-web':
+      '@libs/web-ui':
         specifier: workspace:*
-        version: link:../../../libs/ui-web
+        version: link:../../../libs/web/ui
       '@projects/thermo-automation-contracts':
         specifier: workspace:*
         version: link:../contracts
 
   projects/wuguishifu/web:
     dependencies:
-      '@libs/ui-web':
+      '@libs/web-ui':
         specifier: workspace:*
-        version: link:../../../libs/ui-web
+        version: link:../../../libs/web/ui
 
 packages:
 

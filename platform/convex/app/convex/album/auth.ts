@@ -1,5 +1,10 @@
 import { ConvexError, v } from 'convex/values';
 
+import { appQuery } from '../access/functions';
+
+/** The album's reads, for janktm-web: only people with a `janktm` grant can call them. */
+export const albumQuery = appQuery('janktm');
+
 /**
  * The album's writes come from janktm-service over HTTP, and a deployment URL isn't a secret, so
  * each write takes this argument, which must match the deployment's JANKTM_CONVEX_SECRET env var.

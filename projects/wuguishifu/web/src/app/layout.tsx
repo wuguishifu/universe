@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { Nunito } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 
-import { cn, SidebarProvider, TooltipProvider } from '@libs/ui-web';
+import { cn, SidebarProvider, TooltipProvider } from '@libs/web-ui';
 
 import { AppSidebar } from '../modules/sidebar/app-sidebar';
 import './globals.css';

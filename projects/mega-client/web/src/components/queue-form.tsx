@@ -2,7 +2,7 @@ import { ClipboardPaste } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { Button, Textarea } from '@libs/ui-web';
+import { Button, Textarea } from '@libs/web-ui';
 import { parseMegaLinks } from '@projects/mega-client-contracts';
 
 import { api, expect } from '../lib/api';

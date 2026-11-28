@@ -3,7 +3,7 @@
 import { useMutation } from 'convex/react';
 import { useState } from 'react';
 
-import { cn } from '@libs/ui-web';
+import { cn } from '@libs/web-ui';
 import { api } from '@platform/convex-contracts';
 
 import {

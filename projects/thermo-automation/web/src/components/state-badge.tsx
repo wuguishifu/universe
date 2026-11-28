@@ -10,7 +10,7 @@ import {
   Zap,
 } from 'lucide-react';
 
-import { cn } from '@libs/ui-web';
+import { cn } from '@libs/web-ui';
 import {
   type ControlActionKind,
   type DeviceSnapshot,

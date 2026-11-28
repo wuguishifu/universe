@@ -5,7 +5,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "@libs/ui-web": "workspace:*",
+    "@libs/web-ui": "workspace:*",
     "@platform/convex-contracts": "workspace:*",
     "@platform/notifications-client-next": "workspace:*",
     "@platform/notifications-contracts": "workspace:*"

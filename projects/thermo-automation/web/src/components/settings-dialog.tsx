@@ -12,7 +12,7 @@ import {
   DialogTitle,
   Input,
   Label,
-} from '@libs/ui-web';
+} from '@libs/web-ui';
 import type {
   DisplayUnit,
   Settings,

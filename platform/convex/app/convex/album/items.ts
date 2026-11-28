@@ -2,8 +2,8 @@ import { paginationOptsValidator } from 'convex/server';
 import { v } from 'convex/values';
 
 import type { Doc } from '../_generated/dataModel';
-import { query } from '../_generated/server';
 
+import { albumQuery } from './auth';
 import { signDerivative, signerFor } from './media';
 import type { Signer } from './signing';
 import { basename } from './slugs';
@@ -12,7 +12,7 @@ import { basename } from './slugs';
  * A page of an album's ready items, oldest first, with what a grid needs: the thumbnail, and the
  * hover loop for anything that moves. `getItem` has the rest.
  */
-export const list = query({
+export const list = albumQuery({
   args: {
     albumId: v.id('albumAlbums'),
     paginationOpts: paginationOptsValidator,
@@ -40,7 +40,7 @@ export const list = query({
 });
 
 /** One ready item, with its lightbox image, video, and a download of the original. */
-export const get = query({
+export const get = albumQuery({
   args: { itemId: v.string(), signingWindow: v.number() },
   handler: async (ctx, { itemId: rawId, signingWindow }) => {
     const sign = signerFor(signingWindow);

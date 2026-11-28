@@ -1,6 +1,6 @@
 import { IconType } from '@icons-pack/react-simple-icons';
 
-import { cn } from '@libs/ui-web';
+import { cn } from '@libs/web-ui';
 
 export type TechStackProps = {
   href: string;

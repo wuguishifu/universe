@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-import { cn } from '@libs/ui-web';
+import { cn } from '@libs/web-ui';
 
 export function Table({
   head,
