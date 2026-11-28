@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { Card, CardDescription, CardHeader, CardTitle } from '@libs/ui-web';
+import { Card, CardDescription, CardHeader, CardTitle } from '@libs/web-ui';
 
 export default function NxGenerators() {
   return (

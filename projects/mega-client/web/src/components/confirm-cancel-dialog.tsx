@@ -6,7 +6,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@libs/ui-web';
+} from '@libs/web-ui';
 
 export function ConfirmCancelDialog({
   open,

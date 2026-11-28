@@ -1,7 +1,7 @@
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-import { Button, Switch } from '@libs/ui-web';
+import { Button, Switch } from '@libs/web-ui';
 import type {
   Automation,
   AutomationInput,

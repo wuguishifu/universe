@@ -11,7 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@libs/ui-web';
+} from '@libs/web-ui';
 
 import { AppSidebarGroup } from './app-sidebar-group';
 import { groups } from './groups';

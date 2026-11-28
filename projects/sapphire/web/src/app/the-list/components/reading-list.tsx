@@ -1,6 +1,6 @@
 'use client';
 
-import { Spinner } from '@libs/ui-web';
+import { Spinner } from '@libs/web-ui';
 import { api } from '@platform/convex-contracts';
 
 import { Section } from '../../../components/section';

@@ -42,7 +42,7 @@
       "path": "../../../platform/convex/contracts"
     },
     {
-      "path": "../../../libs/ui-web"
+      "path": "../../../libs/web/ui"
     }
   ]
 }

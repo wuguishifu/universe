@@ -13,7 +13,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from '@libs/ui-web';
+} from '@libs/web-ui';
 
 import { NavGroup, NavItem } from './types';
 

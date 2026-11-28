@@ -16,7 +16,7 @@
   "exclude": ["src/**/*.spec.ts"],
   "references": [
     {
-      "path": "../../../libs/ui-web/tsconfig.lib.json"
+      "path": "../../../libs/web/ui/tsconfig.lib.json"
     },
     {
       "path": "../contracts/tsconfig.lib.json"

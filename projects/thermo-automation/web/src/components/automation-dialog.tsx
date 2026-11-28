@@ -12,7 +12,7 @@ import {
   Input,
   Label,
   Switch,
-} from '@libs/ui-web';
+} from '@libs/web-ui';
 import {
   type Automation,
   type AutomationInput,

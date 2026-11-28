@@ -1,5 +1,7 @@
+import { authTables } from '@convex-dev/auth/server';
 import { defineSchema } from 'convex/server';
 
+import { accessTables } from './access/tables';
 import { albumTables } from './album/tables';
 import { clipperTables } from './clipper/tables';
 import { gameTables } from './game/tables';
@@ -8,6 +10,8 @@ import { rubyTables } from './ruby/tables';
 import { sapphireTables } from './sapphire/tables';
 
 export default defineSchema({
+  ...authTables,
+  ...accessTables,
   ...albumTables,
   ...clipperTables,
   ...gameTables,

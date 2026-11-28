@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { Button, Input } from '@libs/ui-web';
+import { Button, Input } from '@libs/web-ui';
 
 export function JoinCodeForm() {
   const router = useRouter();

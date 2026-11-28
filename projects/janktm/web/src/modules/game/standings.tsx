@@ -1,4 +1,4 @@
-import { cn } from '@libs/ui-web';
+import { cn } from '@libs/web-ui';
 
 import { ordinal } from './format';
 import type { PartyPlayer, Standing } from './types';

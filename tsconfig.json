@@ -4,7 +4,13 @@
   "files": [],
   "references": [
     {
-      "path": "./libs/ui-web"
+      "path": "./libs/web/ui"
+    },
+    {
+      "path": "./libs/web/auth"
+    },
+    {
+      "path": "./projects/admin/web"
     },
     {
       "path": "./platform/convex/contracts"

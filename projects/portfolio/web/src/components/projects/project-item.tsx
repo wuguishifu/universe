@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { cn } from '@libs/ui-web';
+import { cn } from '@libs/web-ui';
 
 import { ProjectDocument } from '../../../prismicio-types';
 import { backgroundClass } from '../../slices/background';

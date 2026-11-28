@@ -1,18 +1,19 @@
 import { v } from 'convex/values';
 
 import type { Doc } from '../_generated/dataModel';
-import { query, type QueryCtx } from '../_generated/server';
+import type { QueryCtx } from '../_generated/server';
 
+import { albumQuery } from './auth';
 import { edgeReadyItem } from './helpers';
 import { publicAlbum, signerFor } from './media';
 
 /**
- * Public reads. Every query that returns media takes `signingWindow`: pass
- * `Math.floor(Date.now() / SIGNING_WINDOW_MS)` (see ./signing.ts).
+ * Reads for janktm-web, for anyone with a `janktm` grant. Every query that returns media takes
+ * `signingWindow`: pass `Math.floor(Date.now() / SIGNING_WINDOW_MS)` (see ./signing.ts).
  */
 
 /** Albums with anything to show, newest first. */
-export const list = query({
+export const list = albumQuery({
   args: { signingWindow: v.number() },
   handler: async (ctx, { signingWindow }) => {
     const sign = signerFor(signingWindow);
@@ -31,7 +32,7 @@ export const list = query({
   },
 });
 
-export const get = query({
+export const get = albumQuery({
   args: { slug: v.string(), signingWindow: v.number() },
   handler: async (ctx, { slug, signingWindow }) => {
     const sign = signerFor(signingWindow);

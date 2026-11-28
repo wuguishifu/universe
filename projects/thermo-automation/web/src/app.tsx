@@ -2,7 +2,7 @@ import { House, Settings as SettingsIcon, TriangleAlert } from 'lucide-react';
 import { useState } from 'react';
 import { Toaster } from 'sonner';
 
-import { Button, Spinner } from '@libs/ui-web';
+import { Button, Spinner } from '@libs/web-ui';
 
 import { DeviceCard } from './components/device-card';
 import { browserTimeZone, SettingsDialog } from './components/settings-dialog';
