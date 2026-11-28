@@ -1,0 +1,15 @@
+{
+  "name": "@projects/janktm-service",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@libs/nest-core": "workspace:*",
+    "@libs/nest-s3": "workspace:*",
+    "@libs/queue": "workspace:*",
+    "@platform/convex-contracts": "workspace:*",
+    "@platform/ffmpeg-client-nest": "workspace:*",
+    "@platform/ffmpeg-contracts": "workspace:*",
+    "exifr": "*",
+    "tslib": "^2.3.0"
+  }
+}

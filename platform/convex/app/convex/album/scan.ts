@@ -23,12 +23,13 @@ import {
  * 1. `beginAlbum` with the scan's start time, which every write of the scan stamps.
  * 2. For each batch of listed files, `diffItems` says which are new or changed; the service reads
  *    metadata for just those, then `upsertItems` saves the batch and returns the jobs to queue.
- * 3. `sweepItems` until it's done, to delete the album's items the scan didn't see.
- * A scan of every album then deletes the albums it didn't see: `staleAlbums`, then `sweepItems`
- * and `deleteAlbum` for each.
+ * 3. `staleItems` and `deleteItems` until there are none, to delete the album's items the scan
+ *    didn't see (and their derivatives, in between).
+ * A scan of every album then deletes the albums it didn't see: `staleAlbums`, then the same for
+ * each one's items, then `deleteAlbum`.
  */
 
-/** Items deleted per `sweepItems` call. */
+/** Items per `staleItems` batch. */
 const SWEEP_BATCH = 200;
 
 export const beginAlbum = mutation({
@@ -159,10 +160,11 @@ export const upsertItems = mutation({
 });
 
 /**
- * Deletes a batch of the album's items that the scan didn't see. Call it until `done`, deleting
- * each returned item's derivatives (everything under `<itemId>/` in the derived bucket).
+ * A batch of the album's items that the scan didn't see. Delete their derivatives (everything
+ * under `<itemId>/` in the derived bucket) first, then the items with `deleteItems`; repeat until
+ * this is empty. In that order, a failure in between leaves the items to try again.
  */
-export const sweepItems = mutation({
+export const staleItems = query({
   args: {
     secret: janktmSecret,
     albumId: v.id('albumAlbums'),
@@ -176,25 +178,52 @@ export const sweepItems = mutation({
         q.eq('albumId', albumId).lt('lastSeenScanAt', scannedAt),
       )
       .take(SWEEP_BATCH);
+    return stale.map((item) => item._id);
+  },
+});
+
+/** Deletes items `staleItems` returned, once their derivatives are gone. */
+export const deleteItems = mutation({
+  args: {
+    secret: janktmSecret,
+    albumId: v.id('albumAlbums'),
+    scannedAt: v.number(),
+    itemIds: v.array(v.id('albumItems')),
+  },
+  handler: async (ctx, { secret, albumId, scannedAt, itemIds }) => {
+    assertJanktmSecret(secret);
+    if (itemIds.length > SWEEP_BATCH) {
+      throw new ConvexError({ code: 'too_many_items' as const });
+    }
+    let deleted = 0;
     let ready = 0;
-    for (const item of stale) {
+    for (const itemId of itemIds) {
+      const item = await ctx.db.get('albumItems', itemId);
+      // Gone already (a retry), or seen by a later scan.
+      if (
+        !item ||
+        item.albumId !== albumId ||
+        item.lastSeenScanAt >= scannedAt
+      ) {
+        continue;
+      }
       if (item.status === 'ready') ready++;
       await ctx.db.delete('albumItems', item._id);
+      deleted++;
     }
     const album = await ctx.db.get('albumAlbums', albumId);
     if (album) {
-      if (album.coverItemId && stale.some((i) => i._id === album.coverItemId)) {
-        await ctx.db.patch('albumAlbums', albumId, { coverItemId: undefined });
+      if (album.coverItemId && itemIds.includes(album.coverItemId)) {
+        const cover = await ctx.db.get('albumItems', album.coverItemId);
+        if (!cover) {
+          await ctx.db.patch('albumAlbums', albumId, {
+            coverItemId: undefined,
+          });
+        }
       }
-      await updateAlbumStats(ctx, albumId, {
-        items: -stale.length,
-        ready: -ready,
-      });
+      await updateAlbumStats(ctx, albumId, { items: -deleted, ready: -ready });
     }
-    return {
-      deletedItemIds: stale.map((item) => item._id),
-      done: stale.length < SWEEP_BATCH,
-    };
+    return { deleted };
   },
 });
 
@@ -211,7 +240,7 @@ export const staleAlbums = query({
   },
 });
 
-/** Deletes an album the scan didn't see, once `sweepItems` has emptied it. */
+/** Deletes an album the scan didn't see, once its items are deleted. */
 export const deleteAlbum = mutation({
   args: {
     secret: janktmSecret,

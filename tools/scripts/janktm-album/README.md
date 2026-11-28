@@ -10,6 +10,10 @@ node tools/scripts/janktm-album/upload.mjs /Volumes/album --dry-run
 # a small set to try things on, e.g. against a dev Garage
 node tools/scripts/janktm-album/upload.mjs /Volumes/album --album "2022-06-12 GRADUATION!" --limit 50
 
+# a test seed with every kind of file: 3 each of jpg, heic, heif, png, gif, mov, mp4, and Live
+# Photo stills and videos (with their other halves), spread across the albums
+node tools/scripts/janktm-album/upload.mjs /Volumes/album --sample 3
+
 # everything (resumable: files already there with the same size are skipped)
 node tools/scripts/janktm-album/upload.mjs /Volumes/album
 ```
@@ -23,6 +27,8 @@ folder, so `2022-06-12 GRADUATION!/Bo's Uploads/IMG_5974.HEIC` is in album `2022
 - Keys are NFC-normalized, since macOS can list names decomposed.
 - Each object gets `Content-Disposition: attachment` with its file name, so the album's "download
   original" links download (Garage ignores presigned URLs' `response-content-disposition`).
+- Uploads don't send checksums: Garage serves a multipart upload's checksum (over its parts) as
+  the whole object's, which fails the AWS SDK's download checks.
 - It never deletes. To take a file out of the album, delete it from the bucket; the next scan
   removes it.
 

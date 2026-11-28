@@ -56,6 +56,8 @@ export const mediaInfo = v.object({
   rotationDeg: v.optional(v.number()),
   /** A video with an HDR transfer function (HLG or PQ), which needs tone mapping. */
   hdr: v.optional(v.boolean()),
+  /** The same for a Live Photo's motion. */
+  motionHdr: v.optional(v.boolean()),
 });
 export type MediaInfo = Infer<typeof mediaInfo>;
 
@@ -74,6 +76,10 @@ export const takenAtSource = v.union(
   v.literal('lastModified'),
 );
 export type TakenAtSource = Infer<typeof takenAtSource>;
+
+/** An S3 object, by location only. */
+export const s3Location = v.object({ bucket: v.string(), key: v.string() });
+export type S3Location = Infer<typeof s3Location>;
 
 /** A generated file in the derived bucket. */
 export const derivative = v.object({

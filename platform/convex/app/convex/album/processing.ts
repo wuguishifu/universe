@@ -13,9 +13,10 @@ import {
   updateAlbumStats,
 } from './helpers';
 import {
-  type Derivative,
   type DerivativeKind,
   type Derivatives,
+  s3Location,
+  type S3Location,
   DERIVATIVE_KINDS,
   derivativeKind,
   derivatives,
@@ -26,62 +27,112 @@ import {
 const MAX_REPROCESS_IDS = 500;
 
 /**
- * Saves a job's derivatives. A job whose token isn't the item's any more (the file changed or it
- * was reprocessed since) is stale: nothing is saved, and its outputs should be deleted.
+ * Saves a job's derivatives, if its token is still the item's. A newer job (the file changed, or it
+ * was reprocessed) makes it stale, and so does this one having been saved already (a retry).
  *
- * Returns the derivatives the new ones replaced, whose objects should be deleted too.
+ * Returns what janktm-service should delete, and nothing else, so a job uploading for the same
+ * item meanwhile is never touched:
+ * - `inUse`: the item's derivatives now. A stale job deletes its own outputs except these (a retry
+ *   of a saved job finds its outputs here).
+ * - `garbage`: derivatives that saving replaced, now and in earlier calls whose deletes didn't
+ *   finish. Delete them, then `clearGarbage`.
  */
 export const completeItem = mutation({
   args: {
     secret: janktmSecret,
-    itemId: v.id('albumItems'),
+    itemId: v.string(),
     token: v.string(),
     derivatives,
   },
-  handler: async (ctx, { secret, itemId, token, derivatives: generated }) => {
+  handler: async (
+    ctx,
+    { secret, itemId: rawId, token, derivatives: generated },
+  ) => {
     assertJanktmSecret(secret);
-    const item = await ctx.db.get('albumItems', itemId);
-    const replaced: Derivative[] = [];
-    if (!item || item.job?.token !== token) {
-      return { applied: false, replaced };
+    const itemId = ctx.db.normalizeId('albumItems', rawId);
+    const item = itemId && (await ctx.db.get('albumItems', itemId));
+    // Deleted (its file is gone): nothing is in use.
+    if (!item) return { applied: false, inUse: [], garbage: [] };
+    if (item.job?.token !== token) {
+      return {
+        applied: false,
+        inUse: locationsOf(item.derivatives),
+        garbage: item.garbage ?? [],
+      };
     }
 
     const merged: Derivatives = { ...item.derivatives };
+    const garbage = [...(item.garbage ?? [])];
     for (const kind of DERIVATIVE_KINDS) {
       const before = item.derivatives[kind];
       const after = generated[kind];
       if (!after) continue;
       merged[kind] = after;
-      if (before && before.key !== after.key) replaced.push(before);
+      if (before && before.key !== after.key) {
+        garbage.push({ bucket: before.bucket, key: before.key });
+      }
     }
     const ready = merged.thumb !== undefined;
-    await ctx.db.patch('albumItems', itemId, {
+    await ctx.db.patch('albumItems', item._id, {
       derivatives: merged,
       status: ready ? 'ready' : item.status,
       width: merged.display?.width ?? item.width,
       height: merged.display?.height ?? item.height,
       job: undefined,
+      garbage,
     });
     await updateAlbumStats(ctx, item.albumId, {
       ready: ready && item.status !== 'ready' ? 1 : 0,
     });
-    return { applied: true, replaced };
+    return { applied: true, inUse: locationsOf(merged), garbage };
   },
 });
+
+/** Takes deleted objects off an item's `garbage`. */
+export const clearGarbage = mutation({
+  args: {
+    secret: janktmSecret,
+    itemId: v.string(),
+    deleted: v.array(s3Location),
+  },
+  handler: async (ctx, { secret, itemId: rawId, deleted }) => {
+    assertJanktmSecret(secret);
+    const itemId = ctx.db.normalizeId('albumItems', rawId);
+    const item = itemId && (await ctx.db.get('albumItems', itemId));
+    if (!item?.garbage) return;
+    const gone = new Set(deleted.map(({ bucket, key }) => `${bucket}/${key}`));
+    const garbage = item.garbage.filter(
+      ({ bucket, key }) => !gone.has(`${bucket}/${key}`),
+    );
+    await ctx.db.patch('albumItems', item._id, {
+      garbage: garbage.length > 0 ? garbage : undefined,
+    });
+  },
+});
+
+function locationsOf(derivatives: Derivatives): S3Location[] {
+  return DERIVATIVE_KINDS.flatMap((kind) => {
+    const derivative = derivatives[kind];
+    return derivative
+      ? [{ bucket: derivative.bucket, key: derivative.key }]
+      : [];
+  });
+}
 
 /** Records a job's failure. A ready item stays listed with what it had. */
 export const failItem = mutation({
   args: {
     secret: janktmSecret,
-    itemId: v.id('albumItems'),
+    itemId: v.string(),
     token: v.string(),
     error: v.string(),
   },
-  handler: async (ctx, { secret, itemId, token, error }) => {
+  handler: async (ctx, { secret, itemId: rawId, token, error }) => {
     assertJanktmSecret(secret);
-    const item = await ctx.db.get('albumItems', itemId);
+    const itemId = ctx.db.normalizeId('albumItems', rawId);
+    const item = itemId && (await ctx.db.get('albumItems', itemId));
     if (!item?.job || item.job.token !== token) return { applied: false };
-    await ctx.db.patch('albumItems', itemId, {
+    await ctx.db.patch('albumItems', item._id, {
       status: item.status === 'ready' ? 'ready' : 'failed',
       job: { ...item.job, state: 'failed', error: error.slice(0, 4000) },
     });
