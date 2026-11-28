@@ -18,8 +18,13 @@ concurrency:
 jobs:
   plan:
     name: Find affected mobile apps
-    # Put "skip-mobile-builds" in the PR title or merge commit message to skip this merge's release.
-    if: ${{ !contains(github.event.head_commit.message, 'skip-mobile-builds') }}
+    # Put "skip-mobile-builds" in the PR title or merge commit message to skip this merge's release,
+    # or "no-deploy" to skip it along with every other deploy workflow. The run is then marked
+    # skipped rather than successful, so nx-set-shas keeps the last real release as the base and
+    # the next merge picks up these changes too.
+    if: >-
+      ${{ !contains(github.event.head_commit.message, 'skip-mobile-builds')
+      && !contains(github.event.head_commit.message, 'no-deploy') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
