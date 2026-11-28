@@ -126,6 +126,9 @@ const s3 = new S3Client({
     accessKeyId: process.env.S3_ACCESS_KEY_ID,
     secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
   },
+  // Garage stores a multipart upload's checksum as one over its parts' checksums but serves it as
+  // the whole object's, which fails SDK downloads' checksum checks. Don't send checksums at all.
+  requestChecksumCalculation: 'WHEN_REQUIRED',
 });
 
 const counts = { uploaded: 0, skipped: 0, failed: 0 };

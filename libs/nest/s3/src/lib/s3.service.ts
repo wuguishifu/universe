@@ -49,6 +49,10 @@ export class S3Service {
         secretAccessKey: s3.secretAccessKey,
       },
       forcePathStyle: s3.forcePathStyle,
+      // Garage gives a multipart object's checksum (one over its parts' checksums) as if it were
+      // the whole object's, so the SDK's default check fails every download of one ("Checksum
+      // mismatch ... x-amz-checksum-crc32"). Only check when the operation requires it.
+      responseChecksumValidation: 'WHEN_REQUIRED' as const,
     };
     this.client = config ? new S3Client(config) : null;
     this.uploadPresignClient = config
