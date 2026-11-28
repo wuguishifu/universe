@@ -14,7 +14,7 @@ import {
 } from '../../queues/queue';
 import { ConvexService } from '../common/convex.service';
 import { withoutUndefined } from '../common/without-undefined';
-import { garbageKeys, type InUse } from '../media/ffmpeg-requests';
+import { toDelete } from '../media/ffmpeg-requests';
 
 type Derivative = {
   bucket: string;
@@ -79,33 +79,28 @@ export class CompleteItemProcessor extends WorkerHost {
       });
     }
 
-    // Saving is idempotent, and so is the clean-up after it: a retry (say the delete below failed)
-    // gets a fresh picture of what's in use, so it never deletes what this job published.
-    const { applied, inUse } = await this.convex.mutation(
+    // Saving is idempotent, and so is the clean-up: a retry (say a delete below failed) is told
+    // what's in use and what's still garbage, and deletes only those.
+    const completion = await this.convex.mutation(
       api.album.processing.completeItem,
       { itemId, token, derivatives },
     );
-    if (!applied)
+    if (!completion.applied) {
       this.logger.debug(`Item ${itemId}'s job ${token} is stale or done`);
-    await this.cleanUp(itemId, inUse);
-  }
-
-  /**
-   * Deletes everything in the item's folder of the derived bucket that it doesn't use: what this
-   * job replaced, stale jobs' outputs, and leftovers of failed attempts. Keeps the folder of the
-   * job it's waiting on, whose outputs may be uploading.
-   */
-  private async cleanUp(itemId: string, inUse: InUse): Promise<void> {
-    const bucket = this.environmentService.environment.albumDerivedBucket;
-    const keys: string[] = [];
-    for await (const page of this.s3.listObjects({
-      bucket,
-      prefix: `${itemId}/`,
-    })) {
-      keys.push(...page.map((object) => object.key));
     }
-    const garbage = garbageKeys(keys, itemId, bucket, inUse);
-    if (garbage.length > 0)
-      await this.s3.deleteObjects({ bucket, keys: garbage });
+    const bucket = this.environmentService.environment.albumDerivedBucket;
+    const doomed = toDelete(Object.values(derivatives), completion, bucket);
+    if (doomed.length > 0) {
+      await this.s3.deleteObjects({
+        bucket,
+        keys: doomed.map((object) => object.key),
+      });
+    }
+    if (completion.garbage.length > 0) {
+      await this.convex.mutation(api.album.processing.clearGarbage, {
+        itemId,
+        deleted: completion.garbage,
+      });
+    }
   }
 }

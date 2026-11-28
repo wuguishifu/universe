@@ -77,6 +77,10 @@ export const takenAtSource = v.union(
 );
 export type TakenAtSource = Infer<typeof takenAtSource>;
 
+/** An S3 object, by location only. */
+export const s3Location = v.object({ bucket: v.string(), key: v.string() });
+export type S3Location = Infer<typeof s3Location>;
+
 /** A generated file in the derived bucket. */
 export const derivative = v.object({
   bucket: v.string(),

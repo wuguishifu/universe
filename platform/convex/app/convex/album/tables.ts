@@ -7,6 +7,7 @@ import {
   itemKind,
   itemStatus,
   mediaInfo,
+  s3Location,
   s3Object,
   takenAtSource,
 } from './validators';
@@ -56,6 +57,11 @@ export const albumTables = {
     status: itemStatus,
     derivatives,
     job: v.optional(itemJob),
+    /**
+     * Derivatives that completed jobs replaced, for janktm-service to delete (then `clearGarbage`).
+     * Kept here, in the transaction that replaced them, so a failed delete is retried.
+     */
+    garbage: v.optional(v.array(s3Location)),
     /** When the last scan that saw it started; each scan deletes its album's items it didn't see. */
     lastSeenScanAt: v.number(),
   })

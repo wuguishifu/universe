@@ -354,35 +354,38 @@ export function jobFolder(itemId: string, token: string): string {
   return `${itemId}/${token.slice(0, 8)}/`;
 }
 
-/** What Convex's completeItem says an item uses in the derived bucket. */
-export type InUse = {
-  keys: { bucket: string; key: string }[];
-  jobToken: string | null;
+type S3Location = { bucket: string; key: string };
+
+/** What Convex's completeItem says about an item after a job, for cleaning up. */
+export type Completion = {
+  applied: boolean;
+  /** The item's derivatives now. */
+  inUse: S3Location[];
+  /** Derivatives that completed jobs replaced, not yet deleted. */
+  garbage: S3Location[];
 };
 
 /**
- * Of `keys` (everything under `<itemId>/` in `bucket`), the ones the item doesn't use: not one of
- * its derivatives, and not in the folder of the job it's waiting on (whose outputs may be
- * uploading right now).
+ * What to delete after completing a job: its own outputs if it was stale (unless the item uses
+ * them, as after a retry of a job that was saved), and the item's garbage. Only ever objects these
+ * name, in `bucket`, and never one in use: a newer job uploading for the same item writes
+ * elsewhere, so nothing it makes is ever deleted here.
  */
-export function garbageKeys(
-  keys: string[],
-  itemId: string,
+export function toDelete(
+  outputs: S3Location[],
+  completion: Completion,
   bucket: string,
-  inUse: InUse,
-): string[] {
-  const keep = new Set(
-    inUse.keys
-      .filter((object) => object.bucket === bucket)
-      .map((object) => object.key),
-  );
-  const pending = inUse.jobToken
-    ? jobFolder(itemId, inUse.jobToken)
-    : undefined;
-  return keys.filter(
-    (key) =>
-      key.startsWith(`${itemId}/`) &&
-      !keep.has(key) &&
-      !(pending && key.startsWith(pending)),
-  );
+): S3Location[] {
+  const id = ({ bucket, key }: S3Location) => `${bucket}/${key}`;
+  const used = new Set(completion.inUse.map(id));
+  const candidates = [
+    ...(completion.applied ? [] : outputs),
+    ...completion.garbage,
+  ];
+  const result = new Map<string, S3Location>();
+  for (const object of candidates) {
+    if (object.bucket === bucket && !used.has(id(object)))
+      result.set(id(object), object);
+  }
+  return [...result.values()];
 }

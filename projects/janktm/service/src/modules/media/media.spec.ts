@@ -23,9 +23,9 @@ import {
 import {
   buildItemRequest,
   derivativeKey,
-  garbageKeys,
   type ItemJobInput,
   PRESETS,
+  toDelete,
 } from './ffmpeg-requests.ts';
 import { readMovieInfo } from './movie-info.ts';
 import { readPhotoMetadata } from './photo-metadata.ts';
@@ -594,60 +594,63 @@ describe('buildItemRequest', () => {
   });
 });
 
-describe('garbageKeys', () => {
-  const listed = [
-    'item1/aaaaaaaa/thumb.webp',
-    'item1/aaaaaaaa/display.webp',
-    'item1/bbbbbbbb/thumb.webp',
-    'item1/cccccccc/hover.mp4',
-    'item10/aaaaaaaa/thumb.webp',
+describe('toDelete', () => {
+  const at = (key: string, bucket = 'derived') => ({ bucket, key });
+  const outputs = [
+    at('item1/bbbbbbbb/thumb.webp'),
+    at('item1/bbbbbbbb/display.webp'),
   ];
-  const inUse = (keys: string[], jobToken: string | null = null) => ({
-    keys: keys.map((key) => ({ bucket: 'derived', key })),
-    jobToken,
-  });
 
-  it('keeps what the item shows and what its pending job is writing', () => {
-    assert.deepEqual(
-      garbageKeys(
-        listed,
-        'item1',
-        'derived',
-        inUse(
-          ['item1/aaaaaaaa/thumb.webp', 'item1/aaaaaaaa/display.webp'],
-          'cccccccc-1234',
-        ),
-      ),
-      ['item1/bbbbbbbb/thumb.webp'],
-    );
-  });
-
-  it("deletes nothing a retry's earlier attempt published", () => {
-    // The first attempt saved bbbbbbbb's thumb; a retry is told so, and keeps it.
-    const garbage = garbageKeys(
-      listed,
-      'item1',
+  it("deletes what a saved job replaced, never the job's own outputs", () => {
+    const deleted = toDelete(
+      outputs,
+      {
+        applied: true,
+        inUse: outputs,
+        garbage: [at('item1/aaaaaaaa/thumb.webp')],
+      },
       'derived',
-      inUse(['item1/bbbbbbbb/thumb.webp']),
     );
-    assert.ok(!garbage.includes('item1/bbbbbbbb/thumb.webp'));
+    assert.deepEqual(deleted, [at('item1/aaaaaaaa/thumb.webp')]);
   });
 
-  it("deletes a deleted item's whole folder, and never another item's", () => {
-    const garbage = garbageKeys(listed, 'item1', 'derived', inUse([]));
-    assert.equal(garbage.length, 4);
-    assert.ok(!garbage.includes('item10/aaaaaaaa/thumb.webp'));
+  it("keeps a retried job's outputs, and finishes deleting its garbage", () => {
+    // The first attempt saved them, then failed to delete what they replaced.
+    const deleted = toDelete(
+      outputs,
+      {
+        applied: false,
+        inUse: outputs,
+        garbage: [at('item1/aaaaaaaa/thumb.webp')],
+      },
+      'derived',
+    );
+    assert.deepEqual(deleted, [at('item1/aaaaaaaa/thumb.webp')]);
   });
 
-  it('ignores keys in use in other buckets', () => {
-    const other = {
-      keys: [{ bucket: 'originals', key: 'item1/aaaaaaaa/thumb.webp' }],
-      jobToken: null,
-    };
-    assert.ok(
-      garbageKeys(listed, 'item1', 'derived', other).includes(
-        'item1/aaaaaaaa/thumb.webp',
-      ),
+  it("deletes a superseded job's outputs, and only those", () => {
+    // A newer job (cccccccc) may be uploading; nothing names its files, so they're safe.
+    const deleted = toDelete(
+      outputs,
+      { applied: false, inUse: [at('item1/aaaaaaaa/thumb.webp')], garbage: [] },
+      'derived',
     );
+    assert.deepEqual(deleted, outputs);
+  });
+
+  it('never deletes what the item uses, or anything outside the derived bucket', () => {
+    const deleted = toDelete(
+      [],
+      {
+        applied: true,
+        inUse: [at('item1/aaaaaaaa/thumb.webp')],
+        garbage: [
+          at('item1/aaaaaaaa/thumb.webp'),
+          at('album/IMG_1.JPG', 'originals'),
+        ],
+      },
+      'derived',
+    );
+    assert.deepEqual(deleted, []);
   });
 });
