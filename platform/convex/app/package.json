@@ -9,6 +9,7 @@
     "@convex-dev/auth": "*",
     "@libs/phrase-matching": "workspace:^",
     "@platform/notifications-contracts": "workspace:^",
+    "aws4fetch": "*",
     "convex": "*"
   }
 }

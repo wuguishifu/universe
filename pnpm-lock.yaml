@@ -238,6 +238,9 @@ importers:
       '@xterm/xterm':
         specifier: 6.0.0
         version: 6.0.0
+      aws4fetch:
+        specifier: ^1.0.20
+        version: 1.0.20
       axios:
         specifier: '*'
         version: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -702,6 +705,9 @@ importers:
       '@platform/notifications-contracts':
         specifier: workspace:^
         version: link:../../notifications/contracts
+      aws4fetch:
+        specifier: '*'
+        version: 1.0.20
       convex:
         specifier: '*'
         version: 1.37.0(react@19.2.3)
@@ -7239,6 +7245,9 @@ packages:
 
   avvio@9.3.0:
     resolution: {integrity: sha512-g2tQ7LE7oOSqDfwEm3M+ZCMTJc7KiZCdJ4UwyZJb5ckTKyYu50OYmvv0mCFXPuYXoM4zkSt8zM9XQ9KCvxA74A==}
+
+  aws4fetch@1.0.20:
+    resolution: {integrity: sha512-/djoAN709iY65ETD6LKCtyyEI04XIBP5xVvfmNxsEP0uJB5tyaGBztSryRr4HqMStr9R06PisQE7m9zDTXKu6g==}
 
   axe-core@4.13.0:
     resolution: {integrity: sha512-UzGt8zg7Ny8djbYMhxl2zuEevVa7r2gJjYY5Lwr1xM7+XU2nd6CkIWFTVcCIbAP63vSz71NaVyyuSk9lHKcy0A==}
@@ -21146,6 +21155,8 @@ snapshots:
     dependencies:
       '@fastify/error': 4.2.0
       fastq: 1.20.3
+
+  aws4fetch@1.0.20: {}
 
   axe-core@4.13.0: {}
 
