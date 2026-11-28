@@ -3,10 +3,11 @@
 The finance dashboard. For now: sign in, and link or disconnect institutions under Settings →
 Connections. Hosted on Vercel.
 
-- **Auth** is Convex Auth with email and password ([convex/auth.ts](../../../platform/convex/app/convex/auth.ts)).
-  Sign-ups are closed: "Create your account" only works for emails in the deployment's
-  `AUTH_SIGNUP_ALLOWLIST`. There's no password reset (no email provider).
-  [proxy.ts](src/proxy.ts) sends everything but `/sign-in` to `/sign-in` when signed out.
+- **Auth** is the shared invite-only Convex Auth from [@libs/web-auth](../../../libs/web/auth/README.md):
+  email and password, with emailed codes to verify the address and reset a password. Only emails with
+  a `finance` grant (invite them in admin-web) can use the app. [proxy.ts](src/proxy.ts) sends
+  signed-out visitors to `/sign-in` and anyone without the grant to `/no-access`. The convex queries
+  (`finance.*`) and finance-service check the grant too.
 - **Linking** happens in [finance-service](../service/README.md). The server actions in
   [actions.ts](src/modules/connections/actions.ts) forward the user's Convex Auth JWT to it, and the
   browser only opens Plaid Link with the link token it returns. This app never has Plaid's secret or

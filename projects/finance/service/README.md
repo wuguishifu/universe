@@ -13,7 +13,8 @@ browser ──► finance-web (Vercel) ── server actions, as the signed-in u
               ▼
             finance-service (k8s, tailnet)
               1. ConvexJwtGuard: checks the JWT against ${CONVEX_SITE_URL}/.well-known/jwks.json;
-                 the user is the token's subject (<userId>|<sessionId>)
+                 the user is the token's subject (<userId>|<sessionId>). Then asks convex, with the
+                 same token, whether that user has a `finance` grant (api.access.viewer.status)
               2. Plaid: link.createToken / item.exchangePublicToken / item.get / item.remove
               3. AES-256-GCM with PLAID_TOKEN_KEY, bound to userId + itemId
               4. convex: api.finance.items.* with FINANCE_CONVEX_SECRET
@@ -54,7 +55,8 @@ Ciphertexts look like `v1:<iv>:<tag>:<ciphertext>` (base64url). The AAD is
      `JWKS` on dev; add `--prod` for prod. Running it again rotates them and signs everyone out.
      (Not `npx @convex-dev/auth`: it would rewrite the auth files that are already set up.)
    - `pnpm nx convex convex-app -- env set FINANCE_CONVEX_SECRET <same value>`
-   - `pnpm nx convex convex-app -- env set AUTH_SIGNUP_ALLOWLIST you@example.com`
+   - The rest of Convex Auth's setup (Resend, `SITE_URL`, your first admin grant) is in
+     [@libs/web-auth](../../../libs/web/auth/README.md). Then invite yourself to `finance` in admin-web.
    - Push the functions (`nx serve convex-app` for dev; the deploy workflow for prod).
 3. `nx setup environment` writes `.env.local` (plus `CONVEX_URL` and `CONVEX_SITE_URL` for dev), then
    `nx serve finance-service`. It listens on 3013.

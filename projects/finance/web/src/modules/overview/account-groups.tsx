@@ -4,7 +4,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@libs/ui-web';
+} from '@libs/web-ui';
 
 import { formatMoney, formatPercent } from '../format';
 

@@ -2,7 +2,7 @@ import { Content, isFilled } from '@prismicio/client';
 import Image from 'next/image';
 import { FC } from 'react';
 
-import { cn } from '@libs/ui-web';
+import { cn } from '@libs/web-ui';
 
 import { RichText } from '../../components/text/text';
 import { animation } from '../animation';

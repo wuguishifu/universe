@@ -1,0 +1,5 @@
+{
+  "$schema": "../../../tools/environment/environment-config.schema.json",
+  "hasConvex": true,
+  "secretsPaths": ["platform/s3", "platform/redis", "projects/janktm/service"]
+}

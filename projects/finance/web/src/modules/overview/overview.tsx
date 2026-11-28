@@ -5,7 +5,7 @@ import { TriangleAlertIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
-import { Button, Card, CardContent, Skeleton } from '@libs/ui-web';
+import { Button, Card, CardContent, Skeleton } from '@libs/web-ui';
 import { api } from '@platform/convex-contracts';
 
 import { formatMoney, formatPercent, formatRelative, useNow } from '../format';

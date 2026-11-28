@@ -3,7 +3,7 @@
 import { RefreshCwIcon } from 'lucide-react';
 import { useState } from 'react';
 
-import { Button } from '@libs/ui-web';
+import { Button } from '@libs/web-ui';
 
 import { syncAccounts } from '../connections/actions';
 

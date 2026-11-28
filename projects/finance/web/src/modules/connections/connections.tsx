@@ -13,7 +13,7 @@ import {
   CardTitle,
   Skeleton,
   Spinner,
-} from '@libs/ui-web';
+} from '@libs/web-ui';
 import { api } from '@platform/convex-contracts';
 import type { LinkKind } from '@projects/finance-contracts';
 

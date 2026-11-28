@@ -1,12 +1,11 @@
 import './globals.css';
 
-import { ConvexAuthNextjsServerProvider } from '@convex-dev/auth/nextjs/server';
 import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
 
-import { cn } from '@libs/ui-web';
-
-import { ConvexClientProvider } from '../modules/convex/convex-client-provider';
+import { ConvexAuthClientProvider } from '@libs/web-auth';
+import { ConvexAuthNextjsServerProvider } from '@libs/web-auth/server';
+import { cn } from '@libs/web-ui';
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-geist' });
 
@@ -23,7 +22,7 @@ export default function RootLayout({
     <ConvexAuthNextjsServerProvider>
       <html lang="en">
         <body className={cn(geist.variable, 'min-h-svh')}>
-          <ConvexClientProvider>{children}</ConvexClientProvider>
+          <ConvexAuthClientProvider>{children}</ConvexAuthClientProvider>
         </body>
       </html>
     </ConvexAuthNextjsServerProvider>

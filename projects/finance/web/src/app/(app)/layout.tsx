@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 
-import { SidebarInset, SidebarProvider, TooltipProvider } from '@libs/ui-web';
+import { SidebarInset, SidebarProvider, TooltipProvider } from '@libs/web-ui';
 
 import { AppSidebar } from '../../modules/layout/app-sidebar';
 

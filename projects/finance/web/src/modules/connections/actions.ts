@@ -106,6 +106,12 @@ function failure(response: { status: number; body: unknown }): {
   if (response.status === 401) {
     return { ok: false, message: 'Your session expired. Sign in again.' };
   }
+  if (response.status === 403) {
+    return {
+      ok: false,
+      message: "This account doesn't have access to Finance.",
+    };
+  }
   const body = errorBodySchema.safeParse(response.body);
   return {
     ok: false,

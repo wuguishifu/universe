@@ -4,7 +4,7 @@ import { Metadata } from 'next';
 import { Jersey_15, Source_Code_Pro } from 'next/font/google';
 import localFont from 'next/font/local';
 
-import { cn } from '@libs/ui-web';
+import { cn } from '@libs/web-ui';
 
 import { ParallaxBackground } from '../components/bg/parallax-background';
 import { RainCanvas } from '../components/bg/rain-canvas';

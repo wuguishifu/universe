@@ -169,6 +169,9 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.1108.0
         version: 3.1146.0
+      '@aws-sdk/lib-storage':
+        specifier: ~3.1146.0
+        version: 3.1146.0(@aws-sdk/client-s3@3.1146.0)
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.1108.0
         version: 3.1146.0
@@ -238,6 +241,9 @@ importers:
       '@xterm/xterm':
         specifier: 6.0.0
         version: 6.0.0
+      aws4fetch:
+        specifier: ^1.0.20
+        version: 1.0.20
       axios:
         specifier: '*'
         version: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -283,6 +289,9 @@ importers:
       embla-carousel-react:
         specifier: ^8.6.0
         version: 8.6.0(react@19.2.3)
+      exifr:
+        specifier: ^7.1.3
+        version: 7.1.3
       expo:
         specifier: ~56.0.0
         version: 56.0.24(4ae89be1a22fec7d1892d46c756d5878)
@@ -666,7 +675,16 @@ importers:
 
   libs/redis-cache: {}
 
-  libs/ui-web: {}
+  libs/web/auth:
+    dependencies:
+      '@libs/web-ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@platform/convex-contracts':
+        specifier: workspace:*
+        version: link:../../../platform/convex/contracts
+
+  libs/web/ui: {}
 
   platform/analytics/client-nest:
     dependencies:
@@ -708,6 +726,9 @@ importers:
       '@platform/notifications-contracts':
         specifier: workspace:^
         version: link:../../notifications/contracts
+      aws4fetch:
+        specifier: '*'
+        version: 1.0.20
       convex:
         specifier: '*'
         version: 1.37.0(react@19.2.3)
@@ -855,6 +876,18 @@ importers:
         specifier: ^2.3.0
         version: 2.8.1
 
+  projects/admin/web:
+    dependencies:
+      '@libs/web-auth':
+        specifier: workspace:*
+        version: link:../../../libs/web/auth
+      '@libs/web-ui':
+        specifier: workspace:*
+        version: link:../../../libs/web/ui
+      '@platform/convex-contracts':
+        specifier: workspace:*
+        version: link:../../../platform/convex/contracts
+
   projects/clipper/contracts:
     dependencies:
       '@libs/queue':
@@ -885,6 +918,12 @@ importers:
         specifier: ^2.3.0
         version: 2.8.1
 
+  projects/docs/web:
+    dependencies:
+      '@libs/web-ui':
+        specifier: workspace:*
+        version: link:../../../libs/web/ui
+
   projects/finance/contracts: {}
 
   projects/finance/sandbox: {}
@@ -909,9 +948,12 @@ importers:
       '@convex-dev/auth':
         specifier: '*'
         version: 0.0.96(@auth/core@0.41.3)(convex@1.37.0(react@19.2.3))(react@19.2.3)
-      '@libs/ui-web':
+      '@libs/web-auth':
         specifier: workspace:*
-        version: link:../../../libs/ui-web
+        version: link:../../../libs/web/auth
+      '@libs/web-ui':
+        specifier: workspace:*
+        version: link:../../../libs/web/ui
       '@platform/convex-contracts':
         specifier: workspace:*
         version: link:../../../platform/convex/contracts
@@ -1042,11 +1084,41 @@ importers:
         specifier: ^2.3.0
         version: 2.8.1
 
+  projects/janktm/service:
+    dependencies:
+      '@libs/nest-core':
+        specifier: workspace:*
+        version: link:../../../libs/nest/core
+      '@libs/nest-s3':
+        specifier: workspace:*
+        version: link:../../../libs/nest/s3
+      '@libs/queue':
+        specifier: workspace:*
+        version: link:../../../libs/queue
+      '@platform/convex-contracts':
+        specifier: workspace:*
+        version: link:../../../platform/convex/contracts
+      '@platform/ffmpeg-client-nest':
+        specifier: workspace:*
+        version: link:../../../platform/ffmpeg/client-nest
+      '@platform/ffmpeg-contracts':
+        specifier: workspace:*
+        version: link:../../../platform/ffmpeg/contracts
+      exifr:
+        specifier: '*'
+        version: 7.1.3
+      tslib:
+        specifier: ^2.3.0
+        version: 2.8.1
+
   projects/janktm/web:
     dependencies:
-      '@libs/ui-web':
+      '@libs/web-auth':
         specifier: workspace:*
-        version: link:../../../libs/ui-web
+        version: link:../../../libs/web/auth
+      '@libs/web-ui':
+        specifier: workspace:*
+        version: link:../../../libs/web/ui
       '@platform/convex-contracts':
         specifier: workspace:*
         version: link:../../../platform/convex/contracts
@@ -1076,18 +1148,18 @@ importers:
 
   projects/mega-client/web:
     dependencies:
-      '@libs/ui-web':
+      '@libs/web-ui':
         specifier: workspace:*
-        version: link:../../../libs/ui-web
+        version: link:../../../libs/web/ui
       '@projects/mega-client-contracts':
         specifier: workspace:*
         version: link:../contracts
 
   projects/portfolio/web:
     dependencies:
-      '@libs/ui-web':
+      '@libs/web-ui':
         specifier: workspace:*
-        version: link:../../../libs/ui-web
+        version: link:../../../libs/web/ui
 
   projects/sapphire/mobile:
     dependencies:
@@ -1208,9 +1280,9 @@ importers:
 
   projects/sapphire/web:
     dependencies:
-      '@libs/ui-web':
+      '@libs/web-ui':
         specifier: workspace:*
-        version: link:../../../libs/ui-web
+        version: link:../../../libs/web/ui
       '@platform/convex-contracts':
         specifier: workspace:*
         version: link:../../../platform/convex/contracts
@@ -1258,18 +1330,12 @@ importers:
 
   projects/thermo-automation/web:
     dependencies:
-      '@libs/ui-web':
+      '@libs/web-ui':
         specifier: workspace:*
-        version: link:../../../libs/ui-web
+        version: link:../../../libs/web/ui
       '@projects/thermo-automation-contracts':
         specifier: workspace:*
         version: link:../contracts
-
-  projects/wuguishifu/web:
-    dependencies:
-      '@libs/ui-web':
-        specifier: workspace:*
-        version: link:../../../libs/ui-web
 
 packages:
 
@@ -1360,6 +1426,12 @@ packages:
   '@aws-sdk/credential-provider-web-identity@3.972.78':
     resolution: {integrity: sha512-/y9WvNtlcPBGLR0qc1a+9J/xtYZfVczvLUOuXaVWylzttH7ewsxwHtjmiJSolNrVSDorIxHGHMU61CbonRkmwA==}
     engines: {node: '>=20.0.0'}
+
+  '@aws-sdk/lib-storage@3.1146.0':
+    resolution: {integrity: sha512-Fqnbc3xayxP0GfsQoxcLl9wublbVC2eo5uWFds6tTUejAyHKYcMFvgziBmZBFOKA04oYY8kgXMjAuJGQoPFk5A==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      '@aws-sdk/client-s3': ^3.1146.0
 
   '@aws-sdk/middleware-sdk-s3@3.972.77':
     resolution: {integrity: sha512-E7W2UOeUoc+lg3uIfR/dM7ZwusHwhBQrKMnlkRv4EXRR+C0YtV1pg25xC7GdZIhXH+NAMgZPCbE7o5to2cjFiw==}
@@ -7280,6 +7352,9 @@ packages:
   avvio@9.3.0:
     resolution: {integrity: sha512-g2tQ7LE7oOSqDfwEm3M+ZCMTJc7KiZCdJ4UwyZJb5ckTKyYu50OYmvv0mCFXPuYXoM4zkSt8zM9XQ9KCvxA74A==}
 
+  aws4fetch@1.0.20:
+    resolution: {integrity: sha512-/djoAN709iY65ETD6LKCtyyEI04XIBP5xVvfmNxsEP0uJB5tyaGBztSryRr4HqMStr9R06PisQE7m9zDTXKu6g==}
+
   axe-core@4.13.0:
     resolution: {integrity: sha512-UzGt8zg7Ny8djbYMhxl2zuEevVa7r2gJjYY5Lwr1xM7+XU2nd6CkIWFTVcCIbAP63vSz71NaVyyuSk9lHKcy0A==}
     engines: {node: '>=4'}
@@ -7525,6 +7600,9 @@ packages:
 
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
+
+  buffer@5.6.0:
+    resolution: {integrity: sha512-/gDYp/UtU0eA1ys8bOs9J6a+E/KWIY+DZ+Q2WESNUA0jFRsJOc0SNUO6xJ5SGA1xueg3NL65W6s+NY5l9cunuw==}
 
   buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
@@ -8898,6 +8976,9 @@ packages:
   execa@8.0.1:
     resolution: {integrity: sha512-VyhnebXciFV2DESc+p6B+y0LjSm0krU4OgJN44qFAhBY0TJ+1V61tYD2+wHusZ6F9n5K+vl8k0sTy7PEfV4qpg==}
     engines: {node: '>=16.17'}
+
+  exifr@7.1.3:
+    resolution: {integrity: sha512-g/aje2noHivrRSLbAUtBPWFbxKdKhgj/xr1vATDdUXPOFYJlQ62Ft0oy+72V6XLIpDJfHs6gXLbBLAolqOXYRw==}
 
   exit-x@0.2.2:
     resolution: {integrity: sha512-+I6B/IkJc1o/2tiURyz/ivu/O0nKNEArIUB5O7zBrlDVJr22SCLH3xTeEry428LvFhRzIA1g8izguxJ/gbNcVQ==}
@@ -13190,6 +13271,9 @@ packages:
     resolution: {integrity: sha512-eLoXW/DHyl62zxY4SCaIgnRhuMr6ri4juEYARS8E6sCEqzKpOiE521Ucofdx+KnDZl5xmvGYaaKCk5FEOxJCoQ==}
     engines: {node: '>= 0.4'}
 
+  stream-browserify@3.0.0:
+    resolution: {integrity: sha512-H73RAHsVBapbim0tU2JwwOiXUj+fikfiaoYAKHF3VJfA0pe2BCzkhAHBlLG6REzE+2WNZcxOXjK7lkso+9euLA==}
+
   stream-buffers@2.2.0:
     resolution: {integrity: sha512-uyQK/mx5QjHun80FLJTfaWE7JtwfRMKBLkMne6udYOmvH0CawotVa7TfgYHzAnpphn4+TweIx1QKMnRIbipmUg==}
     engines: {node: '>= 0.10.0'}
@@ -14375,6 +14459,16 @@ snapshots:
       '@aws-sdk/types': 3.974.6
       '@smithy/core': 3.35.1
       '@smithy/types': 4.19.0
+      tslib: 2.8.1
+
+  '@aws-sdk/lib-storage@3.1146.0(@aws-sdk/client-s3@3.1146.0)':
+    dependencies:
+      '@aws-sdk/client-s3': 3.1146.0
+      '@smithy/core': 3.35.1
+      '@smithy/types': 4.19.0
+      buffer: 5.6.0
+      events: 3.3.0
+      stream-browserify: 3.0.0
       tslib: 2.8.1
 
   '@aws-sdk/middleware-sdk-s3@3.972.77':
@@ -21191,6 +21285,8 @@ snapshots:
       '@fastify/error': 4.2.0
       fastq: 1.20.3
 
+  aws4fetch@1.0.20: {}
+
   axe-core@4.13.0: {}
 
   axios-retry@4.5.0(axios@1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)):
@@ -21589,6 +21685,11 @@ snapshots:
   buffer-equal-constant-time@1.0.1: {}
 
   buffer-from@1.1.2: {}
+
+  buffer@5.6.0:
+    dependencies:
+      base64-js: 1.5.1
+      ieee754: 1.2.1
 
   buffer@5.7.1:
     dependencies:
@@ -23107,6 +23208,8 @@ snapshots:
       onetime: 6.0.0
       signal-exit: 4.1.0
       strip-final-newline: 3.0.0
+
+  exifr@7.1.3: {}
 
   exit-x@0.2.2: {}
 
@@ -28375,6 +28478,11 @@ snapshots:
     dependencies:
       es-errors: 1.3.0
       internal-slot: 1.1.0
+
+  stream-browserify@3.0.0:
+    dependencies:
+      inherits: 2.0.4
+      readable-stream: 3.6.2
 
   stream-buffers@2.2.0: {}
 

@@ -9,12 +9,14 @@ import {
 } from './items';
 
 /**
- * Every route needs `Authorization: Bearer <convex auth JWT>`; the user is whoever the token is for.
- * Through the Cloudflare tunnel, requests also need the Access service token headers.
+ * Every route needs `Authorization: Bearer <convex auth JWT>`; the user is whoever the token is for,
+ * and gets a 403 without a `finance` grant. Through the Cloudflare tunnel, requests also need the
+ * Access service token headers.
  */
 const errorResponses = {
   400: errorBodySchema,
   401: errorBodySchema,
+  403: errorBodySchema,
   404: errorBodySchema,
   409: errorBodySchema,
   502: errorBodySchema,

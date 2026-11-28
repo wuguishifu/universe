@@ -25,6 +25,10 @@ env:
 jobs:
   plan:
     name: Find affected server apps
+    # Put "no-deploy" in the PR title or merge commit message to skip this merge. The run is then
+    # marked skipped rather than successful, so nx-set-shas keeps the last real deploy as the base
+    # and the next merge picks up these changes too.
+    if: ${{ !contains(github.event.head_commit.message, 'no-deploy') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:

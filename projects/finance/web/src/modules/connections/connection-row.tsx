@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
   Spinner,
-} from '@libs/ui-web';
+} from '@libs/web-ui';
 import type { api } from '@platform/convex-contracts';
 
 import { removeItem } from './actions';

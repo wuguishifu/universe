@@ -39,7 +39,10 @@
       "path": "../contracts"
     },
     {
-      "path": "../../../libs/ui-web"
+      "path": "../../../libs/web/ui"
+    },
+    {
+      "path": "../../../libs/web/auth"
     }
   ]
 }

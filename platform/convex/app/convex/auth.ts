@@ -2,38 +2,46 @@ import { Password } from '@convex-dev/auth/providers/Password';
 import { convexAuth } from '@convex-dev/auth/server';
 import { ConvexError } from 'convex/values';
 
+import { internal } from './_generated/api';
+import { ResetPasswordOtp, VerifyEmailOtp } from './access/emails';
+import { normalizeEmail } from './access/helpers';
+
 /**
- * Email + password only, and sign-ups are closed: the "signUp" flow only works for an email in
- * AUTH_SIGNUP_ALLOWLIST (comma-separated, set on the deployment). Everyone else can only sign in to
- * an account that already exists.
+ * Email + password, invite-only. Accounts are deployment-wide, so every app on this deployment that
+ * uses Convex Auth shares these users; what each person can use is up to their grants
+ * (access/tables.ts), managed in admin-web.
  *
- * This is deployment-wide, so every app on this deployment that uses Convex Auth shares these users.
+ * - Signing up needs a grant for at least one app, so uninvited emails never get an account (or a
+ *   code emailed to them).
+ * - An address is verified with an emailed code before its first session, so whoever is invited
+ *   has to own the address.
+ * - Every new session needs a grant for at least one app. Which app is checked by the app itself:
+ *   its proxy (@libs/web-auth) for pages and appQuery/appMutation (access/functions.ts) for data.
  */
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
     Password({
-      profile(params) {
-        const email = normalizeEmail(params.email);
-        if (params.flow === 'signUp' && !signUpAllowlist().includes(email)) {
-          throw new ConvexError({ code: 'SIGN_UPS_CLOSED' });
-        }
-        return { email };
-      },
+      profile: (params) => ({ email: normalizeEmail(params.email) }),
+      verify: VerifyEmailOtp,
+      reset: ResetPasswordOtp,
     }),
   ],
+  callbacks: {
+    // Runs in the same mutation that creates the user, so throwing here means no account at all.
+    async afterUserCreatedOrUpdated(ctx, { userId, existingUserId }) {
+      if (existingUserId !== null) return;
+      if (
+        !(await ctx.runQuery(internal.access.internal.canSignIn, { userId }))
+      ) {
+        throw new ConvexError({ code: 'not_invited' as const });
+      }
+    },
+    async beforeSessionCreation(ctx, { userId }) {
+      if (
+        !(await ctx.runQuery(internal.access.internal.canSignIn, { userId }))
+      ) {
+        throw new ConvexError({ code: 'no_access' as const });
+      }
+    },
+  },
 });
-
-function normalizeEmail(value: unknown): string {
-  const email = typeof value === 'string' ? value.trim().toLowerCase() : '';
-  if (!email) {
-    throw new ConvexError({ code: 'EMAIL_REQUIRED' });
-  }
-  return email;
-}
-
-function signUpAllowlist(): string[] {
-  return (process.env.AUTH_SIGNUP_ALLOWLIST ?? '')
-    .split(',')
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean);
-}

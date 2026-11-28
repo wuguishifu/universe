@@ -1,4 +1,4 @@
-import { Card, CardContent, cn } from '@libs/ui-web';
+import { Card, CardContent, cn } from '@libs/web-ui';
 
 /** A label, a value and a line of context. */
 export function StatTile({

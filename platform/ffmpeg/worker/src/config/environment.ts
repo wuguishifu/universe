@@ -42,6 +42,11 @@ export const environmentSchema = z
       'h264_videotoolbox',
       'hevc_videotoolbox',
     ]),
+    /**
+     * Filters ffmpeg must have, checked on start like the encoders. Homebrew's `ffmpeg` lacks
+     * some that jobs use (e.g. `zscale` for HDR tone mapping); `ffmpeg-full` has them.
+     */
+    ffmpegRequiredFilters: commaSeparated.default([]),
 
     // MARK: s3 vars
     s3Endpoint: z.string(),

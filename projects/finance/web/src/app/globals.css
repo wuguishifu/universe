@@ -1,7 +1,8 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-@source "../../../../../libs/ui-web/";
+@source "../../../../../libs/web/ui/";
+@source "../../../../../libs/web/auth/";
 
 /* Follows the system setting; there's no theme toggle. */
 @custom-variant dark (@media (prefers-color-scheme: dark));

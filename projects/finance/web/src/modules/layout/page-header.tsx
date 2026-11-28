@@ -1,4 +1,4 @@
-import { Separator, SidebarTrigger } from '@libs/ui-web';
+import { Separator, SidebarTrigger } from '@libs/web-ui';
 
 /** `children` go at the right end, e.g. page actions. */
 export function PageHeader({

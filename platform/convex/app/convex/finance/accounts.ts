@@ -1,15 +1,12 @@
-import { getAuthUserId } from '@convex-dev/auth/server';
-
-import { query } from '../_generated/server';
+import { financeQuery } from './auth';
 
 /**
  * The signed-in user's items and accounts for the home page. Never includes access tokens.
  */
-export const overview = query({
+export const overview = financeQuery({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return { items: [], accounts: [] };
+    const { userId } = ctx.viewer;
 
     const [items, accounts] = await Promise.all([
       ctx.db

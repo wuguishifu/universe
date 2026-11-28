@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
-import { Button, cn } from '@libs/ui-web';
+import { Button, cn } from '@libs/web-ui';
 import {
   isFinished,
   type Transfer,

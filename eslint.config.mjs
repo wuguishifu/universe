@@ -74,14 +74,17 @@ export default [
             {
               sourceTag: 'scope:shared',
               onlyDependOnLibsWithTags: ['scope:shared'],
+              notDependOnLibsWithTags: ['scope:private'],
             },
             {
               sourceTag: 'scope:server',
               onlyDependOnLibsWithTags: ['scope:shared', 'scope:server'],
+              notDependOnLibsWithTags: ['scope:private'],
             },
             {
               sourceTag: 'scope:client',
               onlyDependOnLibsWithTags: ['scope:shared', 'scope:client'],
+              notDependOnLibsWithTags: ['scope:private'],
             },
             {
               sourceTag: 'scope:hybrid',
@@ -90,6 +93,7 @@ export default [
                 'scope:client',
                 'scope:server',
               ],
+              notDependOnLibsWithTags: ['scope:private'],
             },
           ],
         },

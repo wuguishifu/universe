@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Generates Convex Auth's signing keys and sets them on a convex deployment: JWT_PRIVATE_KEY signs
-// the JWTs, JWKS is the public half (served at /.well-known/jwks.json, which finance-service checks
+// the JWTs, JWKS is the public half (served at /.well-known/jwks.json, which services can check
 // tokens against). This is the key step of `npx @convex-dev/auth`, without the rest of that CLI,
 // which would try to rewrite convex/auth.ts, auth.config.ts, http.ts and tsconfig.
 //

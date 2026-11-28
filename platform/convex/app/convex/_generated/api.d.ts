@@ -8,6 +8,25 @@
  * @module
  */
 
+import type * as access_admin from "../access/admin.js";
+import type * as access_apps from "../access/apps.js";
+import type * as access_emails from "../access/emails.js";
+import type * as access_functions from "../access/functions.js";
+import type * as access_helpers from "../access/helpers.js";
+import type * as access_internal from "../access/internal.js";
+import type * as access_tables from "../access/tables.js";
+import type * as access_viewer from "../access/viewer.js";
+import type * as album_albums from "../album/albums.js";
+import type * as album_auth from "../album/auth.js";
+import type * as album_helpers from "../album/helpers.js";
+import type * as album_items from "../album/items.js";
+import type * as album_media from "../album/media.js";
+import type * as album_processing from "../album/processing.js";
+import type * as album_scan from "../album/scan.js";
+import type * as album_signing from "../album/signing.js";
+import type * as album_slugs from "../album/slugs.js";
+import type * as album_tables from "../album/tables.js";
+import type * as album_validators from "../album/validators.js";
 import type * as auth from "../auth.js";
 import type * as clipper_auth from "../clipper/auth.js";
 import type * as clipper_clipJobs from "../clipper/clipJobs.js";
@@ -53,6 +72,25 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "access/admin": typeof access_admin;
+  "access/apps": typeof access_apps;
+  "access/emails": typeof access_emails;
+  "access/functions": typeof access_functions;
+  "access/helpers": typeof access_helpers;
+  "access/internal": typeof access_internal;
+  "access/tables": typeof access_tables;
+  "access/viewer": typeof access_viewer;
+  "album/albums": typeof album_albums;
+  "album/auth": typeof album_auth;
+  "album/helpers": typeof album_helpers;
+  "album/items": typeof album_items;
+  "album/media": typeof album_media;
+  "album/processing": typeof album_processing;
+  "album/scan": typeof album_scan;
+  "album/signing": typeof album_signing;
+  "album/slugs": typeof album_slugs;
+  "album/tables": typeof album_tables;
+  "album/validators": typeof album_validators;
   auth: typeof auth;
   "clipper/auth": typeof clipper_auth;
   "clipper/clipJobs": typeof clipper_clipJobs;

@@ -4,7 +4,7 @@ import Script from 'next/script';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 
-import { cn } from '@libs/ui-web';
+import { cn } from '@libs/web-ui';
 
 import { Navbar } from '../components/navbar/navbar';
 import './globals.css';

@@ -1,20 +1,18 @@
-import { getAuthUserId } from '@convex-dev/auth/server';
 import { ConvexError, v } from 'convex/values';
 
 import type { Doc } from '../_generated/dataModel';
 import { mutation, query, type QueryCtx } from '../_generated/server';
 
-import { assertFinanceSecret, financeSecret } from './auth';
+import { assertFinanceSecret, financeQuery, financeSecret } from './auth';
 import { linkKind } from './validators';
 
 // MARK: web app (signed-in user)
 
 /** The signed-in user's items, oldest first. Never includes the access token. */
-export const list = query({
+export const list = financeQuery({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+    const { userId } = ctx.viewer;
     const items = await ctx.db
       .query('financeItems')
       .withIndex('by_userId', (q) => q.eq('userId', userId))

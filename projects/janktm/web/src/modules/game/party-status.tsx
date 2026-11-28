@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { Button, Spinner } from '@libs/ui-web';
+import { Button, Spinner } from '@libs/web-ui';
 
 /** What to show while a party is loading, failed to load, or doesn't exist. */
 export function PartyStatus({

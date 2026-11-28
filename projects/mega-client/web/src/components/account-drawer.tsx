@@ -9,7 +9,7 @@ import {
   DrawerTitle,
   Input,
   Label,
-} from '@libs/ui-web';
+} from '@libs/web-ui';
 import type { Account } from '@projects/mega-client-contracts';
 
 import { api, expect } from '../lib/api';

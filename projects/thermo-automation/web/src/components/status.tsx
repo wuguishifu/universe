@@ -1,6 +1,6 @@
 import { CircleCheck, TriangleAlert, WifiOff } from 'lucide-react';
 
-import { cn } from '@libs/ui-web';
+import { cn } from '@libs/web-ui';
 
 import type { Health } from '../lib/status';
 

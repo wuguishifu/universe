@@ -4,7 +4,7 @@ import { CheckIcon, CopyIcon, PencilIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { cn } from '@libs/ui-web';
+import { cn } from '@libs/web-ui';
 import { api } from '@platform/convex-contracts';
 
 import { useQuery } from '../convex/use-query';

@@ -16,7 +16,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-} from '@libs/ui-web';
+} from '@libs/web-ui';
 import { api } from '@platform/convex-contracts';
 
 /** The main navigation. Add pages here as they're built. */
