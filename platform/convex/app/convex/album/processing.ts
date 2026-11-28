@@ -34,13 +34,17 @@ const MAX_REPROCESS_IDS = 500;
 export const completeItem = mutation({
   args: {
     secret: janktmSecret,
-    itemId: v.id('albumItems'),
+    itemId: v.string(),
     token: v.string(),
     derivatives,
   },
-  handler: async (ctx, { secret, itemId, token, derivatives: generated }) => {
+  handler: async (
+    ctx,
+    { secret, itemId: rawId, token, derivatives: generated },
+  ) => {
     assertJanktmSecret(secret);
-    const item = await ctx.db.get('albumItems', itemId);
+    const itemId = ctx.db.normalizeId('albumItems', rawId);
+    const item = itemId && (await ctx.db.get('albumItems', itemId));
     const replaced: Derivative[] = [];
     if (!item || item.job?.token !== token) {
       return { applied: false, replaced };
@@ -55,7 +59,7 @@ export const completeItem = mutation({
       if (before && before.key !== after.key) replaced.push(before);
     }
     const ready = merged.thumb !== undefined;
-    await ctx.db.patch('albumItems', itemId, {
+    await ctx.db.patch('albumItems', item._id, {
       derivatives: merged,
       status: ready ? 'ready' : item.status,
       width: merged.display?.width ?? item.width,
@@ -73,15 +77,16 @@ export const completeItem = mutation({
 export const failItem = mutation({
   args: {
     secret: janktmSecret,
-    itemId: v.id('albumItems'),
+    itemId: v.string(),
     token: v.string(),
     error: v.string(),
   },
-  handler: async (ctx, { secret, itemId, token, error }) => {
+  handler: async (ctx, { secret, itemId: rawId, token, error }) => {
     assertJanktmSecret(secret);
-    const item = await ctx.db.get('albumItems', itemId);
+    const itemId = ctx.db.normalizeId('albumItems', rawId);
+    const item = itemId && (await ctx.db.get('albumItems', itemId));
     if (!item?.job || item.job.token !== token) return { applied: false };
-    await ctx.db.patch('albumItems', itemId, {
+    await ctx.db.patch('albumItems', item._id, {
       status: item.status === 'ready' ? 'ready' : 'failed',
       job: { ...item.job, state: 'failed', error: error.slice(0, 4000) },
     });

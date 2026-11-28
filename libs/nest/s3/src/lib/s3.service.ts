@@ -1,6 +1,8 @@
 import {
+  DeleteObjectsCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
   NoSuchKey,
   PutObjectCommand,
   PutObjectCommandOutput,
@@ -17,6 +19,17 @@ import { pipeline } from 'stream/promises';
 import { S3_CONFIG, S3Props } from './s3';
 
 export class S3ObjectNotFoundError extends Error {}
+
+export type ListedS3Object = {
+  key: string;
+  /** As S3 sends it, quotes included. */
+  etag: string;
+  sizeBytes: number;
+  lastModified?: Date;
+};
+
+/** DeleteObjects' limit per request. */
+const MAX_DELETE_KEYS = 1000;
 
 @Injectable()
 export class S3Service {
@@ -196,5 +209,85 @@ export class S3Service {
     } catch (error) {
       return false;
     }
+  }
+
+  /** Every object under `prefix` (or the whole bucket), a page of up to 1000 at a time. */
+  public async *listObjects({
+    bucket,
+    prefix,
+  }: {
+    bucket: string;
+    prefix?: string;
+  }): AsyncGenerator<ListedS3Object[]> {
+    let continuationToken: string | undefined;
+    do {
+      const page = await this.s3Client.send(
+        new ListObjectsV2Command({
+          Bucket: bucket,
+          Prefix: prefix,
+          ContinuationToken: continuationToken,
+        }),
+      );
+      const objects: ListedS3Object[] = [];
+      for (const object of page.Contents ?? []) {
+        if (object.Key === undefined) continue;
+        objects.push({
+          key: object.Key,
+          etag: object.ETag ?? '',
+          sizeBytes: object.Size ?? 0,
+          lastModified: object.LastModified,
+        });
+      }
+      if (objects.length > 0) yield objects;
+      continuationToken = page.IsTruncated
+        ? page.NextContinuationToken
+        : undefined;
+    } while (continuationToken);
+  }
+
+  /**
+   * Deletes `keys` (ones that don't exist are fine), 1000 per request.
+   *
+   * @throws if S3 couldn't delete some of them.
+   */
+  public async deleteObjects({
+    bucket,
+    keys,
+  }: {
+    bucket: string;
+    keys: string[];
+  }): Promise<void> {
+    for (let i = 0; i < keys.length; i += MAX_DELETE_KEYS) {
+      const chunk = keys.slice(i, i + MAX_DELETE_KEYS);
+      const { Errors = [] } = await this.s3Client.send(
+        new DeleteObjectsCommand({
+          Bucket: bucket,
+          Delete: { Objects: chunk.map((Key) => ({ Key })), Quiet: true },
+        }),
+      );
+      if (Errors.length > 0) {
+        const [first] = Errors;
+        throw new Error(
+          `Couldn't delete ${Errors.length} objects from ${bucket}, e.g. ${first?.Key}: ${first?.Message}`,
+        );
+      }
+    }
+  }
+
+  /** Deletes everything under `prefix`, which must be non-empty (this never empties a bucket). */
+  public async deletePrefix({
+    bucket,
+    prefix,
+  }: {
+    bucket: string;
+    prefix: string;
+  }): Promise<number> {
+    if (!prefix) throw new Error('deletePrefix needs a prefix');
+    let deleted = 0;
+    for await (const page of this.listObjects({ bucket, prefix })) {
+      await this.deleteObjects({ bucket, keys: page.map((o) => o.key) });
+      deleted += page.length;
+    }
+    return deleted;
   }
 }

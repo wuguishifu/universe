@@ -56,6 +56,8 @@ export const mediaInfo = v.object({
   rotationDeg: v.optional(v.number()),
   /** A video with an HDR transfer function (HLG or PQ), which needs tone mapping. */
   hdr: v.optional(v.boolean()),
+  /** The same for a Live Photo's motion. */
+  motionHdr: v.optional(v.boolean()),
 });
 export type MediaInfo = Infer<typeof mediaInfo>;
 
