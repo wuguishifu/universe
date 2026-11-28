@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 
 import { contentTypeFor } from './content-type.ts';
 import { isTransientFailure, tail } from './errors.ts';
+import { listedNames } from './listed-names.ts';
 import { LocalPaths } from './local-paths.ts';
 import { toProbe } from './probe.ts';
 import {
@@ -217,5 +218,38 @@ describe('contentTypeFor', () => {
       contentTypeFor('raw/no-extension'),
       'application/octet-stream',
     );
+  });
+});
+
+describe('listedNames', () => {
+  it('reads encoder names, skipping the legend', () => {
+    const output = [
+      'Encoders:',
+      ' V..... = Video',
+      ' A..... = Audio',
+      ' ------',
+      ' V....D h264_videotoolbox    VideoToolbox H.264 Encoder (codec h264)',
+      ' V....D libwebp              libwebp WebP image (codec webp)',
+      '',
+    ].join('\n');
+    const names = listedNames(output);
+    assert.ok(names.has('h264_videotoolbox'));
+    assert.ok(names.has('libwebp'));
+    assert.ok(!names.has('='));
+    // A regex over the whole output would find `h264` in the "(codec h264)" descriptions.
+    assert.ok(!names.has('h264'));
+  });
+
+  it('reads filter names, and only whole names', () => {
+    const output = [
+      'Filters:',
+      '  T.. = Timeline support',
+      ' .S tonemap           V->V       Conversion to/from different dynamic ranges.',
+      ' .. scale_vt          V->V       Scale Videotoolbox frames',
+    ].join('\n');
+    const names = listedNames(output);
+    assert.ok(names.has('tonemap'));
+    assert.ok(names.has('scale_vt'));
+    assert.ok(!names.has('scale'));
   });
 });
