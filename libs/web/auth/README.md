@@ -37,7 +37,7 @@ Accounts are deployment-wide: one account works in every app. What someone can u
 These go on the Convex deployment (`nx convex convex-app -- env set …`):
 
 - `JWT_PRIVATE_KEY` and `JWKS`: `node tools/scripts/convex-auth-keys.mjs` (add `--prod` for prod).
-- `SITE_URL`: Convex Auth needs this before it emails a code. Any of the apps' URLs works, since the emails carry only a code, not a link.
+- `SITE_URL`: Convex Auth needs this before it emails a code. Any of the apps' URLs works, since the emails carry only a code, not a link. Include the scheme (`https://example.com`, not `example.com`). Without it, sending a code crashes with `object null is not iterable`.
 - `RESEND_API_KEY`: used by the Resend component.
 - `AUTH_EMAIL_FROM`: e.g. `Universe <auth@example.com>`, on a domain verified in Resend.
 
