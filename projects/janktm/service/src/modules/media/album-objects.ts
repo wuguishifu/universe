@@ -53,6 +53,14 @@ export type AlbumItem = {
 };
 
 /**
+ * Whether `name` can be an album: one top-level folder's name, as `splitKey` takes the first
+ * segment. A scan of one album sweeps that whole album, so `A/sub` must never pass for one.
+ */
+export function isAlbumName(name: string): boolean {
+  return name !== '' && !name.includes('/') && !name.startsWith('.');
+}
+
+/**
  * Splits a key into its album (the top-level folder) and the path after it. Keys with no folder,
  * an empty segment, or a hidden segment (`.DS_Store`, `._IMG_1.JPG`) aren't album files.
  */

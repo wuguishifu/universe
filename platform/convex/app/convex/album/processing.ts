@@ -13,7 +13,6 @@ import {
   updateAlbumStats,
 } from './helpers';
 import {
-  type Derivative,
   type DerivativeKind,
   type Derivatives,
   DERIVATIVE_KINDS,
@@ -26,10 +25,13 @@ import {
 const MAX_REPROCESS_IDS = 500;
 
 /**
- * Saves a job's derivatives. A job whose token isn't the item's any more (the file changed or it
- * was reprocessed since) is stale: nothing is saved, and its outputs should be deleted.
+ * Saves a job's derivatives, if its token is still the item's: a newer job (the file changed, or it
+ * was reprocessed) makes it stale, and so does this one having been saved already (a retry).
  *
- * Returns the derivatives the new ones replaced, whose objects should be deleted too.
+ * Either way, returns what of the item's `<itemId>/` folder in the derived bucket is in use: the
+ * derivatives it shows, and the folder of the job it's waiting on. Everything else there (what
+ * these replaced, a stale job's outputs, leftovers of an attempt that failed) can be deleted. Being
+ * a fresh snapshot each call, a retry never deletes what an earlier attempt published.
  */
 export const completeItem = mutation({
   args: {
@@ -45,33 +47,49 @@ export const completeItem = mutation({
     assertJanktmSecret(secret);
     const itemId = ctx.db.normalizeId('albumItems', rawId);
     const item = itemId && (await ctx.db.get('albumItems', itemId));
-    const replaced: Derivative[] = [];
-    if (!item || item.job?.token !== token) {
-      return { applied: false, replaced };
+    // Deleted (its file is gone): none of its folder is in use.
+    if (!item) return { applied: false, inUse: inUse(undefined) };
+    if (item.job?.token !== token) {
+      return { applied: false, inUse: inUse(item) };
     }
 
     const merged: Derivatives = { ...item.derivatives };
     for (const kind of DERIVATIVE_KINDS) {
-      const before = item.derivatives[kind];
       const after = generated[kind];
-      if (!after) continue;
-      merged[kind] = after;
-      if (before && before.key !== after.key) replaced.push(before);
+      if (after) merged[kind] = after;
     }
     const ready = merged.thumb !== undefined;
-    await ctx.db.patch('albumItems', item._id, {
+    const saved = {
       derivatives: merged,
-      status: ready ? 'ready' : item.status,
+      status: ready ? ('ready' as const) : item.status,
       width: merged.display?.width ?? item.width,
       height: merged.display?.height ?? item.height,
       job: undefined,
-    });
+    };
+    await ctx.db.patch('albumItems', item._id, saved);
     await updateAlbumStats(ctx, item.albumId, {
       ready: ready && item.status !== 'ready' ? 1 : 0,
     });
-    return { applied: true, replaced };
+    return { applied: true, inUse: inUse({ ...item, ...saved }) };
   },
 });
+
+/** The derived objects an item uses, and the job token whose outputs it's waiting for. */
+function inUse(item: Doc<'albumItems'> | undefined): {
+  keys: { bucket: string; key: string }[];
+  jobToken: string | null;
+} {
+  if (!item) return { keys: [], jobToken: null };
+  return {
+    keys: DERIVATIVE_KINDS.flatMap((kind) => {
+      const derivative = item.derivatives[kind];
+      return derivative
+        ? [{ bucket: derivative.bucket, key: derivative.key }]
+        : [];
+    }),
+    jobToken: item.job?.token ?? null,
+  };
+}
 
 /** Records a job's failure. A ready item stays listed with what it had. */
 export const failItem = mutation({

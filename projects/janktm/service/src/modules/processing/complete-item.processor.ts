@@ -14,6 +14,7 @@ import {
 } from '../../queues/queue';
 import { ConvexService } from '../common/convex.service';
 import { withoutUndefined } from '../common/without-undefined';
+import { garbageKeys, type InUse } from '../media/ffmpeg-requests';
 
 type Derivative = {
   bucket: string;
@@ -78,24 +79,33 @@ export class CompleteItemProcessor extends WorkerHost {
       });
     }
 
-    const { applied, replaced } = await this.convex.mutation(
+    // Saving is idempotent, and so is the clean-up after it: a retry (say the delete below failed)
+    // gets a fresh picture of what's in use, so it never deletes what this job published.
+    const { applied, inUse } = await this.convex.mutation(
       api.album.processing.completeItem,
       { itemId, token, derivatives },
     );
-    // A stale job's outputs are garbage; a fresh one's replace the old derivatives.
-    const garbage = applied ? replaced : Object.values(derivatives);
-    if (!applied) this.logger.debug(`Item ${itemId}'s job ${token} is stale`);
-    await this.deleteDerived(garbage);
+    if (!applied)
+      this.logger.debug(`Item ${itemId}'s job ${token} is stale or done`);
+    await this.cleanUp(itemId, inUse);
   }
 
-  /** Deletes derivatives, but only ever from the derived bucket: never an original. */
-  private async deleteDerived(
-    derivatives: { bucket: string; key: string }[],
-  ): Promise<void> {
+  /**
+   * Deletes everything in the item's folder of the derived bucket that it doesn't use: what this
+   * job replaced, stale jobs' outputs, and leftovers of failed attempts. Keeps the folder of the
+   * job it's waiting on, whose outputs may be uploading.
+   */
+  private async cleanUp(itemId: string, inUse: InUse): Promise<void> {
     const bucket = this.environmentService.environment.albumDerivedBucket;
-    const keys = derivatives
-      .filter((derivative) => derivative.bucket === bucket)
-      .map((derivative) => derivative.key);
-    if (keys.length > 0) await this.s3.deleteObjects({ bucket, keys });
+    const keys: string[] = [];
+    for await (const page of this.s3.listObjects({
+      bucket,
+      prefix: `${itemId}/`,
+    })) {
+      keys.push(...page.map((object) => object.key));
+    }
+    const garbage = garbageKeys(keys, itemId, bucket, inUse);
+    if (garbage.length > 0)
+      await this.s3.deleteObjects({ bucket, keys: garbage });
   }
 }

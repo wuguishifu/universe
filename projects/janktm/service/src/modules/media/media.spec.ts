@@ -10,6 +10,7 @@ import { ffmpegRequestSchema } from '../../../../../../platform/ffmpeg/contracts
 import {
   groupIntoAlbums,
   type ListedObject,
+  isAlbumName,
   mediaFormat,
   splitKey,
 } from './album-objects.ts';
@@ -22,6 +23,7 @@ import {
 import {
   buildItemRequest,
   derivativeKey,
+  garbageKeys,
   type ItemJobInput,
   PRESETS,
 } from './ffmpeg-requests.ts';
@@ -48,6 +50,16 @@ describe('splitKey', () => {
     assert.equal(splitKey('album/.DS_Store'), null);
     assert.equal(splitKey('album/._IMG_1.JPG'), null);
     assert.equal(splitKey('album//IMG_1.JPG'), null);
+  });
+});
+
+describe('isAlbumName', () => {
+  it('takes one top-level folder, never a path in one', () => {
+    assert.ok(isAlbumName('2022-06-12 GRADUATION!'));
+    assert.ok(!isAlbumName('A/sub'));
+    assert.ok(!isAlbumName('A/'));
+    assert.ok(!isAlbumName(''));
+    assert.ok(!isAlbumName('.hidden'));
   });
 });
 
@@ -578,6 +590,64 @@ describe('buildItemRequest', () => {
     assert.equal(
       derivativeKey('abc', 'f00dfeed1234', 'preview'),
       'abc/f00dfeed/preview.mp4',
+    );
+  });
+});
+
+describe('garbageKeys', () => {
+  const listed = [
+    'item1/aaaaaaaa/thumb.webp',
+    'item1/aaaaaaaa/display.webp',
+    'item1/bbbbbbbb/thumb.webp',
+    'item1/cccccccc/hover.mp4',
+    'item10/aaaaaaaa/thumb.webp',
+  ];
+  const inUse = (keys: string[], jobToken: string | null = null) => ({
+    keys: keys.map((key) => ({ bucket: 'derived', key })),
+    jobToken,
+  });
+
+  it('keeps what the item shows and what its pending job is writing', () => {
+    assert.deepEqual(
+      garbageKeys(
+        listed,
+        'item1',
+        'derived',
+        inUse(
+          ['item1/aaaaaaaa/thumb.webp', 'item1/aaaaaaaa/display.webp'],
+          'cccccccc-1234',
+        ),
+      ),
+      ['item1/bbbbbbbb/thumb.webp'],
+    );
+  });
+
+  it("deletes nothing a retry's earlier attempt published", () => {
+    // The first attempt saved bbbbbbbb's thumb; a retry is told so, and keeps it.
+    const garbage = garbageKeys(
+      listed,
+      'item1',
+      'derived',
+      inUse(['item1/bbbbbbbb/thumb.webp']),
+    );
+    assert.ok(!garbage.includes('item1/bbbbbbbb/thumb.webp'));
+  });
+
+  it("deletes a deleted item's whole folder, and never another item's", () => {
+    const garbage = garbageKeys(listed, 'item1', 'derived', inUse([]));
+    assert.equal(garbage.length, 4);
+    assert.ok(!garbage.includes('item10/aaaaaaaa/thumb.webp'));
+  });
+
+  it('ignores keys in use in other buckets', () => {
+    const other = {
+      keys: [{ bucket: 'originals', key: 'item1/aaaaaaaa/thumb.webp' }],
+      jobToken: null,
+    };
+    assert.ok(
+      garbageKeys(listed, 'item1', 'derived', other).includes(
+        'item1/aaaaaaaa/thumb.webp',
+      ),
     );
   });
 });

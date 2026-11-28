@@ -1,5 +1,6 @@
 import { WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
+import { UnrecoverableError } from 'bullmq';
 
 import { S3Service } from '@libs/nest-s3';
 import { UniverseProcessor } from '@libs/queue';
@@ -15,6 +16,7 @@ import { ConvexService } from '../common/convex.service';
 import {
   type AlbumItem,
   groupIntoAlbums,
+  isAlbumName,
   type ListedObject,
 } from '../media/album-objects';
 import { ProcessingService } from '../processing/processing.service';
@@ -44,6 +46,10 @@ export class ScanProcessor extends WorkerHost {
 
   override async process(job: JanktmJob<'scan'>): Promise<ScanResult> {
     const { album: onlyAlbum, scannedAt } = job.data;
+    if (onlyAlbum !== undefined && !isAlbumName(onlyAlbum)) {
+      // Scanning "A/sub" would sweep the rest of A away.
+      throw new UnrecoverableError(`Not an album folder: ${onlyAlbum}`);
+    }
     const bucket = this.environmentService.environment.albumOriginalsBucket;
     const result: ScanResult = {
       albums: 0,
@@ -191,15 +197,21 @@ export class ScanProcessor extends WorkerHost {
     const bucket = this.environmentService.environment.albumDerivedBucket;
     let deleted = 0;
     for (;;) {
-      const { deletedItemIds, done } = await this.convex.mutation(
-        api.album.scan.sweepItems,
-        { albumId, scannedAt },
-      );
-      for (const itemId of deletedItemIds) {
+      const itemIds = await this.convex.query(api.album.scan.staleItems, {
+        albumId,
+        scannedAt,
+      });
+      if (itemIds.length === 0) return deleted;
+      // Files first: if this fails, the items are still there to find next time.
+      for (const itemId of itemIds) {
         await this.s3.deletePrefix({ bucket, prefix: `${itemId}/` });
       }
-      deleted += deletedItemIds.length;
-      if (done) return deleted;
+      const result = await this.convex.mutation(api.album.scan.deleteItems, {
+        albumId,
+        scannedAt,
+        itemIds,
+      });
+      deleted += result.deleted;
     }
   }
 }

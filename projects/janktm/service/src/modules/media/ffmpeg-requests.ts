@@ -346,5 +346,43 @@ export function derivativeKey(
   kind: DerivativeKind,
 ): string {
   const extension = kind === 'hover' || kind === 'preview' ? 'mp4' : 'webp';
-  return `${itemId}/${token.slice(0, 8)}/${kind}.${extension}`;
+  return `${jobFolder(itemId, token)}${kind}.${extension}`;
+}
+
+/** Where one job of an item writes, in the derived bucket. */
+export function jobFolder(itemId: string, token: string): string {
+  return `${itemId}/${token.slice(0, 8)}/`;
+}
+
+/** What Convex's completeItem says an item uses in the derived bucket. */
+export type InUse = {
+  keys: { bucket: string; key: string }[];
+  jobToken: string | null;
+};
+
+/**
+ * Of `keys` (everything under `<itemId>/` in `bucket`), the ones the item doesn't use: not one of
+ * its derivatives, and not in the folder of the job it's waiting on (whose outputs may be
+ * uploading right now).
+ */
+export function garbageKeys(
+  keys: string[],
+  itemId: string,
+  bucket: string,
+  inUse: InUse,
+): string[] {
+  const keep = new Set(
+    inUse.keys
+      .filter((object) => object.bucket === bucket)
+      .map((object) => object.key),
+  );
+  const pending = inUse.jobToken
+    ? jobFolder(itemId, inUse.jobToken)
+    : undefined;
+  return keys.filter(
+    (key) =>
+      key.startsWith(`${itemId}/`) &&
+      !keep.has(key) &&
+      !(pending && key.startsWith(pending)),
+  );
 }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Controller,
   Get,
@@ -15,8 +16,12 @@ import { type Queue } from 'bullmq';
 import { TokenAuthGuard } from '../../auth/token-auth.guard';
 import { JANKTM_QUEUE_CONFIG, type JanktmJobData } from '../../queues/queue';
 import { jobStatus } from '../common/job-status';
+import { isAlbumName } from '../media/album-objects';
 
 type ScanQueue = Queue<JanktmJobData<'scan'>>;
+
+/** One scan at a time. */
+const SCAN_DEDUPLICATION_ID = 'album-scan';
 
 @UseGuards(TokenAuthGuard)
 @Controller('api/scans')
@@ -33,20 +38,27 @@ export class ScansController {
   @Post()
   @HttpCode(202)
   public async start(@Query('album') album?: string) {
-    const running = await this.queue.getJobCountByTypes(
-      'active',
-      'waiting',
-      'delayed',
-      'prioritized',
-    );
-    if (running > 0) throw new ConflictException('A scan is already running');
+    if (album !== undefined && !isAlbumName(album)) {
+      throw new BadRequestException(
+        'album is one top-level folder\'s name, e.g. "2022-06-12 GRADUATION!"',
+      );
+    }
     const scannedAt = Date.now();
+    const scanId = `scan-${scannedAt}`;
+    // Deduplicated in Redis, atomically: until the scan in progress completes or finally fails,
+    // adding another returns it instead, whichever instance asks.
     const job = await this.queue.add(
       JANKTM_QUEUE_CONFIG.scan.jobName,
-      { album: album || undefined, scannedAt },
-      { jobId: `scan-${scannedAt}` },
+      { album, scannedAt },
+      { jobId: scanId, deduplication: { id: SCAN_DEDUPLICATION_ID } },
     );
-    return { scanId: job.id };
+    if (job.id !== scanId) {
+      throw new ConflictException({
+        message: 'A scan is already running',
+        scanId: job.id,
+      });
+    }
+    return { scanId };
   }
 
   @Get(':id')
