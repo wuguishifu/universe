@@ -1,14 +1,14 @@
 {
-  "name": "wuguishifu-web",
+  "name": "docs-web",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "projects/wuguishifu/web",
+  "sourceRoot": "projects/docs/web",
   "projectType": "application",
   "tags": ["scope:hybrid"],
   "targets": {
     "clean": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "rimraf projects/wuguishifu/web/.next"
+        "command": "rimraf projects/docs/web/.next"
       }
     },
     "build": {
@@ -51,7 +51,7 @@
       ],
       "syncGenerators": ["@nx/js:typescript-sync"],
       "options": {
-        "cwd": "projects/wuguishifu/web",
+        "cwd": "projects/docs/web",
         "command": "next typegen && tsc --project tsconfig.json --noEmit"
       }
     },
@@ -59,7 +59,7 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm madge . --circular --extensions js,ts,tsx --warning --exclude \"(^|/)convex/_generated(/|$)\"",
-        "cwd": "projects/wuguishifu/web"
+        "cwd": "projects/docs/web"
       }
     }
   }
